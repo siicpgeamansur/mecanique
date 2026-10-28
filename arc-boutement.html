@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phénomène d'Arc-boutement — Simulation Interactive & Pédagogique</title>
+  <!-- Tailwind CSS pour un style moderne et responsive -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome pour les icônes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- KaTeX pour l'affichage propre des équations mathématiques -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Style personnalisé pour les sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #e2e8f0;
+      border-radius: 6px;
+      height: 6px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transition: transform 0.1s ease, background-color 0.1s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #1d4ed8;
+    }
+    /* Scrollbar fine */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    canvas {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-slate-50">
+
+  <!-- EN-TÊTE PRINCIPAL -->
+  <header class="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between shrink-0 z-10 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="bg-blue-600 text-white p-2 rounded-lg shadow-md shadow-blue-500/20">
+        <i class="fa-solid fa-arrows-split-up-and-left text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-slate-800 text-base md:text-lg leading-tight flex items-center gap-2">
+          Étude Interactive de l'Arc-boutement
+          <span class="text-xs font-normal px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200">Mécanique des contacts</span>
+        </h1>
+        <p class="text-xs text-slate-500 hidden sm:block">Condition de blocage par frottement d'un guidage en translation excentré</p>
+      </div>
+    </div>
+
+    <!-- Actions & Presets en En-tête -->
+    <div class="flex items-center gap-2 md:gap-3">
+      <div class="hidden lg:flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+        <span class="text-slate-500 px-2 font-medium">Presets :</span>
+        <button onclick="applyPreset('serre-joint')" class="px-2.5 py-1 bg-white text-slate-700 hover:text-blue-600 rounded shadow-xs font-medium transition">Serre-joint</button>
+        <button onclick="applyPreset('tiroir')" class="px-2.5 py-1 bg-white text-slate-700 hover:text-blue-600 rounded shadow-xs font-medium transition">Tiroir bois</button>
+        <button onclick="applyPreset('douille-lisse')" class="px-2.5 py-1 bg-white text-slate-700 hover:text-blue-600 rounded shadow-xs font-medium transition">Douille bronze</button>
+        <button onclick="applyPreset('billes')" class="px-2.5 py-1 bg-white text-slate-700 hover:text-blue-600 rounded shadow-xs font-medium transition">Guidage billes</button>
+      </div>
+
+      <button onclick="toggleModal(true)" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span>Théorie</span>
+      </button>
+
+      <button onclick="resetParameters()" title="Réinitialiser les paramètres" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition border border-slate-200">
+        <i class="fa-solid fa-rotate-left"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENU PRINCIPAL (SIDEBAR + CANVAS + READOUT) -->
+  <div class="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden relative">
+
+    <!-- PANNEAU DES CONTRÔLES (SIDEBAR LEFT) -->
+    <aside class="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto z-10 shadow-sm">
+      <div class="p-4 space-y-5">
+        
+        <!-- Presets Mobile -->
+        <div class="block lg:hidden">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Applications types</label>
+          <select id="preset-select" onchange="applyPreset(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="serre-joint">Serre-joint de maçon (μ élevé, court guidage)</option>
+            <option value="tiroir">Tiroir en bois (μ moyen, large guidage)</option>
+            <option value="douille-lisse">Douille lisse lubrifiée (μ faible)</option>
+            <option value="billes">Douille à billes (μ quasi nul)</option>
+          </select>
+        </div>
+
+        <!-- Section 1 : Géométrie du système -->
+        <div>
+          <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-ruler-combined text-slate-500"></i> Géométrie du guidage
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Longueur L -->
+            <div class="ctrl-group">
+              <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                <label for="input-L" class="flex items-center gap-1">
+                  Longueur de guidage (<span class="font-mono text-blue-600 font-bold">L</span>)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="num-L" min="20" max="300" step="1" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs border border-slate-200 rounded bg-slate-50 text-blue-700 font-semibold focus:outline-none focus:border-blue-500" oninput="updateFromNum('L', this.value)">
+                  <span class="text-slate-400 text-xs">mm</span>
+                </div>
+              </div>
+              <input type="range" id="input-L" min="20" max="300" step="1" class="w-full" oninput="updateFromSlider('L', this.value)">
+            </div>
+
+            <!-- Diamètre D -->
+            <div class="ctrl-group">
+              <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                <label for="input-D" class="flex items-center gap-1">
+                  Diamètre/Largeur arbre (<span class="font-mono text-blue-600 font-bold">D</span>)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="num-D" min="10" max="150" step="1" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs border border-slate-200 rounded bg-slate-50 text-blue-700 font-semibold focus:outline-none focus:border-blue-500" oninput="updateFromNum('D', this.value)">
+                  <span class="text-slate-400 text-xs">mm</span>
+                </div>
+              </div>
+              <input type="range" id="input-D" min="10" max="150" step="1" class="w-full" oninput="updateFromSlider('D', this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2 : Conditions de frottement -->
+        <div>
+          <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-hand-friction text-slate-500"></i> Contact & Frottement
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Coefficient mu -->
+            <div class="ctrl-group">
+              <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                <label for="input-mu" class="flex items-center gap-1">
+                  Coef. de frottement (<span class="font-mono text-blue-600 font-bold">&mu;</span>)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="num-mu" min="0.01" max="1.20" step="0.01" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs border border-slate-200 rounded bg-slate-50 text-blue-700 font-semibold focus:outline-none focus:border-blue-500" oninput="updateFromNum('mu', this.value)">
+                </div>
+              </div>
+              <input type="range" id="input-mu" min="0.01" max="1.20" step="0.01" class="w-full" oninput="updateFromSlider('mu', this.value)">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>0.01 (Billes/Teflon)</span>
+                <span>0.5 (Acier/Bois)</span>
+                <span>1.0+ (Gomme)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3 : Effort appliqué -->
+        <div>
+          <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-hand-pointer text-slate-500"></i> Force Extérieure $F$
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <!-- Position Lf -->
+            <div class="ctrl-group">
+              <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                <label for="input-Lf" class="flex items-center gap-1">
+                  Excentricité (<span class="font-mono text-blue-600 font-bold">L<sub>f</sub></span>)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="num-Lf" min="-300" max="300" step="1" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs border border-slate-200 rounded bg-slate-50 text-blue-700 font-semibold focus:outline-none focus:border-blue-500" oninput="updateFromNum('Lf', this.value)">
+                  <span class="text-slate-400 text-xs">mm</span>
+                </div>
+              </div>
+              <input type="range" id="input-Lf" min="-300" max="300" step="1" class="w-full" oninput="updateFromSlider('Lf', this.value)">
+              <p class="text-[11px] text-slate-500 mt-1 italic"><i class="fa-solid fa-computer-mouse text-slate-400"></i> Astuce: Faites glisser le point rouge directement sur le schéma !</p>
+            </div>
+
+            <!-- Norme F -->
+            <div class="ctrl-group">
+              <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                <label for="input-F" class="flex items-center gap-1">
+                  Intensité de la force (<span class="font-mono text-blue-600 font-bold">F</span>)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="num-F" min="10" max="1000" step="10" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs border border-slate-200 rounded bg-slate-50 text-blue-700 font-semibold focus:outline-none focus:border-blue-500" oninput="updateFromNum('F', this.value)">
+                  <span class="text-slate-400 text-xs">N</span>
+                </div>
+              </div>
+              <input type="range" id="input-F" min="10" max="1000" step="10" class="w-full" oninput="updateFromSlider('F', this.value)">
+            </div>
+
+            <!-- Angle alpha -->
+            <div class="ctrl-group">
+              <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                <label for="input-alpha" class="flex items-center gap-1">
+                  Angle de la force (<span class="font-mono text-blue-600 font-bold">&alpha;</span>)
+                </label>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="num-alpha" min="-45" max="45" step="1" class="w-16 px-1.5 py-0.5 text-right font-mono text-xs border border-slate-200 rounded bg-slate-50 text-blue-700 font-semibold focus:outline-none focus:border-blue-500" oninput="updateFromNum('alpha', this.value)">
+                  <span class="text-slate-400 text-xs">&deg;</span>
+                </div>
+              </div>
+              <input type="range" id="input-alpha" min="-45" max="45" step="1" class="w-full" oninput="updateFromSlider('alpha', this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4 : Options d'affichage -->
+        <div>
+          <div class="flex justify-between items-center mb-2 pb-1 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-eye text-slate-500"></i> Affichage
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-slate-50 border border-transparent hover:border-slate-200">
+              <input type="checkbox" id="show-forces" checked onchange="draw()" class="rounded text-blue-600 focus:ring-blue-500">
+              <span class="text-slate-700">Vecteurs Forces</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-slate-50 border border-transparent hover:border-slate-200">
+              <input type="checkbox" id="show-cones" checked onchange="draw()" class="rounded text-blue-600 focus:ring-blue-500">
+              <span class="text-slate-700">Cônes de Coulomb</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-slate-50 border border-transparent hover:border-slate-200">
+              <input type="checkbox" id="show-dims" checked onchange="draw()" class="rounded text-blue-600 focus:ring-blue-500">
+              <span class="text-slate-700">Cotes & Repères</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded hover:bg-slate-50 border border-transparent hover:border-slate-200">
+              <input type="checkbox" id="show-grid" checked onchange="draw()" class="rounded text-blue-600 focus:ring-blue-500">
+              <span class="text-slate-700">Grille de fond</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ZONE DE DESSIN CANVAS & READOUT OVERLAY -->
+    <main class="flex-1 relative bg-slate-100 flex flex-col justify-center items-center overflow-hidden">
+      
+      <!-- CANVAS PRINCIPAL -->
+      <canvas id="sim-canvas" class="w-full h-full cursor-crosshair"></canvas>
+
+      <!-- PANNEAU D'ÉTAT & READOUT DE CALCUL (SURIMPRESSION EN HAUT À DROITE) -->
+      <div class="absolute top-4 right-4 max-w-sm w-full sm:w-80 bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/80 shadow-lg p-4 pointer-events-auto transition-all">
+        
+        <!-- BADGE D'ÉTAT PRINCIPAL -->
+        <div id="status-badge" class="flex items-center justify-between p-2.5 rounded-lg mb-3 font-semibold text-sm transition-colors shadow-xs">
+          <div class="flex items-center gap-2">
+            <span id="status-icon" class="text-lg"></span>
+            <span id="status-text">Calcul...</span>
+          </div>
+          <span id="status-subtext" class="text-xs font-mono px-2 py-0.5 rounded bg-white/40"></span>
+        </div>
+
+        <!-- INDICATEUR VISUEL DE RATIO -->
+        <div class="mb-3">
+          <div class="flex justify-between text-xs mb-1 font-medium text-slate-600">
+            <span>Rapport d'excentricité <span class="font-mono">|L<sub>f</sub> / L|</span></span>
+            <span id="ratio-value" class="font-mono font-bold">0.00</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex relative">
+            <!-- Zone d'arc-boutement limite -->
+            <div id="ratio-bar" class="h-full bg-blue-600 transition-all duration-150"></div>
+            <div id="limit-marker" class="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10" title="Limite théorique d'arc-boutement"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+            <span>0</span>
+            <span id="limit-label" class="text-red-600 font-semibold">Limite: 1/(2&mu;) = 0.00</span>
+            <span>&infin;</span>
+          </div>
+        </div>
+
+        <!-- VALEURS ET CALCULS EN TEMPS RÉEL -->
+        <div class="space-y-1.5 border-t border-slate-100 pt-2.5 text-xs text-slate-600">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Angle de frottement &phi; = atan(&mu;) :</span>
+            <span id="val-phi" class="font-mono font-semibold text-slate-800">0.0&deg;</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Réaction normale N<sub>1</sub> (Haut G) :</span>
+            <span id="val-N1" class="font-mono text-slate-800">0 N</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Réaction normale N<sub>2</sub> (Bas D) :</span>
+            <span id="val-N2" class="font-mono text-slate-800">0 N</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Frottement max disponible T<sub>max</sub> :</span>
+            <span id="val-Tmax" class="font-mono text-slate-800">0 N</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LÉGENDE RAPIDE (BAS DU CANVAS) -->
+      <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-xs border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 shadow-xs flex items-center gap-4 hidden sm:flex">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+          <span>Effort Appliqué $F$</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+          <span>Réactions de contact $R_1, R_2$</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 bg-amber-400/40 border border-amber-500 inline-block"></span>
+          <span>Cône de Coulomb ($\phi$)</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL / FENÊTRE PÉDAGOGIQUE ET THÉORIQUE -->
+  <div id="theory-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-100">
+      
+      <!-- En-tête modal -->
+      <div class="px-6 py-4 bg-slate-800 text-white flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-book-open text-blue-400 text-xl"></i>
+          <h2 class="font-bold text-lg">Comprendre l'Arc-Boutement (Jamming / Binding)</h2>
+        </div>
+        <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Corps du texte explicatif -->
+      <div class="p-6 overflow-y-auto space-y-6 text-slate-700 text-sm leading-relaxed">
+        
+        <!-- Explication intuitive -->
+        <div class="bg-blue-50/70 border-l-4 border-blue-600 p-4 rounded-r-lg">
+          <h3 class="font-bold text-blue-900 text-base mb-1">Qu'est-ce que l'arc-boutement ?</h3>
+          <p>
+            L'<strong>arc-boutement</strong> est un phénomène d'auto-blocage mécanique dans un guidage en translation. 
+            Lorsqu'une force extérieure est appliquée de manière trop **excentrée** (éloignée de l'axe du guidage), elle génère un couple d'ascenseur qui plaque le coulisseau contre le rail. Les réactions normales augmentent alors proportionnellement à l'effort appliqué, engendrant un frottement tel que **le mouvement devient impossible, quelle que soit la force exercée**.
+          </p>
+        </div>
+
+        <!-- Modélisation Mathématique -->
+        <div>
+          <h3 class="font-bold text-slate-800 text-base mb-2 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-700 text-xs flex items-center justify-center font-bold">1</span>
+            Équations d'Équilibre Statique (Cas $\alpha = 0$)
+          </h3>
+          <p class="mb-3">
+            En considérant le coulisseau à la limite du glissement guidé par deux contacts distants de $L$ avec un jeu minimal :
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center my-3 font-mono text-xs">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div class="text-slate-500 text-[10px] mb-1">Équilibre suivant X</div>
+              <div id="math-eq-x"></div>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div class="text-slate-500 text-[10px] mb-1">Équilibre suivant Y</div>
+              <div id="math-eq-y"></div>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div class="text-slate-500 text-[10px] mb-1">Moment au point d'application</div>
+              <div id="math-eq-m"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Condition théorique d'arc-boutement -->
+        <div>
+          <h3 class="font-bold text-slate-800 text-base mb-2 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-700 text-xs flex items-center justify-center font-bold">2</span>
+            Condition d'Arc-Boutement Théorique
+          </h3>
+          <p class="mb-3">
+            À la limite du glissement, la loi de Coulomb donne $T_1 = \mu N_1$ et $T_2 = \mu N_2$. En remplaçant ces expressions dans l'équation d'équilibre, on obtient la condition critique d'excentricité :
+          </p>
+          
+          <div class="my-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-center shadow-xs">
+            <div id="math-condition" class="text-lg font-bold text-amber-900 mb-1"></div>
+            <p class="text-xs text-amber-700">Si cette inégalité est vérifiée, le coulisseau se bloque spontanément (Arc-boutement).</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-4">
+            <div class="p-3 border border-slate-200 rounded-lg">
+              <span class="font-bold text-slate-800 block mb-1">Pour éviter l'arc-boutement :</span>
+              <ul class="list-disc pl-4 space-y-1 text-slate-600">
+                <li>Augmenter la longueur de guidage $L$.</li>
+                <li>Réduire le coefficient de frottement $\mu$ (lubrification, roulements).</li>
+                <li>Rapprocher l'effort de l'axe (diminuer $L_f$).</li>
+              </ul>
+            </div>
+            <div class="p-3 border border-slate-200 rounded-lg">
+              <span class="font-bold text-slate-800 block mb-1">Applications utiles de l'arc-boutement :</span>
+              <ul class="list-disc pl-4 space-y-1 text-slate-600">
+                <li>Serre-joints de maçon et pièces de serrage rapide.</li>
+                <li>Verrous à coincement automatique.</li>
+                <li>Bloqueurs de corde d'escalade.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pied de modal -->
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+        <button onclick="toggleModal(false)" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg shadow-xs transition">
+          Fermer et retourner à la simulation
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPT (LOGIQUE PHYSIQUE ET DESSIN CANVAS) -->
+  <script>
+    // --- ÉTAT GLOBAL ET PARAMÈTRES ---
+    const state = {
+      L: 120,       // Longueur de guidage (mm)
+      D: 40,        // Diamètre/Largeur de l'arbre (mm)
+      mu: 0.35,     // Coefficient de frottement Coulomb
+      Lf: 200,      // Excentricité de la force F (mm)
+      F: 250,       // Norme de la force appliquée (N)
+      alpha: 0,     // Angle de la force par rapport à l'horizontale (degrés)
+      
+      // Résultats calculés
+      isJammed: false,
+      limitLf: 0,
+      ratio: 0,
+      phiDeg: 0,
+      N1: 0,
+      N2: 0,
+      T1: 0,
+      T2: 0,
+
+      // Interaction Canvas
+      isDraggingForcePoint: false,
+      dragOffset: { x: 0, y: 0 },
+      forcePointCanvas: { x: 0, y: 0 }
+    };
+
+    // Canvas setup
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Initialisation au chargement de la page
+    window.addEventListener('load', () => {
+      initKaTeX();
+      resizeCanvas();
+      syncUI();
+      calculatePhysics();
+      draw();
+
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        draw();
+      });
+
+      setupInteractions();
+    });
+
+    // Rendu des formules mathématiques KaTeX dans la modale
+    function initKaTeX() {
+      try {
+        katex.render("\\sum F_x = F \\cos\\alpha - T_1 - T_2 = 0", document.getElementById('math-eq-x'));
+        katex.render("\\sum F_y = -F \\sin\\alpha + N_1 - N_2 = 0", document.getElementById('math-eq-y'));
+        katex.render("\\sum M = F L_f - N_2 L - T_2 \\frac{D}{2} - T_1 \\frac{D}{2} = 0", document.getElementById('math-eq-m'));
+        katex.render("|L_f| > \\frac{L}{2\\mu} + \\frac{D}{2}", document.getElementById('math-condition'));
+      } catch (e) {
+        console.error("KaTeX error:", e);
+      }
+    }
+
+    // Redimensionnement fluide du Canvas
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    // --- MOTEUR DE CALCUL PHYSIQUE ---
+    function calculatePhysics() {
+      const alphaRad = (state.alpha * Math.PI) / 180;
+      state.phiDeg = (Math.atan(state.mu) * 180) / Math.PI;
+
+      // Condition théorique d'arc-boutement avec prise en compte de D et de l'angle alpha
+      // Pour une force purement perpendiculaire à l'axe de coulissement (alpha = 0) :
+      // La condition exacte d'arc-boutement avec contact en diagonale :
+      // L_f_critique = L / (2 * mu) + D / 2
+      state.limitLf = (state.L / (2 * state.mu)) + (state.D / 2);
+      
+      const absLf = Math.abs(state.Lf);
+      state.ratio = absLf / state.limitLf;
+
+      // Un système est en arc-boutement si le ratio d'excentricité dépasse 1
+      state.isJammed = state.ratio >= 1.0;
+
+      // Calcul des réactions de contact N1 et N2 (pour visualisation)
+      // Modèle statique à la limite de glissement
+      const cosA = Math.cos(alphaRad);
+      const sinA = Math.sin(alphaRad);
+
+      // Calcul simplifié des réactions d'appui
+      const denom = state.L - state.mu * state.D;
+      if (denom > 0) {
+        state.N2 = Math.max(0, (state.F * (absLf * cosA + (state.L/2) * sinA)) / state.L);
+        state.N1 = state.N2 + state.F * sinA;
+      } else {
+        state.N2 = (state.F * absLf) / state.L;
+        state.N1 = state.N2;
+      }
+
+      state.T1 = state.mu * state.N1;
+      state.T2 = state.mu * state.N2;
+
+      updateReadoutUI();
+    }
+
+    // Mettre à jour les textes et le badge dans le Readout
+    function updateReadoutUI() {
+      const statusBadge = document.getElementById('status-badge');
+      const statusIcon = document.getElementById('status-icon');
+      const statusText = document.getElementById('status-text');
+      const statusSubtext = document.getElementById('status-subtext');
+
+      const ratioVal = document.getElementById('ratio-value');
+      const ratioBar = document.getElementById('ratio-bar');
+      const limitMarker = document.getElementById('limit-marker');
+      const limitLabel = document.getElementById('limit-label');
+
+      ratioVal.textContent = state.ratio.toFixed(2);
+      limitLabel.innerHTML = `Limite: ${(state.limitLf).toFixed(0)} mm`;
+
+      // Mise à jour de la barre d'excentricité
+      const barPercent = Math.min(100, (state.ratio / 1.5) * 100);
+      ratioBar.style.width = `${barPercent}%`;
+
+      // Position du marqueur de limite (à 1.0 -> (1 / 1.5) * 100 = 66.6%)
+      limitMarker.style.left = `${(1 / 1.5) * 100}%`;
+
+      if (state.isJammed) {
+        statusBadge.className = "flex items-center justify-between p-2.5 rounded-lg mb-3 font-semibold text-sm transition-colors shadow-xs bg-red-50 text-red-700 border border-red-200";
+        statusIcon.innerHTML = `<i class="fa-solid fa-lock text-red-600"></i>`;
+        statusText.textContent = "ARC-BOUTEMENT";
+        statusSubtext.textContent = "Blocage total";
+        ratioBar.className = "h-full bg-red-600 transition-all duration-150";
+      } else {
+        statusBadge.className = "flex items-center justify-between p-2.5 rounded-lg mb-3 font-semibold text-sm transition-colors shadow-xs bg-emerald-50 text-emerald-700 border border-emerald-200";
+        statusIcon.innerHTML = `<i class="fa-solid fa-arrows-left-right text-emerald-600"></i>`;
+        statusText.textContent = "COULISSEMENT FLUIDE";
+        statusSubtext.textContent = "Pas de blocage";
+        ratioBar.className = "h-full bg-emerald-500 transition-all duration-150";
+      }
+
+      document.getElementById('val-phi').textContent = `${state.phiDeg.toFixed(1)}°`;
+      document.getElementById('val-N1').textContent = `${Math.round(state.N1)} N`;
+      document.getElementById('val-N2').textContent = `${Math.round(state.N2)} N`;
+      document.getElementById('val-Tmax').textContent = `${Math.round(state.T1 + state.T2)} N`;
+    }
+
+    // Sync des inputs contrôles avec l'état JS
+    function updateFromSlider(param, value) {
+      state[param] = parseFloat(value);
+      document.getElementById(`num-${param}`).value = value;
+      calculatePhysics();
+      draw();
+    }
+
+    function updateFromNum(param, value) {
+      let val = parseFloat(value);
+      if (isNaN(val)) return;
+      state[param] = val;
+      document.getElementById(`input-${param}`).value = val;
+      calculatePhysics();
+      draw();
+    }
+
+    function syncUI() {
+      ['L', 'D', 'mu', 'Lf', 'F', 'alpha'].forEach(param => {
+        document.getElementById(`input-${param}`).value = state[param];
+        document.getElementById(`num-${param}`).value = state[param];
+      });
+    }
+
+    // --- PRESETS D'APPLICATIONS DIVERSES ---
+    function applyPreset(type) {
+      if (type === 'serre-joint') {
+        state.L = 50;
+        state.D = 25;
+        state.mu = 0.50;
+        state.Lf = 180;
+        state.F = 400;
+        state.alpha = 0;
+      } else if (type === 'tiroir') {
+        state.L = 200;
+        state.D = 40;
+        state.mu = 0.35;
+        state.Lf = 160;
+        state.F = 150;
+        state.alpha = 0;
+      } else if (type === 'douille-lisse') {
+        state.L = 100;
+        state.D = 30;
+        state.mu = 0.12;
+        state.Lf = 120;
+        state.F = 300;
+        state.alpha = 0;
+      } else if (type === 'billes') {
+        state.L = 80;
+        state.D = 25;
+        state.mu = 0.02;
+        state.Lf = 220;
+        state.F = 500;
+        state.alpha = 0;
+      }
+      syncUI();
+      calculatePhysics();
+      draw();
+    }
+
+    function resetParameters() {
+      applyPreset('tiroir');
+    }
+
+    // --- RENDU CANVAS ET GRAPHIQUE INTERACTIF ---
+    function draw() {
+      const w = canvas.width / window.devicePixelRatio;
+      const h = canvas.height / window.devicePixelRatio;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Grille de fond optionnelle
+      if (document.getElementById('show-grid').checked) {
+        drawGrid(w, h);
+      }
+
+      // Origine centrale du repère pour le schéma mécanique
+      const originX = w / 2 - 40;
+      const originY = h / 2;
+      const scale = 1.4; // Échelle de conversion mm -> pixels Canvas
+
+      // Conversion des dimensions physiques en pixels
+      const L_px = state.L * scale;
+      const D_px = state.D * scale;
+      const Lf_px = state.Lf * scale;
+
+      // Position du centre du coulisseau
+      const sliderCenterX = originX;
+      const sliderCenterY = originY;
+
+      // --- 1. DESSIN DE L'ARBRE / RAIL DE GUIDAGE ---
+      const railLength = Math.max(w * 0.8, L_px + 300);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(sliderCenterX - railLength/2, sliderCenterY - D_px/2, railLength, D_px);
+      
+      // Hachures du rail (fixe)
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      for (let x = sliderCenterX - railLength/2; x < sliderCenterX + railLength/2; x += 15) {
+        ctx.beginPath();
+        ctx.moveTo(x, sliderCenterY - D_px/2);
+        ctx.lineTo(x - 8, sliderCenterY - D_px/2 - 8);
+        ctx.moveTo(x, sliderCenterY + D_px/2);
+        ctx.lineTo(x - 8, sliderCenterY + D_px/2 + 8);
+        ctx.stroke();
+      }
+
+      // Lignes de contour du rail
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(sliderCenterX - railLength/2, sliderCenterY - D_px/2);
+      ctx.lineTo(sliderCenterX + railLength/2, sliderCenterY - D_px/2);
+      ctx.moveTo(sliderCenterX - railLength/2, sliderCenterY + D_px/2);
+      ctx.lineTo(sliderCenterX + railLength/2, sliderCenterY + D_px/2);
+      ctx.stroke();
+
+      // --- 2. DESSIN DU COULISSEAU (SLIDER) ---
+      const sliderLeft = sliderCenterX - L_px/2;
+      const sliderTop = sliderCenterY - D_px/2 - 12;
+      const sliderWidth = L_px;
+      const sliderHeight = D_px + 24;
+
+      // Effet d'arc-boutement : Légère inclinaison exagérée si coincé
+      ctx.save();
+      ctx.translate(sliderCenterX, sliderCenterY);
+      
+      let tiltAngle = 0;
+      if (state.isJammed) {
+        tiltAngle = (state.Lf >= 0 ? 1 : -1) * 0.025; // 1.5 degres de basculement visuel
+      }
+      ctx.rotate(tiltAngle);
+
+      // Corps du coulisseau
+      ctx.fillStyle = state.isJammed ? 'rgba(254, 226, 226, 0.9)' : 'rgba(239, 246, 255, 0.9)';
+      ctx.strokeStyle = state.isJammed ? '#dc2626' : '#2563eb';
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      ctx.roundRect(-L_px/2, -sliderHeight/2, sliderWidth, sliderHeight, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Bras d'extension pour la force excentrée
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -Lf_px);
+      ctx.strokeStyle = state.isJammed ? '#ef4444' : '#3b82f6';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Point d'application de la force F (Draggable)
+      const forcePointY = -Lf_px;
+      state.forcePointCanvas = {
+        x: sliderCenterX,
+        y: sliderCenterY + forcePointY
+      };
+
+      // Dessin du point d'accroche interactif
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(0, forcePointY, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Points de contact localisés (Coins opposés en cas d'arc-boutement)
+      const p1 = { x: -L_px/2, y: -D_px/2 }; // Haut Gauche
+      const p2 = { x: L_px/2, y: D_px/2 };   // Bas Droite
+
+      if (state.Lf < 0) {
+        p1.x = L_px/2;
+        p2.x = -L_px/2;
+      }
+
+      // Marqueurs de contact
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(p1.x, p1.y, 4, 0, Math.PI*2);
+      ctx.arc(p2.x, p2.y, 4, 0, Math.PI*2);
+      ctx.fill();
+
+      // --- 3. DESSIN DES CÔNES DE FROTTEMENT (COULOMB) ---
+      if (document.getElementById('show-cones').checked) {
+        drawCoulombCone(ctx, p1.x, p1.y, state.phiDeg, true, state.Lf >= 0);
+        drawCoulombCone(ctx, p2.x, p2.y, state.phiDeg, false, state.Lf >= 0);
+      }
+
+      // --- 4. DESSIN DES VECTEURS DE FORCES ---
+      if (document.getElementById('show-forces').checked) {
+        // Vecteur Force Appliquée F (Rouge)
+        const fScale = Math.min(100, state.F * 0.15);
+        const alphaRad = (state.alpha * Math.PI) / 180;
+        const fx = fScale * Math.cos(alphaRad);
+        const fy = fScale * Math.sin(alphaRad);
+
+        drawArrow(ctx, 0, forcePointY, fx, fy, '#dc2626', 3, 'F');
+
+        // Vecteurs Réactions R1 et R2 aux contacts (Vert)
+        if (state.N1 > 1) {
+          const r1x = state.T1 * 0.15 * (state.Lf >= 0 ? 1 : -1);
+          const r1y = state.N1 * 0.15 * (state.Lf >= 0 ? 1 : -1);
+          drawArrow(ctx, p1.x, p1.y, r1x, r1y, '#059669', 2.5, 'R1');
+        }
+        if (state.N2 > 1) {
+          const r2x = state.T2 * 0.15 * (state.Lf >= 0 ? 1 : -1);
+          const r2y = -state.N2 * 0.15 * (state.Lf >= 0 ? 1 : -1);
+          drawArrow(ctx, p2.x, p2.y, r2x, r2y, '#059669', 2.5, 'R2');
+        }
+      }
+
+      ctx.restore(); // Fin de la rotation du coulisseau
+
+      // --- 5. DESSIN DES COTES ET DIMENSIONS (L, Lf, D) ---
+      if (document.getElementById('show-dims').checked) {
+        drawDimensions(ctx, sliderCenterX, sliderCenterY, L_px, D_px, Lf_px);
+      }
+    }
+
+    // Dessin d'une flèche vectorielle
+    function drawArrow(context, fromX, fromY, vecX, vecY, color, width, label) {
+      const toX = fromX + vecX;
+      const toY = fromY + vecY;
+      const headLen = 9;
+      const angle = Math.atan2(vecY, vecX);
+
+      context.strokeStyle = color;
+      context.fillStyle = color;
+      context.lineWidth = width;
+
+      // Corps de la flèche
+      context.beginPath();
+      context.moveTo(fromX, fromY);
+      context.lineTo(toX, toY);
+      context.stroke();
+
+      // Tête de la flèche
+      context.beginPath();
+      context.moveTo(toX, toY);
+      context.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
+      context.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+      context.closePath();
+      context.fill();
+
+      // Libellé de la force
+      if (label) {
+        context.font = 'bold 12px Inter, sans-serif';
+        context.fillText(label, toX + 8 * Math.cos(angle), toY + 8 * Math.sin(angle));
+      }
+    }
+
+    // Dessin du cône de frottement de Coulomb
+    function drawCoulombCone(context, x, y, phiDeg, isTopContact, isPositiveLf) {
+      context.save();
+      context.translate(x, y);
+
+      const phiRad = (phiDeg * Math.PI) / 180;
+      const coneRadius = 50;
+      const normalDir = isTopContact ? (isPositiveLf ? 1 : -1) : (isPositiveLf ? -1 : 1);
+
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.arc(0, 0, coneRadius, (Math.PI/2 * normalDir) - phiRad, (Math.PI/2 * normalDir) + phiRad);
+      context.closePath();
+
+      context.fillStyle = 'rgba(245, 158, 11, 0.2)';
+      context.fill();
+      context.strokeStyle = 'rgba(217, 119, 6, 0.6)';
+      context.lineWidth = 1;
+      context.stroke();
+
+      context.restore();
+    }
+
+    // Dessin des lanières de cotation mécanique
+    function drawDimensions(context, cx, cy, L_px, D_px, Lf_px) {
+      context.strokeStyle = '#64748b';
+      context.fillStyle = '#475569';
+      context.lineWidth = 1;
+      context.font = '11px JetBrains Mono, monospace';
+
+      // Cote L (Longueur du guidage)
+      const dimY = cy + D_px/2 + 25;
+      context.beginPath();
+      context.moveTo(cx - L_px/2, dimY);
+      context.lineTo(cx + L_px/2, dimY);
+      context.moveTo(cx - L_px/2, cy + D_px/2 + 10);
+      context.lineTo(cx - L_px/2, dimY + 5);
+      context.moveTo(cx + L_px/2, cy + D_px/2 + 10);
+      context.lineTo(cx + L_px/2, dimY + 5);
+      context.stroke();
+      context.textAlign = 'center';
+      context.fillText(`L = ${state.L} mm`, cx, dimY + 15);
+
+      // Cote Lf (Excentricité)
+      const dimX = cx - 25;
+      context.beginPath();
+      context.moveTo(dimX, cy);
+      context.lineTo(dimX, cy - Lf_px);
+      context.moveTo(cx, cy);
+      context.lineTo(dimX - 5, cy);
+      context.moveTo(cx, cy - Lf_px);
+      context.lineTo(dimX - 5, cy - Lf_px);
+      context.stroke();
+      context.textAlign = 'right';
+      context.fillText(`Lf = ${Math.round(state.Lf)} mm`, dimX - 8, cy - Lf_px/2);
+    }
+
+    // Grille d'arrière-plan
+    function drawGrid(w, h) {
+      const gridSize = 30;
+      ctx.strokeStyle = '#f1f5f9';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      ctx.stroke();
+    }
+
+    // --- INTERACTION TACTILE ET SOURIS SUR LE CANVAS ---
+    function setupInteractions() {
+      function getCanvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function onPointerDown(e) {
+        const coords = getCanvasCoords(e);
+        const dist = Math.hypot(coords.x - state.forcePointCanvas.x, coords.y - state.forcePointCanvas.y);
+        
+        // Rayon de détection d'accroche (20px)
+        if (dist < 20) {
+          state.isDraggingForcePoint = true;
+          canvas.classList.add('cursor-grabbing');
+        }
+      }
+
+      function onPointerMove(e) {
+        if (!state.isDraggingForcePoint) return;
+        const coords = getCanvasCoords(e);
+        
+        const h = canvas.height / window.devicePixelRatio;
+        const originY = h / 2;
+        const scale = 1.4;
+
+        // Calcul de la nouvelle excentricité Lf depuis la coordonnée Y
+        let newLf = (originY - coords.y) / scale;
+        newLf = Math.max(-300, Math.min(300, newLf));
+
+        state.Lf = Math.round(newLf);
+        syncUI();
+        calculatePhysics();
+        draw();
+      }
+
+      function onPointerUp() {
+        state.isDraggingForcePoint = false;
+        canvas.classList.remove('cursor-grabbing');
+      }
+
+      canvas.addEventListener('mousedown', onPointerDown);
+      canvas.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+      canvas.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('touchend', onPointerUp);
+    }
+
+    // Gestion de l'affichage de la modale théorique
+    function toggleModal(show) {
+      const modal = document.getElementById('theory-modal');
+      if (show) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+      } else {
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+      }
+    }
+  </script>
+</body>
+</html>
