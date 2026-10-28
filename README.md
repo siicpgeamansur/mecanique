@@ -3,7 +3,11 @@ On peut observer une zone inaccessible et jouer avec les longueurs des bras et l
 
 [animation des deux bras robotisés 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html)
 
-Et voici une page pour visualiser l'équilibrage dynamique d'un rotor :
+Voici une page pour visualiser l'équilibrage dynamique d'un rotor :
 
 [equilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html)
+
+Voici une page pour visualiser l'arc-boutement :
+
+[arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html)
 
