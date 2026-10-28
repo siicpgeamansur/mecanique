@@ -258,7 +258,7 @@
 
     <div class="crit-line">
       Seuil critique : <span id="eCritVal">e<sub>crit</sub> = 300 mm</span><br>
-      <small>Arc-boutement si <i>e</i> ≥ <i>L</i> / (2μ)</small>
+      <small>Arc-boutement si <i>e</i> &gt; <i>L</i> / (2μ)</small>
     </div>
 
     <div class="section-title">Effort extérieur</div>
@@ -278,10 +278,10 @@
     <div class="section-title">Comportement mécanique</div>
     <div class="info-box">
       <strong>Condition d’arc-boutement :</strong><br>
-      <i>e</i> ≥ <i>L</i> / (2μ)<br><br>
+      <i>e</i> &gt; <i>L</i> / (2μ)<br><br>
       • <strong>Blocage</strong> : le polygone des forces forme un <strong>triangle fermé</strong>
-      (Σ<span class="vec">F</span> = 0). Équilibre statique.<br><br>
-      • <strong>Coulissement</strong> : le triangle est <strong>ouvert</strong>
+      (Σ<span class="vec">F</span> = 0). Équilibre statique → translation impossible.<br><br>
+      • <strong>Cas limite / Coulissement</strong> : le triangle est <strong>ouvert</strong>
       (Σ<span class="vec">F</span> ≠ 0). La pièce peut translater.
     </div>
   </aside>
@@ -319,7 +319,7 @@ const btnSlide  = document.getElementById('btnSlide');
 const btnLimit  = document.getElementById('btnLimit');
 const btnJammed = document.getElementById('btnJammed');
 
-let slidePosX = 0;          // position horizontale de la pièce (px)
+let slidePosX = 0;
 let isDragging = false;
 let dragStartX = 0;
 let initialSlideX = 0;
@@ -334,12 +334,12 @@ function setPreset(type) {
   } else if (type === 'limit') {
     inMu.value = 0.25;
     inLen.value = 120;
-    inExc.value = Math.round(120 / (2 * 0.25));
+    inExc.value = Math.round(120 / (2 * 0.25)); // exactement e = e_crit
     btnLimit.classList.add('active');
   } else if (type === 'jammed') {
     inMu.value = 0.35;
     inLen.value = 100;
-    inExc.value = 85;
+    inExc.value = 85; // largement au-dessus de e_crit
     btnJammed.classList.add('active');
   }
   draw();
@@ -372,12 +372,17 @@ function computePhysics() {
   const F  = parseFloat(inF.value);
 
   const eCrit = L / (2 * Math.max(mu, 0.01));
-  const isJammed = e >= eCrit - 0.4;
-  const isLimit  = Math.abs(e - eCrit) < 1.8;
+
+  // Logique claire demandée :
+  // - e > eCrit          → Blocage (rouge) + translation INTERDITE
+  // - |e - eCrit| <= 1.5 → Cas limite (orange) + translation AUTORISÉE
+  // - e < eCrit          → Coulissement fluide (vert) + translation AUTORISÉE
+  const isJammed = e > eCrit + 0.5;          // strictement au-dessus
+  const isLimit  = Math.abs(e - eCrit) <= 1.5;
 
   const phi = Math.atan(mu);
 
-  // Réactions normales (modèle pédagogique classique)
+  // Réactions normales (modèle pédagogique)
   const Na = F * (e + L / 2) / L;
   const Nb = F * (e + L / 2) / L;
 
@@ -396,7 +401,7 @@ function computePhysics() {
 function getBlockBounds(physics) {
   const W = canvas.clientWidth;
   const H = canvas.clientHeight;
-  const cx = W / 2 + slidePosX;   // centre de la pièce
+  const cx = W / 2 + slidePosX;
   const cy = H / 2;
   const blockW = 78;
   const blockH = physics.L * 1.15;
@@ -415,6 +420,8 @@ function isOverBlock(mx, my, physics) {
   return mx >= b.left && mx <= b.right && my >= b.top && my <= b.bottom;
 }
 
+// ========== GESTION DU GLISSEMENT ==========
+// On n'autorise le drag QUE si !isJammed
 canvas.addEventListener('mousedown', e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
@@ -433,10 +440,8 @@ canvas.addEventListener('mousemove', e => {
   if (!isDragging) return;
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
-  const delta = mx - dragStartX;
-  slidePosX = initialSlideX + delta;
+  slidePosX = initialSlideX + (mx - dragStartX);
 
-  // Limites de coulissement
   const maxRange = canvas.clientWidth / 2 - 140;
   slidePosX = Math.max(-maxRange, Math.min(maxRange, slidePosX));
   draw();
@@ -525,22 +530,25 @@ function draw() {
   nbVal.textContent = Nb.toFixed(1) + ' N';
   tbVal.textContent = Tb.toFixed(1) + ' N';
 
-  // ---------- Badge d'état ----------
+  // ========== BADGE D'ÉTAT (logique exacte demandée) ==========
   if (isJammed) {
+    // e > eCrit → Blocage rouge + translation bloquée
     statusBadge.textContent = 'Blocage';
     statusBadge.className = 'status-badge status-warn';
     hintText.textContent = '🔒 Pièce bloquée — le triangle des forces est fermé (ΣF = 0)';
   } else if (isLimit) {
+    // e ≈ eCrit → Cas limite orange + translation autorisée
     statusBadge.textContent = 'Cas limite';
     statusBadge.className = 'status-badge status-limit';
-    hintText.textContent = '⚠️ Vous êtes au seuil d’arc-boutement (e ≈ e_crit)';
+    hintText.textContent = '⚠️ Vous êtes au seuil d’arc-boutement (e ≈ e_crit) — translation encore possible';
   } else {
+    // e < eCrit → Coulissement fluide vert + translation autorisée
     statusBadge.textContent = 'Coulissement fluide';
     statusBadge.className = 'status-badge status-ok';
     hintText.textContent = '💡 Cliquez-glissez la pièce bleue pour la faire coulisser sur les rails';
   }
 
-  // ---------- Rails FIXES (ne bougent pas) ----------
+  // ---------- Rails FIXES ----------
   const railLen = Math.min(W - 80, 620);
   const railX = (W - railLen) / 2;
   const blockH = L * 1.15;
@@ -554,14 +562,12 @@ function draw() {
   ctx.strokeStyle = '#94a3b8';
   ctx.lineWidth = 2.5;
 
-  // Rail haut
   ctx.fillRect(railX, railY1, railLen, 16);
   ctx.strokeRect(railX, railY1, railLen, 16);
-  // Rail bas
   ctx.fillRect(railX, railY2, railLen, 16);
   ctx.strokeRect(railX, railY2, railLen, 16);
 
-  // Petites marques sur les rails pour montrer le mouvement relatif
+  // Marques sur les rails
   ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = 1;
   for (let i = 0; i < railLen; i += 40) {
@@ -588,7 +594,6 @@ function draw() {
   ctx.lineWidth = 1.5;
   ctx.setLineDash([3, 3]);
 
-  // Cône A
   ctx.beginPath();
   ctx.moveTo(pA.x, pA.y);
   ctx.lineTo(pA.x + coneLen * Math.sin(phi), pA.y + coneLen * Math.cos(phi));
@@ -596,7 +601,6 @@ function draw() {
   ctx.closePath();
   ctx.fill(); ctx.stroke();
 
-  // Cône B
   ctx.beginPath();
   ctx.moveTo(pB.x, pB.y);
   ctx.lineTo(pB.x + coneLen * Math.sin(phi), pB.y - coneLen * Math.cos(phi));
@@ -646,7 +650,6 @@ function draw() {
   // Flèches des forces
   const fScale = 0.42;
   drawArrow(ctx, appX, appY, appX + F * fScale, appY, '#dc2626', 2.8, 'F');
-
   drawArrow(ctx, pA.x, pA.y, pA.x - Ta * fScale, pA.y + Na * fScale, '#d97706', 2.3, 'Rₐ');
   drawArrow(ctx, pB.x, pB.y, pB.x - Tb * fScale, pB.y - Nb * fScale, '#d97706', 2.3, 'Rᵦ');
 
