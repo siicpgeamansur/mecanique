@@ -164,6 +164,7 @@
     cursor: grab;
   }
   canvas.dragging { cursor: grabbing; }
+  canvas.blocked { cursor: not-allowed; }
   .hint {
     position: absolute;
     bottom: 14px;
@@ -232,6 +233,7 @@
 
 <div class="main">
   <aside>
+    <!-- LE BADGE QUI DOIT CHANGER -->
     <div id="statusBadge" class="status-badge status-ok">Coulissement fluide</div>
 
     <div class="section-title">Presets</div>
@@ -317,6 +319,10 @@ const btnSlide  = document.getElementById('btnSlide');
 const btnLimit  = document.getElementById('btnLimit');
 const btnJammed = document.getElementById('btnJammed');
 
+// État global mis à jour à chaque frame
+let currentIsJammed = false;
+let currentIsLimit  = false;
+
 let slidePosX = 0;
 let isDragging = false;
 let dragStartX = 0;
@@ -326,24 +332,24 @@ function setPreset(type) {
   [btnSlide, btnLimit, btnJammed].forEach(b => b.classList.remove('active'));
 
   if (type === 'slide') {
-    // e << e_crit → coulissement fluide
+    // e << e_crit → vert + glissable
     inMu.value = 0.20;
     inLen.value = 140;
     inExc.value = 35;
     btnSlide.classList.add('active');
   }
   else if (type === 'limit') {
-    // e = e_crit exactement
+    // e = e_crit → orange + glissable
     inMu.value = 0.30;
     inLen.value = 120;
     inExc.value = Math.round(120 / (2 * 0.30)); // = 200
     btnLimit.classList.add('active');
   }
   else if (type === 'jammed') {
-    // e > e_crit → blocage
+    // e > e_crit → rouge + BLOQUÉ
     inMu.value = 0.40;
     inLen.value = 100;
-    inExc.value = 145; // e_crit = 100/(0.8) = 125 → 145 > 125
+    inExc.value = 145; // e_crit = 125 → 145 > 125
     btnJammed.classList.add('active');
   }
   draw();
@@ -377,7 +383,7 @@ function computePhysics() {
 
   const eCrit = L / (2 * Math.max(mu, 0.01));
 
-  // Logique EXACTE demandée
+  // Logique claire
   const isJammed = e > eCrit;                 // strictement supérieur → Blocage
   const isLimit  = Math.abs(e - eCrit) <= 2;  // très proche → Cas limite
 
@@ -422,13 +428,18 @@ function isOverBlock(mx, my, physics) {
 
 // ========== DRAG – UNIQUEMENT si PAS de blocage ==========
 canvas.addEventListener('mousedown', e => {
+  // On regarde l'état GLOBAL mis à jour par draw()
+  if (currentIsJammed) {
+    // En blocage → on refuse complètement le drag
+    return;
+  }
+
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   const physics = computePhysics();
 
-  // On n'autorise le glissement QUE si !isJammed
-  if (isOverBlock(mx, my, physics) && !physics.isJammed) {
+  if (isOverBlock(mx, my, physics)) {
     isDragging = true;
     canvas.classList.add('dragging');
     dragStartX = mx;
@@ -438,6 +449,14 @@ canvas.addEventListener('mousedown', e => {
 
 canvas.addEventListener('mousemove', e => {
   if (!isDragging) return;
+
+  // Sécurité supplémentaire : si on passe en blocage pendant le drag, on arrête
+  if (currentIsJammed) {
+    isDragging = false;
+    canvas.classList.remove('dragging');
+    return;
+  }
+
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   slidePosX = initialSlideX + (mx - dragStartX);
@@ -455,12 +474,14 @@ window.addEventListener('mouseup', () => {
 // Support tactile
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
+  if (currentIsJammed) return;
+
   const t = e.touches[0];
   const rect = canvas.getBoundingClientRect();
   const mx = t.clientX - rect.left;
   const my = t.clientY - rect.top;
   const physics = computePhysics();
-  if (isOverBlock(mx, my, physics) && !physics.isJammed) {
+  if (isOverBlock(mx, my, physics)) {
     isDragging = true;
     dragStartX = mx;
     initialSlideX = slidePosX;
@@ -468,7 +489,10 @@ canvas.addEventListener('touchstart', e => {
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
-  if (!isDragging) return;
+  if (!isDragging || currentIsJammed) {
+    isDragging = false;
+    return;
+  }
   e.preventDefault();
   const t = e.touches[0];
   const rect = canvas.getBoundingClientRect();
@@ -523,6 +547,10 @@ function draw() {
   const p = computePhysics();
   const { mu, L, e, F, isJammed, isLimit, eCrit, phi, Na, Nb, Ta, Tb } = p;
 
+  // Mise à jour de l'état global (utilisé par les événements de drag)
+  currentIsJammed = isJammed;
+  currentIsLimit  = isLimit;
+
   updateLabels(mu, L, e, F, eCrit);
 
   naVal.textContent = Na.toFixed(1) + ' N';
@@ -530,21 +558,25 @@ function draw() {
   nbVal.textContent = Nb.toFixed(1) + ' N';
   tbVal.textContent = Tb.toFixed(1) + ' N';
 
-  // ========== BADGE – logique stricte ==========
+  // ========== BADGE – mise à jour forcée ==========
   if (isJammed) {
     statusBadge.textContent = 'Blocage';
     statusBadge.className = 'status-badge status-warn';
     hintText.textContent = '🔒 Pièce bloquée — triangle des forces fermé (ΣF = 0) — translation interdite';
+    canvas.classList.add('blocked');
+    canvas.classList.remove('dragging');
   }
   else if (isLimit) {
     statusBadge.textContent = 'Cas limite';
     statusBadge.className = 'status-badge status-limit';
     hintText.textContent = '⚠️ Seuil d’arc-boutement (e ≈ e_crit) — translation encore possible';
+    canvas.classList.remove('blocked');
   }
   else {
     statusBadge.textContent = 'Coulissement fluide';
     statusBadge.className = 'status-badge status-ok';
     hintText.textContent = '💡 Cliquez-glissez la pièce bleue pour la faire coulisser sur les rails';
+    canvas.classList.remove('blocked');
   }
 
   // ---------- Rails FIXES ----------
