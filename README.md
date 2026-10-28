@@ -11,3 +11,6 @@ Voici une page pour visualiser l'arc-boutement :
 
 [arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html)
 
+Voici une page pour visualiser le champ vectoriel d'un torseur :
+
+[champ vectoriel](https://siicpgeamansur.github.io/mecanique/champ_vectoriel.html)
