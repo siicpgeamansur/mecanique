@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arc-boutement — Illustration interactive et dynamique</title>
+<title>Arc-boutement — Illustration interactive</title>
 <style>
   :root{
     --bg:#f5f7fa; --panel:#ffffff; --border:#d6dbe3;
@@ -21,7 +21,7 @@
   }
   header{
     background:var(--panel); border-bottom:1px solid var(--border);
-    padding:10px 18px; display:flex; align-items:center; justify-content:between; gap:14px; flex-shrink:0;
+    padding:10px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-shrink:0;
   }
   header h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px;}
   header .sub{font-size:12.5px;color:var(--muted);}
@@ -57,21 +57,27 @@
   .status-warn{background:#ffebee; color:var(--warn); border:1px solid #ef9a9a;}
 
   .canvas-wrap{flex:1;position:relative;min-width:0;background:#ffffff;}
-  canvas{display:block;width:100%;height:100%;}
+  canvas{display:block;width:100%;height:100%;cursor:grab;}
+  canvas:active{cursor:grabbing;}
 
   .info-box{
     font-size:12.5px; line-height:1.5; color:var(--muted); background:#f8fafc;
     border:1px solid var(--border); padding:10px 12px; border-radius:8px; margin-top:10px;
   }
   .info-box strong{color:var(--text);}
+  .hint{
+    position:absolute; bottom:12px; left:12px; background:rgba(255,255,255,0.9);
+    padding:6px 12px; border-radius:6px; border:1px solid var(--border); font-size:12px; color:var(--muted);
+    pointer-events:none;
+  }
 </style>
 </head>
 <body>
 
 <header>
   <div>
-    <h1>Arc-boutement d'un coulisseau</h1>
-    <div class="sub">Simulation interactive du blocage par coincement géométrique</div>
+    <h1>Arc-boutement d'un coulisseau — Simulation mécanique</h1>
+    <div class="sub">Glissez la pièce bleue à la souris pour tester la translation</div>
   </div>
 </header>
 
@@ -102,19 +108,21 @@
       <input type="range" id="forceMag" min="20" max="400" step="10" value="150">
     </div>
     <div class="ctrl">
-      <label>Angle de poussée (<i>&alpha;</i>) <span id="alphaVal" class="val">15°</span></label>
-      <input type="range" id="alpha" min="-45" max="45" step="1" value="15">
+      <label>Angle de poussée (<i>&alpha;</i>) <span id="alphaVal" class="val">0°</span></label>
+      <input type="range" id="alpha" min="-45" max="45" step="1" value="0">
     </div>
 
     <div class="section-title">Principe physique</div>
     <div class="info-box">
-      L'arc-boutement se produit lorsque le moment de basculement génère des réactions normales <i>N<sub>1</sub></i> et <i>N<sub>2</sub></i> telles que les forces de tangage dépassent l'effort moteur.<br><br>
-      Condition critique : <strong>e &gt; L / (2&mu;)</strong>. Si cette condition est remplie, plus on pousse fort, plus la pièce se bloque !
+      L'arc-boutement apparaît lorsque le moment créé par la force excentrée engendre des réactions d'appui normales <i>N<sub>1</sub></i> et <i>N<sub>2</sub></i> si intenses que les forces de frottement associées empêchent tout glissement.<br><br>
+      Condition théorique de blocage : <strong>e &gt; L / (2&mu;)</strong>.<br><br>
+      <strong>Testez l'interactivité :</strong> essayez de déplacer le coulisseau à la souris sur le schéma. Lorsque la condition d'arc-boutement est atteinte, la pièce se verrouille !
     </div>
   </aside>
 
   <div class="canvas-wrap">
     <canvas id="simCanvas"></canvas>
+    <div class="hint">💡 Cliquez et faites glisser le coulisseau bleu pour tester sa mobilité</div>
   </div>
 </div>
 
@@ -136,16 +144,18 @@ const fVal = document.getElementById('fVal');
 const alphaVal = document.getElementById('alphaVal');
 const statusBadge = document.getElementById('statusBadge');
 
-// État de la simulation pour la translation
-let posX = 0; // Position horizontale du coulisseau sur le rail
-let velocity = 0;
+// État de positionnement manuel du coulisseau (en pixels)
+let slidePosX = 0; 
+let isDragging = false;
+let dragStartX = 0;
+let initialSlideX = 0;
 
 function resizeCanvas() {
   canvas.width = canvas.parentElement.clientWidth;
   canvas.height = canvas.parentElement.clientHeight;
+  draw();
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
 function updateLabels(mu, L, e, F, alpha) {
   muVal.textContent = mu.toFixed(2);
@@ -160,143 +170,183 @@ function computePhysics() {
   const L = parseFloat(inLen.value);
   const e = parseFloat(inExc.value);
   const F = parseFloat(inF.value);
-  const alpha = parseFloat(inAlpha.value) * Math.PI / 180;
+  const alphaRad = parseFloat(inAlpha.value) * Math.PI / 180;
 
-  updateLabels(mu, L, e, F, Math.round(alpha * 180 / Math.PI));
+  updateLabels(mu, L, e, F, parseInt(inAlpha.value));
 
-  // Condition théorique d'arc-boutement simplifiée pour un coulisseau de longueur L avec excentricité e
-  // Seuil critique d'excentricité : e_crit = L / (2 * mu)
-  // Ou condition alternative selon le sens de poussée.
+  // Condition théorique d'arc-boutement
   const eCrit = L / (2 * Math.max(mu, 0.01));
-  
-  // Test d'arc-boutement (si l'excentricité dépasse le seuil critique ou si les composantes angulaires coincent)
-  const isJammed = (e > eCrit) && (Math.cos(alpha) > 0);
+  const isJammed = (e > eCrit);
 
-  return { mu, L, e, F, alpha, isJammed, eCrit };
+  return { mu, L, e, F, alphaRad, isJammed, eCrit };
 }
 
-function animate() {
+// Interactivité à la souris pour translater la pièce à la main
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  const physics = computePhysics();
+  const cx = canvas.width / 2 + slidePosX;
+  const cy = canvas.height / 2;
+  const blockWidth = 70;
+  const blockHeight = physics.L * 1.2;
+
+  // Vérifier si la souris pointe sur le coulisseau bleu
+  if (mouseX >= cx - blockWidth/2 && mouseX <= cx + blockWidth/2 &&
+      mouseY >= cy - blockHeight/2 && mouseY <= cy + blockHeight/2) {
+    
+    // Si la pièce est bloquée par l'arc-boutement, elle refuse de bouger !
+    if (!physics.isJammed) {
+      isDragging = true;
+      dragStartX = mouseX;
+      initialSlideX = slidePosX;
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const deltaX = mouseX - dragStartX;
+    
+    // Mise à jour de la position de translation
+    slidePosX = initialSlideX + deltaX;
+    
+    // Limites de course sur le rail
+    const maxRange = canvas.width / 2 - 120;
+    slidePosX = Math.max(-maxRange, Math.min(maxRange, slidePosX));
+    
+    draw();
+  }
+});
+
+window.addEventListener('mouseup', () => { isDragging = false; });
+
+// Événements pour réactualiser lors des changements de paramètres
+[inMu, inLen, inExc, inF, inAlpha].forEach(input => {
+  input.addEventListener('input', draw);
+});
+
+function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const physics = computePhysics();
-  const { mu, L, e, F, alpha, isJammed } = physics;
+  const { mu, L, e, F, alphaRad, isJammed } = physics;
 
-  // Mise à jour du statut UI
+  // Mise à jour du badge de statut
   if (isJammed) {
     statusBadge.textContent = "Arc-boutement / Blocage total !";
     statusBadge.className = "status-badge status-warn";
-    velocity = 0; // Bloqué net
   } else {
-    statusBadge.textContent = "Coulissement Fluide";
+    statusBadge.textContent = "Coulissement Fluide (Translataion possible)";
     statusBadge.className = "status-badge status-ok";
-    
-    // Mouvement de translation si non bloqué
-    // La force pousse la pièce vers la droite
-    let drivingForce = F * Math.cos(alpha);
-    velocity = drivingForce * 0.05;
-    posX += velocity;
-
-    // Boucle de va-et-vient pour garder la pièce dans le champ visuel
-    if (posX > 180) posX = -180;
   }
 
-  // --- RENDU GRAPHIQUE ---
-  const cx = canvas.width / 2 + posX;
+  const cx = canvas.width / 2 + slidePosX;
   const cy = canvas.height / 2;
 
-  // 1. Dessin du Rail de guidage (mâchoires haut et bas)
-  const railH = 160;
+  // 1. Dessin des Rails de guidage
+  const railSpacing = L * 1.2 + 2; 
+  const railLength = canvas.width - 100;
+  
+  ctx.fillStyle = "#f1f5f9";
   ctx.strokeStyle = "#94a3b8";
-  ctx.lineWidth = 4;
-  ctx.fillStyle = "#e2e8f0";
+  ctx.lineWidth = 2;
 
   // Rail supérieur
-  ctx.fillRect(cx - 250, cy - railH/2 - 20, 500, 20);
-  ctx.strokeRect(cx - 250, cy - railH/2 - 20, 500, 20);
+  ctx.fillRect(canvas.width/2 - railLength/2, cy - railSpacing/2 - 20, railLength, 20);
+  ctx.strokeRect(canvas.width/2 - railLength/2, cy - railSpacing/2 - 20, railLength, 20);
 
   // Rail inférieur
-  ctx.fillRect(cx - 250, cy + railH/2, 500, 20);
-  ctx.strokeRect(cx - 250, cy + railH/2, 500, 20);
+  ctx.fillRect(canvas.width/2 - railLength/2, cy + railSpacing/2, railLength, 20);
+  ctx.strokeRect(canvas.width/2 - railLength/2, cy + railSpacing/2, railLength, 20);
 
-  // Hachures des rails
+  // Hachures d'ancrage du guidage
   ctx.strokeStyle = "#cbd5e1";
   ctx.lineWidth = 1;
-  for(let x = -240; x < 240; x += 15) {
-    ctx.beginPath(); ctx.moveTo(cx + x, cy - railH/2 - 20); ctx.lineTo(cx + x - 10, cy - railH/2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + x, cy + railH/2 + 20); ctx.lineTo(cx + x - 10, cy + railH/2); ctx.stroke();
+  for(let x = canvas.width/2 - railLength/2 + 10; x < canvas.width/2 + railLength/2; x += 15) {
+    ctx.beginPath(); ctx.moveTo(x, cy - railSpacing/2 - 20); ctx.lineTo(x - 8, cy - railSpacing/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, cy + railSpacing/2 + 20); ctx.lineTo(x - 8, cy + railSpacing/2); ctx.stroke();
   }
 
   // 2. Dessin du Coulisseau (pièce bleue)
-  // La longueur L du guidage en pixels
-  const blockHeight = L * 1.2; // Échelle visuelle
+  const blockHeight = L * 1.2;
   const blockWidth = 70;
-  
+
   ctx.fillStyle = isJammed ? "#ffebee" : "#e3f0fc";
   ctx.strokeStyle = isJammed ? "#c62828" : "#1565c0";
   ctx.lineWidth = 3;
 
   ctx.beginPath();
-  ctx.roundRect(cx - blockWidth/2, cy - blockHeight/2, blockWidth, blockHeight, 8);
+  ctx.roundRect(cx - blockWidth/2, cy - blockHeight/2, blockWidth, blockHeight, 6);
   ctx.fill();
   ctx.stroke();
 
-  // 3. Points de contact A (haut) et B (bas)
-  const pointA = { x: cx - blockWidth/2, y: cy - blockHeight/2 + 15 };
-  const pointB = { x: cx - blockWidth/2, y: cy + blockHeight/2 - 15 };
+  // 3. Points de contact A et B
+  const pA = { x: cx - blockWidth/2, y: cy - blockHeight/2 };
+  const pB = { x: cx + blockWidth/2, y: cy + blockHeight/2 };
 
   ctx.fillStyle = "#1e293b";
-  ctx.beginPath(); ctx.arc(pointA.x, pointA.y, 5, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(pointB.x, pointB.y, 5, 0, Math.PI*2); ctx.fill();
-  
+  ctx.beginPath(); ctx.arc(pA.x, pA.y, 4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(pB.x, pB.y, 4, 0, Math.PI*2); ctx.fill();
+
   ctx.font = "bold 12px Segoe UI";
-  ctx.fillText("A", pointA.x - 18, pointA.y + 4);
-  ctx.fillText("B", pointB.x - 18, pointB.y + 4);
+  ctx.fillText("A", pA.x - 15, pA.y - 5);
+  ctx.fillText("B", pB.x + 8, pB.y + 12);
 
-  // 4. Point d'application de l'effort F (décalé de e par rapport à l'axe central)
+  // 4. Effort appliqué F (avec hauteur d'excentricité e)
   const appX = cx;
-  const appY = cy - e; // Excentricité verticale
+  const appY = cy - e;
 
-  ctx.fillStyle = "#c62828";
-  ctx.beginPath(); ctx.arc(appX, appY, 6, 0, Math.PI*2); ctx.fill();
-  ctx.fillText("Point d'application (effort F)", appX + 10, appY - 5);
-
-  // 5. Vecteur Force F
-  const fLenScale = 0.8;
-  const fx = F * Math.cos(alpha) * fLenScale;
-  const fy = F * Math.sin(alpha) * fLenScale;
-
-  drawArrow(ctx, appX, appY, appX + fx, appY + fy, "#c62828", 3, "F");
-
-  // Légende / Infos visuelles sur le canvas
-  ctx.fillStyle = "#1e293b";
-  ctx.font = "13px Segoe UI";
-  ctx.fillText(`Excentricité e = ${e} mm`, cx - blockWidth - 140, cy - e / 2);
-  
-  // Ligne pointillée d'excentricité
+  // Ligne de cotation de l'excentricité e
   ctx.strokeStyle = "#94a3b8";
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx, appY);
-  ctx.stroke();
-  ctx.setLineDash([]); // Reset
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, appY); ctx.stroke();
+  ctx.setLineDash([]);
 
-  requestAnimationFrame(animate);
+  ctx.fillStyle = "#1e293b";
+  ctx.font = "11px Consolas";
+  ctx.fillText(`e = ${e} mm`, cx + 8, cy - e/2 + 4);
+
+  // Repère du point d'application
+  ctx.fillStyle = "#c62828";
+  ctx.beginPath(); ctx.arc(appX, appY, 5, 0, Math.PI*2); ctx.fill();
+
+  // Vecteur Force F
+  const fScale = 0.6;
+  const fx = F * Math.cos(alphaRad) * fScale;
+  const fy = F * Math.sin(alphaRad) * fScale;
+
+  drawArrow(ctx, appX, appY, appX + fx, appY + fy, "#c62828", 2.5, "F");
+
+  // Indicateur visuel d'état de blocage sur la pièce
+  if (isJammed) {
+    ctx.fillStyle = "#c62828";
+    ctx.font = "bold 13px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText("🔒 BLOQUÉ", cx, cy + 5);
+    ctx.textAlign = "left";
+  } else {
+    ctx.fillStyle = "#1565c0";
+    ctx.font = "12px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText("↔ Glisser", cx, cy + 4);
+    ctx.textAlign = "left";
+  }
 }
 
-// Fonction utilitaire pour dessiner des flèches vectorielles propres
 function drawArrow(ctx, fromX, fromY, toX, toY, color, width, label) {
-  const headLen = 10;
+  const headLen = 9;
   const angle = Math.atan2(toY - fromY, toX - fromX);
   
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
   ctx.lineWidth = width;
 
-  ctx.beginPath();
-  ctx.moveTo(fromX, fromY);
-  ctx.lineTo(toX, toY);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY); ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(toX, toY);
@@ -306,13 +356,13 @@ function drawArrow(ctx, fromX, fromY, toX, toY, color, width, label) {
   ctx.fill();
 
   if (label) {
-    ctx.font = "bold 14px Segoe UI";
-    ctx.fillText(label, toX + 10, toY + 5);
+    ctx.font = "bold 13px Segoe UI";
+    ctx.fillText(label, toX + 8, toY + 4);
   }
 }
 
-// Lancement de l'animation
-animate();
+// Premier dessin initial
+resizeCanvas();
 </script>
 
 </body>
