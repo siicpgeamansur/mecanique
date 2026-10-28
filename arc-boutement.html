@@ -249,11 +249,11 @@
     </div>
     <div class="ctrl">
       <label>Longueur du guidage <i>L</i> <span id="lVal" class="val">120 mm</span></label>
-      <input type="range" id="length" min="60" max="250" step="5" value="120">
+      <input type="range" id="length" min="60" max="200" step="5" value="120">
     </div>
     <div class="ctrl">
       <label>Excentricité de l’effort <i>e</i> <span id="eVal" class="val">40 mm</span></label>
-      <input type="range" id="excent" min="0" max="120" step="1" value="40">
+      <input type="range" id="excent" min="0" max="200" step="1" value="40">
     </div>
 
     <div class="crit-line">
@@ -279,10 +279,8 @@
     <div class="info-box">
       <strong>Condition d’arc-boutement :</strong><br>
       <i>e</i> &gt; <i>L</i> / (2μ)<br><br>
-      • <strong>Blocage</strong> : le polygone des forces forme un <strong>triangle fermé</strong>
-      (Σ<span class="vec">F</span> = 0). Équilibre statique → translation impossible.<br><br>
-      • <strong>Cas limite / Coulissement</strong> : le triangle est <strong>ouvert</strong>
-      (Σ<span class="vec">F</span> ≠ 0). La pièce peut translater.
+      • <strong>Blocage</strong> : triangle fermé (ΣF = 0) → translation <strong>interdite</strong><br><br>
+      • <strong>Cas limite / Coulissement</strong> : triangle ouvert → translation <strong>autorisée</strong>
     </div>
   </aside>
 
@@ -326,20 +324,26 @@ let initialSlideX = 0;
 
 function setPreset(type) {
   [btnSlide, btnLimit, btnJammed].forEach(b => b.classList.remove('active'));
+
   if (type === 'slide') {
-    inMu.value = 0.15;
-    inLen.value = 160;
-    inExc.value = 30;
+    // e << e_crit → coulissement fluide
+    inMu.value = 0.20;
+    inLen.value = 140;
+    inExc.value = 35;
     btnSlide.classList.add('active');
-  } else if (type === 'limit') {
-    inMu.value = 0.25;
+  }
+  else if (type === 'limit') {
+    // e = e_crit exactement
+    inMu.value = 0.30;
     inLen.value = 120;
-    inExc.value = Math.round(120 / (2 * 0.25)); // exactement e = e_crit
+    inExc.value = Math.round(120 / (2 * 0.30)); // = 200
     btnLimit.classList.add('active');
-  } else if (type === 'jammed') {
-    inMu.value = 0.35;
+  }
+  else if (type === 'jammed') {
+    // e > e_crit → blocage
+    inMu.value = 0.40;
     inLen.value = 100;
-    inExc.value = 85; // largement au-dessus de e_crit
+    inExc.value = 145; // e_crit = 100/(0.8) = 125 → 145 > 125
     btnJammed.classList.add('active');
   }
   draw();
@@ -373,16 +377,12 @@ function computePhysics() {
 
   const eCrit = L / (2 * Math.max(mu, 0.01));
 
-  // Logique claire demandée :
-  // - e > eCrit          → Blocage (rouge) + translation INTERDITE
-  // - |e - eCrit| <= 1.5 → Cas limite (orange) + translation AUTORISÉE
-  // - e < eCrit          → Coulissement fluide (vert) + translation AUTORISÉE
-  const isJammed = e > eCrit + 0.5;          // strictement au-dessus
-  const isLimit  = Math.abs(e - eCrit) <= 1.5;
+  // Logique EXACTE demandée
+  const isJammed = e > eCrit;                 // strictement supérieur → Blocage
+  const isLimit  = Math.abs(e - eCrit) <= 2;  // très proche → Cas limite
 
   const phi = Math.atan(mu);
 
-  // Réactions normales (modèle pédagogique)
   const Na = F * (e + L / 2) / L;
   const Nb = F * (e + L / 2) / L;
 
@@ -420,14 +420,14 @@ function isOverBlock(mx, my, physics) {
   return mx >= b.left && mx <= b.right && my >= b.top && my <= b.bottom;
 }
 
-// ========== GESTION DU GLISSEMENT ==========
-// On n'autorise le drag QUE si !isJammed
+// ========== DRAG – UNIQUEMENT si PAS de blocage ==========
 canvas.addEventListener('mousedown', e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   const physics = computePhysics();
 
+  // On n'autorise le glissement QUE si !isJammed
   if (isOverBlock(mx, my, physics) && !physics.isJammed) {
     isDragging = true;
     canvas.classList.add('dragging');
@@ -530,19 +530,18 @@ function draw() {
   nbVal.textContent = Nb.toFixed(1) + ' N';
   tbVal.textContent = Tb.toFixed(1) + ' N';
 
-  // ========== BADGE D'ÉTAT (logique exacte demandée) ==========
+  // ========== BADGE – logique stricte ==========
   if (isJammed) {
-    // e > eCrit → Blocage rouge + translation bloquée
     statusBadge.textContent = 'Blocage';
     statusBadge.className = 'status-badge status-warn';
-    hintText.textContent = '🔒 Pièce bloquée — le triangle des forces est fermé (ΣF = 0)';
-  } else if (isLimit) {
-    // e ≈ eCrit → Cas limite orange + translation autorisée
+    hintText.textContent = '🔒 Pièce bloquée — triangle des forces fermé (ΣF = 0) — translation interdite';
+  }
+  else if (isLimit) {
     statusBadge.textContent = 'Cas limite';
     statusBadge.className = 'status-badge status-limit';
-    hintText.textContent = '⚠️ Vous êtes au seuil d’arc-boutement (e ≈ e_crit) — translation encore possible';
-  } else {
-    // e < eCrit → Coulissement fluide vert + translation autorisée
+    hintText.textContent = '⚠️ Seuil d’arc-boutement (e ≈ e_crit) — translation encore possible';
+  }
+  else {
     statusBadge.textContent = 'Coulissement fluide';
     statusBadge.className = 'status-badge status-ok';
     hintText.textContent = '💡 Cliquez-glissez la pièce bleue pour la faire coulisser sur les rails';
@@ -567,7 +566,6 @@ function draw() {
   ctx.fillRect(railX, railY2, railLen, 16);
   ctx.strokeRect(railX, railY2, railLen, 16);
 
-  // Marques sur les rails
   ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = 1;
   for (let i = 0; i < railLen; i += 40) {
