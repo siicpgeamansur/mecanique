@@ -1,7 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Champ d'un torseur</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
 :root{
   /* Mise en page : fenêtre de type GeoGebra. Vue Algèbre (champs de saisie, curseurs) à gauche, vue Graphique 3D à droite. Fond blanc assumé dans les deux thèmes. */
@@ -39,6 +38,8 @@ body{
 .brand{font-weight:600;font-size:15px}
 .formula{font-family:var(--font-math);font-style:italic;font-size:16px;color:var(--ink)}
 .formula b{font-style:normal;font-weight:400}
+.v{position:relative;display:inline-block}
+.v::before{content:"→";position:absolute;top:-.62em;left:.12em;font-size:.62em;font-style:normal;line-height:1}
 .body{flex:1;display:flex;min-height:0}
 .alg{width:350px;flex:none;overflow-y:auto;border-right:1px solid var(--line);background:var(--paper)}
 .view{flex:1;position:relative;min-width:0;min-height:0}
@@ -67,6 +68,13 @@ canvas:focus-visible{outline:2px solid var(--ui);outline-offset:-2px}
 .cap{margin:0 0 2px 20px;font-size:12px;color:var(--muted)}
 .note{margin:4px 0 2px;font-size:13px;color:var(--muted)}
 .unit{font-size:12px;color:var(--muted)}
+
+.tor{display:flex;align-items:center;gap:8px;margin:2px 0 10px}
+.tn{font-family:var(--font-math);font-size:18px;white-space:nowrap}
+.tn i{font-style:italic}
+.mat{display:grid;grid-template-columns:1fr 1fr;gap:4px 6px;padding:4px 8px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px;flex:1;min-width:0}
+.mh{text-align:center;font-family:var(--font-math);font-style:italic;font-size:14px}
+.mat .field{width:100%;min-width:0;text-align:center;padding:0 4px}
 .slider{padding:0 0 4px}
 input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:calc(100% - 20px);margin:0 0 0 20px;height:22px;background:transparent;cursor:pointer}
 input[type=range]::-webkit-slider-runnable-track{height:3px;background:#c7c7d1;border-radius:2px}
@@ -110,9 +118,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ui);outline-offset:2px}
 <div class="app">
   <header class="bar">
     <div class="brand">Champ d'un torseur</div>
-    <div class="formula">
-    $$\overrightarrow{M}_B = \overrightarrow{M}_A + \overrightarrow{BA} \wedge \overrightarrow{R}$$
-</div>
+    <div class="formula" aria-label="Moment en B égal moment en A plus BA vectoriel R"><span class="v">M</span><sub>B</sub> = <span class="v">M</span><sub>A</sub> + <span class="v">BA</span> <b>∧</b> <span class="v">R</span></div>
   </header>
 
   <div class="body">
@@ -130,35 +136,23 @@ input[type=range]:focus-visible{outline:2px solid var(--ui);outline-offset:2px}
       </section>
 
       <section class="sec">
-        <h2>Éléments de réduction</h2>
-        <div class="item" id="item-R">
-          <div class="row"><span class="dot" style="--c:var(--res)"></span><label class="name" for="in-R">R</label><span class="eq">=</span><input class="field" id="in-R" type="text" autocomplete="off" spellcheck="false"></div>
-          <p class="cap">Résultante, la même en tout point</p>
-        </div>
-        <div class="item" id="item-A">
-          <div class="row"><span class="dot" style="--c:var(--axisc)"></span><label class="name" for="in-A">A</label><span class="eq">=</span><input class="field" id="in-A" type="text" autocomplete="off" spellcheck="false"></div>
-          <p class="cap">Point de l'axe central Δ</p>
-        </div>
-        <div class="item" id="item-C">
-          <div class="row"><span class="dot" style="--c:var(--mom)"></span><label class="name" for="in-C">C</label><span class="eq">=</span><input class="field" id="in-C" type="text" autocomplete="off" spellcheck="false"></div>
-          <p class="cap">Moment du couple, le même en tout point</p>
-        </div>
-        <div class="item" id="host-p"></div>
-        <p class="note" id="note-nul" hidden>Aucun paramètre : R = 0 et M = 0 en tout point.</p>
-      </section>
-
-      <section class="sec">
-        <h2>Point P</h2>
-        <div class="row"><span class="dot" style="--c:#111"></span><label class="name" for="in-P">P</label><span class="eq">=</span><input class="field" id="in-P" type="text" autocomplete="off" spellcheck="false"></div>
+        <h2>Points</h2>
+        <div id="host-A"></div>
         <div id="host-P"></div>
       </section>
 
       <section class="sec">
-        <h2>Résultats en P</h2>
-        <div class="res"><span class="dot" style="--c:var(--res)"></span><span class="lab">R(P)</span><span class="val" id="res-R"></span></div>
-        <div class="res"><span class="dot" style="--c:var(--mom)"></span><span class="lab">M(P)</span><span class="val" id="res-M"></span></div>
+        <h2>Torseurs (colonnes R et M, lignes x, y, z)</h2>
+        <div id="host-TA"></div>
+        <div id="host-TP"></div>
+        <p class="note">Modifier une composante change la nature du torseur. M(P) = M(A) + PA ∧ R, donc modifier M en P déplace aussi M en A.</p>
+      </section>
+
+      <section class="sec">
+        <h2>Résultats</h2>
         <div class="res"><span class="dot" style="--c:var(--mom)"></span><span class="lab">‖M(P)‖</span><span class="val" id="res-nM"></span></div>
         <div class="res"><span class="dot" style="--c:var(--ui)"></span><span class="lab">R · M</span><span class="val" id="res-I"></span></div>
+        <div class="res" id="res-p-row"><span class="dot" style="--c:var(--ui)"></span><span class="lab">pas p</span><span class="val" id="res-p"></span></div>
         <div class="res" id="res-d-row"><span class="dot" style="--c:var(--axisc)"></span><span class="lab">d(P, Δ)</span><span class="val" id="res-d"></span></div>
         <p class="kind" id="kind"></p>
       </section>
@@ -215,27 +209,39 @@ const cv_=n=>cs.getPropertyValue(n).trim();
 const COL={res:cv_('--res')||'#1565c0',mom:cv_('--mom')||'#d93a2b',axisc:cv_('--axisc')||'#2e8b57',grid:cv_('--grid')||'#e8e8ee',axis:cv_('--axis')||'#55555f',ui:cv_('--ui')||'#6557d2',muted:cv_('--muted')||'#6a6a78'};
 
 /* ---------- état ---------- */
+/* Le torseur est défini par R, M(A) et le point A. Sa nature se déduit des valeurs. */
 const S={
   type:'mixte',
-  R:[0,0,2], A:[1,0,0], C:[0,0,3], p:0.5,
+  R:[0,0,2], MA:[0,2,1], A:[1,0,0],
   P:[2,1,1],
   scale:0.5, n:5,
   showR:true, showM:true, showAxis:true, norm:false, domain:'space',
   az:-2.0, el:0.5, zoom:1
 };
-const VIS={
-  glisseur:{R:1,A:1,C:0,p:0},
-  couple:{R:0,A:0,C:1,p:0},
-  mixte:{R:1,A:1,C:0,p:1},
-  nul:{R:0,A:0,C:0,p:0}
-};
 const DESC={
-  glisseur:"R ≠ 0 et le moment est nul sur l'axe central Δ, la droite passant par A et dirigée par R.",
-  couple:"R = 0 : le moment vaut C en tout point de l'espace.",
-  mixte:"R ≠ 0 et R · M ≠ 0 : le moment ne s'annule nulle part. Sur Δ il est parallèle à R, avec C = p·R.",
+  glisseur:"R ≠ 0 et R · M = 0 : le moment s'annule sur l'axe central Δ.",
+  couple:"R = 0 et M ≠ 0 : le moment est le même en tout point de l'espace.",
+  mixte:"R ≠ 0 et R · M ≠ 0 : le moment ne s'annule nulle part. Sur Δ il est parallèle à R.",
   nul:"R = 0 et M = 0 en tout point."
 };
 const KIND={nul:'Torseur nul',couple:'Couple',glisseur:'Glisseur',mixte:'Torseur mixte (glisseur + couple)'};
+const EPS=1e-9;
+function detect(){
+  const nR=norm(S.R),nM=norm(S.MA);
+  if(nR<EPS) return nM<EPS?'nul':'couple';
+  return Math.abs(dot(S.R,S.MA))<1e-6?'glisseur':'mixte';
+}
+function applyPreset(t){
+  const nR=norm(S.R);
+  if(t==='nul'){S.R=[0,0,0];S.MA=[0,0,0];}
+  else if(t==='couple'){S.R=[0,0,0];if(norm(S.MA)<EPS)S.MA=[0,0,3];}
+  else{
+    if(nR<EPS)S.R=[0,0,2];
+    const n2=dot(S.R,S.R),k=dot(S.R,S.MA)/n2;
+    if(t==='glisseur')S.MA=sub(S.MA,mul(S.R,k));
+    else if(Math.abs(k)<1e-6)S.MA=add(S.MA,mul(S.R,0.5));
+  }
+}
 
 /* ---------- saisie et formats ---------- */
 function fmt(x,d){
@@ -245,8 +251,6 @@ function fmt(x,d){
   if(Object.is(r,-0)) r=0;
   return String(r).replace('.',',');
 }
-const fmtV=v=>'('+v.map(x=>fmt(x)).join(' ; ')+')';
-
 const FN={sqrt:'Math.sqrt',sin:'Math.sin',cos:'Math.cos',tan:'Math.tan',abs:'Math.abs',exp:'Math.exp',ln:'Math.log',pi:'Math.PI'};
 function evalExpr(src){
   let e=String(src).toLowerCase().replace(/π/g,'pi').replace(/\s+/g,'');
@@ -262,54 +266,24 @@ function evalExpr(src){
     return (typeof v==='number'&&isFinite(v))?v:NaN;
   }catch(_){return NaN;}
 }
-function stripOuter(s){
-  if(s[0]==='('||s[0]==='['){
-    const close=s[0]==='('?')':']';
-    if(s[s.length-1]===close){
-      let depth=0;
-      for(let i=0;i<s.length;i++){
-        const c=s[i];
-        if(c==='('||c==='[')depth++;
-        else if(c===')'||c===']'){depth--; if(depth===0&&i<s.length-1) return s;}
-      }
-      return s.slice(1,-1);
-    }
-  }
-  return s;
-}
-function parseVec(str){
-  const s=stripOuter(str.trim());
-  const sep=s.indexOf(';')>=0?';':',';
-  const parts=[];let depth=0,cur='';
-  for(const c of s){
-    if(c==='('||c==='[')depth++;
-    if(c===')'||c===']')depth--;
-    if(c===sep&&depth===0){parts.push(cur);cur='';}else cur+=c;
-  }
-  parts.push(cur);
-  if(parts.length!==3) return null;
-  const v=parts.map(evalExpr);
-  return v.every(isFinite)?v:null;
-}
 
 /* ---------- mécanique du torseur ---------- */
-function eff(){
-  switch(S.type){
-    case 'glisseur': return {R:S.R,A:S.A,C:ZERO};
-    case 'couple':   return {R:ZERO,A:ZERO,C:S.C};
-    case 'mixte':    return {R:S.R,A:S.A,C:mul(S.R,S.p)};
-    default:         return {R:ZERO,A:ZERO,C:ZERO};
-  }
-}
-/* M(P) = C + R × AP, avec C = M(A) */
+function eff(){return {R:S.R,A:S.A,C:S.MA};}
+/* M(P) = M(A) + R × AP */
 function moment(P,t){
   t=t||eff();
   return add(t.C,cross(t.R,sub(P,t.A)));
+}
+/* point de l'axe central le plus proche de A : A + (R × M(A)) / ‖R‖² */
+function axisPoint(){
+  const n2=dot(S.R,S.R);
+  return add(S.A,mul(cross(S.R,S.MA),1/n2));
 }
 
 /* ---------- interface ---------- */
 const syncs=[];
 function update(skip){
+  S.type=detect();
   syncUI(skip||null);
   renderResults();
   draw();
@@ -319,7 +293,7 @@ function makeSlider(hostId,o){
   const wrap=document.createElement('div');
   wrap.className='slider';
   wrap.style.setProperty('--c',o.color);
-  wrap.innerHTML='<div class="row"><span class="dot"></span><label class="name" for="'+o.id+'-n">'+o.name+'</label><span class="eq">=</span><input class="field num" id="'+o.id+'-n" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><span class="unit">'+(o.note||'')+'</span></div><input type="range" id="'+o.id+'-r" min="'+o.min+'" max="'+o.max+'" step="'+o.step+'" aria-label="'+o.label+'">';
+  wrap.innerHTML='<div class="row"><span class="dot"></span><label class="name" for="'+o.id+'-n">'+o.name+'</label><span class="eq">=</span><input class="field num" id="'+o.id+'-n" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"></div><input type="range" id="'+o.id+'-r" min="'+o.min+'" max="'+o.max+'" step="'+o.step+'" aria-label="'+o.label+'">';
   host.appendChild(wrap);
   const num=wrap.querySelector('.num'), rg=wrap.querySelector('[type=range]');
   const dec=(o.dec===undefined)?2:o.dec;
@@ -337,32 +311,55 @@ function makeSlider(hostId,o){
     rg.value=o.get();
   });
 }
-makeSlider('host-p',{id:'sl-p',name:'p',label:'Pas p',color:'#6557d2',min:-2,max:2,step:0.05,get:()=>S.p,set:v=>{S.p=v;},note:'C = p·R'});
-makeSlider('host-P',{id:'sl-x',name:'x<sub>P</sub>',label:'Abscisse de P',color:'#111',min:-5,max:5,step:0.1,dec:1,get:()=>S.P[0],set:v=>{S.P=[v,S.P[1],S.P[2]];}});
-makeSlider('host-P',{id:'sl-y',name:'y<sub>P</sub>',label:'Ordonnée de P',color:'#111',min:-5,max:5,step:0.1,dec:1,get:()=>S.P[1],set:v=>{S.P=[S.P[0],v,S.P[2]];}});
-makeSlider('host-P',{id:'sl-z',name:'z<sub>P</sub>',label:'Cote de P',color:'#111',min:-5,max:5,step:0.1,dec:1,get:()=>S.P[2],set:v=>{S.P=[S.P[0],S.P[1],v];}});
-makeSlider('host-view',{id:'sl-s',name:'échelle',label:'Échelle des flèches',color:'#7a7a88',min:0.1,max:1.5,step:0.05,get:()=>S.scale,set:v=>{S.scale=v;}});
-makeSlider('host-view',{id:'sl-n',name:'points',label:'Points par axe',color:'#7a7a88',min:3,max:9,step:1,dec:0,get:()=>S.n,set:v=>{S.n=Math.round(v);},note:'par axe'});
-
-function bindVec(id,get,set){
-  const el=$(id);
-  el.addEventListener('input',()=>{
-    const v=parseVec(el.value);
-    if(!v){el.classList.add('bad');return;}
-    el.classList.remove('bad');
-    set(v);
-    update(el);
+function pointSliders(host,key,name,color){
+  ['x','y','z'].forEach((c,i)=>{
+    makeSlider(host,{id:'sl-'+key+c,name:c+'<sub>'+name+'</sub>',label:'Coordonnée '+c+' du point '+name,color:color,min:-5,max:5,step:0.1,dec:1,
+      get:()=>S[key][i],set:v=>{const q=S[key].slice();q[i]=v;S[key]=q;}});
   });
-  el.addEventListener('blur',()=>{el.classList.remove('bad');el.value=fmtV(get());});
-  syncs.push(skip=>{if(skip!==el) el.value=fmtV(get());});
 }
-bindVec('in-R',()=>S.R,v=>{S.R=v;});
-bindVec('in-A',()=>S.A,v=>{S.A=v;});
-bindVec('in-C',()=>S.C,v=>{S.C=v;});
-bindVec('in-P',()=>S.P,v=>{S.P=v;});
+pointSliders('host-A','A','A','#2e8b57');
+pointSliders('host-P','P','P','#111');
+makeSlider('host-view',{id:'sl-s',name:'échelle',label:'Échelle des flèches',color:'#7a7a88',min:0.1,max:1.5,step:0.05,get:()=>S.scale,set:v=>{S.scale=v;}});
+makeSlider('host-view',{id:'sl-n',name:'points',label:'Points par axe',color:'#7a7a88',min:3,max:9,step:1,dec:0,get:()=>S.n,set:v=>{S.n=Math.round(v);}});
+
+/* torseur en colonnes : R à gauche, M à droite, lignes x y z */
+function buildTorsor(hostId,pt,getR,setR,getM,setM){
+  const host=$(hostId);
+  const wrap=document.createElement('div');
+  wrap.className='tor';
+  let h='<span class="tn">𝒯<sub><i>'+pt+'</i></sub> =</span><div class="mat" role="group" aria-label="Torseur en '+pt+'"><span class="mh" style="color:var(--res)">R</span><span class="mh" style="color:var(--mom)">M<sub>'+pt+'</sub></span>';
+  const ids=[];
+  ['x','y','z'].forEach((c,i)=>{
+    const ir='t'+pt+'r'+i, im='t'+pt+'m'+i;
+    h+='<input class="field" id="'+ir+'" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="R'+c+' en '+pt+'"><input class="field" id="'+im+'" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="M'+c+' en '+pt+'">';
+    ids.push([ir,im,i]);
+  });
+  h+='</div>';
+  wrap.innerHTML=h;
+  host.appendChild(wrap);
+  ids.forEach(([ir,im,i])=>{
+    [[ir,getR,setR],[im,getM,setM]].forEach(([id,get,set])=>{
+      const el=wrap.querySelector('#'+id);
+      el.addEventListener('input',()=>{
+        const v=evalExpr(el.value);
+        if(!isFinite(v)){el.classList.add('bad');return;}
+        el.classList.remove('bad');
+        set(i,v);
+        update(el);
+      });
+      el.addEventListener('blur',()=>{el.classList.remove('bad');el.value=fmt(get()[i]);});
+      syncs.push(skip=>{if(skip!==el) el.value=fmt(get()[i]);});
+    });
+  });
+}
+const setR=(i,v)=>{const r=S.R.slice();r[i]=v;S.R=r;};
+buildTorsor('host-TA','A',()=>S.R,setR,()=>S.MA,(i,v)=>{const m=S.MA.slice();m[i]=v;S.MA=m;});
+buildTorsor('host-TP','P',()=>S.R,setR,()=>moment(S.P),(i,v)=>{
+  const cur=moment(S.P)[i],m=S.MA.slice();m[i]+=v-cur;S.MA=m;
+});
 
 document.querySelectorAll('.seg button').forEach(b=>{
-  b.addEventListener('click',()=>{S.type=b.dataset.type;update(null);});
+  b.addEventListener('click',()=>{applyPreset(b.dataset.type);update(null);});
 });
 function bindCheck(id,key){$(id).addEventListener('change',e=>{S[key]=e.target.checked;update(null);});}
 bindCheck('ck-R','showR');bindCheck('ck-M','showM');bindCheck('ck-axis','showAxis');bindCheck('ck-norm','norm');
@@ -372,28 +369,23 @@ document.querySelectorAll('input[name=domain]').forEach(r=>{
 
 function syncUI(skip){
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.type===S.type)));
-  const v=VIS[S.type];
-  $('item-R').hidden=!v.R;$('item-A').hidden=!v.A;$('item-C').hidden=!v.C;$('host-p').hidden=!v.p;
-  $('note-nul').hidden=S.type!=='nul';
   $('desc').textContent=DESC[S.type];
   $('lg-axis').hidden=!(S.type==='glisseur'||S.type==='mixte');
   syncs.forEach(f=>f(skip));
 }
 function renderResults(){
   const t=eff(), M=moment(S.P,t), nR=norm(t.R);
-  $('res-R').textContent=fmtV(t.R);
-  $('res-M').textContent=fmtV(M);
   $('res-nM').textContent=fmt(norm(M));
   $('res-I').textContent=fmt(dot(t.R,M));
-  const hasAxis=nR>1e-9;
+  const hasAxis=nR>EPS;
   $('res-d-row').hidden=!hasAxis;
-  if(hasAxis) $('res-d').textContent=fmt(norm(cross(t.R,sub(S.P,t.A)))/nR);
-  let kind;
-  if(nR<1e-9) kind=norm(t.C)<1e-9?'nul':'couple';
-  else kind=Math.abs(dot(t.R,t.C))<1e-6?'glisseur':'mixte';
-  let txt='Nature du torseur : <strong>'+KIND[kind]+'</strong>.';
-  if(S.type==='mixte'&&kind==='glisseur') txt+=' Avec p = 0, le torseur mixte devient un glisseur.';
-  if(S.type!=='nul'&&S.type!=='couple'&&nR<1e-9) txt+=' R est nul, le champ de moments est constant.';
+  $('res-p-row').hidden=!hasAxis;
+  if(hasAxis){
+    $('res-d').textContent=fmt(norm(cross(t.R,sub(S.P,axisPoint())))/nR);
+    $('res-p').textContent=fmt(dot(t.R,t.C)/(nR*nR));
+  }
+  let txt='Nature du torseur : <strong>'+KIND[S.type]+'</strong>.';
+  if(S.type==='glisseur'&&norm(t.C)<EPS) txt+=' Δ passe par A.';
   $('kind').innerHTML=txt;
 }
 
@@ -495,13 +487,16 @@ function draw(){
   const nR=norm(t.R);
   const hasAxis=(S.type==='glisseur'||S.type==='mixte')&&nR>1e-9;
   if(hasAxis&&S.showAxis){
-    const u=mul(t.R,1/nR);
+    const u=mul(t.R,1/nR),O=axisPoint();
     ctx.setLineDash([7,5]);ctx.strokeStyle=COL.axisc;ctx.lineWidth=2;ctx.beginPath();
-    seg(add(t.A,mul(u,-12)),add(t.A,mul(u,12)));ctx.stroke();ctx.setLineDash([]);
+    seg(add(O,mul(u,-12)),add(O,mul(u,12)));ctx.stroke();ctx.setLineDash([]);
+    const d=proj(add(O,mul(u,6)));label('Δ',d[0]+10,d[1],COL.axisc,18,true);
+  }
+  {
     const a=proj(t.A);
-    ctx.fillStyle=COL.axisc;ctx.beginPath();ctx.arc(a[0],a[1],4,0,Math.PI*2);ctx.fill();
-    label('A',a[0]+11,a[1]+10,COL.axisc,17,true);
-    const d=proj(add(t.A,mul(u,6)));label('Δ',d[0]+10,d[1],COL.axisc,18,true);
+    ctx.fillStyle=COL.axisc;ctx.strokeStyle='#fff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(a[0],a[1],5,0,Math.PI*2);ctx.fill();ctx.stroke();
+    label('A',a[0]+12,a[1]+11,COL.axisc,18,true);
   }
 
   /* champ de vecteurs */
