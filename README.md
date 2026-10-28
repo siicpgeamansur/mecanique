@@ -2,3 +2,8 @@ Voici une animation de deux bras en liaisons pivot entre eux et dont l'un est en
 On peut observer une zone inaccessible et jouer avec les longueurs des bras et les positions angulaires des pivots pour mieux visualiser cette zone.
 
 [animation des deux bras robotisés 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html)
+
+Et voici une page pour visualiser l'équilibrage dynamique d'un rotor :
+
+[equilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html)
+
