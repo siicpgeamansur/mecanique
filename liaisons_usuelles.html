@@ -316,8 +316,8 @@ const LIAISONS = {
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "tz", label: "Vz", min: -1.2, max: 1.2, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+      { id: "ry", label: "Ωy (axe cylindre)", min: -3.14, max: 3.14, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz (fixe)", min: -1.5, max: 1.5, step: 0.01, value: 0 }
     ]
   },
   appuiplan: {
@@ -661,7 +661,8 @@ function buildScene(key) {
     mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 2.6, 32), matStripe);
     mobile.position.y = 0.32;
     scene.add(plane, mobile);
-else if (key === "appuiplan") {
+  }
+  else if (key === "appuiplan") {
     const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
     plane.position.y = -0.035;
     mobile = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 1.1), matStripe);
@@ -699,32 +700,18 @@ function buildSliders(key) {
   });
 }
 
-/* ================================================================
-   TOUTES LES ROTATIONS SONT AUTOUR DES AXES FIXES
-   (rouge = x, bleu = y, vert = z)
-   ================================================================ */
 function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
-  // -------------------------------------------------------
-  // Rotations autour des axes FIXES du repère
-  // Rouge (X) = x⃗ , Bleu (Z) = y⃗ , Vert (Y) = z⃗
-  // -------------------------------------------------------
-  function setFixedRotations(rx = 0, ry = 0, rz = 0, baseQuat = null) {
-    const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), rx); // autour de x (rouge)
-    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), ry); // autour de y (bleu)
-    const qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rz); // autour de z (vert)
-
-    if (baseQuat) {
-      // base * qz * qy * qx  (axes fixes)
-      mobile.quaternion.copy(baseQuat).multiply(qz).multiply(qy).multiply(qx);
-    } else {
-      mobile.quaternion.copy(qz).multiply(qy).multiply(qx);
-    }
+  // Helper : rotations autour des axes FIXES
+  function setFixedRotations(rx = 0, ry = 0, rz = 0) {
+    const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), rx);
+    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), ry);
+    const qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rz);
+    mobile.quaternion.copy(qz).multiply(qy).multiply(qx);
   }
 
-  // ---------- Application selon la liaison ----------
   if (key === "pivot") {
     setFixedRotations(0, 0, v.rz || 0);
   }
@@ -747,46 +734,36 @@ function applyParams(key) {
     setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
-    mobile.position.y = 0.45;               // contact maintenu
+    mobile.position.y = 0.45;
   }
   else if (key === "spherecylindre") {
     setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
     mobile.position.y = v.tz || 0;
   }
   else if (key === "cylindreplan") {
-  // 1. Orientation de base : cylindre allongé selon l'axe rouge (x)
-  const base = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(0, 0, 1),
-    Math.PI / 2
-  );
+    // 1. Base : cylindre allongé selon x (rouge)
+    const base = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
 
-  // 2. Rotation locale autour de l'axe de révolution du cylindre (Ωy)
-  //    Après la base, cet axe correspond à l'axe X local
-  const spin = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(1, 0, 0),
-    v.ry || 0
-  );
+    // 2. Rotation locale autour de l'axe de révolution du cylindre (Ωy)
+    const spin = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), v.ry || 0);
 
-  // 3. Rotation autour de l'axe z FIXE (vert) → Ωz
-  const rotZ = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(0, 1, 0),
-    v.rz || 0
-  );
+    // 3. Rotation autour de z FIXE (vert) → Ωz
+    const rotZ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v.rz || 0);
 
-  // Ordre final : rotZ * base * spin
-  mobile.quaternion.copy(rotZ).multiply(base).multiply(spin);
+    // Ordre : rotZ * base * spin
+    mobile.quaternion.copy(rotZ).multiply(base).multiply(spin);
 
-  // Translations dans le plan + contact maintenu
-  mobile.position.x = v.tx || 0;
-  mobile.position.z = v.tz || 0;
-  mobile.position.y = 0.32;
-}
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.tz || 0;
+    mobile.position.y = 0.32;
+  }
   else if (key === "appuiplan") {
     setFixedRotations(0, 0, v.rz || 0);
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
   }
 }
+
 initThree();
 initButtons();
 selectLiaison("pivot");
