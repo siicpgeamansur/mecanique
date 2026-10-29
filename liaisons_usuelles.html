@@ -53,7 +53,7 @@
   }
   @media (max-width: 980px) { .main-grid { grid-template-columns: 1fr; } }
   #canvas-container {
-    width: 100%; height: 390px; border-radius: 10px;
+    width: 100%; height: 400px; border-radius: 10px;
     overflow: hidden; border: 1px solid var(--border); background: #0a0a12;
   }
   [data-theme="light"] #canvas-container { background: #e2e8f0; }
@@ -63,9 +63,14 @@
     display: inline-block; background: var(--accent); color: #fff;
     font-size: .75rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px;
   }
-  /* Torseurs */
+  .instruction {
+    background: rgba(37,99,235,.08);
+    border-left: 4px solid var(--accent);
+    padding: .6rem .9rem; border-radius: 0 8px 8px 0;
+    font-size: .9rem; margin-bottom: 1rem;
+  }
   .torseurs {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .8rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
   }
   @media (max-width: 600px) { .torseurs { grid-template-columns: 1fr; } }
   .torseur-box {
@@ -73,64 +78,58 @@
     border-radius: 10px; padding: .9rem;
   }
   .torseur-title {
-    font-size: .82rem; color: var(--muted); margin-bottom: .5rem;
+    font-size: .86rem; color: var(--muted); margin-bottom: .6rem; font-weight: 600;
   }
   .bmatrix {
-    display: grid;
-    grid-template-columns: auto auto auto;
-    gap: 2px 8px;
-    font-family: 'Fira Code', Consolas, monospace;
-    font-size: .95rem;
-    align-items: center;
-    justify-content: start;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Fira Code', Consolas, monospace; font-size: 1.05rem;
   }
-  .bm-left, .bm-right {
-    font-size: 2.2rem; line-height: 1; color: var(--muted);
+  .bm-brace {
+    font-size: 2.8rem; line-height: 1; color: var(--muted); user-select: none;
   }
-  .bm-cells {
+  .bm-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 12px;
+    gap: 5px 14px;
   }
   .comp {
-    display: flex; align-items: center; gap: .35rem;
-    padding: .25rem .4rem; border-radius: 6px; cursor: pointer;
-    user-select: none; border: 1px solid transparent;
+    min-width: 52px; text-align: center;
+    padding: .3rem .25rem; border-radius: 6px; cursor: pointer;
+    user-select: none; border: 1px solid var(--border);
+    background: var(--input-bg); transition: all .15s;
   }
-  .comp:hover { background: rgba(37,99,235,.08); }
+  .comp:hover { border-color: var(--accent); }
   .comp.selected {
-    background: rgba(37,99,235,.18); border-color: var(--accent);
+    background: rgba(37,99,235,.15); border-color: var(--accent); font-weight: 700;
   }
   .comp.correct {
-    background: rgba(22,163,74,.2); border-color: var(--ok); color: var(--ok);
+    background: rgba(22,163,74,.18); border-color: var(--ok); color: var(--ok); font-weight: 700;
   }
   .comp.wrong {
-    background: rgba(220,38,38,.15); border-color: var(--ko); color: var(--ko);
+    background: rgba(220,38,38,.15); border-color: var(--ko); color: var(--ko); font-weight: 700;
   }
-  .comp input { display: none; }
   .point-base {
-    font-size: .8rem; color: var(--muted); margin-top: .45rem;
+    font-size: .82rem; color: var(--muted); margin-top: .5rem;
   }
   .btn {
     background: linear-gradient(135deg, #2563eb, #7c3aed);
     color: #fff; border: none; border-radius: 8px;
-    padding: .5rem 1.1rem; font-size: .9rem; font-weight: 600; cursor: pointer;
+    padding: .5rem 1.15rem; font-size: .9rem; font-weight: 600; cursor: pointer;
   }
   [data-theme="dark"] .btn { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
+  .btn-secondary { background: #64748b; }
   .btn-row { margin-top: 1rem; display: flex; gap: .6rem; flex-wrap: wrap; }
   .feedback {
     margin-top: .7rem; font-size: .9rem; display: none;
-    padding: .5rem .8rem; border-radius: 8px;
+    padding: .55rem .85rem; border-radius: 8px;
   }
   .feedback.show { display: block; }
   .feedback.ok { background: rgba(22,163,74,.12); color: var(--ok); }
   .feedback.ko { background: rgba(220,38,38,.12); color: var(--ko); }
-  /* Sliders */
-  .sliders { margin-top: .8rem; }
+  .sliders { margin-top: .9rem; }
   .slider-row {
-    display: grid; grid-template-columns: 90px 1fr 50px;
-    align-items: center; gap: .5rem; margin-bottom: .45rem;
-    font-size: .88rem;
+    display: grid; grid-template-columns: 100px 1fr 48px;
+    align-items: center; gap: .5rem; margin-bottom: .4rem; font-size: .88rem;
   }
   input[type=range] { width: 100%; }
   .info { font-size: .85rem; color: var(--muted); margin-top: .5rem; }
@@ -142,7 +141,7 @@
   </button>
 
   <h1>Liaisons usuelles & Torseurs</h1>
-  <p class="subtitle">Dualité cinématique / statique – Sélection des composantes – Mouvement interactif</p>
+  <p class="subtitle">Dualité cinématique / statique – Cliquez sur les composantes non nulles</p>
 
   <div class="container">
     <div class="card">
@@ -156,23 +155,26 @@
         <div id="liaison-dof"></div>
         <div class="geo" id="liaison-geo"></div>
 
-        <div class="torseurs" id="torseurs">
-          <!-- rempli en JS -->
+        <div class="instruction">
+          Cliquez sur les composantes <strong>non nulles</strong> de chaque torseur.<br>
+          Par défaut toutes les composantes valent <strong>0</strong>.
         </div>
+
+        <div class="torseurs" id="torseurs"></div>
 
         <div class="btn-row">
           <button class="btn" onclick="checkAnswer()">Vérifier</button>
-          <button class="btn" style="background:#64748b" onclick="resetSelection()">Réinitialiser</button>
+          <button class="btn btn-secondary" onclick="resetSelection()">Réinitialiser</button>
         </div>
         <div class="feedback" id="feedback"></div>
       </div>
 
-      <!-- Droite : 3D + sliders -->
+      <!-- Droite -->
       <div class="card">
         <h2>Mouvement de la pièce mobile (bleue)</h2>
         <div id="canvas-container"></div>
         <div class="sliders" id="sliders"></div>
-        <p class="info">Les curseurs correspondent aux degrés de liberté autorisés par la liaison.<br>
+        <p class="info">Les curseurs commandent les degrés de liberté autorisés.<br>
         Souris = tourner la vue • Molette = zoom</p>
       </div>
     </div>
@@ -196,9 +198,11 @@ function toggleTheme() {
     document.getElementById('theme-label').textContent = 'Clair';
     localStorage.setItem('theme', 'dark');
   }
-  if (scene) scene.background = new THREE.Color(
-    document.documentElement.getAttribute('data-theme') === 'dark' ? 0x0a0a12 : 0xe2e8f0
-  );
+  if (scene) {
+    scene.background = new THREE.Color(
+      document.documentElement.getAttribute('data-theme') === 'dark' ? 0x0a0a12 : 0xe2e8f0
+    );
+  }
 }
 if (localStorage.getItem('theme') === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
@@ -209,80 +213,59 @@ if (localStorage.getItem('theme') === 'dark') {
 /* ========== Données ========== */
 const LIAISONS = {
   encastrement: {
-    name: "Encastrement",
-    dof: "0 ddl",
+    name: "Encastrement", dof: "0 ddl",
     geo: "Aucun élément géométrique particulier (liaison complète).",
-    point: "A quelconque",
-    base: "(\\vec{x},\\vec{y},\\vec{z})",
-    cineFree: [],                // indices 0..5 = Ωx Ωy Ωz Vx Vy Vz
-    statFree: [0,1,2,3,4,5],     // Rx Ry Rz Mx My Mz
+    point: "A quelconque", base: "(x, y, z)",
+    cineFree: [], statFree: [0,1,2,3,4,5],
     params: []
   },
   pivot: {
-    name: "Pivot",
-    dof: "1 ddl",
+    name: "Pivot", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    point: "A ∈ Δ",
-    base: "\\vec{z} \\parallel \\Delta",
-    cineFree: [2],               // Ωz
-    statFree: [0,1,2,3,4],       // tout sauf Mz
-    params: [{ id: "rz", label: "Ωz (rot)", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
+    point: "A ∈ Δ", base: "z ∥ Δ",
+    cineFree: [2], statFree: [0,1,2,3,4],
+    params: [{ id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
   },
   glissiere: {
-    name: "Glissière",
-    dof: "1 ddl",
-    geo: "Caractérisée par sa <strong>direction \\(\\vec{u}\\)</strong>.",
-    point: "A quelconque",
-    base: "\\vec{z} \\parallel \\vec{u}",
-    cineFree: [5],               // Vz
-    statFree: [0,1,3,4,5],
-    params: [{ id: "tz", label: "Vz (trans)", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
+    name: "Glissière", dof: "1 ddl",
+    geo: "Caractérisée par sa <strong>direction u</strong>.",
+    point: "A quelconque", base: "z ∥ u",
+    cineFree: [5], statFree: [0,1,3,4,5],
+    params: [{ id: "tz", label: "Translation Vz", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
   },
   helicoidale: {
-    name: "Hélicoïdale",
-    dof: "1 ddl",
+    name: "Hélicoïdale", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> et son <strong>pas p</strong>.",
-    point: "A ∈ Δ",
-    base: "\\vec{z} \\parallel \\Delta",
-    cineFree: [2,5],             // Ωz et Vz (liés)
-    statFree: [0,1,2,3,4],
-    params: [{ id: "hel", label: "paramètre hélicoïdal", min: -3, max: 3, step: 0.01, value: 0 }]
+    point: "A ∈ Δ", base: "z ∥ Δ",
+    cineFree: [2,5], statFree: [0,1,2,3,4],
+    params: [{ id: "hel", label: "Paramètre hélicoïdal", min: -4, max: 4, step: 0.01, value: 0 }]
   },
   pivotglissant: {
-    name: "Pivot glissant",
-    dof: "2 ddl",
+    name: "Pivot glissant", dof: "2 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    point: "A ∈ Δ",
-    base: "\\vec{z} \\parallel \\Delta",
-    cineFree: [2,5],
-    statFree: [0,1,3,4],
+    point: "A ∈ Δ", base: "z ∥ Δ",
+    cineFree: [2,5], statFree: [0,1,3,4],
     params: [
-      { id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
-      { id: "tz", label: "Vz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+      { id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
+      { id: "tz", label: "Translation Vz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
     ]
   },
   spherique: {
-    name: "Sphérique",
-    dof: "3 ddl",
+    name: "Sphérique", dof: "3 ddl",
     geo: "Caractérisée par son <strong>centre C</strong>.",
-    point: "C (centre)",
-    base: "(\\vec{x},\\vec{y},\\vec{z})",
-    cineFree: [0,1,2],
-    statFree: [0,1,2],
+    point: "C (centre)", base: "(x, y, z)",
+    cineFree: [0,1,2], statFree: [0,1,2],
     params: [
-      { id: "rx", label: "Ωx", min: -1.2, max: 1.2, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy", min: -1.2, max: 1.2, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.2, max: 1.2, step: 0.01, value: 0 }
+      { id: "rx", label: "Ωx", min: -1.3, max: 1.3, step: 0.01, value: 0 },
+      { id: "ry", label: "Ωy", min: -1.3, max: 1.3, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.3, max: 1.3, step: 0.01, value: 0 }
     ]
   },
   sphereplan: {
-    name: "Sphère / Plan",
-    dof: "5 ddl",
+    name: "Sphère / Plan", dof: "5 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong> et le <strong>point de contact</strong>.",
-    point: "I (point de contact)",
-    base: "\\vec{z} \\perp plan",
-    cineFree: [0,1,2,3,4],
-    statFree: [2],
+    point: "I (point de contact)", base: "z ⊥ plan",
+    cineFree: [0,1,2,3,4], statFree: [2],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -292,28 +275,22 @@ const LIAISONS = {
     ]
   },
   spherecylindre: {
-    name: "Sphère / Cylindre",
-    dof: "4 ddl",
+    name: "Sphère / Cylindre", dof: "4 ddl",
     geo: "Caractérisée par l’<strong>axe du cylindre</strong>.",
-    point: "A ∈ axe",
-    base: "\\vec{z} \\parallel axe",
-    cineFree: [0,1,2,5],
-    statFree: [0,1],
+    point: "A ∈ axe", base: "z ∥ axe",
+    cineFree: [0,1,2,5], statFree: [0,1],
     params: [
       { id: "tz", label: "Vz", min: -1.4, max: 1.4, step: 0.01, value: 0 },
-      { id: "rx", label: "Ωx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+      { id: "rx", label: "Ωx", min: -1.6, max: 1.6, step: 0.01, value: 0 },
+      { id: "ry", label: "Ωy", min: -1.6, max: 1.6, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.6, max: 1.6, step: 0.01, value: 0 }
     ]
   },
   cylindreplan: {
-    name: "Cylindre / Plan",
-    dof: "4 ddl",
+    name: "Cylindre / Plan", dof: "4 ddl",
     geo: "Caractérisée par la <strong>direction des génératrices</strong> et le plan.",
-    point: "A sur la génératrice de contact",
-    base: "\\vec{x} \\parallel génératrices, \\vec{z} \\perp plan",
-    cineFree: [1,2,3,5],
-    statFree: [1,4],
+    point: "A sur la génératrice de contact", base: "x ∥ génératrices , z ⊥ plan",
+    cineFree: [1,2,3,5], statFree: [1,4],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "tz", label: "Vz", min: -1.2, max: 1.2, step: 0.01, value: 0 },
@@ -322,13 +299,10 @@ const LIAISONS = {
     ]
   },
   appuiplan: {
-    name: "Appui plan",
-    dof: "3 ddl",
+    name: "Appui plan", dof: "3 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong>.",
-    point: "A dans le plan",
-    base: "\\vec{z} \\perp plan",
-    cineFree: [2,3,4],
-    statFree: [2,5],
+    point: "A dans le plan", base: "z ⊥ plan",
+    cineFree: [2,3,4], statFree: [2,5],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -337,13 +311,15 @@ const LIAISONS = {
   }
 };
 
-const COMP_CINE = ["Ωx","Ωy","Ωz","Vx","Vy","Vz"];
-const COMP_STAT = ["Rx","Ry","Rz","Mx","My","Mz"];
+// Indices : 0:Ωx/X  1:Ωy/Y  2:Ωz/Z  3:Vx/L  4:Vy/M  5:Vz/N
+const CINE_SYMBOLS = ["Ωx","Ωy","Ωz","Vx","Vy","Vz"];
+const STAT_SYMBOLS = ["X","Y","Z","L","M","N"];
 
 let currentKey = "pivot";
 let userCine = new Set();
 let userStat = new Set();
 let checked = false;
+const paramValues = {};
 
 /* ========== UI ========== */
 function initButtons() {
@@ -379,41 +355,43 @@ function renderInfo() {
   const torseurs = document.getElementById("torseurs");
   torseurs.innerHTML = `
     <div class="torseur-box">
-      <div class="torseur-title">Torseur cinématique $\\{ \\mathcal{V}_{1/0} \\}$</div>
+      <div class="torseur-title">{ 𝒱<sub>1/0</sub> } &nbsp;–&nbsp; Torseur cinématique</div>
       <div class="bmatrix">
-        <div class="bm-left">{</div>
-        <div class="bm-cells" id="cine-cells"></div>
-        <div class="bm-right">}</div>
+        <div class="bm-brace">{</div>
+        <div class="bm-grid" id="cine-cells"></div>
+        <div class="bm-brace">}</div>
       </div>
-      <div class="point-base">point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
+      <div class="point-base">au point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
     </div>
     <div class="torseur-box">
-      <div class="torseur-title">Torseur des actions $\\{ \\mathcal{T}_{0 \\to 1} \\}$</div>
+      <div class="torseur-title">{ 𝒯<sub>0→1</sub> } &nbsp;–&nbsp; Torseur des actions mécaniques</div>
       <div class="bmatrix">
-        <div class="bm-left">{</div>
-        <div class="bm-cells" id="stat-cells"></div>
-        <div class="bm-right">}</div>
+        <div class="bm-brace">{</div>
+        <div class="bm-grid" id="stat-cells"></div>
+        <div class="bm-brace">}</div>
       </div>
-      <div class="point-base">point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
+      <div class="point-base">au point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
     </div>
   `;
 
-  // cellules cliquables
   const cineCells = document.getElementById("cine-cells");
   const statCells = document.getElementById("stat-cells");
-  COMP_CINE.forEach((name, i) => {
+
+  // Ordre d'affichage : Ωx Vx / Ωy Vy / Ωz Vz
+  [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
     div.dataset.idx = i;
-    div.innerHTML = `<span>${name}</span>`;
+    div.textContent = "0";
     div.onclick = () => toggleComp("cine", i, div);
     cineCells.appendChild(div);
   });
-  COMP_STAT.forEach((name, i) => {
+  // X L / Y M / Z N
+  [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
     div.dataset.idx = i;
-    div.innerHTML = `<span>${name}</span>`;
+    div.textContent = "0";
     div.onclick = () => toggleComp("stat", i, div);
     statCells.appendChild(div);
   });
@@ -424,12 +402,16 @@ function renderInfo() {
 function toggleComp(type, idx, el) {
   if (checked) return;
   const set = type === "cine" ? userCine : userStat;
+  const symbols = type === "cine" ? CINE_SYMBOLS : STAT_SYMBOLS;
+
   if (set.has(idx)) {
     set.delete(idx);
     el.classList.remove("selected");
+    el.textContent = "0";
   } else {
     set.add(idx);
     el.classList.add("selected");
+    el.textContent = symbols[idx];
   }
 }
 
@@ -438,32 +420,36 @@ function checkAnswer() {
   const L = LIAISONS[currentKey];
   let allOk = true;
 
-  // Cinématique
   document.querySelectorAll("#cine-cells .comp").forEach(el => {
     const idx = +el.dataset.idx;
     const should = L.cineFree.includes(idx);
     const selected = userCine.has(idx);
     el.classList.remove("selected", "correct", "wrong");
-    if (should && selected) el.classList.add("correct");
-    else if (!should && !selected) el.classList.add("correct");
-    else { el.classList.add("wrong"); allOk = false; }
+    if ((should && selected) || (!should && !selected)) {
+      el.classList.add("correct");
+    } else {
+      el.classList.add("wrong");
+      allOk = false;
+    }
   });
 
-  // Statique
   document.querySelectorAll("#stat-cells .comp").forEach(el => {
     const idx = +el.dataset.idx;
     const should = L.statFree.includes(idx);
     const selected = userStat.has(idx);
     el.classList.remove("selected", "correct", "wrong");
-    if (should && selected) el.classList.add("correct");
-    else if (!should && !selected) el.classList.add("correct");
-    else { el.classList.add("wrong"); allOk = false; }
+    if ((should && selected) || (!should && !selected)) {
+      el.classList.add("correct");
+    } else {
+      el.classList.add("wrong");
+      allOk = false;
+    }
   });
 
   const fb = document.getElementById("feedback");
   fb.className = "feedback show " + (allOk ? "ok" : "ko");
   fb.textContent = allOk
-    ? "✅ Parfait ! Toutes les composantes sont correctes."
+    ? "✅ Bravo ! Toutes les composantes sont correctes."
     : "❌ Certaines composantes sont incorrectes (en rouge).";
 }
 
@@ -473,13 +459,13 @@ function resetSelection() {
   checked = false;
   document.querySelectorAll(".comp").forEach(el => {
     el.classList.remove("selected", "correct", "wrong");
+    el.textContent = "0";
   });
   document.getElementById("feedback").className = "feedback";
 }
 
 /* ========== Three.js ========== */
 let scene, camera, renderer, controls, mobile;
-const paramValues = {};
 
 function initThree() {
   const container = document.getElementById("canvas-container");
@@ -496,7 +482,7 @@ function initThree() {
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
   dir.position.set(5, 10, 7);
   scene.add(dir);
   scene.add(new THREE.AxesHelper(2.2));
@@ -513,29 +499,83 @@ function initThree() {
 }
 
 function clearScene() {
-  while (scene.children.length > 3) { // keep lights + axes
-    const o = scene.children[3];
-    scene.remove(o);
-  }
+  while (scene.children.length > 3) scene.remove(scene.children[3]);
   mobile = null;
+}
+
+function createStripeTexture() {
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 64;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillRect(0, 0, 64, 64);
+  ctx.fillStyle = "#93c5fd";
+  for (let i = 0; i < 8; i++) ctx.fillRect(i*8, 0, 4, 64);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3, 1);
+  return tex;
+}
+
+function createHelixTexture() {
+  const c = document.createElement("canvas");
+  c.width = 128; c.height = 128;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillRect(0, 0, 128, 128);
+  ctx.strokeStyle = "#1e40af";
+  ctx.lineWidth = 6;
+  for (let i = -2; i < 6; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, i*32);
+    ctx.lineTo(128, i*32 + 64);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 4);
+  return tex;
+}
+
+function createSphereTexture() {
+  const c = document.createElement("canvas");
+  c.width = 128; c.height = 128;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillRect(0, 0, 128, 128);
+  ctx.strokeStyle = "#93c5fd";
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 8; i++) {
+    ctx.beginPath();
+    ctx.arc(64, 64, 10 + i*7, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(0, 64); ctx.lineTo(128, 64);
+  ctx.moveTo(64, 0); ctx.lineTo(64, 128);
+  ctx.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
 }
 
 function buildScene(key) {
   clearScene();
   const matFix = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
   const matMob = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
+  const matStripe = new THREE.MeshStandardMaterial({ map: createStripeTexture() });
+  const matHelix  = new THREE.MeshStandardMaterial({ map: createHelixTexture() });
+  const matSphere = new THREE.MeshStandardMaterial({ map: createSphereTexture() });
 
   if (key === "encastrement") {
     const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matFix);
     const b2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matMob);
     b1.position.x = -1; b2.position.x = 1;
-    scene.add(b1, b2);
-    mobile = b2;
+    scene.add(b1, b2); mobile = b2;
   }
   else if (key === "pivot") {
     const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4, 16), matFix);
     mobile = new THREE.Group();
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.35), matMob);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.35), matStripe);
     arm.position.x = 0.8;
     mobile.add(arm);
     scene.add(base, mobile);
@@ -547,18 +587,18 @@ function buildScene(key) {
   }
   else if (key === "helicoidale") {
     const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.45, 16), matMob);
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.55, 24), matHelix);
     scene.add(axe, mobile);
   }
   else if (key === "pivotglissant") {
     const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.7, 16), matMob);
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.7, 24), matStripe);
     scene.add(axe, mobile);
   }
   else if (key === "spherique") {
     const socket = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 16), matFix);
     mobile = new THREE.Group();
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 14), matMob);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 14), matSphere);
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 12), matMob);
     stick.position.y = 0.65;
     mobile.add(ball, stick);
@@ -567,19 +607,19 @@ function buildScene(key) {
   else if (key === "sphereplan") {
     const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
     plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 16), matMob);
+    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 16), matSphere);
     mobile.position.y = 0.45;
     scene.add(plane, mobile);
   }
   else if (key === "spherecylindre") {
     const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 2.8, 24, 1, true), matFix);
-    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 14), matMob);
+    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), matSphere);
     scene.add(cyl, mobile);
   }
   else if (key === "cylindreplan") {
     const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 2.8), matFix);
     plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2.0, 24), matMob);
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2.0, 24), matStripe);
     mobile.rotation.z = Math.PI / 2;
     mobile.position.y = 0.35;
     scene.add(plane, mobile);
@@ -587,12 +627,11 @@ function buildScene(key) {
   else if (key === "appuiplan") {
     const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
     plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 1.1), matMob);
+    mobile = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 1.1), matStripe);
     mobile.position.y = 0.125;
     scene.add(plane, mobile);
   }
 
-  // reset params
   LIAISONS[key].params.forEach(p => paramValues[p.id] = p.value);
   applyParams(key);
 }
@@ -601,8 +640,8 @@ function buildSliders(key) {
   const cont = document.getElementById("sliders");
   cont.innerHTML = "";
   const params = LIAISONS[key].params;
-  if (params.length === 0) {
-    cont.innerHTML = "<p class='info'>Aucun degré de liberté (encastrement).</p>";
+  if (!params.length) {
+    cont.innerHTML = "<p class='info'>Aucun degré de liberté.</p>";
     return;
   }
   params.forEach(p => {
@@ -611,10 +650,10 @@ function buildSliders(key) {
     row.innerHTML = `
       <span>${p.label}</span>
       <input type="range" id="sl-${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.value}">
-      <span id="val-${p.id}">${p.value.toFixed(2)}</span>
+      <span id="val-${p.id}">${Number(p.value).toFixed(2)}</span>
     `;
     cont.appendChild(row);
-    document.getElementById(`sl-${p.id}`).oninput = (e) => {
+    document.getElementById(`sl-${p.id}`).oninput = e => {
       const v = parseFloat(e.target.value);
       paramValues[p.id] = v;
       document.getElementById(`val-${p.id}`).textContent = v.toFixed(2);
@@ -627,38 +666,28 @@ function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
-  if (key === "pivot") {
-    mobile.rotation.y = v.rz || 0;
-  }
-  else if (key === "glissiere") {
-    mobile.position.x = v.tz || 0;
-  }
+  if (key === "pivot") mobile.rotation.y = v.rz || 0;
+  else if (key === "glissiere") mobile.position.x = v.tz || 0;
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.y = t * 2;
-    mobile.position.y = t * 0.35;
+    mobile.rotation.y = t * 2.2;
+    mobile.position.y = t * 0.28;
   }
   else if (key === "pivotglissant") {
     mobile.rotation.y = v.rz || 0;
     mobile.position.y = v.tz || 0;
   }
   else if (key === "spherique") {
-    mobile.rotation.x = v.rx || 0;
-    mobile.rotation.y = v.rz || 0;
-    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.set(v.rx || 0, v.rz || 0, v.ry || 0);
   }
   else if (key === "sphereplan") {
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
-    mobile.rotation.x = v.rx || 0;
-    mobile.rotation.y = v.rz || 0;
-    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.set(v.rx || 0, v.rz || 0, v.ry || 0);
   }
   else if (key === "spherecylindre") {
     mobile.position.y = v.tz || 0;
-    mobile.rotation.x = v.rx || 0;
-    mobile.rotation.y = v.rz || 0;
-    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.set(v.rx || 0, v.rz || 0, v.ry || 0);
   }
   else if (key === "cylindreplan") {
     mobile.position.x = v.tx || 0;
