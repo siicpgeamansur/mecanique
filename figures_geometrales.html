@@ -194,7 +194,7 @@
       border-radius: 8px;
       padding: 10px 12px;
       text-align: center;
-      min-width: 240px;
+      min-width: 280px;
     }
     .fig2d svg {
       display: block;
@@ -329,8 +329,7 @@
       <div class="section">
         <h2>Figures géométriques 2D de changement de base</h2>
         <p class="note">
-          Les figures sont <strong>toujours dessinées avec un petit angle positif (~25°)</strong> pour éviter les confusions de projection.
-          L’angle réel (et son signe) est indiqué dans la légende.
+          Lorsque plusieurs rotations successives partagent le même axe physique, les orientations sont visualisées sur la même figure 2D avec un espacement progressif (15° par défaut, ou 10° si 3+ étapes) pour bien distinguer chaque base. L’angle réel s'affiche dans la légende.
         </p>
         <div class="fig2d-container" id="fig2dContainer"></div>
       </div>
@@ -372,7 +371,6 @@
   </main>
 
   <script>
-    // ===================== Helper for KaTeX rendering =====================
     function renderMath(element) {
       if (window.renderMathInElement) {
         renderMathInElement(element, {
@@ -505,10 +503,6 @@
       return symMatVec(Rij, e);
     }
 
-    function fmtSymVec(v) {
-      return `\\begin{pmatrix} ${v[0]} \\\\ ${v[1]} \\\\ ${v[2]} \\end{pmatrix}`;
-    }
-
     function getRotationGroups() {
       const steps = [
         { from: 0, to: 1, axis: axes.a10, angle: angles.t10, key: '10' },
@@ -539,42 +533,62 @@
       return groups;
     }
 
+    // Figures 2D avec espacement visuel progressif pour voir les successions sur la même figure
     function draw2DFigure(group) {
-      const size = 230;
+      const size = 280;
       const cx = size / 2, cy = size / 2;
-      const len = 80;
-      const displayDeg = 25;
-      const displayRad = deg2rad(displayDeg);
+      const len = 100;
+      
       let labelU, labelV;
       if (group.axis === 'z') { labelU = 'x'; labelV = 'y'; }
       else if (group.axis === 'x') { labelU = 'y'; labelV = 'z'; }
       else { labelU = 'z'; labelV = 'x'; }
 
-      const colorStart = ['#333', '#e74c3c', '#27ae60', '#3498db'][group.from];
-      const colorEnd   = ['#333', '#e74c3c', '#27ae60', '#3498db'][group.to];
+      const numSteps = group.steps.length;
+      const baseStepAngle = numSteps >= 3 ? 10 : 15;
+
+      // Calcul des angles cumulés d'affichage visuel
+      const displayAngles = [0];
+      let currentSum = 0;
+      group.angles.forEach((_, idx) => {
+        currentSum += (idx === 0 ? 25 : baseStepAngle); // Base de départ à 25° puis décalage progressif
+        displayAngles.push(currentSum);
+      });
+
       function toSvg(mx, my) { return [cx + mx, cy - my]; }
 
-      const cosT = Math.cos(displayRad), sinT = Math.sin(displayRad);
-      const [su0x, su0y] = toSvg(len, 0);
-      const [sv0x, sv0y] = toSvg(0, len);
-      const [su1x, su1y] = toSvg(cosT * len, sinT * len);
-      const [sv1x, sv1y] = toSvg(-sinT * len, cosT * len);
-      const rArc = 38;
-      const [ax0, ay0] = toSvg(rArc, 0);
-      const [ax1, ay1] = toSvg(rArc * cosT, rArc * sinT);
-      const arcPath = `M ${ax0} ${ay0} A ${rArc} ${rArc} 0 0 1 ${ax1} ${ay1}`;
+      // Génération des vecteurs unitaires pour chaque base de la fusion
+      const baseLinesSvg = [];
+      const colors = ['#333', '#e74c3c', '#27ae60', '#3498db'];
 
+      for (let i = 0; i <= numSteps; i++) {
+        const bIdx = group.from + i;
+        const col = colors[bIdx] || '#333';
+        const rad = deg2rad(displayAngles[i]);
+        const cosT = Math.cos(rad), sinT = Math.sin(rad);
+
+        const [sux, suy] = toSvg(cosT * len, sinT * len);
+        const [svx, svy] = toSvg(-sinT * len, cosT * len);
+
+        baseLinesSvg.push(`
+          <line x1="${cx}" y1="${cy}" x2="${sux}" y2="${suy}" stroke="${col}" stroke-width="2.6"/>
+          <line x1="${cx}" y1="${cy}" x2="${svx}" y2="${svy}" stroke="${col}" stroke-width="2.6"/>
+          <text x="${sux + 8}" y="${suy + 5}" fill="${col}" font-size="13" font-weight="600">${labelU}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
+          <text x="${svx + 6}" y="${svy - 6}" fill="${col}" font-size="13" font-weight="600">${labelV}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
+        `);
+      }
+
+      // Légende textuelle des angles
       let angleHtml = '';
       if (group.keys.length === 1) {
         angleHtml = `\\(\\theta_{${group.keys[0]}} = ${group.angles[0]}^\\circ\\)`;
       } else {
-        const parts = group.keys.map(k => `\\theta_{${k}}`);
-        const total = group.angles.reduce((a,b)=>a+b, 0);
-        angleHtml = `\\(${parts.join(' + ')} = ${total.toFixed(1)}^\\circ\\)`;
+        const parts = group.keys.map((k, idx) => `\\theta_{${k}} = ${group.angles[idx]}^\\circ`);
+        angleHtml = parts.join(', ');
       }
 
-      const title = group.angles.length > 1
-        ? `Rotations fusionnées autour de \\(${group.axis}\\) (\\(b_{${group.from}} \\to b_{${group.to}}\\))`
+      const title = numSteps > 1
+        ? `Rotations successives autour de \\(${group.axis}\\) (\\(b_{${group.from}} \\to b_{${group.to}}\\))`
         : `Rotation autour de \\(${group.axis}_${group.from}\\) (\\(b_{${group.from}} \\to b_{${group.to}}\\))`;
 
       return `
@@ -583,21 +597,13 @@
           <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
             <line x1="0" y1="${cy}" x2="${size}" y2="${cy}" stroke="#eee" stroke-width="1"/>
             <line x1="${cx}" y1="0" x2="${cx}" y2="${size}" stroke="#eee" stroke-width="1"/>
-            <line x1="${cx}" y1="${cy}" x2="${su0x}" y2="${su0y}" stroke="${colorStart}" stroke-width="2.8"/>
-            <line x1="${cx}" y1="${cy}" x2="${sv0x}" y2="${sv0y}" stroke="${colorStart}" stroke-width="2.8"/>
-            <text x="${su0x + 9}" y="${su0y + 5}" fill="${colorStart}" font-size="14" font-weight="600">${labelU}<tspan baseline-shift="sub" font-size="11">${group.from}</tspan></text>
-            <text x="${sv0x + 7}" y="${sv0y - 7}" fill="${colorStart}" font-size="14" font-weight="600">${labelV}<tspan baseline-shift="sub" font-size="11">${group.from}</tspan></text>
-            <line x1="${cx}" y1="${cy}" x2="${su1x}" y2="${su1y}" stroke="${colorEnd}" stroke-width="2.8"/>
-            <line x1="${cx}" y1="${cy}" x2="${sv1x}" y2="${sv1y}" stroke="${colorEnd}" stroke-width="2.8"/>
-            <text x="${su1x + 9}" y="${su1y + 5}" fill="${colorEnd}" font-size="14" font-weight="600">${labelU}<tspan baseline-shift="sub" font-size="11">${group.to}</tspan></text>
-            <text x="${sv1x + 7}" y="${sv1y - 7}" fill="${colorEnd}" font-size="14" font-weight="600">${labelV}<tspan baseline-shift="sub" font-size="11">${group.to}</tspan></text>
-            <path d="${arcPath}" fill="none" stroke="#555" stroke-width="1.8"/>
-            <circle cx="${cx}" cy="${cy}" r="2.8" fill="#222"/>
+            ${baseLinesSvg.join('')}
+            <circle cx="${cx}" cy="${cy}" r="3" fill="#222"/>
           </svg>
           <div class="fig2d-caption">
-            Axe de rotation : <strong>${group.axis}</strong><br>
+            Axe : <strong>${group.axis}</strong><br>
             ${angleHtml}
-            <br><span style="font-size:0.78rem;color:#888;">(figure dessinée avec un angle positif fixe de 25°)</span>
+            <br><span style="font-size:0.75rem;color:#888;">(espacement visuel adapté pour distinguer les orientations)</span>
           </div>
         </div>
       `;
@@ -781,7 +787,7 @@
       const groups = getRotationGroups();
       let html = `Rotations : \\(\\theta_{10}\\) autour de <b>\\(${axes.a10}_0\\)</b>, \\(\\theta_{21}\\) autour de <b>\\(${axes.a21}_1\\)</b>, \\(\\theta_{32}\\) autour de <b>\\(${axes.a32}_2\\)</b>.<br>`;
       if (groups.length < 3) {
-        html += `<span style="color:#0a58ca;">Certaines rotations partagent le même axe physique → figures 2D fusionnées.</span>`;
+        html += `<span style="color:#0a58ca;">Certaines rotations partagent le même axe physique → figures 2D fusionnées avec espacement visuel.</span>`;
       } else {
         html += `Tous les axes de rotation sont distincts → 3 figures 2D séparées.`;
       }
