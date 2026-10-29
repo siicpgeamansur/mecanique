@@ -5,7 +5,7 @@ On peut observer une zone inaccessible et jouer avec les longueurs des bras et l
 
 Voici une page pour visualiser l'équilibrage dynamique d'un rotor :
 
-[equilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html)
+[équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html)
 
 Voici une page pour visualiser l'arc-boutement :
 
