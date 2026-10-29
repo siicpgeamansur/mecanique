@@ -739,50 +739,50 @@ function applyParams(key) {
   // rotation.y  = rotation autour de z⃗
 
   if (key === "pivot") {
-    // Ωz → rotation autour de z⃗ (vert) = Three.js Y
-    mobile.rotation.y = v.rz || 0;
+    // Ωz → rotation autour de z⃗ (vert) = Three.js Z
+    mobile.rotation.z = v.rz || 0;
   }
   else if (key === "glissiere") {
-    // Vz → translation selon y (rouge) = Three.js Y
+    // Vy → translation selon y (rouge) = Three.js Y
     mobile.position.y = v.ty || 0;
   }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.y = t * 2.2;   // Ωz
-    mobile.position.y = t * 0.28;  // Vz
+    mobile.rotation.z = t * 2.2;   // Ωz
+    mobile.position.z = t * 0.28;  // Vz
   }
   else if (key === "pivotglissant") {
-    mobile.rotation.y = v.rz || 0; // Ωz
-    mobile.position.y = v.tz || 0; // Vz
+    mobile.rotation.z = v.rz || 0; // Ωz
+    mobile.position.z = v.tz || 0; // Vz
   }
   else if (key === "spherique") {
     mobile.rotation.x = v.rx || 0; // Ωx → autour de x (rouge)
-    mobile.rotation.z = v.ry || 0; // Ωy → autour de y (bleu)
-    mobile.rotation.y = v.rz || 0; // Ωz → autour de z (vert)
+    mobile.rotation.y = v.ry || 0; // Ωy → autour de y (bleu)
+    mobile.rotation.z = v.rz || 0; // Ωz → autour de z (vert)
   }
   else if (key === "sphereplan") {
     mobile.position.x = v.tx || 0; // Vx → x (rouge)
-    mobile.position.z = v.ty || 0; // Vy → y (bleu)
+    mobile.position.y = v.ty || 0; // Vy → y (bleu)
     mobile.rotation.x = v.rx || 0;
-    mobile.rotation.z = v.ry || 0;
-    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.y = v.ry || 0;
+    mobile.rotation.z = v.rz || 0;
   }
   else if (key === "spherecylindre") {
-    mobile.position.y = v.tz || 0; // Vz
+    mobile.position.z = v.tz || 0; // Vz
     mobile.rotation.x = v.rx || 0;
-    mobile.rotation.z = v.ry || 0;
-    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.y = v.ry || 0;
+    mobile.rotation.z = v.rz || 0;
   }
   else if (key === "cylindreplan") {
     mobile.position.x = v.tx || 0; // Vx
-    mobile.position.y = v.tz || 0; // Vz
-    mobile.rotation.z = v.ry || 0; // Ωy
-    mobile.rotation.y = v.rz || 0; // Ωz
+    mobile.position.z = v.tz || 0; // Vz
+    mobile.rotation.y = v.ry || 0; // Ωy
+    mobile.rotation.z = v.rz || 0; // Ωz
   }
   else if (key === "appuiplan") {
     mobile.position.x = v.tx || 0; // Vx
-    mobile.position.z = v.ty || 0; // Vy
-    mobile.rotation.y = v.rz || 0; // Ωz
+    mobile.position.y = v.ty || 0; // Vy
+    mobile.rotation.z = v.rz || 0; // Ωz
   }
 }
 
