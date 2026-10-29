@@ -743,8 +743,8 @@ function applyParams(key) {
     mobile.rotation.y = v.rz || 0;
   }
   else if (key === "glissiere") {
-    // Vz → translation selon z⃗ (vert) = Three.js Y
-    mobile.position.y = v.tz || 0;
+    // Vz → translation selon y (rouge) = Three.js Y
+    mobile.position.y = v.ty || 0;
   }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
