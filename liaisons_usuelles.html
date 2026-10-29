@@ -3,17 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liaisons usuelles & Torseurs – Animation 3D</title>
+<title>Liaisons usuelles – Torseurs & Mouvements</title>
 <style>
   :root {
     --bg: #ffffff; --card: #f8fafc; --accent: #2563eb; --accent2: #7c3aed;
     --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
     --input-bg: #fff; --code-bg: #f1f5f9;
+    --ok: #16a34a; --ko: #dc2626;
   }
   [data-theme="dark"] {
     --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --accent2: #a78bfa;
     --text: #e2e8f0; --muted: #94a3b8; --border: #334155;
     --input-bg: #0f172a; --code-bg: #0f172a;
+    --ok: #4ade80; --ko: #f87171;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -22,26 +24,14 @@
     min-height: 100vh; padding: 1rem;
     transition: background .25s, color .25s;
   }
-  h1 { text-align: center; font-size: 1.65rem; color: var(--accent); margin-bottom: .25rem; }
+  h1 { text-align: center; font-size: 1.6rem; color: var(--accent); margin-bottom: .3rem; }
   .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.2rem; font-size: .95rem; }
   .container { max-width: 1300px; margin: 0 auto; display: grid; gap: 1.1rem; }
   .card {
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 1.1rem;
+    border-radius: 12px; padding: 1.15rem;
   }
   .card h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: .7rem; }
-  .top-controls {
-    display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center; margin-bottom: .5rem;
-  }
-  .btn {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: #fff; border: none; border-radius: 8px;
-    padding: .5rem 1.1rem; font-size: .9rem; font-weight: 600; cursor: pointer;
-  }
-  [data-theme="dark"] .btn { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
-  .btn-secondary { background: #64748b; }
-  [data-theme="dark"] .btn-secondary { background: #475569; }
-  .btn.active { outline: 3px solid var(--accent); outline-offset: 2px; }
   .theme-toggle {
     position: fixed; top: 1rem; right: 1rem; z-index: 100;
     background: var(--card); border: 1px solid var(--border); color: var(--text);
@@ -49,45 +39,101 @@
     display: flex; align-items: center; gap: .35rem;
   }
   .liaison-select {
-    display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+    display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center;
   }
   .liaison-select button {
     background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 8px; padding: .4rem .8rem; font-size: .85rem; cursor: pointer;
+    border-radius: 8px; padding: .38rem .75rem; font-size: .84rem; cursor: pointer;
   }
   .liaison-select button.active {
     background: var(--accent); color: #fff; border-color: var(--accent);
   }
   .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.1rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem;
   }
-  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 980px) { .main-grid { grid-template-columns: 1fr; } }
   #canvas-container {
-    width: 100%; height: 380px; border-radius: 10px;
+    width: 100%; height: 390px; border-radius: 10px;
     overflow: hidden; border: 1px solid var(--border); background: #0a0a12;
   }
   [data-theme="light"] #canvas-container { background: #e2e8f0; }
-  .svg-box {
-    background: var(--code-bg); border: 1px solid var(--border);
-    border-radius: 10px; padding: .8rem; text-align: center;
-  }
-  .svg-box svg { max-width: 100%; height: auto; }
-  .torseur-col {
-    font-family: 'Fira Code', Consolas, monospace;
-    font-size: .88rem; line-height: 1.45;
-    background: var(--code-bg); border: 1px solid var(--border);
-    border-radius: 10px; padding: .9rem 1rem; overflow-x: auto;
-  }
-  .torseur-col .label { font-size: .78rem; color: var(--muted); margin-bottom: .3rem; font-family: inherit; }
-  .geo { font-size: .9rem; color: var(--muted); margin: .4rem 0; }
+  .geo { font-size: .92rem; color: var(--muted); margin: .4rem 0 .8rem; }
   .geo strong { color: var(--text); }
   .dof-badge {
     display: inline-block; background: var(--accent); color: #fff;
     font-size: .75rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px;
   }
-  .info { font-size: .88rem; color: var(--muted); margin-top: .5rem; }
+  /* Torseurs */
+  .torseurs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .8rem;
+  }
+  @media (max-width: 600px) { .torseurs { grid-template-columns: 1fr; } }
+  .torseur-box {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: .9rem;
+  }
+  .torseur-title {
+    font-size: .82rem; color: var(--muted); margin-bottom: .5rem;
+  }
+  .bmatrix {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 2px 8px;
+    font-family: 'Fira Code', Consolas, monospace;
+    font-size: .95rem;
+    align-items: center;
+    justify-content: start;
+  }
+  .bm-left, .bm-right {
+    font-size: 2.2rem; line-height: 1; color: var(--muted);
+  }
+  .bm-cells {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+  }
+  .comp {
+    display: flex; align-items: center; gap: .35rem;
+    padding: .25rem .4rem; border-radius: 6px; cursor: pointer;
+    user-select: none; border: 1px solid transparent;
+  }
+  .comp:hover { background: rgba(37,99,235,.08); }
+  .comp.selected {
+    background: rgba(37,99,235,.18); border-color: var(--accent);
+  }
+  .comp.correct {
+    background: rgba(22,163,74,.2); border-color: var(--ok); color: var(--ok);
+  }
+  .comp.wrong {
+    background: rgba(220,38,38,.15); border-color: var(--ko); color: var(--ko);
+  }
+  .comp input { display: none; }
+  .point-base {
+    font-size: .8rem; color: var(--muted); margin-top: .45rem;
+  }
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff; border: none; border-radius: 8px;
+    padding: .5rem 1.1rem; font-size: .9rem; font-weight: 600; cursor: pointer;
+  }
+  [data-theme="dark"] .btn { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
+  .btn-row { margin-top: 1rem; display: flex; gap: .6rem; flex-wrap: wrap; }
+  .feedback {
+    margin-top: .7rem; font-size: .9rem; display: none;
+    padding: .5rem .8rem; border-radius: 8px;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: rgba(22,163,74,.12); color: var(--ok); }
+  .feedback.ko { background: rgba(220,38,38,.12); color: var(--ko); }
+  /* Sliders */
+  .sliders { margin-top: .8rem; }
+  .slider-row {
+    display: grid; grid-template-columns: 90px 1fr 50px;
+    align-items: center; gap: .5rem; margin-bottom: .45rem;
+    font-size: .88rem;
+  }
+  input[type=range] { width: 100%; }
+  .info { font-size: .85rem; color: var(--muted); margin-top: .5rem; }
 </style>
 </head>
 <body>
@@ -96,35 +142,38 @@
   </button>
 
   <h1>Liaisons usuelles & Torseurs</h1>
-  <p class="subtitle">Cinématique • Statique • Dualité – Animation 3D des mouvements</p>
+  <p class="subtitle">Dualité cinématique / statique – Sélection des composantes – Mouvement interactif</p>
 
   <div class="container">
-    <!-- Contrôles -->
     <div class="card">
-      <div class="top-controls">
-        <button class="btn" id="btn-cine" onclick="setMode('cine')">Cinématique</button>
-        <button class="btn btn-secondary" id="btn-stat" onclick="setMode('stat')">Statique</button>
-        <button class="btn btn-secondary" id="btn-dual" onclick="setMode('dual')">Dualité</button>
-      </div>
       <div class="liaison-select" id="liaison-buttons"></div>
     </div>
 
-    <!-- Contenu principal -->
     <div class="main-grid">
-      <!-- Gauche : info + SVG + torseurs -->
-      <div class="card" id="info-panel">
+      <!-- Gauche -->
+      <div class="card">
         <h2 id="liaison-name">–</h2>
         <div id="liaison-dof"></div>
         <div class="geo" id="liaison-geo"></div>
-        <div class="svg-box" id="svg-container"></div>
-        <div id="torseurs-container" style="margin-top:1rem"></div>
+
+        <div class="torseurs" id="torseurs">
+          <!-- rempli en JS -->
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" onclick="checkAnswer()">Vérifier</button>
+          <button class="btn" style="background:#64748b" onclick="resetSelection()">Réinitialiser</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
       </div>
 
-      <!-- Droite : 3D -->
+      <!-- Droite : 3D + sliders -->
       <div class="card">
-        <h2>Animation 3D des mouvements autorisés</h2>
+        <h2>Mouvement de la pièce mobile (bleue)</h2>
         <div id="canvas-container"></div>
-        <p class="info">Souris = rotation de la vue • Molette = zoom</p>
+        <div class="sliders" id="sliders"></div>
+        <p class="info">Les curseurs correspondent aux degrés de liberté autorisés par la liaison.<br>
+        Souris = tourner la vue • Molette = zoom</p>
       </div>
     </div>
   </div>
@@ -147,7 +196,9 @@ function toggleTheme() {
     document.getElementById('theme-label').textContent = 'Clair';
     localStorage.setItem('theme', 'dark');
   }
-  if (scene) scene.background = new THREE.Color(dark ? 0xf1f5f9 : 0x0a0a12);
+  if (scene) scene.background = new THREE.Color(
+    document.documentElement.getAttribute('data-theme') === 'dark' ? 0x0a0a12 : 0xe2e8f0
+  );
 }
 if (localStorage.getItem('theme') === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
@@ -155,379 +206,150 @@ if (localStorage.getItem('theme') === 'dark') {
   document.getElementById('theme-label').textContent = 'Clair';
 }
 
-/* ========== Données des liaisons ========== */
+/* ========== Données ========== */
 const LIAISONS = {
   encastrement: {
     name: "Encastrement",
     dof: "0 ddl",
     geo: "Aucun élément géométrique particulier (liaison complète).",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="30" y="40" width="60" height="40" fill="#94a3b8" stroke="#334155" stroke-width="2"/>
-      <rect x="110" y="40" width="60" height="40" fill="#64748b" stroke="#334155" stroke-width="2"/>
-      <line x1="90" y1="60" x2="110" y2="60" stroke="#ef4444" stroke-width="4"/>
-      <text x="100" y="105" text-anchor="middle" font-size="12" fill="#64748b">Solide 1  —  Solide 0</text>
-    </svg>`,
-    cine: `{0}\n{0}\n{0}\n{0}\n{0}\n{0}`,
-    stat: `{Rx}\n{Ry}\n{Rz}\n{Mx}\n{My}\n{Mz}`,
     point: "A quelconque",
-    base: "(x,y,z)"
+    base: "(\\vec{x},\\vec{y},\\vec{z})",
+    cineFree: [],                // indices 0..5 = Ωx Ωy Ωz Vx Vy Vz
+    statFree: [0,1,2,3,4,5],     // Rx Ry Rz Mx My Mz
+    params: []
   },
   pivot: {
     name: "Pivot",
     dof: "1 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong> (direction + point).",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="20" y="45" width="50" height="30" fill="#94a3b8" stroke="#334155"/>
-      <circle cx="100" cy="60" r="18" fill="none" stroke="#2563eb" stroke-width="3"/>
-      <circle cx="100" cy="60" r="6" fill="#2563eb"/>
-      <rect x="130" y="45" width="50" height="30" fill="#64748b" stroke="#334155"/>
-      <line x1="100" y1="20" x2="100" y2="100" stroke="#ef4444" stroke-width="2" stroke-dasharray="4"/>
-      <text x="100" y="15" text-anchor="middle" font-size="11" fill="#ef4444">axe Δ</text>
-    </svg>`,
-    cine: `{0}\n{0}\n{Ωz}\n{0}\n{0}\n{0}`,
-    stat: `{Rx}\n{Ry}\n{Rz}\n{Mx}\n{My}\n{0}`,
+    geo: "Caractérisée par son <strong>axe Δ</strong>.",
     point: "A ∈ Δ",
-    base: "z // Δ"
+    base: "\\vec{z} \\parallel \\Delta",
+    cineFree: [2],               // Ωz
+    statFree: [0,1,2,3,4],       // tout sauf Mz
+    params: [{ id: "rz", label: "Ωz (rot)", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
   },
   glissiere: {
     name: "Glissière",
     dof: "1 ddl",
-    geo: "Caractérisée par sa <strong>direction u</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="30" y="50" width="140" height="20" fill="#cbd5e1" stroke="#64748b"/>
-      <rect x="70" y="40" width="40" height="40" fill="#2563eb" stroke="#1e40af"/>
-      <line x1="20" y1="60" x2="180" y2="60" stroke="#ef4444" stroke-width="2" stroke-dasharray="4"/>
-      <text x="100" y="100" text-anchor="middle" font-size="11" fill="#ef4444">direction u</text>
-    </svg>`,
-    cine: `{0}\n{0}\n{0}\n{0}\n{0}\n{Vz}`,
-    stat: `{Rx}\n{Ry}\n{0}\n{Mx}\n{My}\n{Mz}`,
+    geo: "Caractérisée par sa <strong>direction \\(\\vec{u}\\)</strong>.",
     point: "A quelconque",
-    base: "z // u"
+    base: "\\vec{z} \\parallel \\vec{u}",
+    cineFree: [5],               // Vz
+    statFree: [0,1,3,4,5],
+    params: [{ id: "tz", label: "Vz (trans)", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
   },
   helicoidale: {
     name: "Hélicoïdale",
     dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> et son <strong>pas p</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="80" y="20" width="40" height="80" rx="8" fill="#94a3b8" stroke="#334155"/>
-      <path d="M90 30 Q110 40 90 50 Q70 60 90 70 Q110 80 90 90" fill="none" stroke="#2563eb" stroke-width="3"/>
-      <line x1="100" y1="10" x2="100" y2="110" stroke="#ef4444" stroke-width="2" stroke-dasharray="4"/>
-      <text x="100" y="15" text-anchor="middle" font-size="11" fill="#ef4444">axe Δ + pas p</text>
-    </svg>`,
-    cine: `{0}\n{0}\n{Ωz}\n{0}\n{0}\n{(p/2π)Ωz}`,
-    stat: `{Rx}\n{Ry}\n{Rz}\n{Mx}\n{My}\n{−(p/2π)Rz}`,
     point: "A ∈ Δ",
-    base: "z // Δ"
+    base: "\\vec{z} \\parallel \\Delta",
+    cineFree: [2,5],             // Ωz et Vz (liés)
+    statFree: [0,1,2,3,4],
+    params: [{ id: "hel", label: "paramètre hélicoïdal", min: -3, max: 3, step: 0.01, value: 0 }]
   },
   pivotglissant: {
     name: "Pivot glissant",
     dof: "2 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="85" y="15" width="30" height="90" fill="#94a3b8" stroke="#334155"/>
-      <circle cx="100" cy="60" r="22" fill="none" stroke="#2563eb" stroke-width="3"/>
-      <line x1="100" y1="5" x2="100" y2="115" stroke="#ef4444" stroke-width="2" stroke-dasharray="4"/>
-      <text x="100" y="12" text-anchor="middle" font-size="11" fill="#ef4444">axe Δ</text>
-    </svg>`,
-    cine: `{0}\n{0}\n{Ωz}\n{0}\n{0}\n{Vz}`,
-    stat: `{Rx}\n{Ry}\n{0}\n{Mx}\n{My}\n{0}`,
     point: "A ∈ Δ",
-    base: "z // Δ"
+    base: "\\vec{z} \\parallel \\Delta",
+    cineFree: [2,5],
+    statFree: [0,1,3,4],
+    params: [
+      { id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
+      { id: "tz", label: "Vz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+    ]
   },
   spherique: {
-    name: "Sphérique (rotule)",
+    name: "Sphérique",
     dof: "3 ddl",
     geo: "Caractérisée par son <strong>centre C</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="100" cy="60" r="28" fill="#93c5fd" stroke="#2563eb" stroke-width="3"/>
-      <circle cx="100" cy="60" r="6" fill="#1e40af"/>
-      <text x="100" y="105" text-anchor="middle" font-size="12" fill="#2563eb">centre C</text>
-    </svg>`,
-    cine: `{Ωx}\n{Ωy}\n{Ωz}\n{0}\n{0}\n{0}`,
-    stat: `{Rx}\n{Ry}\n{Rz}\n{0}\n{0}\n{0}`,
     point: "C (centre)",
-    base: "(x,y,z) quelconque"
+    base: "(\\vec{x},\\vec{y},\\vec{z})",
+    cineFree: [0,1,2],
+    statFree: [0,1,2],
+    params: [
+      { id: "rx", label: "Ωx", min: -1.2, max: 1.2, step: 0.01, value: 0 },
+      { id: "ry", label: "Ωy", min: -1.2, max: 1.2, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.2, max: 1.2, step: 0.01, value: 0 }
+    ]
   },
   sphereplan: {
-    name: "Sphère / Plan (ponctuelle)",
+    name: "Sphère / Plan",
     dof: "5 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong> et le <strong>point de contact</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="20" y="80" width="160" height="12" fill="#94a3b8" stroke="#64748b"/>
-      <circle cx="100" cy="55" r="25" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-      <circle cx="100" cy="80" r="4" fill="#ef4444"/>
-      <text x="100" y="110" text-anchor="middle" font-size="11" fill="#64748b">point de contact</text>
-    </svg>`,
-    cine: `{Ωx}\n{Ωy}\n{Ωz}\n{Vx}\n{Vy}\n{0}`,
-    stat: `{0}\n{0}\n{Rz}\n{0}\n{0}\n{0}`,
-    point: "Point de contact I",
-    base: "z ⊥ plan"
+    point: "I (point de contact)",
+    base: "\\vec{z} \\perp plan",
+    cineFree: [0,1,2,3,4],
+    statFree: [2],
+    params: [
+      { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "rx", label: "Ωx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "ry", label: "Ωy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+    ]
   },
   spherecylindre: {
-    name: "Sphère / Cylindre (linéaire annulaire)",
+    name: "Sphère / Cylindre",
     dof: "4 ddl",
     geo: "Caractérisée par l’<strong>axe du cylindre</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="70" y="20" width="60" height="80" rx="30" fill="#cbd5e1" stroke="#64748b"/>
-      <circle cx="100" cy="60" r="18" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-      <line x1="100" y1="10" x2="100" y2="110" stroke="#ef4444" stroke-width="2" stroke-dasharray="4"/>
-      <text x="100" y="15" text-anchor="middle" font-size="11" fill="#ef4444">axe</text>
-    </svg>`,
-    cine: `{Ωx}\n{Ωy}\n{Ωz}\n{0}\n{0}\n{Vz}`,
-    stat: `{Rx}\n{Ry}\n{0}\n{0}\n{0}\n{0}`,
     point: "A ∈ axe",
-    base: "z // axe cylindre"
+    base: "\\vec{z} \\parallel axe",
+    cineFree: [0,1,2,5],
+    statFree: [0,1],
+    params: [
+      { id: "tz", label: "Vz", min: -1.4, max: 1.4, step: 0.01, value: 0 },
+      { id: "rx", label: "Ωx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "ry", label: "Ωy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+    ]
   },
   cylindreplan: {
     name: "Cylindre / Plan",
     dof: "4 ddl",
     geo: "Caractérisée par la <strong>direction des génératrices</strong> et le plan.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="20" y="85" width="160" height="10" fill="#94a3b8"/>
-      <rect x="60" y="40" width="80" height="45" rx="20" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-      <line x1="40" y1="62" x2="160" y2="62" stroke="#ef4444" stroke-width="2" stroke-dasharray="4"/>
-      <text x="100" y="30" text-anchor="middle" font-size="11" fill="#ef4444">génératrices</text>
-    </svg>`,
-    cine: `{0}\n{Ωy}\n{Ωz}\n{Vx}\n{0}\n{Vz}`,
-    stat: `{0}\n{Ry}\n{0}\n{0}\n{My}\n{0}`,
     point: "A sur la génératrice de contact",
-    base: "x // génératrices, z ⊥ plan"
+    base: "\\vec{x} \\parallel génératrices, \\vec{z} \\perp plan",
+    cineFree: [1,2,3,5],
+    statFree: [1,4],
+    params: [
+      { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "tz", label: "Vz", min: -1.2, max: 1.2, step: 0.01, value: 0 },
+      { id: "ry", label: "Ωy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+    ]
   },
   appuiplan: {
-    name: "Appui plan (Plan / Plan)",
+    name: "Appui plan",
     dof: "3 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong>.",
-    svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-      <rect x="30" y="70" width="140" height="14" fill="#94a3b8" stroke="#64748b"/>
-      <rect x="50" y="40" width="100" height="30" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-      <text x="100" y="105" text-anchor="middle" font-size="11" fill="#64748b">plan de contact</text>
-    </svg>`,
-    cine: `{0}\n{0}\n{Ωz}\n{Vx}\n{Vy}\n{0}`,
-    stat: `{0}\n{0}\n{Rz}\n{0}\n{0}\n{Mz}`,
     point: "A dans le plan",
-    base: "z ⊥ plan"
+    base: "\\vec{z} \\perp plan",
+    cineFree: [2,3,4],
+    statFree: [2,5],
+    params: [
+      { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
+      { id: "rz", label: "Ωz", min: -1.8, max: 1.8, step: 0.01, value: 0 }
+    ]
   }
 };
 
-let currentMode = 'cine';
-let currentKey = 'pivot';
+const COMP_CINE = ["Ωx","Ωy","Ωz","Vx","Vy","Vz"];
+const COMP_STAT = ["Rx","Ry","Rz","Mx","My","Mz"];
 
-/* ========== Rendu UI ========== */
-function setMode(mode) {
-  currentMode = mode;
-  ['cine','stat','dual'].forEach(m => {
-    const b = document.getElementById('btn-' + m);
-    b.classList.toggle('active', m === mode);
-    b.classList.toggle('btn-secondary', m !== mode);
-  });
-  renderInfo();
-}
+let currentKey = "pivot";
+let userCine = new Set();
+let userStat = new Set();
+let checked = false;
 
-function selectLiaison(key) {
-  currentKey = key;
-  document.querySelectorAll('.liaison-select button').forEach(b => {
-    b.classList.toggle('active', b.dataset.key === key);
-  });
-  renderInfo();
-  buildAnimation(key);
-}
-
-function renderInfo() {
-  const L = LIAISONS[currentKey];
-  document.getElementById('liaison-name').textContent = L.name;
-  document.getElementById('liaison-dof').innerHTML = `<span class="dof-badge">${L.dof}</span>`;
-  document.getElementById('liaison-geo').innerHTML = L.geo;
-  document.getElementById('svg-container').innerHTML = L.svg;
-
-  const cont = document.getElementById('torseurs-container');
-  let html = '';
-
-  const formatCol = (str) => str.split('\\n').map(l => l.trim()).join('<br>');
-
-  if (currentMode === 'cine' || currentMode === 'dual') {
-    html += `<div class="torseur-col" style="margin-bottom:.8rem">
-      <div class="label">Torseur cinématique {V<sub>1/0</sub>} &nbsp;–&nbsp; point ${L.point} &nbsp;–&nbsp; base ${L.base}</div>
-      ${formatCol(L.cine)}
-    </div>`;
-  }
-  if (currentMode === 'stat' || currentMode === 'dual') {
-    html += `<div class="torseur-col">
-      <div class="label">Torseur des actions {T<sub>0→1</sub>} &nbsp;–&nbsp; point ${L.point} &nbsp;–&nbsp; base ${L.base}</div>
-      ${formatCol(L.stat)}
-    </div>`;
-  }
-  cont.innerHTML = html;
-}
-
-/* ========== Three.js ========== */
-let scene, camera, renderer, controls, animGroup, clock;
-let animFn = null;
-
-function initThree() {
-  const container = document.getElementById('canvas-container');
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(
-    document.documentElement.getAttribute('data-theme') === 'dark' ? 0x0a0a12 : 0xe2e8f0
-  );
-  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-  camera.position.set(5, 4, 7);
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(devicePixelRatio);
-  container.appendChild(renderer.domElement);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
-  dir.position.set(5, 10, 7);
-  scene.add(dir);
-  scene.add(new THREE.AxesHelper(2.5));
-  animGroup = new THREE.Group();
-  scene.add(animGroup);
-  clock = new THREE.Clock();
-  window.addEventListener('resize', () => {
-    const w = container.clientWidth, h = container.clientHeight;
-    camera.aspect = w / h; camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  });
-  animate();
-}
-
-function clearAnim() {
-  while (animGroup.children.length) {
-    const o = animGroup.children[0];
-    animGroup.remove(o);
-    if (o.geometry) o.geometry.dispose();
-    if (o.material) {
-      if (Array.isArray(o.material)) o.material.forEach(m => m.dispose());
-      else o.material.dispose();
-    }
-  }
-  animFn = null;
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-  if (animFn) animFn(t);
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-/* Constructions 3D simplifiées + animations */
-function buildAnimation(key) {
-  clearAnim();
-  const matFix = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
-  const matMob = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
-  const matContact = new THREE.MeshStandardMaterial({ color: 0xef4444 });
-
-  if (key === 'encastrement') {
-    const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.8), matFix);
-    const b2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.8), matMob);
-    b1.position.x = -1.1; b2.position.x = 1.1;
-    animGroup.add(b1, b2);
-    // pas de mouvement
-  }
-  else if (key === 'pivot') {
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.5, 16), matFix);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 0.4), matMob);
-    arm.position.x = 0.9;
-    const pivot = new THREE.Group();
-    pivot.add(arm);
-    animGroup.add(base, pivot);
-    animFn = t => { pivot.rotation.y = Math.sin(t) * 1.2; };
-  }
-  else if (key === 'glissiere') {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(4, 0.15, 0.4), matFix);
-    const slider = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.6), matMob);
-    animGroup.add(rail, slider);
-    animFn = t => { slider.position.x = Math.sin(t) * 1.4; };
-  }
-  else if (key === 'helicoidale') {
-    const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3, 16), matFix);
-    const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.5, 16), matMob);
-    animGroup.add(axe, nut);
-    animFn = t => {
-      nut.rotation.y = t * 2;
-      nut.position.y = (t * 0.3) % 2 - 1;
-    };
-  }
-  else if (key === 'pivotglissant') {
-    const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3, 16), matFix);
-    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.8, 16), matMob);
-    animGroup.add(axe, sleeve);
-    animFn = t => {
-      sleeve.rotation.y = t * 1.5;
-      sleeve.position.y = Math.sin(t) * 0.9;
-    };
-  }
-  else if (key === 'spherique') {
-    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.55, 24, 16), matFix);
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 16), matMob);
-    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.4, 12), matMob);
-    stick.position.y = 0.7;
-    const joint = new THREE.Group();
-    joint.add(ball, stick);
-    animGroup.add(socket, joint);
-    animFn = t => {
-      joint.rotation.x = Math.sin(t * 0.8) * 0.6;
-      joint.rotation.z = Math.cos(t * 0.6) * 0.5;
-    };
-  }
-  else if (key === 'sphereplan') {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 4), matFix);
-    plane.position.y = -0.04;
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 16), matMob);
-    sphere.position.y = 0.5;
-    animGroup.add(plane, sphere);
-    animFn = t => {
-      sphere.position.x = Math.sin(t * 0.7) * 1.2;
-      sphere.position.z = Math.cos(t * 0.5) * 1.0;
-      sphere.rotation.x = t * 1.2;
-      sphere.rotation.z = t * 0.8;
-    };
-  }
-  else if (key === 'spherecylindre') {
-    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 3, 24, 1, true), matFix);
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 14), matMob);
-    animGroup.add(cyl, sphere);
-    animFn = t => {
-      sphere.position.y = Math.sin(t) * 1.0;
-      sphere.rotation.x = t;
-      sphere.rotation.z = t * 0.7;
-    };
-  }
-  else if (key === 'cylindreplan') {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 3), matFix);
-    plane.position.y = -0.04;
-    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 2.2, 24), matMob);
-    cyl.rotation.z = Math.PI / 2;
-    cyl.position.y = 0.4;
-    animGroup.add(plane, cyl);
-    animFn = t => {
-      cyl.position.x = Math.sin(t * 0.6) * 1.1;
-      cyl.rotation.x = t * 0.9;
-    };
-  }
-  else if (key === 'appuiplan') {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 4), matFix);
-    plane.position.y = -0.04;
-    const block = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 1.2), matMob);
-    block.position.y = 0.15;
-    animGroup.add(plane, block);
-    animFn = t => {
-      block.position.x = Math.sin(t * 0.7) * 1.0;
-      block.position.z = Math.cos(t * 0.5) * 0.8;
-      block.rotation.y = Math.sin(t * 0.4) * 0.8;
-    };
-  }
-}
-
-/* ========== Init ========== */
+/* ========== UI ========== */
 function initButtons() {
-  const cont = document.getElementById('liaison-buttons');
+  const cont = document.getElementById("liaison-buttons");
   Object.keys(LIAISONS).forEach(key => {
-    const b = document.createElement('button');
+    const b = document.createElement("button");
     b.textContent = LIAISONS[key].name;
     b.dataset.key = key;
     b.onclick = () => selectLiaison(key);
@@ -535,10 +357,326 @@ function initButtons() {
   });
 }
 
+function selectLiaison(key) {
+  currentKey = key;
+  document.querySelectorAll(".liaison-select button").forEach(b => {
+    b.classList.toggle("active", b.dataset.key === key);
+  });
+  userCine.clear();
+  userStat.clear();
+  checked = false;
+  renderInfo();
+  buildScene(key);
+  buildSliders(key);
+}
+
+function renderInfo() {
+  const L = LIAISONS[currentKey];
+  document.getElementById("liaison-name").textContent = L.name;
+  document.getElementById("liaison-dof").innerHTML = `<span class="dof-badge">${L.dof}</span>`;
+  document.getElementById("liaison-geo").innerHTML = L.geo;
+
+  const torseurs = document.getElementById("torseurs");
+  torseurs.innerHTML = `
+    <div class="torseur-box">
+      <div class="torseur-title">Torseur cinématique $\\{ \\mathcal{V}_{1/0} \\}$</div>
+      <div class="bmatrix">
+        <div class="bm-left">{</div>
+        <div class="bm-cells" id="cine-cells"></div>
+        <div class="bm-right">}</div>
+      </div>
+      <div class="point-base">point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
+    </div>
+    <div class="torseur-box">
+      <div class="torseur-title">Torseur des actions $\\{ \\mathcal{T}_{0 \\to 1} \\}$</div>
+      <div class="bmatrix">
+        <div class="bm-left">{</div>
+        <div class="bm-cells" id="stat-cells"></div>
+        <div class="bm-right">}</div>
+      </div>
+      <div class="point-base">point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
+    </div>
+  `;
+
+  // cellules cliquables
+  const cineCells = document.getElementById("cine-cells");
+  const statCells = document.getElementById("stat-cells");
+  COMP_CINE.forEach((name, i) => {
+    const div = document.createElement("div");
+    div.className = "comp";
+    div.dataset.idx = i;
+    div.innerHTML = `<span>${name}</span>`;
+    div.onclick = () => toggleComp("cine", i, div);
+    cineCells.appendChild(div);
+  });
+  COMP_STAT.forEach((name, i) => {
+    const div = document.createElement("div");
+    div.className = "comp";
+    div.dataset.idx = i;
+    div.innerHTML = `<span>${name}</span>`;
+    div.onclick = () => toggleComp("stat", i, div);
+    statCells.appendChild(div);
+  });
+
+  document.getElementById("feedback").className = "feedback";
+}
+
+function toggleComp(type, idx, el) {
+  if (checked) return;
+  const set = type === "cine" ? userCine : userStat;
+  if (set.has(idx)) {
+    set.delete(idx);
+    el.classList.remove("selected");
+  } else {
+    set.add(idx);
+    el.classList.add("selected");
+  }
+}
+
+function checkAnswer() {
+  checked = true;
+  const L = LIAISONS[currentKey];
+  let allOk = true;
+
+  // Cinématique
+  document.querySelectorAll("#cine-cells .comp").forEach(el => {
+    const idx = +el.dataset.idx;
+    const should = L.cineFree.includes(idx);
+    const selected = userCine.has(idx);
+    el.classList.remove("selected", "correct", "wrong");
+    if (should && selected) el.classList.add("correct");
+    else if (!should && !selected) el.classList.add("correct");
+    else { el.classList.add("wrong"); allOk = false; }
+  });
+
+  // Statique
+  document.querySelectorAll("#stat-cells .comp").forEach(el => {
+    const idx = +el.dataset.idx;
+    const should = L.statFree.includes(idx);
+    const selected = userStat.has(idx);
+    el.classList.remove("selected", "correct", "wrong");
+    if (should && selected) el.classList.add("correct");
+    else if (!should && !selected) el.classList.add("correct");
+    else { el.classList.add("wrong"); allOk = false; }
+  });
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback show " + (allOk ? "ok" : "ko");
+  fb.textContent = allOk
+    ? "✅ Parfait ! Toutes les composantes sont correctes."
+    : "❌ Certaines composantes sont incorrectes (en rouge).";
+}
+
+function resetSelection() {
+  userCine.clear();
+  userStat.clear();
+  checked = false;
+  document.querySelectorAll(".comp").forEach(el => {
+    el.classList.remove("selected", "correct", "wrong");
+  });
+  document.getElementById("feedback").className = "feedback";
+}
+
+/* ========== Three.js ========== */
+let scene, camera, renderer, controls, mobile;
+const paramValues = {};
+
+function initThree() {
+  const container = document.getElementById("canvas-container");
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(
+    document.documentElement.getAttribute("data-theme") === "dark" ? 0x0a0a12 : 0xe2e8f0
+  );
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.set(5, 3.5, 6);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(devicePixelRatio);
+  container.appendChild(renderer.domElement);
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+  dir.position.set(5, 10, 7);
+  scene.add(dir);
+  scene.add(new THREE.AxesHelper(2.2));
+  window.addEventListener("resize", () => {
+    const w = container.clientWidth, h = container.clientHeight;
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+  (function loop() {
+    requestAnimationFrame(loop);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+}
+
+function clearScene() {
+  while (scene.children.length > 3) { // keep lights + axes
+    const o = scene.children[3];
+    scene.remove(o);
+  }
+  mobile = null;
+}
+
+function buildScene(key) {
+  clearScene();
+  const matFix = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
+  const matMob = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
+
+  if (key === "encastrement") {
+    const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matFix);
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matMob);
+    b1.position.x = -1; b2.position.x = 1;
+    scene.add(b1, b2);
+    mobile = b2;
+  }
+  else if (key === "pivot") {
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4, 16), matFix);
+    mobile = new THREE.Group();
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.35), matMob);
+    arm.position.x = 0.8;
+    mobile.add(arm);
+    scene.add(base, mobile);
+  }
+  else if (key === "glissiere") {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.12, 0.35), matFix);
+    mobile = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 0.5), matMob);
+    scene.add(rail, mobile);
+  }
+  else if (key === "helicoidale") {
+    const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.45, 16), matMob);
+    scene.add(axe, mobile);
+  }
+  else if (key === "pivotglissant") {
+    const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.7, 16), matMob);
+    scene.add(axe, mobile);
+  }
+  else if (key === "spherique") {
+    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 16), matFix);
+    mobile = new THREE.Group();
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 14), matMob);
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 12), matMob);
+    stick.position.y = 0.65;
+    mobile.add(ball, stick);
+    scene.add(socket, mobile);
+  }
+  else if (key === "sphereplan") {
+    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
+    plane.position.y = -0.035;
+    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 16), matMob);
+    mobile.position.y = 0.45;
+    scene.add(plane, mobile);
+  }
+  else if (key === "spherecylindre") {
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 2.8, 24, 1, true), matFix);
+    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 14), matMob);
+    scene.add(cyl, mobile);
+  }
+  else if (key === "cylindreplan") {
+    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 2.8), matFix);
+    plane.position.y = -0.035;
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2.0, 24), matMob);
+    mobile.rotation.z = Math.PI / 2;
+    mobile.position.y = 0.35;
+    scene.add(plane, mobile);
+  }
+  else if (key === "appuiplan") {
+    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
+    plane.position.y = -0.035;
+    mobile = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 1.1), matMob);
+    mobile.position.y = 0.125;
+    scene.add(plane, mobile);
+  }
+
+  // reset params
+  LIAISONS[key].params.forEach(p => paramValues[p.id] = p.value);
+  applyParams(key);
+}
+
+function buildSliders(key) {
+  const cont = document.getElementById("sliders");
+  cont.innerHTML = "";
+  const params = LIAISONS[key].params;
+  if (params.length === 0) {
+    cont.innerHTML = "<p class='info'>Aucun degré de liberté (encastrement).</p>";
+    return;
+  }
+  params.forEach(p => {
+    const row = document.createElement("div");
+    row.className = "slider-row";
+    row.innerHTML = `
+      <span>${p.label}</span>
+      <input type="range" id="sl-${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.value}">
+      <span id="val-${p.id}">${p.value.toFixed(2)}</span>
+    `;
+    cont.appendChild(row);
+    document.getElementById(`sl-${p.id}`).oninput = (e) => {
+      const v = parseFloat(e.target.value);
+      paramValues[p.id] = v;
+      document.getElementById(`val-${p.id}`).textContent = v.toFixed(2);
+      applyParams(key);
+    };
+  });
+}
+
+function applyParams(key) {
+  if (!mobile) return;
+  const v = paramValues;
+
+  if (key === "pivot") {
+    mobile.rotation.y = v.rz || 0;
+  }
+  else if (key === "glissiere") {
+    mobile.position.x = v.tz || 0;
+  }
+  else if (key === "helicoidale") {
+    const t = v.hel || 0;
+    mobile.rotation.y = t * 2;
+    mobile.position.y = t * 0.35;
+  }
+  else if (key === "pivotglissant") {
+    mobile.rotation.y = v.rz || 0;
+    mobile.position.y = v.tz || 0;
+  }
+  else if (key === "spherique") {
+    mobile.rotation.x = v.rx || 0;
+    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.z = v.ry || 0;
+  }
+  else if (key === "sphereplan") {
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.ty || 0;
+    mobile.rotation.x = v.rx || 0;
+    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.z = v.ry || 0;
+  }
+  else if (key === "spherecylindre") {
+    mobile.position.y = v.tz || 0;
+    mobile.rotation.x = v.rx || 0;
+    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.z = v.ry || 0;
+  }
+  else if (key === "cylindreplan") {
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.tz || 0;
+    mobile.rotation.x = v.rz || 0;
+    mobile.rotation.y = v.ry || 0;
+  }
+  else if (key === "appuiplan") {
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.ty || 0;
+    mobile.rotation.y = v.rz || 0;
+  }
+}
+
+/* ========== Init ========== */
 initThree();
 initButtons();
-setMode('cine');
-selectLiaison('pivot');
+selectLiaison("pivot");
 </script>
 </body>
 </html>
