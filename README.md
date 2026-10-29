@@ -22,3 +22,7 @@ Voici une page pour visualiser les différents type de coordonnées d'un point (
 Voici une page pour visualiser et s'entraîner à connaître les torseurs (statiques et cinématiques) de chaque liaison usuelle :
 
 [liaison_usuelles](https://siicpgeamansur.github.io/mecanique/liaisons_usuelles.html)
+
+Voici une page pour visualiser et s'entraîner à manipuler les figures géométrales et leurs projections :
+
+[figures_géométrales](https://siicpgeamansur.github.io/mecanique/figures_geometrales.html)
