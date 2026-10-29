@@ -183,9 +183,9 @@
         <div class="torseurs" id="torseurs"></div>
 
         <div class="axes-legend">
-          <span><div class="dot dot-x"></div> Rouge = <strong>x⃗</strong></span>
-          <span><div class="dot dot-y"></div> Bleu = <strong>y⃗</strong></span>
-          <span><div class="dot dot-z"></div> Vert = <strong>z⃗</strong> (vertical)</span>
+          <span><div class="dot" style="background:#3b82f6"></div> Bleu = <strong>x⃗</strong></span>
+          <span><div class="dot" style="background:#ef4444"></div> Rouge = <strong>y⃗</strong></span>
+          <span><div class="dot" style="background:#22c55e"></div> Vert = <strong>z⃗</strong> (vertical)</span>
         </div>
 
         <div class="btn-row">
@@ -510,7 +510,7 @@ function initThree() {
   container.appendChild(renderer.domElement);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  scene.add(createCustomAxes(2.2));
   const dir = new THREE.DirectionalLight(0xffffff, 0.8);
   dir.position.set(5, 10, 7);
   scene.add(dir);
@@ -520,7 +520,35 @@ function initThree() {
   // On mappe : math x → Three X (rouge)
   //            math y → Three Z (bleu)
   //            math z → Three Y (vert)  ← vertical
-  scene.add(new THREE.AxesHelper(2.2));
+function createCustomAxes(length = 2.2) {
+  const group = new THREE.Group();
+
+  // x⃗ = Bleu (Three.js X)
+  const xMat = new THREE.LineBasicMaterial({ color: 0x3b82f6, linewidth: 3 });
+  const xGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(length, 0, 0)
+  ]);
+  group.add(new THREE.Line(xGeo, xMat));
+
+  // y⃗ = Rouge (Three.js Z)
+  const yMat = new THREE.LineBasicMaterial({ color: 0xef4444, linewidth: 3 });
+  const yGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, length)
+  ]);
+  group.add(new THREE.Line(yGeo, yMat));
+
+  // z⃗ = Vert (Three.js Y = vertical)
+  const zMat = new THREE.LineBasicMaterial({ color: 0x22c55e, linewidth: 3 });
+  const zGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, length, 0)
+  ]);
+  group.add(new THREE.Line(zGeo, zMat));
+
+  return group;
+}
 
   window.addEventListener("resize", () => {
     const w = container.clientWidth, h = container.clientHeight;
