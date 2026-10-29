@@ -383,7 +383,6 @@
       }
     }
 
-    // Convertisseur de nom d'angle littéral en indices Unicode (ex: "10" -> "₁₀")
     function formatAngleLabel(key) {
       const map = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
       return "θ" + String(key).split('').map(c => map[c] || c).join('');
@@ -502,7 +501,9 @@
       return S03;
     }
 
+    // Si la base du vecteur (j) est égale à la base d'expression (i), on simplifie directement à l'expression canonique la plus simple
     function symVecInBase(j, i, e) {
+      if (j === i) return e; 
       const Rj = getSymR(j);
       const Ri = getSymR(i);
       const Rij = symMatMul(symMatT(Ri), Rj);
@@ -554,7 +555,6 @@
       return `<polygon points="${tx},${ty} ${p1x},${p1y} ${p2x},${p2y}" fill="${color}" />`;
     }
 
-    // Figures 2D orientées directement (le troisième axe sort vers l'observateur)
     function draw2DFigure(group) {
       const size = 300;
       const cx = size / 2, cy = size / 2;
@@ -583,7 +583,6 @@
         const col = colors[bIdx] || '#333';
         const rad = deg2rad(displayAngles[i]);
         
-        // Orientation directe : u pointe vers l'angle rad, v pointe à +90° par rapport à u (en sens direct)
         const sux = cx + len * Math.cos(rad);
         const suy = cy - len * Math.sin(rad);
         const svx = cx + len * Math.cos(rad + Math.PI / 2);
