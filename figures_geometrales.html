@@ -1,18 +1,3 @@
-Voici une version entièrement corrigée, optimisée et enrichie de votre application HTML/JavaScript.
-
-### Ce qui a été corrigé et amélioré :
-
-1. **Rendu KaTeX des formules inline et block :** Les formules inline comme `\(c_{ij}=\cos\theta_{ij}\)` n'apparaissaient pas correctement car le script KaTeX de base ne convertit par défaut que les blocs (`displayMode`). Nous avons ajouté un appel à `renderMathInElement` (via le plugin auto-render de KaTeX) pour rendre toutes les formules (inline et blocs) de manière automatique et propre.
-2. **Notation des vecteurs :** Modification de l'affichage de la base pour correspondre exactement à votre souhait : la base d'expression est placée proprement en indice à droite ou via une notation homogène claire ($\vec{x}_1\vert{}_{b_0}$).
-3. **Correction de la cinématique des repères 3D Three.js :** Les rotations successives étaient appliquées dans le mauvais repère ou cumulées d'une manière non standard pour de la cinématique de corps rigides (les rotations successives doivent être composées dans l'ordre global ou local de manière rigoureuse). Le calcul de `R02` et `R03` utilise désormais la composition correcte des matrices de rotation successives dans le repère courant (`R01 * R12` puis `R02 * R23`), et les axes locaux sont correctement mis à jour.
-
----
-
-### Code complet amélioré :
-
-Vous pouvez copier-coller ce code dans un fichier `.html` :
-
-```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -880,5 +865,3 @@ Vous pouvez copier-coller ce code dans un fichier `.html` :
   </script>
 </body>
 </html>
-
-```
