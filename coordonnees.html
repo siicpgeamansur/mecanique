@@ -171,21 +171,18 @@
   </button>
 
   <h1>Coordonnées cartésiennes • cylindriques • sphériques</h1>
-  <p class="subtitle">Visualisation interactive 3D – Style GeoGebra</p>
+  <p class="subtitle">Visualisation interactive 3D</p>
 
   <div class="container">
-    <!-- Contrôles -->
     <div class="card">
       <h2>Coordonnées du point</h2>
       <div class="grid-3">
-        <!-- Cartésien -->
         <div class="coord-group">
           <strong style="color:var(--accent)">Cartésiennes (x, y, z)</strong>
           <div class="coord-row"><span>x</span><input type="number" id="x" step="0.1" value="3"></div>
           <div class="coord-row"><span>y</span><input type="number" id="y" step="0.1" value="2"></div>
           <div class="coord-row"><span>z</span><input type="number" id="z" step="0.1" value="4"></div>
         </div>
-        <!-- Cylindrique -->
         <div class="coord-group">
           <strong style="color:var(--accent)">Cylindriques (ρ, φ, z)</strong>
           <div class="coord-row"><span>ρ</span><input type="number" id="rho" step="0.1" value="3.61"></div>
@@ -193,7 +190,6 @@
           <div class="coord-row"><span>z</span><input type="number" id="z2" step="0.1" value="4"></div>
           <div class="info">φ en radians</div>
         </div>
-        <!-- Sphérique -->
         <div class="coord-group">
           <strong style="color:var(--accent)">Sphériques (r, θ, φ)</strong>
           <div class="coord-row"><span>r</span><input type="number" id="r" step="0.1" value="5.39"></div>
@@ -215,16 +211,15 @@
       </div>
     </div>
 
-    <!-- Canvas 3D -->
     <div class="card">
       <h2>Visualisation 3D</h2>
       <div id="canvas-container"></div>
       <p class="info" style="margin-top:0.6rem">
-        Souris gauche = rotation • Molette = zoom • Clic droit = déplacement
+        Souris gauche = rotation • Molette = zoom • Clic droit = déplacement<br>
+        <strong>Axes :</strong> Rouge = x • Vert = y • Bleu = z (vertical)
       </p>
     </div>
 
-    <!-- Formules -->
     <div class="card">
       <h2>Relations de conversion</h2>
       <div class="grid-3">
@@ -284,9 +279,16 @@ function toggleTheme() {
   }
 })();
 
+// ========== Mapping math → Three.js ==========
+// Math : x, y, z (z vertical)
+// Three : X = math x, Y = math z (up), Z = math y
+function toThree(x, y, z) {
+  return new THREE.Vector3(x, z, y);
+}
+
 // ========== Three.js ==========
 let scene, camera, renderer, controls;
-let pointMesh, axesHelper;
+let pointMesh;
 let cartGroup, cylGroup, sphGroup;
 let isUpdating = false;
 
@@ -299,7 +301,7 @@ function initThree() {
   updateSceneBackground();
 
   camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
-  camera.position.set(8, 6, 10);
+  camera.position.set(9, 7, 11);
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(w, h);
@@ -309,33 +311,32 @@ function initThree() {
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
+  controls.target.set(0, 2, 0);
 
   // Lumières
-  const amb = new THREE.AmbientLight(0xffffff, 0.6);
-  scene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
-  dir.position.set(5, 10, 7);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+  dir.position.set(6, 12, 8);
   scene.add(dir);
 
-  // Axes
-  axesHelper = new THREE.AxesHelper(6);
-  scene.add(axesHelper);
+  // Axes (Rouge=X=math x, Vert=Y=math z, Bleu=Z=math y)
+  const axes = new THREE.AxesHelper(6);
+  scene.add(axes);
 
-  // Grille
-  const grid = new THREE.GridHelper(12, 12, 0x888888, 0xcccccc);
-  grid.position.y = 0;
+  // Grille horizontale (plan math xOy → plan Three XZ)
+  const grid = new THREE.GridHelper(12, 12, 0x666666, 0xaaaaaa);
   scene.add(grid);
 
   // Point
-  const geo = new THREE.SphereGeometry(0.18, 24, 24);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0x441111 });
+  const geo = new THREE.SphereGeometry(0.2, 24, 24);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x330000 });
   pointMesh = new THREE.Mesh(geo, mat);
   scene.add(pointMesh);
 
   // Groupes de guides
   cartGroup = new THREE.Group();
-  cylGroup = new THREE.Group();
-  sphGroup = new THREE.Group();
+  cylGroup  = new THREE.Group();
+  sphGroup  = new THREE.Group();
   scene.add(cartGroup);
   scene.add(cylGroup);
   scene.add(sphGroup);
@@ -366,13 +367,15 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// ========== Guides visuels ==========
 function clearGroup(g) {
   while (g.children.length) {
     const c = g.children[0];
     g.remove(c);
     if (c.geometry) c.geometry.dispose();
-    if (c.material) c.material.dispose();
+    if (c.material) {
+      if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+      else c.material.dispose();
+    }
   }
 }
 
@@ -387,94 +390,90 @@ function updateGuides(x, y, z) {
 
   const rho = Math.sqrt(x*x + y*y);
   const r   = Math.sqrt(x*x + y*y + z*z);
+  const phi = Math.atan2(y, x);
 
-  // --- Cartésien ---
+  // ========== CARTÉSIEN ==========
   if (showCart) {
-    // Projections
-    const matX = new THREE.LineBasicMaterial({ color: 0xff5555 });
-    const matY = new THREE.LineBasicMaterial({ color: 0x55ff55 });
-    const matZ = new THREE.LineBasicMaterial({ color: 0x5555ff });
+    // Chemin des projections : O → (x,0,0) → (x,y,0) → (x,y,z)
+    const p0 = toThree(0, 0, 0);
+    const p1 = toThree(x, 0, 0);   // le long de x
+    const p2 = toThree(x, y, 0);   // le long de y
+    const p3 = toThree(x, y, z);   // le long de z
 
-    const ptsX = [new THREE.Vector3(0,0,0), new THREE.Vector3(x,0,0)];
-    const ptsY = [new THREE.Vector3(x,0,0), new THREE.Vector3(x,y,0)];
-    const ptsZ = [new THREE.Vector3(x,y,0), new THREE.Vector3(x,y,z)];
+    const matX = new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 });
+    const matY = new THREE.LineBasicMaterial({ color: 0x44ff44, linewidth: 2 });
+    const matZ = new THREE.LineBasicMaterial({ color: 0x4488ff, linewidth: 2 });
 
-    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ptsX), matX));
-    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ptsY), matY));
-    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ptsZ), matZ));
+    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p0, p1]), matX));
+    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), matY));
+    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p2, p3]), matZ));
 
-    // Point projeté sur plan xy
-    const projGeo = new THREE.SphereGeometry(0.1, 12, 12);
-    const projMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
-    const proj = new THREE.Mesh(projGeo, projMat);
-    proj.position.set(x, y, 0);
+    // Point projeté sur le plan xOy
+    const proj = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x888888 })
+    );
+    proj.position.copy(p2);
     cartGroup.add(proj);
   }
 
-  // --- Cylindrique ---
+  // ========== CYLINDRIQUE ==========
   if (showCyl && rho > 0.05) {
-    // Cylindre vertical (filaire)
-    const cylGeo = new THREE.CylinderGeometry(rho, rho, Math.abs(z) + 0.5, 48, 1, true);
+    // Cylindre vertical (axe = math z)
+    const cylGeo = new THREE.CylinderGeometry(rho, rho, Math.abs(z) + 0.8, 48, 1, true);
     const cylMat = new THREE.MeshBasicMaterial({
-      color: 0x22cc88, wireframe: true, transparent: true, opacity: 0.35
+      color: 0x22cc88, wireframe: true, transparent: true, opacity: 0.4
     });
     const cyl = new THREE.Mesh(cylGeo, cylMat);
-    cyl.position.y = z / 2;
+    cyl.position.copy(toThree(0, 0, z/2));
     cylGroup.add(cyl);
 
-    // Arc d'angle φ dans le plan xy
-    const curve = new THREE.EllipseCurve(0, 0, rho, rho, 0, Math.atan2(y, x), false, 0);
-    const points = curve.getPoints(32);
-    const arcPts = points.map(p => new THREE.Vector3(p.x, 0, p.y));
-    const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
-    const arcMat = new THREE.LineBasicMaterial({ color: 0x22cc88, linewidth: 2 });
-    cylGroup.add(new THREE.Line(arcGeo, arcMat));
+    // Segment radial dans le plan xOy
+    const rad = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([toThree(0,0,0), toThree(x,y,0)]),
+      new THREE.LineBasicMaterial({ color: 0x22cc88 })
+    );
+    cylGroup.add(rad);
 
-    // Segment radial
-    const radPts = [new THREE.Vector3(0,0,0), new THREE.Vector3(x, 0, y)];
+    // Arc d'angle φ
+    const arcPts = [];
+    const steps = 32;
+    const end = phi;
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * end;
+      arcPts.push(toThree(rho * Math.cos(a), rho * Math.sin(a), 0));
+    }
     cylGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(radPts),
+      new THREE.BufferGeometry().setFromPoints(arcPts),
       new THREE.LineBasicMaterial({ color: 0x22cc88 })
     ));
   }
 
-  // --- Sphérique ---
+  // ========== SPHÉRIQUE ==========
   if (showSph && r > 0.05) {
     // Sphère filaire
-    const sphGeo = new THREE.SphereGeometry(r, 32, 24);
-    const sphMat = new THREE.MeshBasicMaterial({
-      color: 0xaa66ff, wireframe: true, transparent: true, opacity: 0.25
-    });
-    sphGroup.add(new THREE.Mesh(sphGeo, sphMat));
+    const sph = new THREE.Mesh(
+      new THREE.SphereGeometry(r, 32, 24),
+      new THREE.MeshBasicMaterial({ color: 0xaa66ff, wireframe: true, transparent: true, opacity: 0.28 })
+    );
+    sphGroup.add(sph);
 
     // Rayon
-    const rayPts = [new THREE.Vector3(0,0,0), new THREE.Vector3(x, y, z)];
     sphGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(rayPts),
-      new THREE.LineBasicMaterial({ color: 0xaa66ff, linewidth: 2 })
+      new THREE.BufferGeometry().setFromPoints([toThree(0,0,0), toThree(x,y,z)]),
+      new THREE.LineBasicMaterial({ color: 0xaa66ff })
     ));
 
-    // Arc polaire θ (dans le plan contenant z et le point)
-    if (rho > 0.01) {
-      const theta = Math.acos(z / r);
-      const curve = new THREE.EllipseCurve(0, 0, r, r, 0, theta, false, 0);
-      const pts2d = curve.getPoints(24);
-      // Orientation vers le point
-      const phi = Math.atan2(y, x);
-      const arcPts = pts2d.map(p => {
-        const xx = p.x * Math.sin(phi);
-        const zz = p.x * Math.cos(phi);
-        return new THREE.Vector3(xx, p.y, zz); // y = hauteur
-      });
-      // Correction : EllipseCurve est dans xy, on veut dans le plan vertical
-      // On reconstruit correctement
+    // Arc polaire θ (dans le plan vertical contenant le point)
+    if (rho > 0.02) {
+      const theta = Math.acos(Math.max(-1, Math.min(1, z / r)));
       const arc = [];
       for (let i = 0; i <= 24; i++) {
         const t = (i / 24) * theta;
-        arc.push(new THREE.Vector3(
+        arc.push(toThree(
           r * Math.sin(t) * Math.cos(phi),
-          r * Math.cos(t),
-          r * Math.sin(t) * Math.sin(phi)
+          r * Math.sin(t) * Math.sin(phi),
+          r * Math.cos(t)
         ));
       }
       sphGroup.add(new THREE.Line(
@@ -485,7 +484,7 @@ function updateGuides(x, y, z) {
   }
 }
 
-// ========== Conversion ==========
+// ========== Conversions ==========
 function updatePointFromCartesian() {
   if (isUpdating) return;
   isUpdating = true;
@@ -494,22 +493,19 @@ function updatePointFromCartesian() {
   const y = parseFloat(document.getElementById('y').value) || 0;
   const z = parseFloat(document.getElementById('z').value) || 0;
 
-  // Cylindrique
   const rho = Math.sqrt(x*x + y*y);
   const phi = Math.atan2(y, x);
   document.getElementById('rho').value = rho.toFixed(3);
   document.getElementById('phi').value = phi.toFixed(3);
   document.getElementById('z2').value = z.toFixed(3);
 
-  // Sphérique
   const r = Math.sqrt(x*x + y*y + z*z);
-  const theta = r > 1e-8 ? Math.acos(z / r) : 0;
+  const theta = r > 1e-8 ? Math.acos(Math.max(-1, Math.min(1, z / r))) : 0;
   document.getElementById('r').value = r.toFixed(3);
   document.getElementById('theta').value = theta.toFixed(3);
   document.getElementById('phi2').value = phi.toFixed(3);
 
-  // 3D
-  pointMesh.position.set(x, z, y); // Three.js : y = up
+  pointMesh.position.copy(toThree(x, y, z));
   updateGuides(x, y, z);
 
   isUpdating = false;
@@ -530,14 +526,13 @@ function updatePointFromCylindrical() {
   document.getElementById('y').value = y.toFixed(3);
   document.getElementById('z').value = z.toFixed(3);
 
-  // Sphérique
   const r = Math.sqrt(x*x + y*y + z*z);
-  const theta = r > 1e-8 ? Math.acos(z / r) : 0;
+  const theta = r > 1e-8 ? Math.acos(Math.max(-1, Math.min(1, z / r))) : 0;
   document.getElementById('r').value = r.toFixed(3);
   document.getElementById('theta').value = theta.toFixed(3);
   document.getElementById('phi2').value = phi.toFixed(3);
 
-  pointMesh.position.set(x, z, y);
+  pointMesh.position.copy(toThree(x, y, z));
   updateGuides(x, y, z);
 
   isUpdating = false;
@@ -564,19 +559,16 @@ function updatePointFromSpherical() {
   document.getElementById('phi').value = phi.toFixed(3);
   document.getElementById('z2').value = z.toFixed(3);
 
-  pointMesh.position.set(x, z, y);
+  pointMesh.position.copy(toThree(x, y, z));
   updateGuides(x, y, z);
 
   isUpdating = false;
 }
 
 function randomPoint() {
-  const x = (Math.random() * 8 - 4).toFixed(2);
-  const y = (Math.random() * 8 - 4).toFixed(2);
-  const z = (Math.random() * 6 - 1).toFixed(2);
-  document.getElementById('x').value = x;
-  document.getElementById('y').value = y;
-  document.getElementById('z').value = z;
+  document.getElementById('x').value = (Math.random()*8 - 4).toFixed(2);
+  document.getElementById('y').value = (Math.random()*8 - 4).toFixed(2);
+  document.getElementById('z').value = (Math.random()*6).toFixed(2);
   updatePointFromCartesian();
 }
 
@@ -587,16 +579,10 @@ function resetPoint() {
   updatePointFromCartesian();
 }
 
-// ========== Événements ==========
-['x','y','z'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updatePointFromCartesian);
-});
-['rho','phi','z2'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updatePointFromCylindrical);
-});
-['r','theta','phi2'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updatePointFromSpherical);
-});
+// Événements
+['x','y','z'].forEach(id => document.getElementById(id).addEventListener('input', updatePointFromCartesian));
+['rho','phi','z2'].forEach(id => document.getElementById(id).addEventListener('input', updatePointFromCylindrical));
+['r','theta','phi2'].forEach(id => document.getElementById(id).addEventListener('input', updatePointFromSpherical));
 ['showCart','showCyl','showSph'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     const x = parseFloat(document.getElementById('x').value) || 0;
@@ -606,7 +592,6 @@ function resetPoint() {
   });
 });
 
-// Démarrage
 initThree();
 </script>
 </body>
