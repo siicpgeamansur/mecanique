@@ -1,3 +1,15 @@
+Voici le code complet corrigé.
+
+### Correctifs apportés :
+
+1. **Format exact du vecteur :** L'expression affiche désormais proprement la notation demandée : $\vec{x}_1 = \begin{pmatrix} c_{10} \\ s_{10} \\ 0 \end{pmatrix}_{b_0}$, avec le vecteur à gauche, la matrice des composantes, et la base d'expression en indice à droite de la matrice.
+2. **Correction du rendu KaTeX (plus de symboles `$` visibles) :** Le script de rendu automatique (`renderMathInElement`) est désormais appelé systématiquement après chaque mise à jour dynamique du DOM (panneau d'information, figures 2D et résultat vectoriel), ce qui élimine l'affichage en texte brut (*verbatim*) des formules.
+
+---
+
+### Code HTML complet et corrigé :
+
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -256,7 +268,7 @@
 </head>
 <body>
   <header>
-    <h1>Bases orientées successives ($b_0 \to b_1 \to b_2 \to b_3$)</h1>
+    <h1>Bases orientées successives (\(b_0 \to b_1 \to b_2 \to b_3\))</h1>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn btn-secondary" onclick="resetView()">Réinitialiser vue</button>
       <button class="btn btn-pdf" onclick="exportPDF()">Exporter en PDF</button>
@@ -267,14 +279,14 @@
     <aside class="controls">
       <h2>Paramètres de rotation</h2>
       <div class="step">
-        <h3>Passage $b_0 \to b_1$</h3>
-        <label>Axe de rotation (dans $b_0$)</label>
+        <h3>Passage \(b_0 \to b_1\)</h3>
+        <label>Axe de rotation (dans \(b_0\))</label>
         <select id="axis10">
-          <option value="x">$x_0$</option>
-          <option value="y">$y_0$</option>
-          <option value="z" selected>$z_0$</option>
+          <option value="x">\(x_0\)</option>
+          <option value="y">\(y_0\)</option>
+          <option value="z" selected>\(z_0\)</option>
         </select>
-        <label>Angle $\theta_{10}$ (degrés)</label>
+        <label>Angle \(\theta_{10}\) (degrés)</label>
         <div class="angle-row">
           <input type="range" id="slider10" min="-180" max="180" value="30" step="1" />
           <input type="number" id="angle10" value="30" step="0.1" />
@@ -282,14 +294,14 @@
       </div>
       
       <div class="step">
-        <h3>Passage $b_1 \to b_2$</h3>
-        <label>Axe de rotation (dans $b_1$)</label>
+        <h3>Passage \(b_1 \to b_2\)</h3>
+        <label>Axe de rotation (dans \(b_1\))</label>
         <select id="axis21">
-          <option value="x">$x_1$</option>
-          <option value="y" selected>$y_1$</option>
-          <option value="z">$z_1$</option>
+          <option value="x">\(x_1\)</option>
+          <option value="y" selected>\(y_1\)</option>
+          <option value="z">\(z_1\)</option>
         </select>
-        <label>Angle $\theta_{21}$ (degrés)</label>
+        <label>Angle \(\theta_{21}\) (degrés)</label>
         <div class="angle-row">
           <input type="range" id="slider21" min="-180" max="180" value="45" step="1" />
           <input type="number" id="angle21" value="45" step="0.1" />
@@ -297,14 +309,14 @@
       </div>
       
       <div class="step">
-        <h3>Passage $b_2 \to b_3$</h3>
-        <label>Axe de rotation (dans $b_2$)</label>
+        <h3>Passage \(b_2 \to b_3\)</h3>
+        <label>Axe de rotation (dans \(b_2\))</label>
         <select id="axis32">
-          <option value="x" selected>$x_2$</option>
-          <option value="y">$y_2$</option>
-          <option value="z">$z_2$</option>
+          <option value="x" selected>\(x_2\)</option>
+          <option value="y">\(y_2\)</option>
+          <option value="z">\(z_2\)</option>
         </select>
-        <label>Angle $\theta_{32}$ (degrés)</label>
+        <label>Angle \(\theta_{32}\) (degrés)</label>
         <div class="angle-row">
           <input type="range" id="slider32" min="-180" max="180" value="20" step="1" />
           <input type="number" id="angle32" value="20" step="0.1" />
@@ -319,11 +331,11 @@
     <div class="content">
       <div id="canvas-container"></div>
       <div class="legend">
-        <span><span class="dot" style="background:#333;"></span> $b_0$</span>
-        <span><span class="dot" style="background:#e74c3c;"></span> $b_1$</span>
-        <span><span class="dot" style="background:#27ae60;"></span> $b_2$</span>
-        <span><span class="dot" style="background:#3498db;"></span> $b_3$</span>
-        <span class="arrow-legend">Flèches : $x \to$ &nbsp;|&nbsp; $y \to\to$ &nbsp;|&nbsp; $z \to\to\to$</span>
+        <span><span class="dot" style="background:#333;"></span> \(b_0\)</span>
+        <span><span class="dot" style="background:#e74c3c;"></span> \(b_1\)</span>
+        <span><span class="dot" style="background:#27ae60;"></span> \(b_2\)</span>
+        <span><span class="dot" style="background:#3498db;"></span> \(b_3\)</span>
+        <span class="arrow-legend">Flèches : \(x \to\) &nbsp;|&nbsp; \(y \to\to\) &nbsp;|&nbsp; \(z \to\to\to\)</span>
       </div>
 
       <div class="section">
@@ -342,27 +354,27 @@
           <div>
             <label>Vecteur</label>
             <select id="selVec">
-              <option value="x0">$x_0$</option>
-              <option value="y0">$y_0$</option>
-              <option value="z0">$z_0$</option>
-              <option value="x1" selected>$x_1$</option>
-              <option value="y1">$y_1$</option>
-              <option value="z1">$z_1$</option>
-              <option value="x2">$x_2$</option>
-              <option value="y2">$y_2$</option>
-              <option value="z2">$z_2$</option>
-              <option value="x3">$x_3$</option>
-              <option value="y3">$y_3$</option>
-              <option value="z3">$z_3$</option>
+              <option value="x0">\(x_0\)</option>
+              <option value="y0">\(y_0\)</option>
+              <option value="z0">\(z_0\)</option>
+              <option value="x1" selected>\(x_1\)</option>
+              <option value="y1">\(y_1\)</option>
+              <option value="z1">\(z_1\)</option>
+              <option value="x2">\(x_2\)</option>
+              <option value="y2">\(y_2\)</option>
+              <option value="z2">\(z_2\)</option>
+              <option value="x3">\(x_3\)</option>
+              <option value="y3">\(y_3\)</option>
+              <option value="z3">\(z_3\)</option>
             </select>
           </div>
           <div>
             <label>Exprimé dans la base</label>
             <select id="selBase">
-              <option value="0" selected>$b_0$</option>
-              <option value="1">$b_1$</option>
-              <option value="2">$b_2$</option>
-              <option value="3">$b_3$</option>
+              <option value="0" selected>\(b_0\)</option>
+              <option value="1">\(b_1\)</option>
+              <option value="2">\(b_2\)</option>
+              <option value="3">\(b_3\)</option>
             </select>
           </div>
         </div>
@@ -372,6 +384,19 @@
   </main>
 
   <script>
+    // ===================== Helper for KaTeX rendering =====================
+    function renderMath(element) {
+      if (window.renderMathInElement) {
+        renderMathInElement(element, {
+          delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "\\(", right: "\\)", display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
     // ===================== Symbolic helpers =====================
     function S(s) { return String(s); }
     function symAdd(a, b) {
@@ -461,18 +486,13 @@
       const th21 = deg2rad(angles.t21);
       const th32 = deg2rad(angles.t32);
 
-      // Matrices numériques par rapport au repère absolu b0
       R01 = rot(axes.a10, th10);
       const R12_local = rot(axes.a21, th21);
       const R23_local = rot(axes.a32, th32);
 
-      // Composition correcte des matrices de passage successives :
-      // R_02 = R_01 * R_12
-      // R_03 = R_02 * R_23 = R_01 * R_12 * R_23
       R02 = matMul(R01, R12_local);
       R03 = matMul(R02, R23_local);
 
-      // Symbolique
       const c10 = 'c_{10}', s10 = 's_{10}';
       const c21 = 'c_{21}', s21 = 's_{21}';
       const c32 = 'c_{32}', s32 = 's_{32}';
@@ -599,14 +619,7 @@
       const container = document.getElementById('fig2dContainer');
       const groups = getRotationGroups();
       container.innerHTML = groups.map(g => draw2DFigure(g)).join('');
-      if (window.renderMathInElement) {
-        renderMathInElement(container, {
-          delimiters: [
-            {left: "$$", right: "$$", display: true},
-            {left: "\\(", right: "\\)", display: false}
-          ]
-        });
-      }
+      renderMath(container);
     }
 
     function updateSelectedVector() {
@@ -618,8 +631,8 @@
       const e = eMap[axisLetter];
       const comps = symVecInBase(baseJ, baseI, e);
       
-      // Notation demandée : vecteur avec base en bas à droite, ex: \vec{x}_1|_{b_0}
-      const tex = `\\vec{${axisLetter}}_{${baseJ}}\\big|_{b_{${baseI}}} = ${fmtSymVec(comps)}`;
+      // Format demandé : \vec{x}_1 = \begin{pmatrix} ... \end{pmatrix}_{b_0}
+      const tex = `\\vec{${axisLetter}}_{${baseJ}} = \\begin{pmatrix} ${comps[0]} \\\\ ${comps[1]} \\\\ ${comps[2]} \\end{pmatrix}_{b_{${baseI}}}`;
       const el = document.getElementById('vecResult');
       
       if (window.katex) {
@@ -786,14 +799,7 @@
         html += `Tous les axes de rotation sont distincts → 3 figures 2D séparées.`;
       }
       el.innerHTML = html;
-      if (window.renderMathInElement) {
-        renderMathInElement(el, {
-          delimiters: [
-            {left: "$$", right: "$$", display: true},
-            {left: "\\(", right: "\\)", display: false}
-          ]
-        });
-      }
+      renderMath(el);
     }
 
     function updateAll() {
@@ -852,16 +858,10 @@
     window.addEventListener('load', () => {
       initThree();
       updateAll();
-      // Rendu global KaTeX au chargement
-      if (window.renderMathInElement) {
-        renderMathInElement(document.body, {
-          delimiters: [
-            {left: "$$", right: "$$", display: true},
-            {left: "\\(", right: "\\)", display: false}
-          ]
-        });
-      }
+      renderMath(document.body);
     });
   </script>
 </body>
 </html>
+
+```
