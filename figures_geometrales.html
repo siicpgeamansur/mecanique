@@ -270,9 +270,9 @@
         <h3>Passage \(b_0 \to b_1\)</h3>
         <label>Axe de rotation (dans \(b_0\))</label>
         <select id="axis10">
-          <option value="x">\(x_0\)</option>
-          <option value="y">\(y_0\)</option>
-          <option value="z" selected>\(z_0\)</option>
+          <option value="x">x₀</option>
+          <option value="y">y₀</option>
+          <option value="z" selected>z₀</option>
         </select>
         <label>Angle \(\theta_{10}\) (degrés)</label>
         <div class="angle-row">
@@ -285,9 +285,9 @@
         <h3>Passage \(b_1 \to b_2\)</h3>
         <label>Axe de rotation (dans \(b_1\))</label>
         <select id="axis21">
-          <option value="x">\(x_1\)</option>
-          <option value="y" selected>\(y_1\)</option>
-          <option value="z">\(z_1\)</option>
+          <option value="x">x₁</option>
+          <option value="y" selected>y₁</option>
+          <option value="z">z₁</option>
         </select>
         <label>Angle \(\theta_{21}\) (degrés)</label>
         <div class="angle-row">
@@ -300,9 +300,9 @@
         <h3>Passage \(b_2 \to b_3\)</h3>
         <label>Axe de rotation (dans \(b_2\))</label>
         <select id="axis32">
-          <option value="x" selected>\(x_2\)</option>
-          <option value="y">\(y_2\)</option>
-          <option value="z">\(z_2\)</option>
+          <option value="x" selected>x₂</option>
+          <option value="y">y₂</option>
+          <option value="z">z₂</option>
         </select>
         <label>Angle \(\theta_{32}\) (degrés)</label>
         <div class="angle-row">
@@ -342,27 +342,27 @@
           <div>
             <label>Vecteur</label>
             <select id="selVec">
-              <option value="x0">\(x_0\)</option>
-              <option value="y0">\(y_0\)</option>
-              <option value="z0">\(z_0\)</option>
-              <option value="x1" selected>\(x_1\)</option>
-              <option value="y1">\(y_1\)</option>
-              <option value="z1">\(z_1\)</option>
-              <option value="x2">\(x_2\)</option>
-              <option value="y2">\(y_2\)</option>
-              <option value="z2">\(z_2\)</option>
-              <option value="x3">\(x_3\)</option>
-              <option value="y3">\(y_3\)</option>
-              <option value="z3">\(z_3\)</option>
+              <option value="x0">x₀</option>
+              <option value="y0">y₀</option>
+              <option value="z0">z₀</option>
+              <option value="x1" selected>x₁</option>
+              <option value="y1">y₁</option>
+              <option value="z1">z₁</option>
+              <option value="x2">x₂</option>
+              <option value="y2">y₂</option>
+              <option value="z2">z₂</option>
+              <option value="x3">x₃</option>
+              <option value="y3">y₃</option>
+              <option value="z3">z₃</option>
             </select>
           </div>
           <div>
             <label>Exprimé dans la base</label>
             <select id="selBase">
-              <option value="0" selected>\(b_0\)</option>
-              <option value="1">\(b_1\)</option>
-              <option value="2">\(b_2\)</option>
-              <option value="3">\(b_3\)</option>
+              <option value="0" selected>b₀</option>
+              <option value="1">b₁</option>
+              <option value="2">b₂</option>
+              <option value="3">b₃</option>
             </select>
           </div>
         </div>
@@ -619,7 +619,6 @@
       const e = eMap[axisLetter];
       const comps = symVecInBase(baseJ, baseI, e);
       
-      // Format demandé : \vec{x}_1 = \begin{pmatrix} ... \end{pmatrix}_{b_0}
       const tex = `\\vec{${axisLetter}}_{${baseJ}} = \\begin{pmatrix} ${comps[0]} \\\\ ${comps[1]} \\\\ ${comps[2]} \\end{pmatrix}_{b_{${baseI}}}`;
       const el = document.getElementById('vecResult');
       
