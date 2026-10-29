@@ -18,3 +18,7 @@ Voici une page pour visualiser le champ vectoriel d'un torseur :
 Voici une page pour visualiser les différents type de coordonnées d'un point (cartésiennes, cylindriques, sphériques) :
 
 [coordonnées](https://siicpgeamansur.github.io/mecanique/coordonnees.html)
+
+Voici une page pour visualiser et s'entraîner à connaître les torseurs (statiques et cinématiques) de chaque liaison usuelle :
+
+[liaison_usuelles](https://siicpgeamansur.github.io/mecanique/liaisons_usuelles.html)
