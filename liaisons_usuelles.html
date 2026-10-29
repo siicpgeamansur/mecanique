@@ -80,6 +80,9 @@
   .torseur-title {
     font-size: .86rem; color: var(--muted); margin-bottom: .6rem; font-weight: 600;
   }
+  .bmatrix-wrapper {
+    display: inline-block;
+  }
   .bmatrix {
     display: flex; align-items: center; gap: 6px;
     font-family: 'Fira Code', Consolas, monospace; font-size: 1.05rem;
@@ -92,13 +95,12 @@
     grid-template-columns: 1fr 1fr;
     gap: 5px 14px;
   }
-  .bm-right-info {
-    font-size: 0.78rem;
+  .bm-bottom {
+    text-align: right;
+    font-size: 0.82rem;
     color: var(--muted);
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    margin-left: 4px;
-    white-space: nowrap;
+    margin-top: 2px;
+    padding-right: 4px;
   }
   .comp {
     min-width: 52px; text-align: center;
@@ -117,18 +119,18 @@
     background: rgba(220,38,38,.15); border-color: var(--ko); color: var(--ko); font-weight: 700;
   }
   .axes-legend {
-    margin-top: 0.8rem;
-    font-size: 0.85rem;
+    margin-top: 0.9rem;
+    font-size: 0.88rem;
     color: var(--muted);
     display: flex;
-    gap: 1.2rem;
+    gap: 1.4rem;
     flex-wrap: wrap;
   }
-  .axes-legend span { display: flex; align-items: center; gap: 0.3rem; }
+  .axes-legend span { display: flex; align-items: center; gap: 0.35rem; }
   .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .dot-x { background: #ef4444; }
-  .dot-y { background: #22c55e; }
-  .dot-z { background: #3b82f6; }
+  .dot-x { background: #ef4444; }   /* Rouge = x */
+  .dot-y { background: #3b82f6; }   /* Bleu  = y */
+  .dot-z { background: #22c55e; }   /* Vert  = z (vertical) */
   .btn {
     background: linear-gradient(135deg, #2563eb, #7c3aed);
     color: #fff; border: none; border-radius: 8px;
@@ -182,8 +184,8 @@
 
         <div class="axes-legend">
           <span><div class="dot dot-x"></div> Rouge = <strong>x⃗</strong></span>
-          <span><div class="dot dot-y"></div> Vert = <strong>y⃗</strong></span>
-          <span><div class="dot dot-z"></div> Bleu = <strong>z⃗</strong></span>
+          <span><div class="dot dot-y"></div> Bleu = <strong>y⃗</strong></span>
+          <span><div class="dot dot-z"></div> Vert = <strong>z⃗</strong> (vertical)</span>
         </div>
 
         <div class="btn-row">
@@ -239,35 +241,35 @@ const LIAISONS = {
   encastrement: {
     name: "Encastrement", dof: "0 ddl",
     geo: "Aucun élément géométrique particulier (liaison complète).",
-    point: "A", base: "(x⃗, y⃗, z⃗)",
+    point: "A", 
     cineFree: [], statFree: [0,1,2,3,4,5],
     params: []
   },
   pivot: {
     name: "Pivot", dof: "1 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    point: "A ∈ Δ", base: "z⃗ ∥ Δ",
+    geo: "Caractérisée par son <strong>axe Δ</strong> (ici selon z⃗).",
+    point: "A ∈ Δ", 
     cineFree: [2], statFree: [0,1,2,3,4],
     params: [{ id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
   },
   glissiere: {
     name: "Glissière", dof: "1 ddl",
-    geo: "Caractérisée par sa <strong>direction u⃗</strong>.",
-    point: "A", base: "z⃗ ∥ u⃗",
+    geo: "Caractérisée par sa <strong>direction u⃗</strong> (ici selon z⃗).",
+    point: "A", 
     cineFree: [5], statFree: [0,1,3,4,5],
     params: [{ id: "tz", label: "Translation Vz", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
   },
   helicoidale: {
     name: "Hélicoïdale", dof: "1 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong> et son <strong>pas p</strong>.",
-    point: "A ∈ Δ", base: "z⃗ ∥ Δ",
+    geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗) et son <strong>pas p</strong>.",
+    point: "A ∈ Δ", 
     cineFree: [2,5], statFree: [0,1,2,3,4],
     params: [{ id: "hel", label: "Paramètre hélicoïdal", min: -4, max: 4, step: 0.01, value: 0 }]
   },
   pivotglissant: {
     name: "Pivot glissant", dof: "2 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    point: "A ∈ Δ", base: "z⃗ ∥ Δ",
+    geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗).",
+    point: "A ∈ Δ", 
     cineFree: [2,5], statFree: [0,1,3,4],
     params: [
       { id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
@@ -277,7 +279,7 @@ const LIAISONS = {
   spherique: {
     name: "Sphérique", dof: "3 ddl",
     geo: "Caractérisée par son <strong>centre C</strong>.",
-    point: "C", base: "(x⃗, y⃗, z⃗)",
+    point: "C", 
     cineFree: [0,1,2], statFree: [0,1,2],
     params: [
       { id: "rx", label: "Ωx", min: -1.3, max: 1.3, step: 0.01, value: 0 },
@@ -287,8 +289,8 @@ const LIAISONS = {
   },
   sphereplan: {
     name: "Sphère / Plan", dof: "5 ddl",
-    geo: "Caractérisée par le <strong>plan de contact</strong> et le <strong>point de contact</strong>.",
-    point: "I", base: "z⃗ ⊥ plan",
+    geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗) et le <strong>point de contact</strong>.",
+    point: "I", 
     cineFree: [0,1,2,3,4], statFree: [2],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -300,8 +302,8 @@ const LIAISONS = {
   },
   spherecylindre: {
     name: "Sphère / Cylindre", dof: "4 ddl",
-    geo: "Caractérisée par l’<strong>axe du cylindre</strong>.",
-    point: "A ∈ axe", base: "z⃗ ∥ axe",
+    geo: "Caractérisée par l’<strong>axe du cylindre</strong> (z⃗).",
+    point: "A ∈ axe", 
     cineFree: [0,1,2,5], statFree: [0,1],
     params: [
       { id: "tz", label: "Vz", min: -1.4, max: 1.4, step: 0.01, value: 0 },
@@ -312,8 +314,8 @@ const LIAISONS = {
   },
   cylindreplan: {
     name: "Cylindre / Plan", dof: "4 ddl",
-    geo: "Caractérisée par la <strong>direction des génératrices</strong> et le plan.",
-    point: "A", base: "x⃗ ∥ génératrices , z⃗ ⊥ plan",
+    geo: "Caractérisée par la <strong>direction des génératrices</strong> (x⃗) et le plan (normal z⃗).",
+    point: "A", 
     cineFree: [1,2,3,5], statFree: [1,4],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -324,8 +326,8 @@ const LIAISONS = {
   },
   appuiplan: {
     name: "Appui plan", dof: "3 ddl",
-    geo: "Caractérisée par le <strong>plan de contact</strong>.",
-    point: "A", base: "z⃗ ⊥ plan",
+    geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗).",
+    point: "A", 
     cineFree: [2,3,4], statFree: [2,5],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -379,20 +381,24 @@ function renderInfo() {
   torseurs.innerHTML = `
     <div class="torseur-box">
       <div class="torseur-title">{ 𝒱<sub>1/0</sub> } &nbsp;–&nbsp; Torseur cinématique</div>
-      <div class="bmatrix">
-        <div class="bm-brace">{</div>
-        <div class="bm-grid" id="cine-cells"></div>
-        <div class="bm-brace">}</div>
-        <div class="bm-right-info">(${L.point}, x⃗, y⃗, z⃗)</div>
+      <div class="bmatrix-wrapper">
+        <div class="bmatrix">
+          <div class="bm-brace">{</div>
+          <div class="bm-grid" id="cine-cells"></div>
+          <div class="bm-brace">}</div>
+        </div>
+        <div class="bm-bottom">(${L.point}, x⃗, y⃗, z⃗)</div>
       </div>
     </div>
     <div class="torseur-box">
       <div class="torseur-title">{ 𝒯<sub>0→1</sub> } &nbsp;–&nbsp; Torseur des actions mécaniques</div>
-      <div class="bmatrix">
-        <div class="bm-brace">{</div>
-        <div class="bm-grid" id="stat-cells"></div>
-        <div class="bm-brace">}</div>
-        <div class="bm-right-info">(${L.point}, x⃗, y⃗, z⃗)</div>
+      <div class="bmatrix-wrapper">
+        <div class="bmatrix">
+          <div class="bm-brace">{</div>
+          <div class="bm-grid" id="stat-cells"></div>
+          <div class="bm-brace">}</div>
+        </div>
+        <div class="bm-bottom">(${L.point}, x⃗, y⃗, z⃗)</div>
       </div>
     </div>
   `;
@@ -400,7 +406,7 @@ function renderInfo() {
   const cineCells = document.getElementById("cine-cells");
   const statCells = document.getElementById("stat-cells");
 
-  // Ordre : Ωx Vx / Ωy Vy / Ωz Vz
+  // Ordre d'affichage : Ωx Vx / Ωy Vy / Ωz Vz
   [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
@@ -508,7 +514,14 @@ function initThree() {
   const dir = new THREE.DirectionalLight(0xffffff, 0.8);
   dir.position.set(5, 10, 7);
   scene.add(dir);
+
+  // AxesHelper classique de Three.js :
+  // Rouge = X , Vert = Y (up) , Bleu = Z
+  // On mappe : math x → Three X (rouge)
+  //            math y → Three Z (bleu)
+  //            math z → Three Y (vert)  ← vertical
   scene.add(new THREE.AxesHelper(2.2));
+
   window.addEventListener("resize", () => {
     const w = container.clientWidth, h = container.clientHeight;
     camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -544,10 +557,8 @@ function createHelixTexture() {
   const c = document.createElement("canvas");
   c.width = 128; c.height = 128;
   const ctx = c.getContext("2d");
-  // fond bleu
   ctx.fillStyle = "#3b82f6";
   ctx.fillRect(0, 0, 128, 128);
-  // rayures très foncées et épaisses
   ctx.strokeStyle = "#1e3a8a";
   ctx.lineWidth = 14;
   for (let i = -1; i < 4; i++) {
@@ -589,13 +600,8 @@ function buildScene(key) {
   const matStripe = new THREE.MeshStandardMaterial({ map: createStripeTexture() });
   const matHelix  = new THREE.MeshStandardMaterial({ map: createHelixTexture() });
   const matSphere = new THREE.MeshStandardMaterial({ map: createSphereTexture() });
-
-  // Cylindre transparent pour Sphère/Cylindre
   const matCylTransparent = new THREE.MeshStandardMaterial({
-    color: 0x94a3b8,
-    transparent: true,
-    opacity: 0.5,
-    side: THREE.DoubleSide
+    color: 0x94a3b8, transparent: true, opacity: 0.5, side: THREE.DoubleSide
   });
 
   if (key === "encastrement") {
@@ -644,7 +650,6 @@ function buildScene(key) {
     scene.add(plane, mobile);
   }
   else if (key === "spherecylindre") {
-    // Cylindre transparent
     const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 2.8, 32, 1, true), matCylTransparent);
     mobile = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), matSphere);
     scene.add(cyl, mobile);
