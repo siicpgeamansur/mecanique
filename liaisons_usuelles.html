@@ -6,13 +6,13 @@
 <title>Liaisons usuelles – Torseurs & Mouvements</title>
 <style>
   :root {
-    --bg: #ffffff; --card: #f8fafc; --accent: #2563eb; --accent2: #7c3aed;
+    --bg: #ffffff; --card: #f8fafc; --accent: #2563eb;
     --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
     --input-bg: #fff; --code-bg: #f1f5f9;
     --ok: #16a34a; --ko: #dc2626;
   }
   [data-theme="dark"] {
-    --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --accent2: #a78bfa;
+    --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
     --text: #e2e8f0; --muted: #94a3b8; --border: #334155;
     --input-bg: #0f172a; --code-bg: #0f172a;
     --ok: #4ade80; --ko: #f87171;
@@ -22,7 +22,6 @@
     font-family: 'Segoe UI', system-ui, sans-serif;
     background: var(--bg); color: var(--text);
     min-height: 100vh; padding: 1rem;
-    transition: background .25s, color .25s;
   }
   h1 { text-align: center; font-size: 1.6rem; color: var(--accent); margin-bottom: .3rem; }
   .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.2rem; font-size: .95rem; }
@@ -36,7 +35,6 @@
     position: fixed; top: 1rem; right: 1rem; z-index: 100;
     background: var(--card); border: 1px solid var(--border); color: var(--text);
     border-radius: 999px; padding: .4rem .9rem; font-size: .9rem; cursor: pointer;
-    display: flex; align-items: center; gap: .35rem;
   }
   .liaison-select {
     display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center;
@@ -58,7 +56,6 @@
   }
   [data-theme="light"] #canvas-container { background: #e2e8f0; }
   .geo { font-size: .92rem; color: var(--muted); margin: .4rem 0 .8rem; }
-  .geo strong { color: var(--text); }
   .dof-badge {
     display: inline-block; background: var(--accent); color: #fff;
     font-size: .75rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px;
@@ -80,9 +77,7 @@
   .torseur-title {
     font-size: .86rem; color: var(--muted); margin-bottom: .6rem; font-weight: 600;
   }
-  .bmatrix-wrapper {
-    display: inline-block;
-  }
+  .bmatrix-wrapper { display: inline-block; }
   .bmatrix {
     display: flex; align-items: center; gap: 6px;
     font-family: 'Fira Code', Consolas, monospace; font-size: 1.05rem;
@@ -106,7 +101,7 @@
     min-width: 52px; text-align: center;
     padding: .3rem .25rem; border-radius: 6px; cursor: pointer;
     user-select: none; border: 1px solid var(--border);
-    background: var(--input-bg); transition: all .15s;
+    background: var(--input-bg);
   }
   .comp:hover { border-color: var(--accent); }
   .comp.selected {
@@ -133,7 +128,6 @@
     color: #fff; border: none; border-radius: 8px;
     padding: .5rem 1.15rem; font-size: .9rem; font-weight: 600; cursor: pointer;
   }
-  [data-theme="dark"] .btn { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
   .btn-secondary { background: #64748b; }
   .btn-row { margin-top: 1rem; display: flex; gap: .6rem; flex-wrap: wrap; }
   .feedback {
@@ -166,7 +160,6 @@
     </div>
 
     <div class="main-grid">
-      <!-- Gauche -->
       <div class="card">
         <h2 id="liaison-name">–</h2>
         <div id="liaison-dof"></div>
@@ -180,9 +173,9 @@
         <div class="torseurs" id="torseurs"></div>
 
         <div class="axes-legend">
-          <span><div class="dot" style="background:#3b82f6"></div> Bleu = <strong>x⃗</strong></span>
-          <span><div class="dot" style="background:#ef4444"></div> Rouge = <strong>y⃗</strong></span>
-          <span><div class="dot" style="background:#22c55e"></div> Vert = <strong>z⃗</strong></span>
+          <span><div class="dot" style="background:#ef4444"></div> Rouge = <strong>x⃗</strong></span>
+          <span><div class="dot" style="background:#3b82f6"></div> Bleu = <strong>y⃗</strong></span>
+          <span><div class="dot" style="background:#22c55e"></div> Vert = <strong>z⃗</strong> (vertical)</span>
         </div>
 
         <div class="btn-row">
@@ -192,7 +185,6 @@
         <div class="feedback" id="feedback"></div>
       </div>
 
-      <!-- Droite -->
       <div class="card">
         <h2>Mouvement de la pièce mobile (bleue)</h2>
         <div id="canvas-container"></div>
@@ -233,51 +225,57 @@ if (localStorage.getItem('theme') === 'dark') {
   document.getElementById('theme-label').textContent = 'Clair';
 }
 
-/* ========== Données ========== */
+/* ========== Données des liaisons ========== */
 const LIAISONS = {
   encastrement: {
     name: "Encastrement", dof: "0 ddl",
     geo: "Aucun élément géométrique particulier (liaison complète).",
-    point: "A", 
-    cineFree: [], statFree: [0,1,2,3,4,5],
+    point: "A",
+    cineFree: [], 
+    statFree: [0,1,2,3,4,5],
     params: []
   },
   pivot: {
     name: "Pivot", dof: "1 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong> (ici selon z⃗).",
-    point: "A ∈ Δ", 
-    cineFree: [2], statFree: [0,1,2,3,4],
-    params: [{ id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
+    geo: "Caractérisée par son <strong>axe Δ</strong> (selon z⃗).",
+    point: "A ∈ Δ",
+    cineFree: [2],          // Ωz
+    statFree: [0,1,2,3,4],  // tout sauf Mz
+    params: [{ id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
   },
   glissiere: {
     name: "Glissière", dof: "1 ddl",
-    geo: "Caractérisée par sa <strong>direction u⃗</strong> (ici selon z⃗).",
-    point: "A", 
-    cineFree: [4], statFree: [0,2,3,4,5],
-    params: [{ id: "ty", label: "Translation Vy", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
+    geo: "Caractérisée par sa <strong>direction</strong> (selon z⃗).",
+    point: "A",
+    cineFree: [5],          // Vz
+    statFree: [0,1,3,4,5],
+    params: [{ id: "tz", label: "Vz", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
   },
   helicoidale: {
     name: "Hélicoïdale", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗) et son <strong>pas p</strong>.",
-    point: "A ∈ Δ", 
-    cineFree: [2,5], statFree: [0,1,2,3,4],
+    point: "A ∈ Δ",
+    cineFree: [2,5],        // Ωz + Vz
+    statFree: [0,1,2,3,4],
     params: [{ id: "hel", label: "Paramètre hélicoïdal", min: -4, max: 4, step: 0.01, value: 0 }]
   },
   pivotglissant: {
     name: "Pivot glissant", dof: "2 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗).",
-    point: "A ∈ Δ", 
-    cineFree: [2,5], statFree: [0,1,3,4],
+    point: "A ∈ Δ",
+    cineFree: [2,5],
+    statFree: [0,1,3,4],
     params: [
-      { id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
-      { id: "tz", label: "Translation Vz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+      { id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
+      { id: "tz", label: "Vz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
     ]
   },
   spherique: {
     name: "Sphérique", dof: "3 ddl",
     geo: "Caractérisée par son <strong>centre C</strong>.",
-    point: "C", 
-    cineFree: [0,1,2], statFree: [0,1,2],
+    point: "C",
+    cineFree: [0,1,2],
+    statFree: [0,1,2],
     params: [
       { id: "rx", label: "Ωx", min: -1.3, max: 1.3, step: 0.01, value: 0 },
       { id: "ry", label: "Ωy", min: -1.3, max: 1.3, step: 0.01, value: 0 },
@@ -286,9 +284,10 @@ const LIAISONS = {
   },
   sphereplan: {
     name: "Sphère / Plan", dof: "5 ddl",
-    geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗) et le <strong>point de contact</strong>.",
-    point: "I", 
-    cineFree: [0,1,2,3,4], statFree: [2],
+    geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗) et le point de contact.",
+    point: "I",
+    cineFree: [0,1,2,3,4],
+    statFree: [2],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -300,8 +299,9 @@ const LIAISONS = {
   spherecylindre: {
     name: "Sphère / Cylindre", dof: "4 ddl",
     geo: "Caractérisée par l’<strong>axe du cylindre</strong> (z⃗).",
-    point: "A ∈ axe", 
-    cineFree: [0,1,2,5], statFree: [0,1],
+    point: "A ∈ axe",
+    cineFree: [0,1,2,5],
+    statFree: [0,1],
     params: [
       { id: "tz", label: "Vz", min: -1.4, max: 1.4, step: 0.01, value: 0 },
       { id: "rx", label: "Ωx", min: -1.6, max: 1.6, step: 0.01, value: 0 },
@@ -312,8 +312,9 @@ const LIAISONS = {
   cylindreplan: {
     name: "Cylindre / Plan", dof: "4 ddl",
     geo: "Caractérisée par la <strong>direction des génératrices</strong> (x⃗) et le plan (normal z⃗).",
-    point: "A", 
-    cineFree: [1,2,3,5], statFree: [1,4],
+    point: "A",
+    cineFree: [1,2,3,5],
+    statFree: [1,4],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "tz", label: "Vz", min: -1.2, max: 1.2, step: 0.01, value: 0 },
@@ -324,8 +325,9 @@ const LIAISONS = {
   appuiplan: {
     name: "Appui plan", dof: "3 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗).",
-    point: "A", 
-    cineFree: [2,3,4], statFree: [2,5],
+    point: "A",
+    cineFree: [2,3,4],
+    statFree: [2,5],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
       { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -377,7 +379,7 @@ function renderInfo() {
   const torseurs = document.getElementById("torseurs");
   torseurs.innerHTML = `
     <div class="torseur-box">
-      <div class="torseur-title">{ 𝒱<sub>1/0</sub> } &nbsp;–&nbsp; Torseur cinématique</div>
+      <div class="torseur-title">{ 𝒱<sub>1/0</sub> } – Torseur cinématique</div>
       <div class="bmatrix-wrapper">
         <div class="bmatrix">
           <div class="bm-brace">{</div>
@@ -388,7 +390,7 @@ function renderInfo() {
       </div>
     </div>
     <div class="torseur-box">
-      <div class="torseur-title">{ 𝒯<sub>0→1</sub> } &nbsp;–&nbsp; Torseur des actions mécaniques</div>
+      <div class="torseur-title">{ 𝒯<sub>0→1</sub> } – Torseur des actions mécaniques</div>
       <div class="bmatrix-wrapper">
         <div class="bmatrix">
           <div class="bm-brace">{</div>
@@ -403,7 +405,7 @@ function renderInfo() {
   const cineCells = document.getElementById("cine-cells");
   const statCells = document.getElementById("stat-cells");
 
-  // Ordre : Ωx Vx / Ωy Vy / Ωz Vz
+  // Affichage : Ωx Vx / Ωy Vy / Ωz Vz
   [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
@@ -451,12 +453,8 @@ function checkAnswer() {
     const should = L.cineFree.includes(idx);
     const selected = userCine.has(idx);
     el.classList.remove("selected", "correct", "wrong");
-    if ((should && selected) || (!should && !selected)) {
-      el.classList.add("correct");
-    } else {
-      el.classList.add("wrong");
-      allOk = false;
-    }
+    if ((should && selected) || (!should && !selected)) el.classList.add("correct");
+    else { el.classList.add("wrong"); allOk = false; }
   });
 
   document.querySelectorAll("#stat-cells .comp").forEach(el => {
@@ -464,19 +462,13 @@ function checkAnswer() {
     const should = L.statFree.includes(idx);
     const selected = userStat.has(idx);
     el.classList.remove("selected", "correct", "wrong");
-    if ((should && selected) || (!should && !selected)) {
-      el.classList.add("correct");
-    } else {
-      el.classList.add("wrong");
-      allOk = false;
-    }
+    if ((should && selected) || (!should && !selected)) el.classList.add("correct");
+    else { el.classList.add("wrong"); allOk = false; }
   });
 
   const fb = document.getElementById("feedback");
   fb.className = "feedback show " + (allOk ? "ok" : "ko");
-  fb.textContent = allOk
-    ? "✅ Bravo ! Toutes les composantes sont correctes."
-    : "❌ Certaines composantes sont incorrectes (en rouge).";
+  fb.textContent = allOk ? "✅ Bravo ! Toutes les composantes sont correctes." : "❌ Certaines composantes sont incorrectes (en rouge).";
 }
 
 function resetSelection() {
@@ -496,27 +488,23 @@ let scene, camera, renderer, controls, mobile;
 function createCustomAxes(length = 2.2) {
   const group = new THREE.Group();
 
-    // x = Bleu (Three.js X)
-  const xMat = new THREE.LineBasicMaterial({ color: 0x3b82f6 });
-  const xGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, length)
-  ]);
-  group.add(new THREE.Line(yGeo, yMat));
+  // x⃗ = Rouge → Three.js X
+  group.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(length,0,0)]),
+    new THREE.LineBasicMaterial({ color: 0xef4444 })
+  ));
 
-  // y = Rouge (Three.js Y)
-  const yMat = new THREE.LineBasicMaterial({ color: 0xef4444 });
-  const yGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(length, 0, 0)
-  ]);
-  group.add(new THREE.Line(xGeo, xMat));
+  // y⃗ = Bleu → Three.js Z
+  group.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,length)]),
+    new THREE.LineBasicMaterial({ color: 0x3b82f6 })
+  ));
 
-
-  // z⃗ = Vert (Three.js Z)
-  const zMat = new THREE.LineBasicMaterial({ color: 0x22c55e });
-  const zGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, length, 0)
-  ]);
-  group.add(new THREE.Line(zGeo, zMat));
+  // z⃗ = Vert → Three.js Y (vertical)
+  group.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,length,0)]),
+    new THREE.LineBasicMaterial({ color: 0x22c55e })
+  ));
 
   return group;
 }
@@ -539,7 +527,6 @@ function initThree() {
   const dir = new THREE.DirectionalLight(0xffffff, 0.8);
   dir.position.set(5, 10, 7);
   scene.add(dir);
-
   scene.add(createCustomAxes(2.2));
 
   window.addEventListener("resize", () => {
@@ -639,8 +626,8 @@ function buildScene(key) {
     scene.add(base, mobile);
   }
   else if (key === "glissiere") {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.12, 0.35), matFix);
-    mobile = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 0.5), matMob);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 3.6, 0.35), matFix);
+    mobile = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.5), matMob);
     scene.add(rail, mobile);
   }
   else if (key === "helicoidale") {
@@ -720,70 +707,69 @@ function buildSliders(key) {
   });
 }
 
-/* ============================================================
-   MAPPING CORRECT (base orthonormée directe) :
+/* ================================================================
+   MAPPING DÉFINITIF (base orthonormée directe)
    Rouge (Three X) = x⃗
    Bleu  (Three Z) = y⃗
-   Vert  (Three Y) = z⃗  (vertical)
-   ============================================================ */
+   Vert  (Three Y) = z⃗   ← vertical
+   ================================================================ */
 function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
-  // Convention :
-  // position.x  = déplacement selon x⃗ (rouge)
-  // position.z  = déplacement selon y⃗ (bleu)
-  // position.y  = déplacement selon z⃗ (vert / vertical)
-  //
-  // rotation.x  = rotation autour de x⃗
-  // rotation.z  = rotation autour de y⃗
-  // rotation.y  = rotation autour de z⃗
+  // Translations
+  // Vx → position.x
+  // Vy → position.z
+  // Vz → position.y
+
+  // Rotations
+  // Ωx → rotation.x
+  // Ωy → rotation.z
+  // Ωz → rotation.y
 
   if (key === "pivot") {
-    // Ωz → rotation autour de z⃗ (vert) = Three.js Z
-    mobile.rotation.z = v.rz || 0;
+    mobile.rotation.y = v.rz || 0;               // Ωz
   }
   else if (key === "glissiere") {
-    // Vy → translation selon y (rouge) = Three.js Y
-    mobile.position.y = v.ty || 0;
+    mobile.position.y = v.tz || 0;               // Vz
   }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.z = t * 2.2;   // Ωz
-    mobile.position.z = t * 0.28;  // Vz
+    mobile.rotation.y = t * 2.2;                 // Ωz
+    mobile.position.y = t * 0.28;                // Vz
   }
   else if (key === "pivotglissant") {
-    mobile.rotation.z = v.rz || 0; // Ωz
-    mobile.position.z = v.tz || 0; // Vz
+    mobile.rotation.y = v.rz || 0;               // Ωz
+    mobile.position.y = v.tz || 0;               // Vz
   }
   else if (key === "spherique") {
-    mobile.rotation.x = v.rx || 0; // Ωx → autour de x (rouge)
-    mobile.rotation.y = v.ry || 0; // Ωy → autour de y (bleu)
-    mobile.rotation.z = v.rz || 0; // Ωz → autour de z (vert)
+    mobile.rotation.x = v.rx || 0;               // Ωx
+    mobile.rotation.z = v.ry || 0;               // Ωy
+    mobile.rotation.y = v.rz || 0;               // Ωz
   }
   else if (key === "sphereplan") {
-    mobile.position.x = v.tx || 0; // Vx → x (rouge)
-    mobile.position.y = v.ty || 0; // Vy → y (bleu)
-    mobile.rotation.x = v.rx || 0;
-    mobile.rotation.y = v.ry || 0;
-    mobile.rotation.z = v.rz || 0;
+    mobile.position.x = v.tx || 0;               // Vx
+    mobile.position.z = v.ty || 0;               // Vy
+    mobile.rotation.x = v.rx || 0;               // Ωx
+    mobile.rotation.z = v.ry || 0;               // Ωy
+    mobile.rotation.y = v.rz || 0;               // Ωz
   }
   else if (key === "spherecylindre") {
-    mobile.position.z = v.tz || 0; // Vz
+    mobile.position.y = v.tz || 0;               // Vz
     mobile.rotation.x = v.rx || 0;
-    mobile.rotation.y = v.ry || 0;
-    mobile.rotation.z = v.rz || 0;
+    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.y = v.rz || 0;
   }
   else if (key === "cylindreplan") {
-    mobile.position.x = v.tx || 0; // Vx
-    mobile.position.z = v.tz || 0; // Vz
-    mobile.rotation.y = v.ry || 0; // Ωy
-    mobile.rotation.z = v.rz || 0; // Ωz
+    mobile.position.x = v.tx || 0;               // Vx
+    mobile.position.y = v.tz || 0;               // Vz
+    mobile.rotation.z = v.ry || 0;               // Ωy
+    mobile.rotation.y = v.rz || 0;               // Ωz
   }
   else if (key === "appuiplan") {
-    mobile.position.x = v.tx || 0; // Vx
-    mobile.position.y = v.ty || 0; // Vy
-    mobile.rotation.z = v.rz || 0; // Ωz
+    mobile.position.x = v.tx || 0;               // Vx
+    mobile.position.z = v.ty || 0;               // Vy
+    mobile.rotation.y = v.rz || 0;               // Ωz
   }
 }
 
