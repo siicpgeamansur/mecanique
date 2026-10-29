@@ -329,7 +329,7 @@
       <div class="section">
         <h2>Figures géométriques 2D de changement de base</h2>
         <p class="note">
-          Les arcs affichent le nom littéral de l'angle (\(\theta_{ij}\)) entre les bases successives partageant le même axe physique.
+          Les figures 2D forment un trièdre direct où l'axe de rotation pointe vers l'observateur (sortant de l'écran).
         </p>
         <div class="fig2d-container" id="fig2dContainer"></div>
       </div>
@@ -381,6 +381,12 @@
           throwOnError: false
         });
       }
+    }
+
+    // Convertisseur de nom d'angle littéral en indices Unicode (ex: "10" -> "₁₀")
+    function formatAngleLabel(key) {
+      const map = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+      return "θ" + String(key).split('').map(c => map[c] || c).join('');
     }
 
     // ===================== Symbolic helpers =====================
@@ -533,7 +539,6 @@
       return groups;
     }
 
-    // Fonction utilitaire pour dessiner une flèche au bout d'un vecteur 2D
     function getArrowhead(tx, ty, rad, color) {
       const headLen = 10;
       const headAngle = 0.5;
@@ -549,7 +554,7 @@
       return `<polygon points="${tx},${ty} ${p1x},${p1y} ${p2x},${p2y}" fill="${color}" />`;
     }
 
-    // Figures 2D avec flèches aux vecteurs et noms littéraux d'angles
+    // Figures 2D orientées directement (le troisième axe sort vers l'observateur)
     function draw2DFigure(group) {
       const size = 300;
       const cx = size / 2, cy = size / 2;
@@ -561,7 +566,6 @@
       else { labelU = 'z'; labelV = 'x'; }
 
       const numSteps = group.steps.length;
-      // Total spread max de 30° entre la première et la dernière base de la figure
       const stepAngle = 30 / numSteps;
 
       const displayAngles = [];
@@ -574,17 +578,17 @@
       const baseElementsSvg = [];
       const colors = ['#333', '#e74c3c', '#27ae60', '#3498db'];
 
-      // Dessin des axes avec flèches pour chaque base du groupe
       for (let i = 0; i <= numSteps; i++) {
         const bIdx = group.from + i;
         const col = colors[bIdx] || '#333';
         const rad = deg2rad(displayAngles[i]);
-        const cosT = Math.cos(rad), sinT = Math.sin(rad);
+        
+        // Orientation directe : u pointe vers l'angle rad, v pointe à +90° par rapport à u (en sens direct)
+        const sux = cx + len * Math.cos(rad);
+        const suy = cy - len * Math.sin(rad);
+        const svx = cx + len * Math.cos(rad + Math.PI / 2);
+        const svy = cy - len * Math.sin(rad + Math.PI / 2);
 
-        const [sux, suy] = toSvg(cosT * len, sinT * len);
-        const [svx, svy] = toSvg(-sinT * len, -cosT * len); // axe orthogonal v
-
-        // Angles de direction en math/SVG pour les flèches
         const radU = rad;
         const radV = rad + Math.PI / 2;
 
@@ -598,35 +602,29 @@
         `);
       }
 
-      // Dessin des arcs d'angles orientés avec leurs noms littéraux
       for (let i = 1; i <= numSteps; i++) {
         const rArc = 35 + (i - 1) * 16;
         const radStart = deg2rad(displayAngles[i - 1]);
         const radEnd = deg2rad(displayAngles[i]);
         
-        const [x0, y0] = toSvg(rArc * Math.cos(radStart), rArc * Math.sin(radStart));
-        const [x1, y1] = toSvg(rArc * Math.cos(radEnd), rArc * Math.sin(radEnd));
+        const x0 = cx + rArc * Math.cos(radStart);
+        const y0 = cy - rArc * Math.sin(radStart);
+        const x1 = cx + rArc * Math.cos(radEnd);
+        const y1 = cy - rArc * Math.sin(radEnd);
         
-        const arcPath = `M ${x0} ${y0} A ${rArc} ${rArc} 0 0 1 ${x1} ${y1}`;
+        const arcPath = `M ${x0} ${y0} A ${rArc} ${rArc} 0 0 0 ${x1} ${y1}`;
         
         const radMid = (radStart + radEnd) / 2;
-        const [lx, ly] = toSvg((rArc + 12) * Math.cos(radMid), (rArc + 12) * Math.sin(radMid));
+        const lx = cx + (rArc + 14) * Math.cos(radMid);
+        const ly = cy - (rArc + 14) * Math.sin(radMid);
         
         const key = group.keys[i - 1];
+        const angleName = formatAngleLabel(key);
 
         baseElementsSvg.push(`
           <path d="${arcPath}" fill="none" stroke="#555" stroke-width="1.8"/>
-          <text x="${lx}" y="${ly}" fill="#333" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="central">\\(\\theta_{${key}}\\(</text>
+          <text x="${lx}" y="${ly}" fill="#333" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="central">${angleName}</text>
         `);
-      }
-
-      // Légende KaTeX des angles du groupe
-      let angleHtml = '';
-      if (group.keys.length === 1) {
-        angleHtml = `\\(\\theta_{${group.keys[0]}}\\)`;
-      } else {
-        const parts = group.keys.map(k => `\\theta_{${k}}`);
-        angleHtml = `\\(${parts.join(', ')}\\)`;
       }
 
       const title = numSteps > 1
@@ -643,7 +641,7 @@
             <circle cx="${cx}" cy="${cy}" r="3" fill="#222"/>
           </svg>
           <div class="fig2d-caption">
-            Axe : <strong>${group.axis}</strong> | Angles : ${angleHtml}
+            Axe (sortant de l'écran) : <strong>${group.axis}</strong>
           </div>
         </div>
       `;
