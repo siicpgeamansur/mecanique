@@ -539,7 +539,6 @@ function initThree() {
   dir.position.set(5, 10, 7);
   scene.add(dir);
 
-  // Axes personnalisés
   scene.add(createCustomAxes(2.2));
 
   window.addEventListener("resize", () => {
@@ -720,43 +719,70 @@ function buildSliders(key) {
   });
 }
 
+/* ============================================================
+   MAPPING CORRECT (base orthonormée directe) :
+   Rouge (Three X) = x⃗
+   Bleu  (Three Z) = y⃗
+   Vert  (Three Y) = z⃗  (vertical)
+   ============================================================ */
 function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
-  if (key === "pivot") mobile.rotation.y = v.rz || 0;
-  else if (key === "glissiere") mobile.position.x = v.tz || 0;
+  // Convention :
+  // position.x  = déplacement selon x⃗ (rouge)
+  // position.z  = déplacement selon y⃗ (bleu)
+  // position.y  = déplacement selon z⃗ (vert / vertical)
+  //
+  // rotation.x  = rotation autour de x⃗
+  // rotation.z  = rotation autour de y⃗
+  // rotation.y  = rotation autour de z⃗
+
+  if (key === "pivot") {
+    // Ωz → rotation autour de z⃗ (vert) = Three.js Y
+    mobile.rotation.y = v.rz || 0;
+  }
+  else if (key === "glissiere") {
+    // Vz → translation selon z⃗ (vert) = Three.js Y
+    mobile.position.y = v.tz || 0;
+  }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.y = t * 2.2;
-    mobile.position.y = t * 0.28;
+    mobile.rotation.y = t * 2.2;   // Ωz
+    mobile.position.y = t * 0.28;  // Vz
   }
   else if (key === "pivotglissant") {
-    mobile.rotation.y = v.rz || 0;
-    mobile.position.y = v.tz || 0;
+    mobile.rotation.y = v.rz || 0; // Ωz
+    mobile.position.y = v.tz || 0; // Vz
   }
   else if (key === "spherique") {
-    mobile.rotation.set(v.rx || 0, v.rz || 0, v.ry || 0);
+    mobile.rotation.x = v.rx || 0; // Ωx → autour de x (rouge)
+    mobile.rotation.z = v.ry || 0; // Ωy → autour de y (bleu)
+    mobile.rotation.y = v.rz || 0; // Ωz → autour de z (vert)
   }
   else if (key === "sphereplan") {
-    mobile.position.x = v.tx || 0;
-    mobile.position.z = v.ty || 0;
-    mobile.rotation.set(v.rx || 0, v.rz || 0, v.ry || 0);
+    mobile.position.x = v.tx || 0; // Vx → x (rouge)
+    mobile.position.z = v.ty || 0; // Vy → y (bleu)
+    mobile.rotation.x = v.rx || 0;
+    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.y = v.rz || 0;
   }
   else if (key === "spherecylindre") {
-    mobile.position.y = v.tz || 0;
-    mobile.rotation.set(v.rx || 0, v.rz || 0, v.ry || 0);
+    mobile.position.y = v.tz || 0; // Vz
+    mobile.rotation.x = v.rx || 0;
+    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.y = v.rz || 0;
   }
   else if (key === "cylindreplan") {
-    mobile.position.x = v.tx || 0;
-    mobile.position.z = v.tz || 0;
-    mobile.rotation.x = v.rz || 0;
-    mobile.rotation.y = v.ry || 0;
+    mobile.position.x = v.tx || 0; // Vx
+    mobile.position.y = v.tz || 0; // Vz
+    mobile.rotation.z = v.ry || 0; // Ωy
+    mobile.rotation.y = v.rz || 0; // Ωz
   }
   else if (key === "appuiplan") {
-    mobile.position.x = v.tx || 0;
-    mobile.position.z = v.ty || 0;
-    mobile.rotation.y = v.rz || 0;
+    mobile.position.x = v.tx || 0; // Vx
+    mobile.position.z = v.ty || 0; // Vy
+    mobile.rotation.y = v.rz || 0; // Ωz
   }
 }
 
