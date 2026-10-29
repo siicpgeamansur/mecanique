@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coordonnées cartésiennes • cylindriques • sphériques</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --card: #f8fafc;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --success: #16a34a;
+    --error: #dc2626;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --input-bg: #ffffff;
+    --code-bg: #f1f5f9;
+  }
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #38bdf8;
+    --accent2: #a78bfa;
+    --success: #4ade80;
+    --error: #f87171;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --input-bg: #0f172a;
+    --code-bg: #0f172a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 1rem;
+    transition: background 0.25s, color 0.25s;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    margin-bottom: 0.3rem;
+    color: var(--accent);
+  }
+  .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.2rem; font-size: 0.95rem; }
+  .container { max-width: 1280px; margin: 0 auto; display: grid; gap: 1.1rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.7rem; color: var(--accent); }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.2rem; }
+  input[type="number"] {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.95rem;
+  }
+  .coord-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .coord-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .coord-row span {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.05rem;
+  }
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  [data-theme="dark"] .btn {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  }
+  .btn-secondary { background: #64748b; }
+  [data-theme="dark"] .btn-secondary { background: #475569; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.8rem; }
+  .checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.6rem;
+  }
+  .checks label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  #canvas-container {
+    width: 100%;
+    height: 480px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #0a0a12;
+  }
+  [data-theme="light"] #canvas-container { background: #f1f5f9; }
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 0.45rem 0.95rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  [data-theme="dark"] .theme-toggle { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .info {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  .formula {
+    font-family: 'Fira Code', Consolas, monospace;
+    font-size: 0.85rem;
+    background: var(--code-bg);
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-top: 0.5rem;
+  }
+  @media (max-width: 700px) {
+    #canvas-container { height: 360px; }
+    h1 { font-size: 1.35rem; }
+  }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+    <span id="theme-icon">🌙</span>
+    <span id="theme-label">Sombre</span>
+  </button>
+
+  <h1>Coordonnées cartésiennes • cylindriques • sphériques</h1>
+  <p class="subtitle">Visualisation interactive 3D – Style GeoGebra</p>
+
+  <div class="container">
+    <!-- Contrôles -->
+    <div class="card">
+      <h2>Coordonnées du point</h2>
+      <div class="grid-3">
+        <!-- Cartésien -->
+        <div class="coord-group">
+          <strong style="color:var(--accent)">Cartésiennes (x, y, z)</strong>
+          <div class="coord-row"><span>x</span><input type="number" id="x" step="0.1" value="3"></div>
+          <div class="coord-row"><span>y</span><input type="number" id="y" step="0.1" value="2"></div>
+          <div class="coord-row"><span>z</span><input type="number" id="z" step="0.1" value="4"></div>
+        </div>
+        <!-- Cylindrique -->
+        <div class="coord-group">
+          <strong style="color:var(--accent)">Cylindriques (ρ, φ, z)</strong>
+          <div class="coord-row"><span>ρ</span><input type="number" id="rho" step="0.1" value="3.61"></div>
+          <div class="coord-row"><span>φ</span><input type="number" id="phi" step="0.01" value="0.59"></div>
+          <div class="coord-row"><span>z</span><input type="number" id="z2" step="0.1" value="4"></div>
+          <div class="info">φ en radians</div>
+        </div>
+        <!-- Sphérique -->
+        <div class="coord-group">
+          <strong style="color:var(--accent)">Sphériques (r, θ, φ)</strong>
+          <div class="coord-row"><span>r</span><input type="number" id="r" step="0.1" value="5.39"></div>
+          <div class="coord-row"><span>θ</span><input type="number" id="theta" step="0.01" value="0.74"></div>
+          <div class="coord-row"><span>φ</span><input type="number" id="phi2" step="0.01" value="0.59"></div>
+          <div class="info">θ, φ en radians</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="randomPoint()">Point aléatoire</button>
+        <button class="btn btn-secondary" onclick="resetPoint()">Réinitialiser (3,2,4)</button>
+      </div>
+
+      <div class="checks">
+        <label><input type="checkbox" id="showCart" checked> Guides cartésiens</label>
+        <label><input type="checkbox" id="showCyl" checked> Guides cylindriques</label>
+        <label><input type="checkbox" id="showSph" checked> Guides sphériques</label>
+      </div>
+    </div>
+
+    <!-- Canvas 3D -->
+    <div class="card">
+      <h2>Visualisation 3D</h2>
+      <div id="canvas-container"></div>
+      <p class="info" style="margin-top:0.6rem">
+        Souris gauche = rotation • Molette = zoom • Clic droit = déplacement
+      </p>
+    </div>
+
+    <!-- Formules -->
+    <div class="card">
+      <h2>Relations de conversion</h2>
+      <div class="grid-3">
+        <div>
+          <strong>Cartésien → Cylindrique</strong>
+          <div class="formula">
+ρ = √(x² + y²)<br>
+φ = atan2(y, x)<br>
+z = z
+          </div>
+        </div>
+        <div>
+          <strong>Cartésien → Sphérique</strong>
+          <div class="formula">
+r = √(x² + y² + z²)<br>
+θ = acos(z / r)<br>
+φ = atan2(y, x)
+          </div>
+        </div>
+        <div>
+          <strong>Sphérique → Cartésien</strong>
+          <div class="formula">
+x = r · sinθ · cosφ<br>
+y = r · sinθ · sinφ<br>
+z = r · cosθ
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ========== Thème ==========
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    html.removeAttribute('data-theme');
+    document.getElementById('theme-icon').textContent = '🌙';
+    document.getElementById('theme-label').textContent = 'Sombre';
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    document.getElementById('theme-icon').textContent = '☀️';
+    document.getElementById('theme-label').textContent = 'Clair';
+    localStorage.setItem('theme', 'dark');
+  }
+  updateSceneBackground();
+}
+(function() {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('theme-icon').textContent = '☀️';
+    document.getElementById('theme-label').textContent = 'Clair';
+  }
+})();
+
+// ========== Three.js ==========
+let scene, camera, renderer, controls;
+let pointMesh, axesHelper;
+let cartGroup, cylGroup, sphGroup;
+let isUpdating = false;
+
+function initThree() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  scene = new THREE.Scene();
+  updateSceneBackground();
+
+  camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+  camera.position.set(8, 6, 10);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+
+  // Lumières
+  const amb = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(amb);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+  dir.position.set(5, 10, 7);
+  scene.add(dir);
+
+  // Axes
+  axesHelper = new THREE.AxesHelper(6);
+  scene.add(axesHelper);
+
+  // Grille
+  const grid = new THREE.GridHelper(12, 12, 0x888888, 0xcccccc);
+  grid.position.y = 0;
+  scene.add(grid);
+
+  // Point
+  const geo = new THREE.SphereGeometry(0.18, 24, 24);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0x441111 });
+  pointMesh = new THREE.Mesh(geo, mat);
+  scene.add(pointMesh);
+
+  // Groupes de guides
+  cartGroup = new THREE.Group();
+  cylGroup = new THREE.Group();
+  sphGroup = new THREE.Group();
+  scene.add(cartGroup);
+  scene.add(cylGroup);
+  scene.add(sphGroup);
+
+  window.addEventListener('resize', onResize);
+  animate();
+  updatePointFromCartesian();
+}
+
+function updateSceneBackground() {
+  if (!scene) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  scene.background = new THREE.Color(isDark ? 0x0a0a12 : 0xf1f5f9);
+}
+
+function onResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ========== Guides visuels ==========
+function clearGroup(g) {
+  while (g.children.length) {
+    const c = g.children[0];
+    g.remove(c);
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+  }
+}
+
+function updateGuides(x, y, z) {
+  clearGroup(cartGroup);
+  clearGroup(cylGroup);
+  clearGroup(sphGroup);
+
+  const showCart = document.getElementById('showCart').checked;
+  const showCyl  = document.getElementById('showCyl').checked;
+  const showSph  = document.getElementById('showSph').checked;
+
+  const rho = Math.sqrt(x*x + y*y);
+  const r   = Math.sqrt(x*x + y*y + z*z);
+
+  // --- Cartésien ---
+  if (showCart) {
+    // Projections
+    const matX = new THREE.LineBasicMaterial({ color: 0xff5555 });
+    const matY = new THREE.LineBasicMaterial({ color: 0x55ff55 });
+    const matZ = new THREE.LineBasicMaterial({ color: 0x5555ff });
+
+    const ptsX = [new THREE.Vector3(0,0,0), new THREE.Vector3(x,0,0)];
+    const ptsY = [new THREE.Vector3(x,0,0), new THREE.Vector3(x,y,0)];
+    const ptsZ = [new THREE.Vector3(x,y,0), new THREE.Vector3(x,y,z)];
+
+    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ptsX), matX));
+    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ptsY), matY));
+    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ptsZ), matZ));
+
+    // Point projeté sur plan xy
+    const projGeo = new THREE.SphereGeometry(0.1, 12, 12);
+    const projMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
+    const proj = new THREE.Mesh(projGeo, projMat);
+    proj.position.set(x, y, 0);
+    cartGroup.add(proj);
+  }
+
+  // --- Cylindrique ---
+  if (showCyl && rho > 0.05) {
+    // Cylindre vertical (filaire)
+    const cylGeo = new THREE.CylinderGeometry(rho, rho, Math.abs(z) + 0.5, 48, 1, true);
+    const cylMat = new THREE.MeshBasicMaterial({
+      color: 0x22cc88, wireframe: true, transparent: true, opacity: 0.35
+    });
+    const cyl = new THREE.Mesh(cylGeo, cylMat);
+    cyl.position.y = z / 2;
+    cylGroup.add(cyl);
+
+    // Arc d'angle φ dans le plan xy
+    const curve = new THREE.EllipseCurve(0, 0, rho, rho, 0, Math.atan2(y, x), false, 0);
+    const points = curve.getPoints(32);
+    const arcPts = points.map(p => new THREE.Vector3(p.x, 0, p.y));
+    const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+    const arcMat = new THREE.LineBasicMaterial({ color: 0x22cc88, linewidth: 2 });
+    cylGroup.add(new THREE.Line(arcGeo, arcMat));
+
+    // Segment radial
+    const radPts = [new THREE.Vector3(0,0,0), new THREE.Vector3(x, 0, y)];
+    cylGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(radPts),
+      new THREE.LineBasicMaterial({ color: 0x22cc88 })
+    ));
+  }
+
+  // --- Sphérique ---
+  if (showSph && r > 0.05) {
+    // Sphère filaire
+    const sphGeo = new THREE.SphereGeometry(r, 32, 24);
+    const sphMat = new THREE.MeshBasicMaterial({
+      color: 0xaa66ff, wireframe: true, transparent: true, opacity: 0.25
+    });
+    sphGroup.add(new THREE.Mesh(sphGeo, sphMat));
+
+    // Rayon
+    const rayPts = [new THREE.Vector3(0,0,0), new THREE.Vector3(x, y, z)];
+    sphGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(rayPts),
+      new THREE.LineBasicMaterial({ color: 0xaa66ff, linewidth: 2 })
+    ));
+
+    // Arc polaire θ (dans le plan contenant z et le point)
+    if (rho > 0.01) {
+      const theta = Math.acos(z / r);
+      const curve = new THREE.EllipseCurve(0, 0, r, r, 0, theta, false, 0);
+      const pts2d = curve.getPoints(24);
+      // Orientation vers le point
+      const phi = Math.atan2(y, x);
+      const arcPts = pts2d.map(p => {
+        const xx = p.x * Math.sin(phi);
+        const zz = p.x * Math.cos(phi);
+        return new THREE.Vector3(xx, p.y, zz); // y = hauteur
+      });
+      // Correction : EllipseCurve est dans xy, on veut dans le plan vertical
+      // On reconstruit correctement
+      const arc = [];
+      for (let i = 0; i <= 24; i++) {
+        const t = (i / 24) * theta;
+        arc.push(new THREE.Vector3(
+          r * Math.sin(t) * Math.cos(phi),
+          r * Math.cos(t),
+          r * Math.sin(t) * Math.sin(phi)
+        ));
+      }
+      sphGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(arc),
+        new THREE.LineBasicMaterial({ color: 0xaa66ff })
+      ));
+    }
+  }
+}
+
+// ========== Conversion ==========
+function updatePointFromCartesian() {
+  if (isUpdating) return;
+  isUpdating = true;
+
+  const x = parseFloat(document.getElementById('x').value) || 0;
+  const y = parseFloat(document.getElementById('y').value) || 0;
+  const z = parseFloat(document.getElementById('z').value) || 0;
+
+  // Cylindrique
+  const rho = Math.sqrt(x*x + y*y);
+  const phi = Math.atan2(y, x);
+  document.getElementById('rho').value = rho.toFixed(3);
+  document.getElementById('phi').value = phi.toFixed(3);
+  document.getElementById('z2').value = z.toFixed(3);
+
+  // Sphérique
+  const r = Math.sqrt(x*x + y*y + z*z);
+  const theta = r > 1e-8 ? Math.acos(z / r) : 0;
+  document.getElementById('r').value = r.toFixed(3);
+  document.getElementById('theta').value = theta.toFixed(3);
+  document.getElementById('phi2').value = phi.toFixed(3);
+
+  // 3D
+  pointMesh.position.set(x, z, y); // Three.js : y = up
+  updateGuides(x, y, z);
+
+  isUpdating = false;
+}
+
+function updatePointFromCylindrical() {
+  if (isUpdating) return;
+  isUpdating = true;
+
+  const rho = parseFloat(document.getElementById('rho').value) || 0;
+  const phi = parseFloat(document.getElementById('phi').value) || 0;
+  const z   = parseFloat(document.getElementById('z2').value) || 0;
+
+  const x = rho * Math.cos(phi);
+  const y = rho * Math.sin(phi);
+
+  document.getElementById('x').value = x.toFixed(3);
+  document.getElementById('y').value = y.toFixed(3);
+  document.getElementById('z').value = z.toFixed(3);
+
+  // Sphérique
+  const r = Math.sqrt(x*x + y*y + z*z);
+  const theta = r > 1e-8 ? Math.acos(z / r) : 0;
+  document.getElementById('r').value = r.toFixed(3);
+  document.getElementById('theta').value = theta.toFixed(3);
+  document.getElementById('phi2').value = phi.toFixed(3);
+
+  pointMesh.position.set(x, z, y);
+  updateGuides(x, y, z);
+
+  isUpdating = false;
+}
+
+function updatePointFromSpherical() {
+  if (isUpdating) return;
+  isUpdating = true;
+
+  const r     = parseFloat(document.getElementById('r').value) || 0;
+  const theta = parseFloat(document.getElementById('theta').value) || 0;
+  const phi   = parseFloat(document.getElementById('phi2').value) || 0;
+
+  const x = r * Math.sin(theta) * Math.cos(phi);
+  const y = r * Math.sin(theta) * Math.sin(phi);
+  const z = r * Math.cos(theta);
+
+  document.getElementById('x').value = x.toFixed(3);
+  document.getElementById('y').value = y.toFixed(3);
+  document.getElementById('z').value = z.toFixed(3);
+
+  const rho = Math.sqrt(x*x + y*y);
+  document.getElementById('rho').value = rho.toFixed(3);
+  document.getElementById('phi').value = phi.toFixed(3);
+  document.getElementById('z2').value = z.toFixed(3);
+
+  pointMesh.position.set(x, z, y);
+  updateGuides(x, y, z);
+
+  isUpdating = false;
+}
+
+function randomPoint() {
+  const x = (Math.random() * 8 - 4).toFixed(2);
+  const y = (Math.random() * 8 - 4).toFixed(2);
+  const z = (Math.random() * 6 - 1).toFixed(2);
+  document.getElementById('x').value = x;
+  document.getElementById('y').value = y;
+  document.getElementById('z').value = z;
+  updatePointFromCartesian();
+}
+
+function resetPoint() {
+  document.getElementById('x').value = 3;
+  document.getElementById('y').value = 2;
+  document.getElementById('z').value = 4;
+  updatePointFromCartesian();
+}
+
+// ========== Événements ==========
+['x','y','z'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePointFromCartesian);
+});
+['rho','phi','z2'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePointFromCylindrical);
+});
+['r','theta','phi2'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePointFromSpherical);
+});
+['showCart','showCyl','showSph'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    const x = parseFloat(document.getElementById('x').value) || 0;
+    const y = parseFloat(document.getElementById('y').value) || 0;
+    const z = parseFloat(document.getElementById('z').value) || 0;
+    updateGuides(x, y, z);
+  });
+});
+
+// Démarrage
+initThree();
+</script>
+</body>
+</html>
