@@ -92,6 +92,14 @@
     grid-template-columns: 1fr 1fr;
     gap: 5px 14px;
   }
+  .bm-right-info {
+    font-size: 0.78rem;
+    color: var(--muted);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    margin-left: 4px;
+    white-space: nowrap;
+  }
   .comp {
     min-width: 52px; text-align: center;
     padding: .3rem .25rem; border-radius: 6px; cursor: pointer;
@@ -108,9 +116,19 @@
   .comp.wrong {
     background: rgba(220,38,38,.15); border-color: var(--ko); color: var(--ko); font-weight: 700;
   }
-  .point-base {
-    font-size: .82rem; color: var(--muted); margin-top: .5rem;
+  .axes-legend {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
   }
+  .axes-legend span { display: flex; align-items: center; gap: 0.3rem; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-x { background: #ef4444; }
+  .dot-y { background: #22c55e; }
+  .dot-z { background: #3b82f6; }
   .btn {
     background: linear-gradient(135deg, #2563eb, #7c3aed);
     color: #fff; border: none; border-radius: 8px;
@@ -128,7 +146,7 @@
   .feedback.ko { background: rgba(220,38,38,.12); color: var(--ko); }
   .sliders { margin-top: .9rem; }
   .slider-row {
-    display: grid; grid-template-columns: 100px 1fr 48px;
+    display: grid; grid-template-columns: 110px 1fr 48px;
     align-items: center; gap: .5rem; margin-bottom: .4rem; font-size: .88rem;
   }
   input[type=range] { width: 100%; }
@@ -161,6 +179,12 @@
         </div>
 
         <div class="torseurs" id="torseurs"></div>
+
+        <div class="axes-legend">
+          <span><div class="dot dot-x"></div> Rouge = <strong>x⃗</strong></span>
+          <span><div class="dot dot-y"></div> Vert = <strong>y⃗</strong></span>
+          <span><div class="dot dot-z"></div> Bleu = <strong>z⃗</strong></span>
+        </div>
 
         <div class="btn-row">
           <button class="btn" onclick="checkAnswer()">Vérifier</button>
@@ -215,35 +239,35 @@ const LIAISONS = {
   encastrement: {
     name: "Encastrement", dof: "0 ddl",
     geo: "Aucun élément géométrique particulier (liaison complète).",
-    point: "A quelconque", base: "(x, y, z)",
+    point: "A", base: "(x⃗, y⃗, z⃗)",
     cineFree: [], statFree: [0,1,2,3,4,5],
     params: []
   },
   pivot: {
     name: "Pivot", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    point: "A ∈ Δ", base: "z ∥ Δ",
+    point: "A ∈ Δ", base: "z⃗ ∥ Δ",
     cineFree: [2], statFree: [0,1,2,3,4],
     params: [{ id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
   },
   glissiere: {
     name: "Glissière", dof: "1 ddl",
-    geo: "Caractérisée par sa <strong>direction u</strong>.",
-    point: "A quelconque", base: "z ∥ u",
+    geo: "Caractérisée par sa <strong>direction u⃗</strong>.",
+    point: "A", base: "z⃗ ∥ u⃗",
     cineFree: [5], statFree: [0,1,3,4,5],
     params: [{ id: "tz", label: "Translation Vz", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
   },
   helicoidale: {
     name: "Hélicoïdale", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> et son <strong>pas p</strong>.",
-    point: "A ∈ Δ", base: "z ∥ Δ",
+    point: "A ∈ Δ", base: "z⃗ ∥ Δ",
     cineFree: [2,5], statFree: [0,1,2,3,4],
     params: [{ id: "hel", label: "Paramètre hélicoïdal", min: -4, max: 4, step: 0.01, value: 0 }]
   },
   pivotglissant: {
     name: "Pivot glissant", dof: "2 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong>.",
-    point: "A ∈ Δ", base: "z ∥ Δ",
+    point: "A ∈ Δ", base: "z⃗ ∥ Δ",
     cineFree: [2,5], statFree: [0,1,3,4],
     params: [
       { id: "rz", label: "Rotation Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
@@ -253,7 +277,7 @@ const LIAISONS = {
   spherique: {
     name: "Sphérique", dof: "3 ddl",
     geo: "Caractérisée par son <strong>centre C</strong>.",
-    point: "C (centre)", base: "(x, y, z)",
+    point: "C", base: "(x⃗, y⃗, z⃗)",
     cineFree: [0,1,2], statFree: [0,1,2],
     params: [
       { id: "rx", label: "Ωx", min: -1.3, max: 1.3, step: 0.01, value: 0 },
@@ -264,7 +288,7 @@ const LIAISONS = {
   sphereplan: {
     name: "Sphère / Plan", dof: "5 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong> et le <strong>point de contact</strong>.",
-    point: "I (point de contact)", base: "z ⊥ plan",
+    point: "I", base: "z⃗ ⊥ plan",
     cineFree: [0,1,2,3,4], statFree: [2],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -277,7 +301,7 @@ const LIAISONS = {
   spherecylindre: {
     name: "Sphère / Cylindre", dof: "4 ddl",
     geo: "Caractérisée par l’<strong>axe du cylindre</strong>.",
-    point: "A ∈ axe", base: "z ∥ axe",
+    point: "A ∈ axe", base: "z⃗ ∥ axe",
     cineFree: [0,1,2,5], statFree: [0,1],
     params: [
       { id: "tz", label: "Vz", min: -1.4, max: 1.4, step: 0.01, value: 0 },
@@ -289,7 +313,7 @@ const LIAISONS = {
   cylindreplan: {
     name: "Cylindre / Plan", dof: "4 ddl",
     geo: "Caractérisée par la <strong>direction des génératrices</strong> et le plan.",
-    point: "A sur la génératrice de contact", base: "x ∥ génératrices , z ⊥ plan",
+    point: "A", base: "x⃗ ∥ génératrices , z⃗ ⊥ plan",
     cineFree: [1,2,3,5], statFree: [1,4],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -301,7 +325,7 @@ const LIAISONS = {
   appuiplan: {
     name: "Appui plan", dof: "3 ddl",
     geo: "Caractérisée par le <strong>plan de contact</strong>.",
-    point: "A dans le plan", base: "z ⊥ plan",
+    point: "A", base: "z⃗ ⊥ plan",
     cineFree: [2,3,4], statFree: [2,5],
     params: [
       { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
@@ -311,7 +335,6 @@ const LIAISONS = {
   }
 };
 
-// Indices : 0:Ωx/X  1:Ωy/Y  2:Ωz/Z  3:Vx/L  4:Vy/M  5:Vz/N
 const CINE_SYMBOLS = ["Ωx","Ωy","Ωz","Vx","Vy","Vz"];
 const STAT_SYMBOLS = ["X","Y","Z","L","M","N"];
 
@@ -360,8 +383,8 @@ function renderInfo() {
         <div class="bm-brace">{</div>
         <div class="bm-grid" id="cine-cells"></div>
         <div class="bm-brace">}</div>
+        <div class="bm-right-info">(${L.point}, x⃗, y⃗, z⃗)</div>
       </div>
-      <div class="point-base">au point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
     </div>
     <div class="torseur-box">
       <div class="torseur-title">{ 𝒯<sub>0→1</sub> } &nbsp;–&nbsp; Torseur des actions mécaniques</div>
@@ -369,15 +392,15 @@ function renderInfo() {
         <div class="bm-brace">{</div>
         <div class="bm-grid" id="stat-cells"></div>
         <div class="bm-brace">}</div>
+        <div class="bm-right-info">(${L.point}, x⃗, y⃗, z⃗)</div>
       </div>
-      <div class="point-base">au point ${L.point} &nbsp;|&nbsp; base ${L.base}</div>
     </div>
   `;
 
   const cineCells = document.getElementById("cine-cells");
   const statCells = document.getElementById("stat-cells");
 
-  // Ordre d'affichage : Ωx Vx / Ωy Vy / Ωz Vz
+  // Ordre : Ωx Vx / Ωy Vy / Ωz Vz
   [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
@@ -509,11 +532,11 @@ function createStripeTexture() {
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#3b82f6";
   ctx.fillRect(0, 0, 64, 64);
-  ctx.fillStyle = "#93c5fd";
-  for (let i = 0; i < 8; i++) ctx.fillRect(i*8, 0, 4, 64);
+  ctx.fillStyle = "#1e3a8a";
+  for (let i = 0; i < 4; i++) ctx.fillRect(i*16, 0, 8, 64);
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(3, 1);
+  tex.repeat.set(2, 1);
   return tex;
 }
 
@@ -521,19 +544,21 @@ function createHelixTexture() {
   const c = document.createElement("canvas");
   c.width = 128; c.height = 128;
   const ctx = c.getContext("2d");
+  // fond bleu
   ctx.fillStyle = "#3b82f6";
   ctx.fillRect(0, 0, 128, 128);
-  ctx.strokeStyle = "#1e40af";
-  ctx.lineWidth = 6;
-  for (let i = -2; i < 6; i++) {
+  // rayures très foncées et épaisses
+  ctx.strokeStyle = "#1e3a8a";
+  ctx.lineWidth = 14;
+  for (let i = -1; i < 4; i++) {
     ctx.beginPath();
-    ctx.moveTo(0, i*32);
-    ctx.lineTo(128, i*32 + 64);
+    ctx.moveTo(0, i * 48);
+    ctx.lineTo(128, i * 48 + 80);
     ctx.stroke();
   }
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(2, 4);
+  tex.repeat.set(1.5, 3);
   return tex;
 }
 
@@ -545,17 +570,16 @@ function createSphereTexture() {
   ctx.fillRect(0, 0, 128, 128);
   ctx.strokeStyle = "#93c5fd";
   ctx.lineWidth = 3;
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) {
     ctx.beginPath();
-    ctx.arc(64, 64, 10 + i*7, 0, Math.PI*2);
+    ctx.arc(64, 64, 12 + i*9, 0, Math.PI*2);
     ctx.stroke();
   }
   ctx.beginPath();
   ctx.moveTo(0, 64); ctx.lineTo(128, 64);
   ctx.moveTo(64, 0); ctx.lineTo(64, 128);
   ctx.stroke();
-  const tex = new THREE.CanvasTexture(c);
-  return tex;
+  return new THREE.CanvasTexture(c);
 }
 
 function buildScene(key) {
@@ -565,6 +589,14 @@ function buildScene(key) {
   const matStripe = new THREE.MeshStandardMaterial({ map: createStripeTexture() });
   const matHelix  = new THREE.MeshStandardMaterial({ map: createHelixTexture() });
   const matSphere = new THREE.MeshStandardMaterial({ map: createSphereTexture() });
+
+  // Cylindre transparent pour Sphère/Cylindre
+  const matCylTransparent = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    transparent: true,
+    opacity: 0.5,
+    side: THREE.DoubleSide
+  });
 
   if (key === "encastrement") {
     const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matFix);
@@ -587,7 +619,7 @@ function buildScene(key) {
   }
   else if (key === "helicoidale") {
     const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.55, 24), matHelix);
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.6, 24), matHelix);
     scene.add(axe, mobile);
   }
   else if (key === "pivotglissant") {
@@ -612,7 +644,8 @@ function buildScene(key) {
     scene.add(plane, mobile);
   }
   else if (key === "spherecylindre") {
-    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 2.8, 24, 1, true), matFix);
+    // Cylindre transparent
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 2.8, 32, 1, true), matCylTransparent);
     mobile = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), matSphere);
     scene.add(cyl, mobile);
   }
