@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changements de bases orientées successives — style GeoGebra</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #f8f9fa;
+      --border: #dee2e6;
+      --accent: #0d6efd;
+      --text: #212529;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      background: #f1f3f5;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .btn:hover { background: #0b5ed7; }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover { background: #5c636a; }
+    .btn-pdf {
+      background: #dc3545;
+    }
+    .btn-pdf:hover { background: #bb2d3b; }
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 60px);
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .controls {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
+    }
+    .controls h2 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+      color: #495057;
+    }
+    .step {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .step h3 {
+      margin: 0 0 10px 0;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: #495057;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-bottom: 6px;
+    }
+    .angle-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .angle-row input[type="number"] {
+      width: 80px;
+      margin-bottom: 0;
+    }
+    .content {
+      padding: 16px;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
+    }
+    #canvas-container {
+      width: 100%;
+      height: 420px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fafafa;
+      position: relative;
+    }
+    #canvas-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 8px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 10px 0 16px;
+      font-size: 0.9rem;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .section {
+      margin-top: 20px;
+    }
+    .section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .vectors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .vec-card {
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .vec-card h4 {
+      margin: 0 0 8px 0;
+      font-size: 0.95rem;
+    }
+    .vec-expr {
+      font-family: "KaTeX_Main", "Times New Roman", serif;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .note {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 8px;
+    }
+    .combined-info {
+      background: #e7f1ff;
+      border: 1px solid #b6d4fe;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+    }
+    @media print {
+      .controls, header .btn, #canvas-container { display: none !important; }
+      main { display: block; }
+      .content { max-height: none; overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bases orientées successives (b₀ → b₁ → b₂ → b₃)</h1>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn btn-secondary" onclick="resetView()">Réinitialiser vue</button>
+      <button class="btn btn-pdf" onclick="exportPDF()">Exporter en PDF</button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="controls">
+      <h2>Paramètres de rotation</h2>
+
+      <div class="step">
+        <h3>Passage b₀ → b₁</h3>
+        <label>Axe de rotation (dans b₀)</label>
+        <select id="axis10">
+          <option value="x">x₀</option>
+          <option value="y">y₀</option>
+          <option value="z" selected>z₀</option>
+        </select>
+        <label>Angle θ₁₀ (degrés)</label>
+        <div class="angle-row">
+          <input type="range" id="slider10" min="-180" max="180" value="30" step="1" />
+          <input type="number" id="angle10" value="30" step="0.1" />
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>Passage b₁ → b₂</h3>
+        <label>Axe de rotation (dans b₁)</label>
+        <select id="axis21">
+          <option value="x">x₁</option>
+          <option value="y" selected>y₁</option>
+          <option value="z">z₁</option>
+        </select>
+        <label>Angle θ₂₁ (degrés)</label>
+        <div class="angle-row">
+          <input type="range" id="slider21" min="-180" max="180" value="45" step="1" />
+          <input type="number" id="angle21" value="45" step="0.1" />
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>Passage b₂ → b₃</h3>
+        <label>Axe de rotation (dans b₂)</label>
+        <select id="axis32">
+          <option value="x" selected>x₂</option>
+          <option value="y">y₂</option>
+          <option value="z">z₂</option>
+        </select>
+        <label>Angle θ₃₂ (degrés)</label>
+        <div class="angle-row">
+          <input type="range" id="slider32" min="-180" max="180" value="20" step="1" />
+          <input type="number" id="angle32" value="20" step="0.1" />
+        </div>
+      </div>
+
+      <div class="combined-info" id="combinedInfo">
+        <!-- rempli dynamiquement -->
+      </div>
+
+      <button class="btn" style="width:100%;" onclick="updateAll()">Mettre à jour</button>
+      <p class="note">Les curseurs et champs numériques sont synchronisés. Les figures 3D et les expressions vectorielles se mettent à jour en direct.</p>
+    </aside>
+
+    <div class="content">
+      <div id="canvas-container"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#333;"></span> b₀ (noir)</span>
+        <span><span class="dot" style="background:#e74c3c;"></span> b₁ (rouge)</span>
+        <span><span class="dot" style="background:#27ae60;"></span> b₂ (vert)</span>
+        <span><span class="dot" style="background:#3498db;"></span> b₃ (bleu)</span>
+      </div>
+
+      <div class="section">
+        <h2>Figures géométriques de changement de base</h2>
+        <p id="geoDesc" class="note">Les rotations successives sont représentées dans la vue 3D. Si deux rotations successives partagent le même axe (dans la base précédente), les angles se combinent sur une seule figure.</p>
+        <div id="geoFigures"></div>
+      </div>
+
+      <div class="section">
+        <h2>Expression des vecteurs unitaires (vecteurs colonnes)</h2>
+        <p class="note">Chaque vecteur unitaire de chaque base est exprimé dans toutes les bases (composantes dans la base indiquée).</p>
+        <div class="vectors-grid" id="vectorsGrid"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ========== Math helpers ==========
+    const deg2rad = d => d * Math.PI / 180;
+    const rad2deg = r => r * 180 / Math.PI;
+    const round = (x, n=4) => Math.abs(x) < 1e-10 ? 0 : Number(x.toFixed(n));
+
+    function Rx(th) {
+      const c = Math.cos(th), s = Math.sin(th);
+      return [
+        [1, 0, 0],
+        [0, c, -s],
+        [0, s,  c]
+      ];
+    }
+    function Ry(th) {
+      const c = Math.cos(th), s = Math.sin(th);
+      return [
+        [ c, 0, s],
+        [ 0, 1, 0],
+        [-s, 0, c]
+      ];
+    }
+    function Rz(th) {
+      const c = Math.cos(th), s = Math.sin(th);
+      return [
+        [c, -s, 0],
+        [s,  c, 0],
+        [0,  0, 1]
+      ];
+    }
+    function matMul(A, B) {
+      const C = [[0,0,0],[0,0,0],[0,0,0]];
+      for (let i=0;i<3;i++) for (let j=0;j<3;j++)
+        for (let k=0;k<3;k++) C[i][j] += A[i][k]*B[k][j];
+      return C;
+    }
+    function matT(A) {
+      return [
+        [A[0][0], A[1][0], A[2][0]],
+        [A[0][1], A[1][1], A[2][1]],
+        [A[0][2], A[1][2], A[2][2]]
+      ];
+    }
+    function matVec(A, v) {
+      return [
+        A[0][0]*v[0] + A[0][1]*v[1] + A[0][2]*v[2],
+        A[1][0]*v[0] + A[1][1]*v[1] + A[1][2]*v[2],
+        A[2][0]*v[0] + A[2][1]*v[1] + A[2][2]*v[2]
+      ];
+    }
+    function rot(axis, th) {
+      if (axis === 'x') return Rx(th);
+      if (axis === 'y') return Ry(th);
+      return Rz(th);
+    }
+
+    // ========== State ==========
+    let R01, R02, R03; // DCM from bi to b0 (columns = vectors of bi in b0)
+    let axes = { a10: 'z', a21: 'y', a32: 'x' };
+    let angles = { t10: 30, t21: 45, t32: 20 }; // degrees
+
+    function computeMatrices() {
+      const th10 = deg2rad(angles.t10);
+      const th21 = deg2rad(angles.t21);
+      const th32 = deg2rad(angles.t32);
+      R01 = rot(axes.a10, th10);
+      const R12 = rot(axes.a21, th21);
+      const R23 = rot(axes.a32, th32);
+      R02 = matMul(R01, R12);
+      R03 = matMul(R02, R23);
+    }
+
+    // Vector of base j expressed in base i : R0i^T * R0j * e
+    function vecInBase(j, i, e) { // e = [1,0,0] etc
+      const Rj = j===0 ? [[1,0,0],[0,1,0],[0,0,1]] : (j===1?R01:(j===2?R02:R03));
+      const Ri = i===0 ? [[1,0,0],[0,1,0],[0,0,1]] : (i===1?R01:(i===2?R02:R03));
+      const R_i_j = matMul(matT(Ri), Rj);
+      return matVec(R_i_j, e);
+    }
+
+    function fmtVec(v) {
+      return `\\begin{pmatrix} ${round(v[0])} \\\\ ${round(v[1])} \\\\ ${round(v[2])} \\end{pmatrix}`;
+    }
+
+    // ========== UI binding ==========
+    function syncSlider(numId, sliderId) {
+      const num = document.getElementById(numId);
+      const sl = document.getElementById(sliderId);
+      num.addEventListener('input', () => {
+        sl.value = num.value;
+        angles['t'+numId.slice(-2)] = parseFloat(num.value) || 0;
+        updateAll();
+      });
+      sl.addEventListener('input', () => {
+        num.value = sl.value;
+        angles['t'+sliderId.slice(-2)] = parseFloat(sl.value) || 0;
+        updateAll();
+      });
+    }
+    syncSlider('angle10', 'slider10');
+    syncSlider('angle21', 'slider21');
+    syncSlider('angle32', 'slider32');
+
+    document.getElementById('axis10').addEventListener('change', e => {
+      axes.a10 = e.target.value; updateAll();
+    });
+    document.getElementById('axis21').addEventListener('change', e => {
+      axes.a21 = e.target.value; updateAll();
+    });
+    document.getElementById('axis32').addEventListener('change', e => {
+      axes.a32 = e.target.value; updateAll();
+    });
+
+    // ========== Three.js scene ==========
+    let scene, camera, renderer, axesGroups = {};
+    let isDragging = false, prevX, prevY;
+    let rotY = 0.6, rotX = 0.4;
+
+    function createArrow(dir, color, length=1.4) {
+      const group = new THREE.Group();
+      const mat = new THREE.MeshBasicMaterial({ color });
+      // shaft
+      const shaftGeo = new THREE.CylinderGeometry(0.025, 0.025, length*0.85, 8);
+      const shaft = new THREE.Mesh(shaftGeo, mat);
+      shaft.position.y = length*0.425;
+      group.add(shaft);
+      // head
+      const headGeo = new THREE.ConeGeometry(0.07, length*0.18, 12);
+      const head = new THREE.Mesh(headGeo, mat);
+      head.position.y = length*0.91;
+      group.add(head);
+      // orient
+      const up = new THREE.Vector3(0,1,0);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
+      group.quaternion.copy(quaternion);
+      return group;
+    }
+
+    function createFrame(R, colors, labels, scale=1) {
+      // R columns are the axes directions in world (b0)
+      const group = new THREE.Group();
+      const dirs = [
+        new THREE.Vector3(R[0][0], R[1][0], R[2][0]),
+        new THREE.Vector3(R[0][1], R[1][1], R[2][1]),
+        new THREE.Vector3(R[0][2], R[1][2], R[2][2])
+      ];
+      ['x','y','z'].forEach((lab, i) => {
+        const arrow = createArrow(dirs[i], colors[i], 1.3*scale);
+        group.add(arrow);
+      });
+      return group;
+    }
+
+    function initThree() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xfafafa);
+
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.set(3.5, 2.8, 3.5);
+      camera.lookAt(0,0,0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      // grid
+      scene.add(new THREE.GridHelper(4, 10, 0xbbbbbb, 0xe8e8e8));
+
+      // origin
+      const origin = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 16), new THREE.MeshBasicMaterial({color:0x222222}));
+      scene.add(origin);
+
+      // mouse controls (simple orbit)
+      renderer.domElement.addEventListener('pointerdown', e => {
+        isDragging = true; prevX = e.clientX; prevY = e.clientY;
+      });
+      window.addEventListener('pointerup', () => isDragging = false);
+      window.addEventListener('pointermove', e => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        rotY += dx * 0.008;
+        rotX += dy * 0.008;
+        rotX = Math.max(-1.4, Math.min(1.4, rotX));
+        prevX = e.clientX; prevY = e.clientY;
+        updateCamera();
+      });
+      renderer.domElement.addEventListener('wheel', e => {
+        e.preventDefault();
+        const dist = camera.position.length();
+        const newDist = Math.max(2, Math.min(12, dist + e.deltaY*0.01));
+        camera.position.normalize().multiplyScalar(newDist);
+      }, {passive:false});
+
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth, h = container.clientHeight;
+        camera.aspect = w/h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+
+      animate();
+    }
+
+    function updateCamera() {
+      const dist = camera.position.length();
+      camera.position.x = dist * Math.sin(rotY) * Math.cos(rotX);
+      camera.position.y = dist * Math.sin(rotX);
+      camera.position.z = dist * Math.cos(rotY) * Math.cos(rotX);
+      camera.lookAt(0,0,0);
+    }
+
+    function clearFrames() {
+      Object.values(axesGroups).forEach(g => scene.remove(g));
+      axesGroups = {};
+    }
+
+    function updateFrames() {
+      clearFrames();
+      const I = [[1,0,0],[0,1,0],[0,0,1]];
+      // b0 black/gray
+      axesGroups.b0 = createFrame(I, [0x222222, 0x444444, 0x666666], ['x0','y0','z0'], 1.05);
+      scene.add(axesGroups.b0);
+      // b1 red
+      axesGroups.b1 = createFrame(R01, [0xe74c3c, 0xc0392b, 0x922b21], ['x1','y1','z1']);
+      scene.add(axesGroups.b1);
+      // b2 green
+      axesGroups.b2 = createFrame(R02, [0x27ae60, 0x1e8449, 0x196f3d], ['x2','y2','z2']);
+      scene.add(axesGroups.b2);
+      // b3 blue
+      axesGroups.b3 = createFrame(R03, [0x3498db, 0x2980b9, 0x1a5276], ['x3','y3','z3']);
+      scene.add(axesGroups.b3);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    function resetView() {
+      rotY = 0.6; rotX = 0.4;
+      camera.position.set(3.5, 2.8, 3.5);
+      camera.lookAt(0,0,0);
+    }
+
+    // ========== Text / KaTeX ==========
+    function updateCombinedInfo() {
+      const el = document.getElementById('combinedInfo');
+      let msgs = [];
+      msgs.push(`Rotations : θ₁₀ autour de ${axes.a10}₀ , θ₂₁ autour de ${axes.a21}₁ , θ₃₂ autour de ${axes.a32}₂.`);
+      if (axes.a10 === axes.a21) {
+        msgs.push(`Note : si l’axe de la 2ᵉ rotation coïncide géométriquement avec celui de la 1ʳᵉ (selon l’orientation), les angles peuvent se combiner.`);
+      }
+      el.innerHTML = msgs.join('<br>');
+    }
+
+    function updateVectors() {
+      const grid = document.getElementById('vectorsGrid');
+      grid.innerHTML = '';
+      const names = ['0','1','2','3'];
+      const vecNames = ['x','y','z'];
+      const e = [[1,0,0],[0,1,0],[0,0,1]];
+
+      names.forEach(j => {
+        const card = document.createElement('div');
+        card.className = 'vec-card';
+        let html = `<h4>Vecteurs de la base b<sub>${j}</sub></h4><div class="vec-expr">`;
+        vecNames.forEach((v, vi) => {
+          html += `<strong>\\(\\vec{${v}}_{${j}}\\)</strong> :<br>`;
+          names.forEach(i => {
+            const comps = vecInBase(parseInt(j), parseInt(i), e[vi]);
+            html += `dans b<sub>${i}</sub> : \\(${fmtVec(comps)}\\)<br>`;
+          });
+          html += '<br>';
+        });
+        html += '</div>';
+        card.innerHTML = html;
+        grid.appendChild(card);
+      });
+
+      // render KaTeX
+      if (window.katex) {
+        document.querySelectorAll('.vec-expr').forEach(el => {
+          el.innerHTML = el.innerHTML.replace(/\\\((.+?)\\\)/g, (_, tex) => {
+            try {
+              return katex.renderToString(tex, { throwOnError: false, displayMode: false });
+            } catch(e) { return tex; }
+          });
+        });
+      }
+    }
+
+    function updateGeoDesc() {
+      const el = document.getElementById('geoFigures');
+      el.innerHTML = `
+        <p>Vue 3D interactive (glisser pour tourner, molette pour zoomer) montrant les quatre bases superposées à l’origine.</p>
+        <ul>
+          <li><strong>b₀ → b₁</strong> : rotation de θ₁₀ = ${angles.t10}° autour de l’axe ${axes.a10}₀</li>
+          <li><strong>b₁ → b₂</strong> : rotation de θ₂₁ = ${angles.t21}° autour de l’axe ${axes.a21}₁</li>
+          <li><strong>b₂ → b₃</strong> : rotation de θ₃₂ = ${angles.t32}° autour de l’axe ${axes.a32}₂</li>
+        </ul>
+        <p class="note">Les matrices de rotation successives sont multipliées à gauche (convention active / composition de rotations).</p>
+      `;
+    }
+
+    function updateAll() {
+      // read current values
+      angles.t10 = parseFloat(document.getElementById('angle10').value) || 0;
+      angles.t21 = parseFloat(document.getElementById('angle21').value) || 0;
+      angles.t32 = parseFloat(document.getElementById('angle32').value) || 0;
+      axes.a10 = document.getElementById('axis10').value;
+      axes.a21 = document.getElementById('axis21').value;
+      axes.a32 = document.getElementById('axis32').value;
+
+      computeMatrices();
+      updateFrames();
+      updateCombinedInfo();
+      updateVectors();
+      updateGeoDesc();
+    }
+
+    // ========== PDF export ==========
+    async function exportPDF() {
+      const btn = document.querySelector('.btn-pdf');
+      const oldText = btn.textContent;
+      btn.textContent = 'Génération PDF…';
+      btn.disabled = true;
+
+      try {
+        const content = document.querySelector('.content');
+        const canvas = await html2canvas(content, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const imgWidth = pageWidth - 2*margin;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = margin;
+
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - 2*margin);
+
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight + margin;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+          heightLeft -= (pageHeight - 2*margin);
+        }
+
+        pdf.setFontSize(10);
+        pdf.text('Bases orientées successives — export généré le ' + new Date().toLocaleString('fr-FR'), margin, pageHeight - 5);
+
+        pdf.save('bases_orientees.pdf');
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors de l’export PDF. Vous pouvez aussi utiliser Ctrl+P → Enregistrer au format PDF.');
+      } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    // ========== Init ==========
+    window.addEventListener('load', () => {
+      initThree();
+      updateAll();
+    });
+  </script>
+</body>
+</html>
