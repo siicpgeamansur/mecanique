@@ -656,14 +656,10 @@ function buildScene(key) {
     scene.add(cyl, mobile);
   }
   else if (key === "cylindreplan") {
-    // Cylindre allongé posé sur le plan, génératrices selon x (rouge)
     const plane = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.07, 2.8), matFix);
     plane.position.y = -0.035;
-
-    // CylinderGeometry est aligné sur Y → on le couche sur X
     mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 2.6, 32), matStripe);
-    mobile.rotation.z = Math.PI / 2;   // allongé selon x
-    mobile.position.y = 0.32;          // posé sur le plan
+    mobile.position.y = 0.32;
     scene.add(plane, mobile);
   }
   else if (key === "appuiplan") {
@@ -704,64 +700,77 @@ function buildSliders(key) {
   });
 }
 
+/* ================================================================
+   TOUTES LES ROTATIONS SONT AUTOUR DES AXES FIXES
+   (rouge = x, bleu = y, vert = z)
+   ================================================================ */
 function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
+  // On repart toujours de zéro puis on applique les rotations
+  // dans l'ordre des axes fixes : X puis Z puis Y
+
   if (key === "pivot") {
-    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateY(v.rz || 0);               // Ωz autour de z fixe
   }
   else if (key === "glissiere") {
     mobile.position.y = v.tz || 0;
   }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.y = t * 2.2;
-    mobile.position.y = t * 0.28;
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateY(t * 2.2);                 // Ωz
+    mobile.position.y = t * 0.28;            // Vz
   }
   else if (key === "pivotglissant") {
-    mobile.rotation.y = v.rz || 0;
-    mobile.position.y = v.tz || 0;
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateY(v.rz || 0);               // Ωz
+    mobile.position.y = v.tz || 0;           // Vz
   }
   else if (key === "spherique") {
-    mobile.rotation.x = v.rx || 0;
-    mobile.rotation.z = v.ry || 0;
-    mobile.rotation.y = v.rz || 0;
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateX(v.rx || 0);               // Ωx
+    mobile.rotateZ(v.ry || 0);               // Ωy
+    mobile.rotateY(v.rz || 0);               // Ωz
   }
   else if (key === "sphereplan") {
-    // === Rotations autour des axes FIXES du plan ===
-    // On réinitialise puis on applique dans l'ordre des axes fixes
     mobile.rotation.set(0, 0, 0);
-    mobile.rotateX(v.rx || 0);   // autour de x (rouge) fixe
-    mobile.rotateZ(v.ry || 0);   // autour de y (bleu) fixe
-    mobile.rotateY(v.rz || 0);   // autour de z (vert) fixe
+    mobile.rotateX(v.rx || 0);
+    mobile.rotateZ(v.ry || 0);
+    mobile.rotateY(v.rz || 0);
 
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
-    // on garde y = rayon pour rester en contact
-    mobile.position.y = 0.45;
+    mobile.position.y = 0.45;                // contact maintenu
   }
   else if (key === "spherecylindre") {
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateX(v.rx || 0);
+    mobile.rotateZ(v.ry || 0);
+    mobile.rotateY(v.rz || 0);
     mobile.position.y = v.tz || 0;
-    mobile.rotation.x = v.rx || 0;
-    mobile.rotation.z = v.ry || 0;
-    mobile.rotation.y = v.rz || 0;
   }
   else if (key === "cylindreplan") {
-    // Le cylindre reste posé sur le plan
-    mobile.position.x = v.tx || 0;     // translation selon les génératrices (x)
-    mobile.position.z = v.tz || 0;     // translation perpendiculaire dans le plan
-    mobile.position.y = 0.32;          // contact maintenu
+    // Orientation de base : cylindre allongé selon x
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateZ(Math.PI / 2);             // couche le cylindre sur x
 
-    // Rotations
-    mobile.rotation.z = Math.PI / 2;   // orientation de base (allongé sur x)
-    mobile.rotation.x = v.ry || 0;     // Ωy
-    mobile.rotation.y = v.rz || 0;     // Ωz
+    // Rotations supplémentaires autour des axes fixes
+    mobile.rotateX(v.ry || 0);               // Ωy
+    mobile.rotateY(v.rz || 0);               // Ωz
+
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.tz || 0;
+    mobile.position.y = 0.32;                // contact maintenu
   }
   else if (key === "appuiplan") {
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateY(v.rz || 0);               // Ωz
+
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
-    mobile.rotation.y = v.rz || 0;
   }
 }
 
