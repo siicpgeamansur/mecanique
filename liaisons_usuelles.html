@@ -175,7 +175,7 @@
         <div class="axes-legend">
           <span><div class="dot" style="background:#ef4444"></div> Rouge = <strong>x⃗</strong></span>
           <span><div class="dot" style="background:#3b82f6"></div> Bleu = <strong>y⃗</strong></span>
-          <span><div class="dot" style="background:#22c55e"></div> Vert = <strong>z⃗</strong> (vertical)</span>
+          <span><div class="dot" style="background:#22c55e"></div> Vert = <strong>z⃗</strong> (vers le bas)</span>
         </div>
 
         <div class="btn-row">
@@ -198,7 +198,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-/* ========== Thème ========== */
 function toggleTheme() {
   const html = document.documentElement;
   const dark = html.getAttribute('data-theme') === 'dark';
@@ -225,7 +224,6 @@ if (localStorage.getItem('theme') === 'dark') {
   document.getElementById('theme-label').textContent = 'Clair';
 }
 
-/* ========== Données des liaisons ========== */
 const LIAISONS = {
   encastrement: {
     name: "Encastrement", dof: "0 ddl",
@@ -239,15 +237,15 @@ const LIAISONS = {
     name: "Pivot", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> (selon z⃗).",
     point: "A ∈ Δ",
-    cineFree: [2],          // Ωz
-    statFree: [0,1,2,3,4],  // tout sauf Mz
+    cineFree: [2],
+    statFree: [0,1,2,3,4],
     params: [{ id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
   },
   glissiere: {
     name: "Glissière", dof: "1 ddl",
     geo: "Caractérisée par sa <strong>direction</strong> (selon z⃗).",
     point: "A",
-    cineFree: [5],          // Vz
+    cineFree: [5],
     statFree: [0,1,3,4,5],
     params: [{ id: "tz", label: "Vz", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
   },
@@ -255,7 +253,7 @@ const LIAISONS = {
     name: "Hélicoïdale", dof: "1 ddl",
     geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗) et son <strong>pas p</strong>.",
     point: "A ∈ Δ",
-    cineFree: [2,5],        // Ωz + Vz
+    cineFree: [2,5],
     statFree: [0,1,2,3,4],
     params: [{ id: "hel", label: "Paramètre hélicoïdal", min: -4, max: 4, step: 0.01, value: 0 }]
   },
@@ -345,7 +343,6 @@ let userStat = new Set();
 let checked = false;
 const paramValues = {};
 
-/* ========== UI ========== */
 function initButtons() {
   const cont = document.getElementById("liaison-buttons");
   Object.keys(LIAISONS).forEach(key => {
@@ -405,7 +402,6 @@ function renderInfo() {
   const cineCells = document.getElementById("cine-cells");
   const statCells = document.getElementById("stat-cells");
 
-  // Affichage : Ωx Vx / Ωy Vy / Ωz Vz
   [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
@@ -414,7 +410,6 @@ function renderInfo() {
     div.onclick = () => toggleComp("cine", i, div);
     cineCells.appendChild(div);
   });
-  // X L / Y M / Z N
   [0,3,1,4,2,5].forEach(i => {
     const div = document.createElement("div");
     div.className = "comp";
@@ -482,27 +477,26 @@ function resetSelection() {
   document.getElementById("feedback").className = "feedback";
 }
 
-/* ========== Three.js ========== */
 let scene, camera, renderer, controls, mobile;
 
 function createCustomAxes(length = 2.2) {
   const group = new THREE.Group();
 
-  // x⃗ = Rouge → Three.js X
+  // x⃗ = Rouge
   group.add(new THREE.Line(
     new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(length,0,0)]),
     new THREE.LineBasicMaterial({ color: 0xef4444 })
   ));
 
-  // y⃗ = Bleu → Three.js Z
+  // y⃗ = Bleu
   group.add(new THREE.Line(
     new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,length)]),
     new THREE.LineBasicMaterial({ color: 0x3b82f6 })
   ));
 
-  // z⃗ = Vert → Three.js Y (vertical)
+  // z⃗ = Vert (vers le bas)
   group.add(new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,length,0)]),
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,-length,0)]),
     new THREE.LineBasicMaterial({ color: 0x22c55e })
   ));
 
@@ -662,11 +656,14 @@ function buildScene(key) {
     scene.add(cyl, mobile);
   }
   else if (key === "cylindreplan") {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 2.8), matFix);
+    // Cylindre allongé posé sur le plan, génératrices selon x (rouge)
+    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.07, 2.8), matFix);
     plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2.0, 24), matStripe);
-    mobile.rotation.z = Math.PI / 2;
-    mobile.position.y = 0.35;
+
+    // CylinderGeometry est aligné sur Y → on le couche sur X
+    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 2.6, 32), matStripe);
+    mobile.rotation.z = Math.PI / 2;   // allongé selon x
+    mobile.position.y = 0.32;          // posé sur le plan
     scene.add(plane, mobile);
   }
   else if (key === "appuiplan") {
@@ -707,73 +704,67 @@ function buildSliders(key) {
   });
 }
 
-/* ================================================================
-   MAPPING DÉFINITIF (base orthonormée directe)
-   Rouge (Three X) = x⃗
-   Bleu  (Three Z) = y⃗
-   Vert  (Three Y) = z⃗   ← vertical
-   ================================================================ */
 function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
-  // Translations
-  // Vx → position.x
-  // Vy → position.z
-  // Vz → position.y
-
-  // Rotations
-  // Ωx → rotation.x
-  // Ωy → rotation.z
-  // Ωz → rotation.y
-
   if (key === "pivot") {
-    mobile.rotation.y = v.rz || 0;               // Ωz
+    mobile.rotation.y = v.rz || 0;
   }
   else if (key === "glissiere") {
-    mobile.position.y = v.tz || 0;               // Vz
+    mobile.position.y = v.tz || 0;
   }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.y = t * 2.2;                 // Ωz
-    mobile.position.y = t * 0.28;                // Vz
+    mobile.rotation.y = t * 2.2;
+    mobile.position.y = t * 0.28;
   }
   else if (key === "pivotglissant") {
-    mobile.rotation.y = v.rz || 0;               // Ωz
-    mobile.position.y = v.tz || 0;               // Vz
+    mobile.rotation.y = v.rz || 0;
+    mobile.position.y = v.tz || 0;
   }
   else if (key === "spherique") {
-    mobile.rotation.x = v.rx || 0;               // Ωx
-    mobile.rotation.z = v.ry || 0;               // Ωy
-    mobile.rotation.y = v.rz || 0;               // Ωz
+    mobile.rotation.x = v.rx || 0;
+    mobile.rotation.z = v.ry || 0;
+    mobile.rotation.y = v.rz || 0;
   }
   else if (key === "sphereplan") {
-    mobile.position.x = v.tx || 0;               // Vx
-    mobile.position.z = v.ty || 0;               // Vy
-    mobile.rotation.x = v.rx || 0;               // Ωx
-    mobile.rotation.z = v.ry || 0;               // Ωy
-    mobile.rotation.y = v.rz || 0;               // Ωz
+    // === Rotations autour des axes FIXES du plan ===
+    // On réinitialise puis on applique dans l'ordre des axes fixes
+    mobile.rotation.set(0, 0, 0);
+    mobile.rotateX(v.rx || 0);   // autour de x (rouge) fixe
+    mobile.rotateZ(v.ry || 0);   // autour de y (bleu) fixe
+    mobile.rotateY(v.rz || 0);   // autour de z (vert) fixe
+
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.ty || 0;
+    // on garde y = rayon pour rester en contact
+    mobile.position.y = 0.45;
   }
   else if (key === "spherecylindre") {
-    mobile.position.y = v.tz || 0;               // Vz
+    mobile.position.y = v.tz || 0;
     mobile.rotation.x = v.rx || 0;
     mobile.rotation.z = v.ry || 0;
     mobile.rotation.y = v.rz || 0;
   }
   else if (key === "cylindreplan") {
-    mobile.position.x = v.tx || 0;               // Vx
-    mobile.position.y = v.tz || 0;               // Vz
-    mobile.rotation.z = v.ry || 0;               // Ωy
-    mobile.rotation.y = v.rz || 0;               // Ωz
+    // Le cylindre reste posé sur le plan
+    mobile.position.x = v.tx || 0;     // translation selon les génératrices (x)
+    mobile.position.z = v.tz || 0;     // translation perpendiculaire dans le plan
+    mobile.position.y = 0.32;          // contact maintenu
+
+    // Rotations
+    mobile.rotation.z = Math.PI / 2;   // orientation de base (allongé sur x)
+    mobile.rotation.x = v.ry || 0;     // Ωy
+    mobile.rotation.y = v.rz || 0;     // Ωz
   }
   else if (key === "appuiplan") {
-    mobile.position.x = v.tx || 0;               // Vx
-    mobile.position.z = v.ty || 0;               // Vy
-    mobile.rotation.y = v.rz || 0;               // Ωz
+    mobile.position.x = v.tx || 0;
+    mobile.position.z = v.ty || 0;
+    mobile.rotation.y = v.rz || 0;
   }
 }
 
-/* ========== Init ========== */
 initThree();
 initButtons();
 selectLiaison("pivot");
