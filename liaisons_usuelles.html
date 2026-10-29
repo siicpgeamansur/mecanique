@@ -708,67 +708,64 @@ function applyParams(key) {
   if (!mobile) return;
   const v = paramValues;
 
-  // On repart toujours de zéro puis on applique les rotations
-  // dans l'ordre des axes fixes : X puis Z puis Y
+  // --- Fonction utilitaire : rotations autour des axes FIXES ---
+  function setFixedRotations(rx = 0, ry = 0, rz = 0) {
+    // Math : x → Three X (rouge)
+    //        y → Three Z (bleu)
+    //        z → Three Y (vert)
+    const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), rx);
+    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), ry);
+    const qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rz);
+
+    // Ordre extrinsèque (axes fixes) : qz * qy * qx
+    mobile.quaternion.copy(qz).multiply(qy).multiply(qx);
+  }
 
   if (key === "pivot") {
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateY(v.rz || 0);               // Ωz autour de z fixe
+    setFixedRotations(0, 0, v.rz || 0);
   }
   else if (key === "glissiere") {
     mobile.position.y = v.tz || 0;
   }
   else if (key === "helicoidale") {
     const t = v.hel || 0;
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateY(t * 2.2);                 // Ωz
-    mobile.position.y = t * 0.28;            // Vz
+    setFixedRotations(0, 0, t * 2.2);
+    mobile.position.y = t * 0.28;
   }
   else if (key === "pivotglissant") {
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateY(v.rz || 0);               // Ωz
-    mobile.position.y = v.tz || 0;           // Vz
+    setFixedRotations(0, 0, v.rz || 0);
+    mobile.position.y = v.tz || 0;
   }
   else if (key === "spherique") {
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateX(v.rx || 0);               // Ωx
-    mobile.rotateZ(v.ry || 0);               // Ωy
-    mobile.rotateY(v.rz || 0);               // Ωz
+    setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
   }
   else if (key === "sphereplan") {
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateX(v.rx || 0);
-    mobile.rotateZ(v.ry || 0);
-    mobile.rotateY(v.rz || 0);
+    setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
 
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
-    mobile.position.y = 0.45;                // contact maintenu
+    mobile.position.y = 0.45;               // contact maintenu
   }
   else if (key === "spherecylindre") {
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateX(v.rx || 0);
-    mobile.rotateZ(v.ry || 0);
-    mobile.rotateY(v.rz || 0);
+    setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
     mobile.position.y = v.tz || 0;
   }
   else if (key === "cylindreplan") {
     // Orientation de base : cylindre allongé selon x
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateZ(Math.PI / 2);             // couche le cylindre sur x
+    const base = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
 
-    // Rotations supplémentaires autour des axes fixes
-    mobile.rotateX(v.ry || 0);               // Ωy
-    mobile.rotateY(v.rz || 0);               // Ωz
+    const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), v.ry || 0);
+    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), 0);
+    const qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v.rz || 0);
+
+    mobile.quaternion.copy(base).multiply(qz).multiply(qy).multiply(qx);
 
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.tz || 0;
-    mobile.position.y = 0.32;                // contact maintenu
+    mobile.position.y = 0.32;
   }
   else if (key === "appuiplan") {
-    mobile.rotation.set(0, 0, 0);
-    mobile.rotateY(v.rz || 0);               // Ωz
-
+    setFixedRotations(0, 0, v.rz || 0);
     mobile.position.x = v.tx || 0;
     mobile.position.z = v.ty || 0;
   }
