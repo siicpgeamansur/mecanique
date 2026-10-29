@@ -740,23 +740,34 @@ function applyParams(key) {
     setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
     mobile.position.y = v.tz || 0;
   }
-  else if (key === "cylindreplan") {
-    // 1. Base : cylindre allongé selon x (rouge)
-    const base = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+else if (key === "cylindreplan") {
+  // 1. Orientation de base : cylindre allongé selon l'axe rouge (x)
+  const base = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 0, 1),
+    Math.PI / 2
+  );
 
-    // 2. Rotation locale autour de l'axe de révolution du cylindre (Ωy)
-    const spin = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), v.ry || 0);
+  // 2. Rotation autour de l'axe de révolution LOCAL du cylindre
+  //    (l'axe Y original de CylinderGeometry)
+  const spin = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 1, 0),          // ← axe local Y
+    v.ry || 0
+  );
 
-    // 3. Rotation autour de z FIXE (vert) → Ωz
-    const rotZ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v.rz || 0);
+  // 3. Rotation autour de l'axe z FIXE (vert)
+  const rotZ = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 1, 0),
+    v.rz || 0
+  );
 
-    // Ordre : rotZ * base * spin
-    mobile.quaternion.copy(rotZ).multiply(base).multiply(spin);
+  // Ordre correct : rotZ * base * spin
+  mobile.quaternion.copy(rotZ).multiply(base).multiply(spin);
 
-    mobile.position.x = v.tx || 0;
-    mobile.position.z = v.tz || 0;
-    mobile.position.y = 0.32;
-  }
+  // Translations + contact
+  mobile.position.x = v.tx || 0;
+  mobile.position.z = v.tz || 0;
+  mobile.position.y = 0.32;
+}
   else if (key === "appuiplan") {
     setFixedRotations(0, 0, v.rz || 0);
     mobile.position.x = v.tx || 0;
