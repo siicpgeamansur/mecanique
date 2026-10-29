@@ -329,7 +329,7 @@
       <div class="section">
         <h2>Figures géométriques 2D de changement de base</h2>
         <p class="note">
-          Les arcs orientés représentent les angles de rotation successifs entre les bases partageant le même axe physique.
+          Les arcs affichent le nom littéral de l'angle (\(\theta_{ij}\)) entre les bases successives partageant le même axe physique.
         </p>
         <div class="fig2d-container" id="fig2dContainer"></div>
       </div>
@@ -533,7 +533,23 @@
       return groups;
     }
 
-    // Figures 2D avec tracé des arcs d'angles orientés entre vecteurs
+    // Fonction utilitaire pour dessiner une flèche au bout d'un vecteur 2D
+    function getArrowhead(tx, ty, rad, color) {
+      const headLen = 10;
+      const headAngle = 0.5;
+      const vdx = Math.cos(rad);
+      const vdy = -Math.sin(rad);
+      const angleSvg = Math.atan2(vdy, vdx);
+      
+      const p1x = tx - headLen * Math.cos(angleSvg - headAngle);
+      const p1y = ty - headLen * Math.sin(angleSvg - headAngle);
+      const p2x = tx - headLen * Math.cos(angleSvg + headAngle);
+      const p2y = ty - headLen * Math.sin(angleSvg + headAngle);
+      
+      return `<polygon points="${tx},${ty} ${p1x},${p1y} ${p2x},${p2y}" fill="${color}" />`;
+    }
+
+    // Figures 2D avec flèches aux vecteurs et noms littéraux d'angles
     function draw2DFigure(group) {
       const size = 300;
       const cx = size / 2, cy = size / 2;
@@ -545,22 +561,20 @@
       else { labelU = 'z'; labelV = 'x'; }
 
       const numSteps = group.steps.length;
-      const stepSpacing = numSteps >= 3 ? 15 : 22;
+      // Total spread max de 30° entre la première et la dernière base de la figure
+      const stepAngle = 30 / numSteps;
 
-      // Calcul des angles visuels d'affichage pour chaque base du groupe
-      const displayAngles = [0];
-      let currentSum = 0;
-      group.angles.forEach((_, idx) => {
-        currentSum += (idx === 0 ? 0 : stepSpacing);
-        displayAngles.push(currentSum);
-      });
+      const displayAngles = [];
+      for (let i = 0; i <= numSteps; i++) {
+        displayAngles.push(i * stepAngle);
+      }
 
       function toSvg(mx, my) { return [cx + mx, cy - my]; }
 
       const baseElementsSvg = [];
       const colors = ['#333', '#e74c3c', '#27ae60', '#3498db'];
 
-      // Dessin des axes pour chaque base
+      // Dessin des axes avec flèches pour chaque base du groupe
       for (let i = 0; i <= numSteps; i++) {
         const bIdx = group.from + i;
         const col = colors[bIdx] || '#333';
@@ -568,17 +582,23 @@
         const cosT = Math.cos(rad), sinT = Math.sin(rad);
 
         const [sux, suy] = toSvg(cosT * len, sinT * len);
-        const [svx, svy] = toSvg(-sinT * len, cosT * len);
+        const [svx, svy] = toSvg(-sinT * len, -cosT * len); // axe orthogonal v
+
+        // Angles de direction en math/SVG pour les flèches
+        const radU = rad;
+        const radV = rad + Math.PI / 2;
 
         baseElementsSvg.push(`
-          <line x1="${cx}" y1="${cy}" x2="${sux}" y2="${suy}" stroke="${col}" stroke-width="2.6"/>
-          <line x1="${cx}" y1="${cy}" x2="${svx}" y2="${svy}" stroke="${col}" stroke-width="2.6"/>
-          <text x="${sux + 8}" y="${suy + 5}" fill="${col}" font-size="13" font-weight="600">${labelU}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
+          <line x1="${cx}" y1="${cy}" x2="${sux}" y2="${suy}" stroke="${col}" stroke-width="2.2"/>
+          ${getArrowhead(sux, suy, radU, col)}
+          <line x1="${cx}" y1="${cy}" x2="${svx}" y2="${svy}" stroke="${col}" stroke-width="2.2"/>
+          ${getArrowhead(svx, svy, radV, col)}
+          <text x="${sux + 10}" y="${suy + 5}" fill="${col}" font-size="13" font-weight="600">${labelU}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
           <text x="${svx + 6}" y="${svy - 6}" fill="${col}" font-size="13" font-weight="600">${labelV}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
         `);
       }
 
-      // Dessin des arcs d'angles orientés entre les bases successives
+      // Dessin des arcs d'angles orientés avec leurs noms littéraux
       for (let i = 1; i <= numSteps; i++) {
         const rArc = 35 + (i - 1) * 16;
         const radStart = deg2rad(displayAngles[i - 1]);
@@ -589,25 +609,23 @@
         
         const arcPath = `M ${x0} ${y0} A ${rArc} ${rArc} 0 0 1 ${x1} ${y1}`;
         
-        // Position du texte de l'angle
         const radMid = (radStart + radEnd) / 2;
         const [lx, ly] = toSvg((rArc + 12) * Math.cos(radMid), (rArc + 12) * Math.sin(radMid));
         
         const key = group.keys[i - 1];
-        const val = group.angles[i - 1];
 
         baseElementsSvg.push(`
           <path d="${arcPath}" fill="none" stroke="#555" stroke-width="1.8"/>
-          <text x="${lx}" y="${ly}" fill="#333" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="central">\\(\\theta_{${key}}\\) (${val}\\({}^\\circ\\))</text>
+          <text x="${lx}" y="${ly}" fill="#333" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="central">\\(\\theta_{${key}}\\(</text>
         `);
       }
 
-      // Légende KaTeX propre pour les angles du groupe
+      // Légende KaTeX des angles du groupe
       let angleHtml = '';
       if (group.keys.length === 1) {
-        angleHtml = `\\(\\theta_{${group.keys[0]}} = ${group.angles[0]}^\\circ\\)`;
+        angleHtml = `\\(\\theta_{${group.keys[0]}}\\)`;
       } else {
-        const parts = group.keys.map((k, idx) => `\\theta_{${k}} = ${group.angles[idx]}^\\circ`);
+        const parts = group.keys.map(k => `\\theta_{${k}}`);
         angleHtml = `\\(${parts.join(', ')}\\)`;
       }
 
@@ -625,7 +643,7 @@
             <circle cx="${cx}" cy="${cy}" r="3" fill="#222"/>
           </svg>
           <div class="fig2d-caption">
-            Axe : <strong>${group.axis}</strong> | ${angleHtml}
+            Axe : <strong>${group.axis}</strong> | Angles : ${angleHtml}
           </div>
         </div>
       `;
@@ -809,7 +827,7 @@
       const groups = getRotationGroups();
       let html = `Rotations : \\(\\theta_{10}\\) autour de <b>\\(${axes.a10}_0\\)</b>, \\(\\theta_{21}\\) autour de <b>\\(${axes.a21}_1\\)</b>, \\(\\theta_{32}\\) autour de <b>\\(${axes.a32}_2\\)</b>.<br>`;
       if (groups.length < 3) {
-        html += `<span style="color:#0a58ca;">Certaines rotations partagent le même axe physique → figures 2D fusionnées avec arcs orientés.</span>`;
+        html += `<span style="color:#0a58ca;">Certaines rotations partagent le même axe physique → figures 2D fusionnées.</span>`;
       } else {
         html += `Tous les axes de rotation sont distincts → 3 figures 2D séparées.`;
       }
