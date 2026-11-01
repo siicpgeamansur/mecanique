@@ -1,28 +1,60 @@
-Voici une animation de deux bras en liaisons pivot entre eux et dont l'un est en liaison pivot avec le bâti. 
-On peut observer une zone inaccessible et jouer avec les longueurs des bras et les positions angulaires des pivots pour mieux visualiser cette zone.
+# Mécanique – Simulateurs interactifs pour les Sciences de l'Ingénieur
 
-[animation des deux bras robotisés 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html)
+Collection d'interfaces web interactives pour visualiser et comprendre les notions de **mécanique** abordées en classes préparatoires (CPGE – SII) : cinématique, torseurs, liaisons, dynamique et statique.
 
-Voici une page pour visualiser l'équilibrage dynamique d'un rotor :
+Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
-[équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html)
+---
 
-Voici une page pour visualiser l'arc-boutement :
+## Sommaire
 
-[arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html)
+- [Géométrie et paramétrage](#géométrie-et-paramétrage)
+- [Liaisons et torseurs](#liaisons-et-torseurs)
+- [Cinématique des mécanismes](#cinématique-des-mécanismes)
+- [Statique, frottement et dynamique](#statique-frottement-et-dynamique)
+- [Utilisation en local](#utilisation-en-local)
+- [Contribuer](#contribuer)
 
-Voici une page pour visualiser le champ vectoriel d'un torseur :
+---
 
-[champ vectoriel](https://siicpgeamansur.github.io/mecanique/champ_vectoriel.html)
+## Géométrie et paramétrage
 
-Voici une page pour visualiser les différents type de coordonnées d'un point (cartésiennes, cylindriques, sphériques) :
+| Outil | Description |
+|---|---|
+| [Coordonnées d'un point](https://siicpgeamansur.github.io/mecanique/coordonnees.html) | Visualiser les différents systèmes de coordonnées d'un point : cartésiennes, cylindriques et sphériques. |
+| [Figures géométrales](https://siicpgeamansur.github.io/mecanique/figures_geometrales.html) | Visualiser et s'entraîner à manipuler les figures géométrales et leurs projections. |
 
-[coordonnées](https://siicpgeamansur.github.io/mecanique/coordonnees.html)
+## Liaisons et torseurs
 
-Voici une page pour visualiser et s'entraîner à connaître les torseurs (statiques et cinématiques) de chaque liaison usuelle :
+| Outil | Description |
+|---|---|
+| [Liaisons usuelles](https://siicpgeamansur.github.io/mecanique/liaisons_usuelles.html) | Visualiser et s'entraîner à connaître les torseurs statiques et cinématiques de chaque liaison usuelle. |
+| [Champ vectoriel d'un torseur](https://siicpgeamansur.github.io/mecanique/champ_vectoriel.html) | Visualiser le champ vectoriel associé à un torseur. |
 
-[liaison_usuelles](https://siicpgeamansur.github.io/mecanique/liaisons_usuelles.html)
+## Cinématique des mécanismes
 
-Voici une page pour visualiser et s'entraîner à manipuler les figures géométrales et leurs projections :
+| Outil | Description |
+|---|---|
+| [Bras robotisé 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html) | Animation de deux bras en liaison pivot entre eux, l'un étant en liaison pivot avec le bâti. Il est possible de modifier les longueurs des bras et les positions angulaires des pivots pour visualiser la zone inaccessible. |
 
-[figures_géométrales](https://siicpgeamansur.github.io/mecanique/figures_geometrales.html)
+## Statique, frottement et dynamique
+
+| Outil | Description |
+|---|---|
+| [Arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html) | Visualiser le phénomène d'arc-boutement. |
+| [Équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html) | Visualiser l'équilibrage dynamique d'un rotor. |
+
+---
+
+## Utilisation en local
+
+```bash
+git clone https://github.com/siicpgeamansur/mecanique.git
+cd mecanique
+```
+
+Ouvrez ensuite le fichier `.html` de votre choix dans un navigateur récent (Chrome, Firefox, Edge, Safari).
+
+## Contribuer
+
+Les suggestions, corrections et idées de nouveaux simulateurs sont les bienvenues : ouvrez une [issue](https://github.com/siicpgeamansur/mecanique/issues) ou proposez une *pull request*.
