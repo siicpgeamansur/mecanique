@@ -1,0 +1,1382 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caractériser les masses des solides en mouvement</title>
+
+<style>
+:root {
+  --bg: #f3f6fc;
+  --panel: #ffffff;
+  --panel2: #e8eef8;
+  --text: #17243b;
+  --muted: #65738a;
+  --accent: #3867e8;
+  --accent2: #13a88a;
+  --border: #d9e2ef;
+  --good: #13845b;
+  --bad: #d04444;
+  --shadow: 0 8px 28px rgba(25,45,85,.07);
+}
+
+body.dark {
+  --bg: #101827;
+  --panel: #1a2537;
+  --panel2: #243249;
+  --text: #edf3ff;
+  --muted: #a5b4ca;
+  --accent: #83a8ff;
+  --accent2: #54d9b3;
+  --border: #33445e;
+  --good: #55d6a0;
+  --bad: #ff8585;
+  --shadow: 0 8px 28px rgba(0,0,0,.2);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  line-height: 1.55;
+  transition: background .2s, color .2s;
+}
+
+header {
+  padding: 35px 20px 25px;
+  background: linear-gradient(135deg,#172c55,#315dd1);
+  color: white;
+}
+
+.header-inner {
+  max-width: 1150px;
+  margin: auto;
+}
+
+header .tag {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #ffffff22;
+  font-size: .8rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: clamp(1.8rem,4vw,3rem);
+  line-height: 1.15;
+  margin: 16px 0;
+}
+
+header p {
+  max-width: 750px;
+  color: #e0e9ff;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+button, select, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.theme-btn {
+  background: #ffffff18;
+  color: white;
+  border: 1px solid #ffffff55;
+  border-radius: 10px;
+  padding: 9px 14px;
+}
+
+main {
+  max-width: 1150px;
+  margin: 28px auto;
+  padding: 0 18px 60px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+
+.nav button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 15px;
+}
+
+.nav button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+h2 {
+  font-size: 1.65rem;
+  margin: 0 0 7px;
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin-top: 0;
+}
+
+.intro {
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 18px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.card.wide {
+  grid-column: 1/-1;
+}
+
+.control {
+  margin: 16px 0;
+}
+
+.control label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+  font-size: .92rem;
+}
+
+input[type=range] {
+  width: 100%;
+  accent-color: var(--accent);
+  margin: 10px 0;
+}
+
+select {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px;
+  width: 100%;
+}
+
+.formula {
+  background: var(--panel2);
+  padding: 14px 17px;
+  border-radius: 12px;
+  font-family: "Cambria Math", Georgia, serif;
+  font-size: 1.1rem;
+  overflow-x: auto;
+  margin: 13px 0;
+}
+
+.result {
+  font-size: 1.6rem;
+  font-weight: 750;
+  color: var(--accent);
+}
+
+.note {
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 260px;
+  background: var(--panel2);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+.big-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--panel2);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.tip {
+  border-left: 4px solid var(--accent2);
+  padding: 12px 15px;
+  background: var(--panel2);
+  border-radius: 0 10px 10px 0;
+  margin-top: 14px;
+}
+
+.quiz-question {
+  padding: 17px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.quiz-question p {
+  font-weight: 650;
+}
+
+.quiz-question label {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.quiz-question label:hover {
+  background: var(--panel2);
+}
+
+.quiz-question input {
+  accent-color: var(--accent);
+  margin-right: 9px;
+}
+
+.feedback {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: none;
+}
+
+.feedback.good {
+  display: block;
+  background: color-mix(in srgb,var(--good) 14%,var(--panel));
+  color: var(--good);
+}
+
+.feedback.bad {
+  display: block;
+  background: color-mix(in srgb,var(--bad) 14%,var(--panel));
+  color: var(--bad);
+}
+
+.primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 12px 19px;
+  border-radius: 10px;
+  font-weight: 700;
+  margin-top: 18px;
+}
+
+.secondary {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 15px;
+  border-radius: 10px;
+}
+
+.score {
+  display: none;
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 13px;
+  background: var(--panel2);
+}
+
+.progress {
+  height: 8px;
+  background: var(--panel2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 12px 0 25px;
+}
+
+.progress div {
+  width: 0;
+  height: 100%;
+  background: var(--accent2);
+  transition: width .3s;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: .85rem;
+  padding: 25px;
+}
+
+@media(max-width:760px) {
+  .grid { grid-template-columns: 1fr; }
+  .card.wide { grid-column: auto; }
+  header { padding: 25px 18px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="topbar">
+    <div class="tag">CPGE · Sciences industrielles de l'ingénieur</div>
+    <button class="theme-btn" id="themeBtn">☀️ Mode clair</button>
+  </div>
+  <div class="header-inner">
+    <h1>Caractériser les masses<br>des solides en mouvement</h1>
+    <p>
+      Comprendre comment la masse et sa répartition influencent
+      le mouvement d'un solide. Manipule les paramètres, observe
+      les résultats et teste tes connaissances.
+    </p>
+  </div>
+</header>
+
+<main>
+
+<nav class="nav">
+  <button class="active" data-section="inertie">1. Inertie</button>
+  <button data-section="centre">2. Centre de gravité</button>
+  <button data-section="rotation">3. Moment d'inertie</button>
+  <button data-section="huygens">4. Huygens</button>
+  <button data-section="matrice">5. Matrice d'inertie</button>
+  <button data-section="quiz">6. Quiz</button>
+</nav>
+
+<div class="progress"><div id="progressBar"></div></div>
+
+<!-- ACTIVITE 1 -->
+<section class="section active" id="inertie">
+
+<h2>1. La masse et l'inertie</h2>
+<p class="intro">
+  Pourquoi est-il plus difficile d'accélérer un camion qu'une moto ?
+  Et pourquoi la répartition de la masse compte-t-elle lorsqu'un solide tourne ?
+</p>
+
+<div class="grid">
+
+<div class="card">
+  <h3>Manipule la masse</h3>
+
+  <div class="control">
+    <label>Masse du solide <span id="massLabel">100 kg</span></label>
+    <input type="range" id="mass" min="10" max="500" step="10" value="100">
+  </div>
+
+  <div class="control">
+    <label>Force appliquée <span id="forceLabel">200 N</span></label>
+    <input type="range" id="force" min="50" max="1000" step="10" value="200">
+  </div>
+
+  <div class="formula">F = m · a</div>
+  <div class="note">On considère ici un mouvement de translation et une force résultante constante.</div>
+
+  <p>Accélération du solide :</p>
+  <div class="result" id="accel">2 m·s⁻²</div>
+
+  <p class="note">
+    À force identique, plus la masse est grande, plus l'accélération est faible.
+  </p>
+</div>
+
+<div class="card">
+  <h3>Visualise l'accélération</h3>
+  <canvas id="inertiaCanvas"></canvas>
+  <div class="tip">
+    <strong>À retenir :</strong> pour un mouvement de translation,
+    la masse caractérise l'inertie du solide.
+  </div>
+</div>
+
+<div class="card wide">
+  <h3>La masse et l'énergie cinétique</h3>
+  <div class="control">
+    <label>Vitesse du solide <span id="speedLabel">10 m/s</span></label>
+    <input type="range" id="speed" min="0" max="30" step="1" value="10">
+  </div>
+
+  <div class="formula">E<sub>c</sub> = ½ m V²</div>
+  <p>Énergie cinétique :</p>
+  <div class="big-number" id="energy">5 000 J</div>
+  <p class="note">
+    À vitesse identique, un solide plus massif possède une énergie cinétique
+    plus importante.
+  </p>
+</div>
+
+</div>
+</section>
+
+<!-- ACTIVITE 2 -->
+<section class="section" id="centre">
+
+<h2>2. Le centre de gravité</h2>
+<p class="intro">
+  Le centre de gravité est le barycentre des masses élémentaires.
+  Il dépend de la répartition de la masse dans le solide.
+</p>
+
+<div class="grid">
+
+<div class="card">
+  <h3>Deux masses sur une tige</h3>
+
+  <div class="control">
+    <label>Masse 1 <span id="m1Label">2 kg</span></label>
+    <input type="range" id="m1" min="1" max="10" value="2">
+  </div>
+
+  <div class="control">
+    <label>Masse 2 <span id="m2Label">4 kg</span></label>
+    <input type="range" id="m2" min="1" max="10" value="4">
+  </div>
+
+  <div class="control">
+    <label>Distance entre les masses <span id="distLabel">4 m</span></label>
+    <input type="range" id="dist" min="1" max="10" value="4">
+  </div>
+
+  <canvas id="centerCanvas"></canvas>
+
+  <div class="formula">
+    x<sub>G</sub> = (m₁x₁ + m₂x₂)/(m₁ + m₂)
+  </div>
+
+  <div class="result" id="centerResult">xG = 2,67 m</div>
+</div>
+
+<div class="card">
+  <h3>Interprète le résultat</h3>
+  <p>
+    Le centre de gravité se trouve plus près de la masse la plus importante.
+  </p>
+  <div class="tip">
+    Si les deux masses sont identiques, le centre de gravité
+    se trouve au milieu de la tige.
+  </div>
+  <p>
+    Pour un ensemble de solides :
+  </p>
+  <div class="formula">
+    m<sub>E</sub> = Σ m<sub>i</sub>
+  </div>
+  <div class="formula">
+    OG<sub>E</sub> = (1/m<sub>E</sub>) Σ m<sub>i</sub> OG<sub>i</sub>
+  </div>
+  <p class="note">
+    La position du centre de gravité d'un assemblage se détermine
+    en pondérant la position de chaque centre par sa masse.
+  </p>
+</div>
+
+</div>
+</section>
+
+<!-- ACTIVITE 3 -->
+<section class="section" id="rotation">
+
+<h2>3. Le moment d'inertie</h2>
+<p class="intro">
+  Pour une rotation, la masse ne suffit plus.
+  La distance entre la matière et l'axe de rotation intervient au carré.
+</p>
+
+<div class="grid">
+
+<div class="card">
+  <h3>Éloigne la masse de l'axe</h3>
+
+  <div class="control">
+    <label>Masse <span id="rotMassLabel">2 kg</span></label>
+    <input type="range" id="rotMass" min="1" max="10" value="2">
+  </div>
+
+  <div class="control">
+    <label>Rayon <span id="radiusLabel">1 m</span></label>
+    <input type="range" id="radius" min="0.1" max="5" step="0.1" value="1">
+  </div>
+
+  <canvas id="rotationCanvas"></canvas>
+
+  <div class="formula">
+    I<sub>Δ</sub> = m r²
+  </div>
+
+  <div class="result" id="inertiaResult">I = 2 kg·m²</div>
+</div>
+
+<div class="card">
+  <h3>Conséquence sur l'énergie</h3>
+
+  <div class="control">
+    <label>Vitesse angulaire <span id="omegaLabel">5 rad/s</span></label>
+    <input type="range" id="omega" min="0" max="20" step="1" value="5">
+  </div>
+
+  <div class="formula">
+    E<sub>c</sub> = ½ I<sub>Δ</sub> ω²
+  </div>
+
+  <div class="big-number" id="rotEnergy">25 J</div>
+
+  <div class="tip">
+    À masse constante, doubler la distance à l'axe multiplie
+    le moment d'inertie par 4.
+  </div>
+</div>
+
+<div class="card wide">
+  <h3>Deux répartitions de masse</h3>
+  <p>
+    Compare deux solides de même masse : l'un concentre sa masse près
+    de l'axe, l'autre la place loin de l'axe.
+  </p>
+
+  <div class="control">
+    <label>Distance de la masse A <span id="rALabel">1 m</span></label>
+    <input type="range" id="rA" min="0.1" max="5" step="0.1" value="1">
+  </div>
+
+  <div class="control">
+    <label>Distance de la masse B <span id="rBLabel">3 m</span></label>
+    <input type="range" id="rB" min="0.1" max="5" step="0.1" value="3">
+  </div>
+
+  <div class="formula">
+    I = Σ m<sub>i</sub> r<sub>i</sub>²
+  </div>
+
+  <p>Moment d'inertie A : <strong id="IA">2 kg·m²</strong></p>
+  <p>Moment d'inertie B : <strong id="IB">18 kg·m²</strong></p>
+  <p class="note">
+    Les deux solides ont la même masse totale.
+    Pourtant leur inertie en rotation peut être très différente.
+  </p>
+</div>
+
+</div>
+</section>
+
+<!-- ACTIVITE 4 -->
+<section class="section" id="huygens">
+
+<h2>4. Théorème de Huygens</h2>
+<p class="intro">
+  Comment calculer un moment d'inertie autour d'un axe décalé
+  lorsque l'on connaît le moment d'inertie autour d'un axe passant par G ?
+</p>
+
+<div class="grid">
+
+<div class="card">
+  <h3>Déplace l'axe de rotation</h3>
+
+  <div class="control">
+    <label>Masse <span id="hMassLabel">5 kg</span></label>
+    <input type="range" id="hMass" min="1" max="20" value="5">
+  </div>
+
+  <div class="control">
+    <label>Moment au centre de gravité <span id="igLabel">2 kg·m²</span></label>
+    <input type="range" id="ig" min="0.1" max="10" step="0.1" value="2">
+  </div>
+
+  <div class="control">
+    <label>Distance entre les axes <span id="dLabel">1 m</span></label>
+    <input type="range" id="d" min="0" max="5" step="0.1" value="1">
+  </div>
+
+  <canvas id="huygensCanvas"></canvas>
+</div>
+
+<div class="card">
+  <h3>Relation de Huygens</h3>
+
+  <div class="formula">
+    I<sub>Δ</sub> = I<sub>ΔG</sub> + m d²
+  </div>
+
+  <p>Moment autour de l'axe passant par G :</p>
+  <div class="result" id="hIg">2 kg·m²</div>
+
+  <p>Terme de translation :</p>
+  <div class="result" id="hmd">5 kg·m²</div>
+
+  <p>Moment autour de l'axe décalé :</p>
+  <div class="big-number" id="hResult">7 kg·m²</div>
+
+  <div class="tip">
+    De tous les axes parallèles, celui passant par G
+    donne le moment d'inertie minimal.
+  </div>
+</div>
+
+</div>
+</section>
+
+<!-- ACTIVITE 5 -->
+<section class="section" id="matrice">
+
+<h2>5. La matrice d'inertie</h2>
+<p class="intro">
+  La matrice d'inertie caractérise la répartition de la masse
+  dans les trois directions de l'espace.
+</p>
+
+<div class="grid">
+
+<div class="card">
+  <h3>Les moments d'inertie</h3>
+
+  <div class="formula">
+    I<sub>O</sub> =
+    <br>
+    ⎡ A &nbsp; −F &nbsp; −E ⎤
+    <br>
+    ⎢ −F &nbsp; B &nbsp; −D ⎥
+    <br>
+    ⎣ −E &nbsp; −D &nbsp; C ⎦
+  </div>
+
+  <p>
+    A, B et C sont les moments d'inertie associés
+    respectivement aux axes x, y et z.
+  </p>
+
+  <p>
+    D, E et F sont les produits d'inertie.
+    Ils caractérisent les asymétries de répartition de la masse.
+  </p>
+</div>
+
+<div class="card">
+  <h3>Influence des symétries</h3>
+
+  <label for="symmetry">Choisis une particularité géométrique :</label>
+  <select id="symmetry">
+    <option value="none">Aucune symétrie particulière</option>
+    <option value="one">Un plan de symétrie (O,x,y)</option>
+    <option value="two">Deux plans de symétrie</option>
+    <option value="revolution">Solide de révolution autour de z</option>
+    <option value="thin">Épaisseur négligeable suivant z</option>
+  </select>
+
+  <div class="formula" id="matrixResult"></div>
+
+  <div class="tip" id="matrixTip">
+    Les particularités géométriques permettent de déduire
+    la forme de la matrice d'inertie.
+  </div>
+</div>
+
+<div class="card wide">
+  <h3>Axes principaux d'inertie</h3>
+  <p>
+    La matrice d'inertie est symétrique. Il existe donc une base
+    dans laquelle elle est diagonale.
+  </p>
+  <div class="formula">
+    I<sub>G</sub> =
+    ⎡ A' &nbsp; 0 &nbsp; 0 ⎤
+    <br>
+    ⎢ 0 &nbsp; B' &nbsp; 0 ⎥
+    <br>
+    ⎣ 0 &nbsp; 0 &nbsp; C' ⎦
+  </div>
+  <p>
+    Cette base est appelée base principale d'inertie.
+    Les axes associés sont les axes principaux d'inertie.
+  </p>
+</div>
+
+</div>
+</section>
+
+<!-- QUIZ -->
+<section class="section" id="quiz">
+
+<h2>6. Quiz final</h2>
+<p class="intro">
+  Vérifie que tu maîtrises les notions essentielles.
+  Une seule réponse est correcte par question.
+</p>
+
+<div class="card">
+  <div id="quizContainer"></div>
+
+  <button class="primary" id="submitQuiz">Corriger le quiz</button>
+  <button class="secondary" id="resetQuiz">Recommencer</button>
+
+  <div class="score" id="scoreBox"></div>
+</div>
+
+</section>
+
+</main>
+
+<footer>
+  O4 — Caractériser les masses des solides en mouvement · CPGE SII
+</footer>
+
+<script>
+// ===================================================
+// MODE CLAIR / SOMBRE
+// ===================================================
+
+const themeBtn = document.getElementById("themeBtn");
+
+themeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  themeBtn.textContent = document.body.classList.contains("dark")
+    ? "🌙 Mode sombre"
+    : "☀️ Mode clair";
+
+  drawAll();
+});
+
+// ===================================================
+// NAVIGATION
+// ===================================================
+
+document.querySelectorAll(".nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav button")
+      .forEach(b => b.classList.remove("active"));
+
+    document.querySelectorAll(".section")
+      .forEach(s => s.classList.remove("active"));
+
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.section)
+      .classList.add("active");
+
+    document.getElementById("progressBar").style.width =
+      ((Array.from(document.querySelectorAll(".nav button"))
+        .indexOf(btn)+1)/6*100) + "%";
+
+    drawAll();
+  });
+});
+
+// ===================================================
+// OUTILS
+// ===================================================
+
+function val(id) {
+  return Number(document.getElementById(id).value);
+}
+
+function fmt(n) {
+  return n.toLocaleString("fr-FR", {
+    maximumFractionDigits: 2
+  });
+}
+
+function updateLabel(id, text) {
+  document.getElementById(id).textContent = text;
+}
+
+function getColors() {
+  const style = getComputedStyle(document.body);
+  return {
+    text: style.getPropertyValue("--text").trim(),
+    accent: style.getPropertyValue("--accent").trim(),
+    accent2: style.getPropertyValue("--accent2").trim(),
+    muted: style.getPropertyValue("--muted").trim(),
+    panel: style.getPropertyValue("--panel2").trim()
+  };
+}
+
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  const rect = canvas.getBoundingClientRect();
+
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, rect.width * ratio);
+  canvas.height = 260 * ratio;
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(ratio, ratio);
+
+  return {ctx, w:rect.width, h:260};
+}
+
+function drawAxis(ctx,w,h,y,color) {
+  ctx.strokeStyle=color;
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(25,y);
+  ctx.lineTo(w-20,y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(w-28,y-5);
+  ctx.lineTo(w-20,y);
+  ctx.lineTo(w-28,y+5);
+  ctx.stroke();
+}
+
+// ===================================================
+// ACTIVITE 1 : INERTIE
+// ===================================================
+
+function updateInertia() {
+  const m=val("mass");
+  const F=val("force");
+  const v=val("speed");
+
+  updateLabel("massLabel",m+" kg");
+  updateLabel("forceLabel",F+" N");
+  updateLabel("speedLabel",v+" m/s");
+
+  document.getElementById("accel").textContent =
+    fmt(F/m)+" m·s⁻²";
+
+  document.getElementById("energy").textContent =
+    fmt(0.5*m*v*v)+" J";
+
+  drawInertia();
+}
+
+function drawInertia() {
+  const {ctx,w,h}=setupCanvas("inertiaCanvas");
+  const c=getColors();
+
+  ctx.clearRect(0,0,w,h);
+
+  drawAxis(ctx,w,h,h*.72,c.muted);
+
+  const m=val("mass");
+  const F=val("force");
+
+  const x=35;
+  const y=h*.72-45;
+  const size=35+Math.sqrt(m)*2.2;
+
+  ctx.fillStyle=c.accent;
+  ctx.fillRect(x,y,size,size);
+
+  ctx.fillStyle=c.text;
+  ctx.font="13px Arial";
+  ctx.fillText("m = "+m+" kg",x,y-12);
+
+  const arrowLen=30+F/1000*100;
+
+  ctx.strokeStyle=c.accent2;
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(x+size+5,y+size/2);
+  ctx.lineTo(x+size+arrowLen,y+size/2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x+size+arrowLen-10,y+size/2-7);
+  ctx.lineTo(x+size+arrowLen,y+size/2);
+  ctx.lineTo(x+size+arrowLen-10,y+size/2+7);
+  ctx.stroke();
+
+  ctx.fillStyle=c.accent2;
+  ctx.fillText("F = "+F+" N",x+size+8,y+size/2-15);
+}
+
+["mass","force","speed"].forEach(id => {
+  document.getElementById(id).addEventListener("input",updateInertia);
+});
+
+// ===================================================
+// ACTIVITE 2 : CENTRE DE GRAVITE
+// ===================================================
+
+function updateCenter() {
+  const m1=val("m1");
+  const m2=val("m2");
+  const d=val("dist");
+
+  const xG=m2*d/(m1+m2);
+
+  updateLabel("m1Label",m1+" kg");
+  updateLabel("m2Label",m2+" kg");
+  updateLabel("distLabel",d+" m");
+
+  document.getElementById("centerResult").textContent =
+    "xG = "+fmt(xG)+" m";
+
+  drawCenter(xG,d,m1,m2);
+}
+
+function drawCenter(xG,d,m1,m2) {
+  const {ctx,w,h}=setupCanvas("centerCanvas");
+  const c=getColors();
+
+  ctx.clearRect(0,0,w,h);
+
+  const y=h/2;
+  const left=30;
+  const right=w-30;
+  const scale=(right-left)/d;
+
+  drawAxis(ctx,w,h,y,c.muted);
+
+  const x1=left;
+  const x2=left+d*scale;
+  const xGpx=left+xG*scale;
+
+  ctx.fillStyle=c.accent;
+  ctx.beginPath();
+  ctx.arc(x1,y,Math.min(22,8+m1*1.3),0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle=c.accent2;
+  ctx.beginPath();
+  ctx.arc(x2,y,Math.min(22,8+m2*1.3),0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle="#e4a11b";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(xGpx,y-40);
+  ctx.lineTo(xGpx,y+40);
+  ctx.stroke();
+
+  ctx.fillStyle=c.text;
+  ctx.font="12px Arial";
+  ctx.fillText("m1",x1-8,y+42);
+  ctx.fillText("m2",x2-8,y+42);
+  ctx.fillText("G",xGpx-4,y-48);
+}
+
+// ===================================================
+// ACTIVITE 3 : MOMENT D'INERTIE
+// ===================================================
+
+function updateRotation() {
+  const m=val("rotMass");
+  const r=val("radius");
+  const omega=val("omega");
+
+  const I=m*r*r;
+  const E=0.5*I*omega*omega;
+
+  updateLabel("rotMassLabel",m+" kg");
+  updateLabel("radiusLabel",fmt(r)+" m");
+  updateLabel("omegaLabel",omega+" rad/s");
+
+  document.getElementById("inertiaResult").textContent =
+    "I = "+fmt(I)+" kg·m²";
+
+  document.getElementById("rotEnergy").textContent =
+    fmt(E)+" J";
+
+  drawRotation();
+}
+
+function drawRotation() {
+  const {ctx,w,h}=setupCanvas("rotationCanvas");
+  const c=getColors();
+
+  ctx.clearRect(0,0,w,h);
+
+  const cx=w/2;
+  const cy=h/2;
+
+  ctx.strokeStyle=c.muted;
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(cx,15);
+  ctx.lineTo(cx,h-15);
+  ctx.stroke();
+
+  ctx.fillStyle=c.accent;
+  ctx.beginPath();
+  ctx.arc(cx,cy,7,0,Math.PI*2);
+  ctx.fill();
+
+  const r=val("radius");
+  const px=Math.min(r*22,w/2-30);
+
+  ctx.strokeStyle=c.accent2;
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+px,cy);
+  ctx.stroke();
+
+  ctx.fillStyle=c.accent2;
+  ctx.beginPath();
+  ctx.arc(cx+px,cy,13,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle=c.text;
+  ctx.font="13px Arial";
+  ctx.fillText("r = "+fmt(r)+" m",cx+px/2,cy-12);
+}
+
+function updateComparison() {
+  const rA=val("rA");
+  const rB=val("rB");
+
+  updateLabel("rALabel",fmt(rA)+" m");
+  updateLabel("rBLabel",fmt(rB)+" m");
+
+  document.getElementById("IA").textContent =
+    fmt(2*rA*rA)+" kg·m²";
+
+  document.getElementById("IB").textContent =
+    fmt(2*rB*rB)+" kg·m²";
+}
+
+["rotMass","radius","omega"].forEach(id => {
+  document.getElementById(id).addEventListener("input",updateRotation);
+});
+
+["rA","rB"].forEach(id => {
+  document.getElementById(id).addEventListener("input",updateComparison);
+});
+
+// ===================================================
+// ACTIVITE 4 : HUYGENS
+// ===================================================
+
+function updateHuygens() {
+  const m=val("hMass");
+  const Ig=val("ig");
+  const d=val("d");
+
+  const md=m*d*d;
+  const I=Ig+md;
+
+  updateLabel("hMassLabel",m+" kg");
+  updateLabel("igLabel",fmt(Ig)+" kg·m²");
+  updateLabel("dLabel",fmt(d)+" m");
+
+  document.getElementById("hIg").textContent =
+    fmt(Ig)+" kg·m²";
+
+  document.getElementById("hmd").textContent =
+    fmt(md)+" kg·m²";
+
+  document.getElementById("hResult").textContent =
+    fmt(I)+" kg·m²";
+
+  drawHuygens();
+}
+
+function drawHuygens() {
+  const {ctx,w,h}=setupCanvas("huygensCanvas");
+  const c=getColors();
+
+  ctx.clearRect(0,0,w,h);
+
+  const y=h/2;
+  const xG=w/2-40;
+  const xA=xG+val("d")*35;
+
+  drawAxis(ctx,w,h,y,c.muted);
+
+  ctx.strokeStyle=c.accent;
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(xG,y-45);
+  ctx.lineTo(xG,y+45);
+  ctx.stroke();
+
+  ctx.strokeStyle=c.accent2;
+  ctx.beginPath();
+  ctx.moveTo(xA,y-45);
+  ctx.lineTo(xA,y+45);
+  ctx.stroke();
+
+  ctx.fillStyle=c.text;
+  ctx.font="13px Arial";
+  ctx.fillText("G",xG-5,y+60);
+  ctx.fillText("A",xA-5,y+60);
+  ctx.fillText("d",xG+(xA-xG)/2,y-12);
+}
+
+// ===================================================
+// ACTIVITE 5 : MATRICE D'INERTIE
+// ===================================================
+
+function updateMatrix() {
+  const type=document.getElementById("symmetry").value;
+
+  const result=document.getElementById("matrixResult");
+  const tip=document.getElementById("matrixTip");
+
+  if(type==="none") {
+    result.innerHTML=
+      "⎡ A &nbsp; −F &nbsp; −E ⎤<br>"+
+      "⎢ −F &nbsp; B &nbsp; −D ⎥<br>"+
+      "⎣ −E &nbsp; −D &nbsp; C ⎦";
+
+    tip.textContent=
+      "Sans particularité géométrique connue, on conserve la forme générale.";
+  }
+
+  if(type==="one") {
+    result.innerHTML=
+      "⎡ A &nbsp; −F &nbsp; 0 ⎤<br>"+
+      "⎢ −F &nbsp; B &nbsp; 0 ⎥<br>"+
+      "⎣ 0 &nbsp; 0 &nbsp; C ⎦";
+
+    tip.textContent=
+      "Le plan (O,x,y) est un plan de symétrie. Les produits contenant z sont nuls : D = E = 0.";
+  }
+
+  if(type==="two") {
+    result.innerHTML=
+      "⎡ A &nbsp; 0 &nbsp; 0 ⎤<br>"+
+      "⎢ 0 &nbsp; B &nbsp; 0 ⎥<br>"+
+      "⎣ 0 &nbsp; 0 &nbsp; C ⎦";
+
+    tip.textContent=
+      "Deux plans de symétrie permettent d'obtenir une matrice diagonale dans la base adaptée.";
+  }
+
+  if(type==="revolution") {
+    result.innerHTML=
+      "⎡ A &nbsp; 0 &nbsp; 0 ⎤<br>"+
+      "⎢ 0 &nbsp; A &nbsp; 0 ⎥<br>"+
+      "⎣ 0 &nbsp; 0 &nbsp; C ⎦";
+
+    tip.textContent=
+      "Pour un solide de révolution autour de z, A = B et la matrice est diagonale dans la base adaptée.";
+  }
+
+  if(type==="thin") {
+    result.innerHTML=
+      "⎡ A &nbsp; −F &nbsp; 0 ⎤<br>"+
+      "⎢ −F &nbsp; B &nbsp; 0 ⎥<br>"+
+      "⎣ 0 &nbsp; 0 &nbsp; A+B ⎦";
+
+    tip.textContent=
+      "Pour une épaisseur négligeable suivant z, D = E = 0 et C = A + B.";
+  }
+}
+
+document.getElementById("symmetry").addEventListener("change",updateMatrix);
+
+// ===================================================
+// QUIZ FINAL
+// ===================================================
+
+const questions = [
+{
+  q:"Quelle grandeur suffit à caractériser l'inertie d'un solide en translation ?",
+  choices:["Le moment d'inertie","La masse","Le centre de gravité"],
+  answer:1,
+  exp:"Pour un mouvement de translation, la masse suffit à caractériser l'inertie."
+},
+{
+  q:"Quelle est l'unité du moment d'inertie ?",
+  choices:["kg·m","kg·m²","N·m"],
+  answer:1,
+  exp:"Le moment d'inertie est le produit d'une masse et d'une longueur au carré."
+},
+{
+  q:"Pour une masse ponctuelle, le moment d'inertie autour d'un axe est :",
+  choices:["mr","mr²","m/r"],
+  answer:1,
+  exp:"IΔ = mr². La distance à l'axe intervient au carré."
+},
+{
+  q:"Si on double la distance à l'axe, à masse constante, le moment d'inertie :",
+  choices:["Double","Est multiplié par 4","Ne change pas"],
+  answer:1,
+  exp:"I = mr², donc I' = m(2r)² = 4I."
+},
+{
+  q:"Le centre de gravité d'un solide homogène présentant un centre de symétrie se trouve :",
+  choices:["Au centre de symétrie","Sur un bord","Toujours à l'origine du repère"],
+  answer:0,
+  exp:"Le centre de gravité est situé au centre de symétrie."
+},
+{
+  q:"Le théorème de Huygens permet de :",
+  choices:["Changer de base","Déplacer le moment d'inertie entre deux axes parallèles","Calculer la masse volumique"],
+  answer:1,
+  exp:"IΔ = IΔG + md²."
+},
+{
+  q:"Quelle est la forme de la matrice d'inertie dans une base principale ?",
+  choices:["Toujours nulle","Diagonale","Antisymétrique"],
+  answer:1,
+  exp:"Dans une base principale, les produits d'inertie sont nuls."
+},
+{
+  q:"Un solide possède un plan de symétrie (O,x,y). Quels produits d'inertie sont nuls ?",
+  choices:["D et E","A et B","A et C"],
+  answer:0,
+  exp:"Les produits faisant intervenir z, normale au plan de symétrie, sont nuls."
+},
+{
+  q:"Pour un solide de révolution autour de z, on a :",
+  choices:["A = B","A = C","B = C = 0"],
+  answer:0,
+  exp:"La symétrie de révolution implique A = B."
+},
+{
+  q:"La résultante cinétique d'un solide est :",
+  choices:["mVG","IGΩ","mAG"],
+  answer:0,
+  exp:"Rc = mVG."
+},
+{
+  q:"La résultante dynamique d'un solide est :",
+  choices:["mVG","mAG","IGΩ"],
+  answer:1,
+  exp:"Rd = mAG."
+},
+{
+  q:"Pour additionner deux matrices d'inertie, elles doivent être exprimées :",
+  choices:["Dans la même base","À des points différents","En unités différentes"],
+  answer:0,
+  exp:"Les matrices doivent être exprimées dans la même base."
+}
+];
+
+function buildQuiz() {
+  const container=document.getElementById("quizContainer");
+  container.innerHTML="";
+
+  questions.forEach((q,i)=>{
+    const div=document.createElement("div");
+    div.className="quiz-question";
+
+    let html="<p>"+(i+1)+". "+q.q+"</p>";
+
+    q.choices.forEach((choice,j)=>{
+      html+=`
+        <label>
+          <input type="radio" name="q${i}" value="${j}">
+          ${choice}
+        </label>
+      `;
+    });
+
+    html+=`<div class="feedback" id="feedback${i}"></div>`;
+
+    div.innerHTML=html;
+    container.appendChild(div);
+  });
+}
+
+document.getElementById("submitQuiz").addEventListener("click",()=>{
+  let score=0;
+  let answered=0;
+
+  questions.forEach((q,i)=>{
+    const selected=document.querySelector(`input[name="q${i}"]:checked`);
+    const feedback=document.getElementById("feedback"+i);
+
+    feedback.className="feedback";
+
+    if(!selected) {
+      feedback.textContent="Question non renseignée.";
+      feedback.classList.add("bad");
+      return;
+    }
+
+    answered++;
+
+    if(Number(selected.value)===q.answer) {
+      score++;
+      feedback.textContent="Correct ! "+q.exp;
+      feedback.classList.add("good");
+    } else {
+      feedback.textContent="Incorrect. "+q.exp;
+      feedback.classList.add("bad");
+    }
+  });
+
+  const box=document.getElementById("scoreBox");
+  box.style.display="block";
+
+  const percent=Math.round(score/questions.length*100);
+
+  let message="Continue à revoir le cours et à manipuler les activités.";
+
+  if(percent>=80) {
+    message="Très bien ! Tu maîtrises les notions essentielles.";
+  } else if(percent>=60) {
+    message="Bon travail ! Quelques notions sont à consolider.";
+  }
+
+  box.innerHTML=`
+    <h3>Résultat : ${score}/${questions.length}</h3>
+    <div class="big-number">${percent} %</div>
+    <p>${message}</p>
+    <p>${answered} question(s) renseignée(s).</p>
+  `;
+
+  box.scrollIntoView({behavior:"smooth",block:"nearest"});
+});
+
+document.getElementById("resetQuiz").addEventListener("click",()=>{
+  buildQuiz();
+
+  document.getElementById("scoreBox").style.display="none";
+});
+
+// ===================================================
+// INITIALISATION
+// ===================================================
+
+function drawAll() {
+  updateInertia();
+  updateCenter();
+  updateRotation();
+  updateComparison();
+  updateHuygens();
+  updateMatrix();
+}
+
+buildQuiz();
+drawAll();
+
+window.addEventListener("resize",drawAll);
+
+</script>
+
+</body>
+</html>
