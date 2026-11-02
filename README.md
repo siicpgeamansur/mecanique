@@ -11,6 +11,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 - [Géométrie et paramétrage](#géométrie-et-paramétrage)
 - [Liaisons et torseurs](#liaisons-et-torseurs)
 - [Cinématique des mécanismes](#cinématique-des-mécanismes)
+- [Cinétique et inertie](#cinétique-et-inertie)
 - [Statique, frottement et dynamique](#statique-frottement-et-dynamique)
 - [Utilisation en local](#utilisation-en-local)
 - [Contribuer](#contribuer)
@@ -36,6 +37,13 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Bras robotisé 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html) | Animation de deux bras en liaison pivot entre eux, l'un étant en liaison pivot avec le bâti. Il est possible de modifier les longueurs des bras et les positions angulaires des pivots pour visualiser la zone inaccessible. |
+
+## Cinétique et inertie
+
+| Outil | Description |
+|---|---|
+| [Caractériser les masses des solides en mouvement](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Manipuler les notions de masse, centre de gravité, moment d'inertie, théorème de Huygens et matrice d'inertie. La page propose des visualisations interactives, des paramètres à modifier et un quiz pour vérifier les notions essentielles. |
+
 
 ## Statique, frottement et dynamique
 
