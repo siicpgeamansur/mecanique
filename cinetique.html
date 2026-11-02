@@ -1,1381 +1,677 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caractériser les masses des solides en mouvement</title>
-
+<title>Matrices d'inertie</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-:root {
-  --bg: #f3f6fc;
-  --panel: #ffffff;
-  --panel2: #e8eef8;
-  --text: #17243b;
-  --muted: #65738a;
-  --accent: #3867e8;
-  --accent2: #13a88a;
-  --border: #d9e2ef;
-  --good: #13845b;
-  --bad: #d04444;
-  --shadow: 0 8px 28px rgba(25,45,85,.07);
+/* Mise en page : bandeau collant, sections en colonne, scènes 3D en canvas 2D (aucune bibliothèque).
+   Couleurs : papier gris-vert, trace principale turquoise, orange pour les symétriques, violet pour les termes dérivés. */
+:root{
+ --bg:#f2f5f4;--surface:#ffffff;--ink:#14201e;--mut:#566663;--line:#d5dfdc;
+ --accent:#0a6d73;--accent-soft:#dcefef;--on-accent:#ffffff;
+ --ok:#1a7f4b;--ok-soft:#dff3e8;--bad:#bf3b3b;--bad-soft:#f9e3e1;--warn:#9a6700;--warn-soft:#f7ecd0;
+ --tr-i:#b36b00;--tr-d:#8a3fb5;
+ --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+ --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+ --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
-
-body.dark {
-  --bg: #101827;
-  --panel: #1a2537;
-  --panel2: #243249;
-  --text: #edf3ff;
-  --muted: #a5b4ca;
-  --accent: #83a8ff;
-  --accent2: #54d9b3;
-  --border: #33445e;
-  --good: #55d6a0;
-  --bad: #ff8585;
-  --shadow: 0 8px 28px rgba(0,0,0,.2);
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  line-height: 1.55;
-  transition: background .2s, color .2s;
-}
-
-header {
-  padding: 35px 20px 25px;
-  background: linear-gradient(135deg,#172c55,#315dd1);
-  color: white;
-}
-
-.header-inner {
-  max-width: 1150px;
-  margin: auto;
-}
-
-header .tag {
-  display: inline-block;
-  padding: 5px 10px;
-  border-radius: 20px;
-  background: #ffffff22;
-  font-size: .8rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-h1 {
-  font-size: clamp(1.8rem,4vw,3rem);
-  line-height: 1.15;
-  margin: 16px 0;
-}
-
-header p {
-  max-width: 750px;
-  color: #e0e9ff;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  max-width: 1150px;
-  margin: 0 auto;
-}
-
-button, select, input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.theme-btn {
-  background: #ffffff18;
-  color: white;
-  border: 1px solid #ffffff55;
-  border-radius: 10px;
-  padding: 9px 14px;
-}
-
-main {
-  max-width: 1150px;
-  margin: 28px auto;
-  padding: 0 18px 60px;
-}
-
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 25px;
-}
-
-.nav button {
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 10px 15px;
-}
-
-.nav button.active {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
-.section {
-  display: none;
-}
-
-.section.active {
-  display: block;
-}
-
-h2 {
-  font-size: 1.65rem;
-  margin: 0 0 7px;
-}
-
-h3 {
-  font-size: 1.1rem;
-  margin-top: 0;
-}
-
-.intro {
-  color: var(--muted);
-  margin-bottom: 22px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 18px;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 17px;
-  padding: 20px;
-  box-shadow: var(--shadow);
-  min-width: 0;
-}
-
-.card.wide {
-  grid-column: 1/-1;
-}
-
-.control {
-  margin: 16px 0;
-}
-
-.control label {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-weight: 600;
-  font-size: .92rem;
-}
-
-input[type=range] {
-  width: 100%;
-  accent-color: var(--accent);
-  margin: 10px 0;
-}
-
-select {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px;
-  width: 100%;
-}
-
-.formula {
-  background: var(--panel2);
-  padding: 14px 17px;
-  border-radius: 12px;
-  font-family: "Cambria Math", Georgia, serif;
-  font-size: 1.1rem;
-  overflow-x: auto;
-  margin: 13px 0;
-}
-
-.result {
-  font-size: 1.6rem;
-  font-weight: 750;
-  color: var(--accent);
-}
-
-.note {
-  font-size: .9rem;
-  color: var(--muted);
-}
-
-canvas {
-  display: block;
-  width: 100%;
-  height: 260px;
-  background: var(--panel2);
-  border-radius: 12px;
-  margin: 12px 0;
-}
-
-.big-number {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--accent);
-}
-
-.badge {
-  display: inline-block;
-  background: var(--panel2);
-  color: var(--accent);
-  border-radius: 8px;
-  padding: 4px 9px;
-  font-size: .8rem;
-  font-weight: 700;
-}
-
-.tip {
-  border-left: 4px solid var(--accent2);
-  padding: 12px 15px;
-  background: var(--panel2);
-  border-radius: 0 10px 10px 0;
-  margin-top: 14px;
-}
-
-.quiz-question {
-  padding: 17px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.quiz-question p {
-  font-weight: 650;
-}
-
-.quiz-question label {
-  display: block;
-  padding: 7px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.quiz-question label:hover {
-  background: var(--panel2);
-}
-
-.quiz-question input {
-  accent-color: var(--accent);
-  margin-right: 9px;
-}
-
-.feedback {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  display: none;
-}
-
-.feedback.good {
-  display: block;
-  background: color-mix(in srgb,var(--good) 14%,var(--panel));
-  color: var(--good);
-}
-
-.feedback.bad {
-  display: block;
-  background: color-mix(in srgb,var(--bad) 14%,var(--panel));
-  color: var(--bad);
-}
-
-.primary {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 12px 19px;
-  border-radius: 10px;
-  font-weight: 700;
-  margin-top: 18px;
-}
-
-.secondary {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 10px 15px;
-  border-radius: 10px;
-}
-
-.score {
-  display: none;
-  margin-top: 20px;
-  padding: 20px;
-  border-radius: 13px;
-  background: var(--panel2);
-}
-
-.progress {
-  height: 8px;
-  background: var(--panel2);
-  border-radius: 99px;
-  overflow: hidden;
-  margin: 12px 0 25px;
-}
-
-.progress div {
-  width: 0;
-  height: 100%;
-  background: var(--accent2);
-  transition: width .3s;
-}
-
-footer {
-  text-align: center;
-  color: var(--muted);
-  font-size: .85rem;
-  padding: 25px;
-}
-
-@media(max-width:760px) {
-  .grid { grid-template-columns: 1fr; }
-  .card.wide { grid-column: auto; }
-  header { padding: 25px 18px; }
-}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#0e1615;--surface:#152120;--ink:#e4eeec;--mut:#96aaa6;--line:#273a38;
+ --accent:#4fd0c8;--accent-soft:#15302f;--on-accent:#06201f;
+ --ok:#4cd08e;--ok-soft:#12301f;--bad:#ff8080;--bad-soft:#3a1c1c;--warn:#f0c050;--warn-soft:#382d10;--tr-i:#f0a640;--tr-d:#c58cff;color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#0e1615;--surface:#152120;--ink:#e4eeec;--mut:#96aaa6;--line:#273a38;
+ --accent:#4fd0c8;--accent-soft:#15302f;--on-accent:#06201f;
+ --ok:#4cd08e;--ok-soft:#12301f;--bad:#ff8080;--bad-soft:#3a1c1c;--warn:#f0c050;--warn-soft:#382d10;--tr-i:#f0a640;--tr-d:#c58cff;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:12;background:var(--surface)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hd{position:sticky;top:env(safe-area-inset-top,0px);z-index:11;background:var(--surface);border-bottom:1px solid var(--line)}
+.hd-in{max-width:1040px;margin:0 auto;padding-block:8px 0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h1{font:600 1.15rem/1.2 var(--f-display);letter-spacing:.02em;margin:0;flex:1;min-width:180px;text-wrap:balance}
+.top h1 small{display:block;font:400 .72rem var(--f-mono);color:var(--mut);letter-spacing:.04em}
+.xp{display:flex;align-items:center;gap:8px;font:.8rem var(--f-mono);color:var(--mut)}
+.bar{width:90px;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+nav{display:flex;gap:4px;overflow-x:auto;padding-block:8px}
+nav a{white-space:nowrap;text-decoration:none;color:var(--mut);padding:3px 11px;border-radius:6px;font-size:.85rem}
+nav a:hover{color:var(--accent);background:var(--accent-soft)}
+main{max-width:1040px;margin:0 auto;padding-block:8px 48px}
+section{margin:32px 0;scroll-margin-top:120px}
+h2{font:600 1.55rem/1.2 var(--f-display);letter-spacing:.01em;margin:0 0 4px;text-wrap:balance}
+h3{font:600 1.15rem/1.3 var(--f-display);margin:.2em 0 .4em}
+h4{margin:.6em 0 .3em;font:500 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.sub{color:var(--mut);margin:0 0 14px;max-width:72ch}
+p{margin:.5em 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.two{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))}
+.rule{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin:12px 0}
+button,input,select{font:inherit;color:inherit}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tabs button,.btn,.opt{cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 12px}
+.tabs button.on,.btn{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.tabs button:hover:not(.on),.opt:hover{border-color:var(--accent)}
+.btn.alt{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.alt:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts{display:grid;gap:8px;margin:10px 0}
+.opts.mats{grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))}
+.opt{text-align:left}
+.opt.ok{background:var(--ok-soft);border-color:var(--ok)}.opt.ko{background:var(--bad-soft);border-color:var(--bad)}.opt.sel{background:var(--accent-soft);border-color:var(--accent)}
+.fb{background:var(--accent-soft);border-radius:8px;padding:10px 12px;margin-top:8px}
+.row{display:grid;grid-template-columns:70px minmax(0,1fr) 84px;gap:8px;align-items:center;margin:4px 0}
+.row input{width:100%;accent-color:var(--accent)}
+.row output{font:.85rem var(--f-mono);color:var(--mut)}
+canvas{width:100%;display:block;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+canvas.sc{touch-action:pan-y;cursor:grab}
+.tfbox{background:var(--accent-soft);border-radius:6px;padding:8px 12px;margin:8px 0;font-family:var(--f-mono);font-size:.9rem;overflow-x:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{padding:2px 10px;border-radius:99px;font-size:.85rem;border:1px solid var(--line)}
+.chip.g{background:var(--ok-soft);border-color:var(--ok)}.chip.r{background:var(--bad-soft);border-color:var(--bad)}.chip.o{background:var(--warn-soft);border-color:var(--warn)}.chip.n{background:var(--accent-soft);border-color:var(--accent)}
+.out{margin-top:8px;padding:8px 10px;background:var(--accent-soft);border-radius:6px;overflow-wrap:anywhere}
+label{display:inline-block;margin:3px 10px 3px 0}
+input[type=number],select{width:100px;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+select{width:auto;max-width:100%}
+.note{color:var(--mut);font-size:.9rem}
+.mats-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.mat{display:inline-grid;grid-template-columns:repeat(3,auto);gap:4px 12px;padding:6px 12px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px;font:500 .9rem var(--f-mono);text-align:center;max-width:100%}
+.mat span{padding:2px 6px;border-radius:4px;min-width:3ch;font-variant-numeric:tabular-nums}
+.mat .z{background:var(--ok-soft);color:var(--ok)}
+.mat .nz{background:var(--accent-soft)}
+.mat.cl span{cursor:pointer}
+.mat span.sel{outline:2px solid var(--accent)}
+.bars{display:grid;gap:6px;margin:8px 0}
+.b2{display:grid;grid-template-columns:22px minmax(0,1fr) 52px;gap:8px;align-items:center;font:.85rem var(--f-mono)}
+.track{position:relative;height:10px;background:var(--line);border-radius:5px}
+.track::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--mut)}
+.fill{position:absolute;top:0;bottom:0;border-radius:5px;background:var(--accent)}
+.fill.nz{background:var(--tr-d)}
+.steps{margin:8px 0;padding:0;list-style:none;display:grid;gap:6px}
+.steps li{padding:6px 10px;border-radius:6px;border:1px solid var(--line);color:var(--mut)}
+.steps li.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.ctl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.facts{margin:6px 0 0;padding-left:18px}
+.facts li{margin:3px 0}
+.fc{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:1.05rem;cursor:pointer;user-select:none;overflow-wrap:anywhere}
+.fc.back{background:var(--accent-soft);border-color:var(--accent)}
+#badges:empty::before{content:"Aucun badge pour l'instant.";color:var(--mut)}
+.exnav{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.exnav button{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;font:.8rem var(--f-mono)}
+.exnav button.ans{background:var(--accent-soft);border-color:var(--accent)}
+.exnav button.cur{outline:2px solid var(--accent);outline-offset:1px}
+.timer{font:500 1.3rem var(--f-mono);font-variant-numeric:tabular-nums}
+.timer.low{color:var(--bad)}
+.qrow{display:grid;gap:6px;margin:10px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--line)}
+.qrow.ok{background:var(--ok-soft);border-color:var(--ok)}.qrow.ko{background:var(--bad-soft);border-color:var(--bad)}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;opacity:0;transition:.3s;pointer-events:none;z-index:20;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
-
 <body>
 
-<header>
-  <div class="topbar">
-    <div class="tag">CPGE · Sciences industrielles de l'ingénieur</div>
-    <button class="theme-btn" id="themeBtn">☀️ Mode clair</button>
+<div class="hd">
+ <div class="hd-in gut">
+  <div class="top">
+   <h1>Matrices d'inertie<small>masses des solides</small></h1>
+   <div class="xp">Niv. <b id="lvl">1</b><div class="bar"><i id="xpb"></i></div><span id="xpt">0 XP</span></div>
+   <button class="btn alt" id="theme" type="button" aria-label="Changer de thème">Thème : auto</button>
   </div>
-  <div class="header-inner">
-    <h1>Caractériser les masses<br>des solides en mouvement</h1>
-    <p>
-      Comprendre comment la masse et sa répartition influencent
-      le mouvement d'un solide. Manipule les paramètres, observe
-      les résultats et teste tes connaissances.
-    </p>
-  </div>
-</header>
-
-<main>
-
-<nav class="nav">
-  <button class="active" data-section="inertie">1. Inertie</button>
-  <button data-section="centre">2. Centre de gravité</button>
-  <button data-section="rotation">3. Moment d'inertie</button>
-  <button data-section="huygens">4. Huygens</button>
-  <button data-section="matrice">5. Matrice d'inertie</button>
-  <button data-section="quiz">6. Quiz</button>
-</nav>
-
-<div class="progress"><div id="progressBar"></div></div>
-
-<!-- ACTIVITE 1 -->
-<section class="section active" id="inertie">
-
-<h2>1. La masse et l'inertie</h2>
-<p class="intro">
-  Pourquoi est-il plus difficile d'accélérer un camion qu'une moto ?
-  Et pourquoi la répartition de la masse compte-t-elle lorsqu'un solide tourne ?
-</p>
-
-<div class="grid">
-
-<div class="card">
-  <h3>Manipule la masse</h3>
-
-  <div class="control">
-    <label>Masse du solide <span id="massLabel">100 kg</span></label>
-    <input type="range" id="mass" min="10" max="500" step="10" value="100">
-  </div>
-
-  <div class="control">
-    <label>Force appliquée <span id="forceLabel">200 N</span></label>
-    <input type="range" id="force" min="50" max="1000" step="10" value="200">
-  </div>
-
-  <div class="formula">F = m · a</div>
-  <div class="note">On considère ici un mouvement de translation et une force résultante constante.</div>
-
-  <p>Accélération du solide :</p>
-  <div class="result" id="accel">2 m·s⁻²</div>
-
-  <p class="note">
-    À force identique, plus la masse est grande, plus l'accélération est faible.
-  </p>
+  <nav>
+   <a href="#rappels">Rappels</a><a href="#lab">Labo 3D</a><a href="#plan">Plan de symétrie</a><a href="#axe">Axe de symétrie</a>
+   <a href="#demarche">Démarche</a><a href="#outils">Huygens</a><a href="#jeux">Entraînement</a><a href="#memo">Mémo</a>
+  </nav>
+ </div>
 </div>
+<main class="gut">
 
-<div class="card">
-  <h3>Visualise l'accélération</h3>
-  <canvas id="inertiaCanvas"></canvas>
-  <div class="tip">
-    <strong>À retenir :</strong> pour un mouvement de translation,
-    la masse caractérise l'inertie du solide.
-  </div>
-</div>
-
-<div class="card wide">
-  <h3>La masse et l'énergie cinétique</h3>
-  <div class="control">
-    <label>Vitesse du solide <span id="speedLabel">10 m/s</span></label>
-    <input type="range" id="speed" min="0" max="30" step="1" value="10">
-  </div>
-
-  <div class="formula">E<sub>c</sub> = ½ m V²</div>
-  <p>Énergie cinétique :</p>
-  <div class="big-number" id="energy">5 000 J</div>
-  <p class="note">
-    À vitesse identique, un solide plus massif possède une énergie cinétique
-    plus importante.
-  </p>
-</div>
-
-</div>
+<section id="rappels">
+ <h2>1. Répartition de la masse</h2>
+ <p class="sub">En rotation, la masse ne suffit plus : sa répartition par rapport aux axes compte. Elle se résume en six nombres, trois moments et trois produits d'inertie, regroupés dans la matrice d'inertie.</p>
+ <div class="grid">
+  <div class="card"><h3>Moment d'inertie</h3><p>I<sub>Δ</sub>(S) = ∫ r² dm, en kg·m². Plus la matière est loin de l'axe, plus il est grand.</p><p>Huygens : I<sub>Δ</sub> = I<sub>ΔG</sub> + m d². Pour une direction donnée, l'axe passant par G donne le minimum.</p></div>
+  <div class="card"><h3>Produits d'inertie</h3><p>Ils traduisent une asymétrie de la répartition de la masse dans le repère. S'ils sont non nuls, la rotation crée des effets de balourd.</p></div>
+  <div class="card"><h3>Matrice d'inertie</h3><p>Symétrique, donc diagonalisable : il existe une base principale où elle est diagonale (moments principaux A', B', C').</p></div>
+ </div>
+ <div class="card" style="margin-top:12px">
+  <h3>Explorer la matrice</h3>
+  <div class="two"><div id="exMat"></div><div class="out" id="exDef">Clique sur un terme de la matrice.</div></div>
+ </div>
 </section>
 
-<!-- ACTIVITE 2 -->
-<section class="section" id="centre">
-
-<h2>2. Le centre de gravité</h2>
-<p class="intro">
-  Le centre de gravité est le barycentre des masses élémentaires.
-  Il dépend de la répartition de la masse dans le solide.
-</p>
-
-<div class="grid">
-
-<div class="card">
-  <h3>Deux masses sur une tige</h3>
-
-  <div class="control">
-    <label>Masse 1 <span id="m1Label">2 kg</span></label>
-    <input type="range" id="m1" min="1" max="10" value="2">
-  </div>
-
-  <div class="control">
-    <label>Masse 2 <span id="m2Label">4 kg</span></label>
-    <input type="range" id="m2" min="1" max="10" value="4">
-  </div>
-
-  <div class="control">
-    <label>Distance entre les masses <span id="distLabel">4 m</span></label>
-    <input type="range" id="dist" min="1" max="10" value="4">
-  </div>
-
-  <canvas id="centerCanvas"></canvas>
-
-  <div class="formula">
-    x<sub>G</sub> = (m₁x₁ + m₂x₂)/(m₁ + m₂)
-  </div>
-
-  <div class="result" id="centerResult">xG = 2,67 m</div>
-</div>
-
-<div class="card">
-  <h3>Interprète le résultat</h3>
-  <p>
-    Le centre de gravité se trouve plus près de la masse la plus importante.
-  </p>
-  <div class="tip">
-    Si les deux masses sont identiques, le centre de gravité
-    se trouve au milieu de la tige.
-  </div>
-  <p>
-    Pour un ensemble de solides :
-  </p>
-  <div class="formula">
-    m<sub>E</sub> = Σ m<sub>i</sub>
-  </div>
-  <div class="formula">
-    OG<sub>E</sub> = (1/m<sub>E</sub>) Σ m<sub>i</sub> OG<sub>i</sub>
-  </div>
-  <p class="note">
-    La position du centre de gravité d'un assemblage se détermine
-    en pondérant la position de chaque centre par sa masse.
-  </p>
-</div>
-
-</div>
+<section id="lab">
+ <h2>2. Laboratoire 3D</h2>
+ <p class="sub">Chaque point est un élément de masse dm (m = 2 kg, matière homogène). La matrice est obtenue en sommant les intégrales sur ces points. Fais glisser la vue pour tourner. Modifie les dimensions, puis observe quels termes tombent à zéro et pourquoi.</p>
+ <div class="card">
+  <div class="tabs" id="labTabs"></div>
+  <div id="labSl"></div>
+  <label><input type="checkbox" id="lPl" checked> plans de symétrie</label>
+  <label><input type="checkbox" id="lAx" checked> axe de révolution</label>
+  <label><input type="checkbox" id="lAuto"> rotation automatique</label>
+  <label>Matrice au point <select id="lAt"><option value="O">O (origine du repère)</option><option value="G">G (centre de gravité)</option></select></label>
+ </div>
+ <div class="two" style="margin-top:12px"><div><canvas id="cLab"></canvas><p class="note">Axes : x en rouge, y en vert, z en turquoise. O est l'origine du repère, G le centre de gravité.</p></div><div class="card" id="labInfo"></div></div>
 </section>
 
-<!-- ACTIVITE 3 -->
-<section class="section" id="rotation">
-
-<h2>3. Le moment d'inertie</h2>
-<p class="intro">
-  Pour une rotation, la masse ne suffit plus.
-  La distance entre la matière et l'axe de rotation intervient au carré.
-</p>
-
-<div class="grid">
-
-<div class="card">
-  <h3>Éloigne la masse de l'axe</h3>
-
-  <div class="control">
-    <label>Masse <span id="rotMassLabel">2 kg</span></label>
-    <input type="range" id="rotMass" min="1" max="10" value="2">
+<section id="plan">
+ <h2>3. Plan de symétrie : pourquoi D et E s'annulent</h2>
+ <p class="sub">Solide : équerre épaisse, symétrique par rapport au plan (O,x,y). On construit ses produits d'inertie en deux temps : la moitié z &gt; 0, puis ses symétriques M'(x, y, −z). Les contributions x·z et x·(−z) se compensent.</p>
+ <div class="two">
+  <div><canvas id="cPlan"></canvas>
+   <div class="ctl"><button type="button" class="btn" id="pPlay">Lecture</button><button type="button" class="btn alt" id="pRe">Rejouer</button><input type="range" id="pT" min="0" max="1000" value="0" aria-label="Progression de l'animation"></div></div>
+  <div class="card">
+   <h4>Intégrales cumulées (relatives au maximum final)</h4>
+   <div class="bars" id="pBars"></div>
+   <ol class="steps" id="pSteps">
+    <li>1. Moitié supérieure seule : E = ∫xz dm et D = ∫yz dm sont non nuls.</li>
+    <li>2. On ajoute les symétriques M'(x, y, −z) : xz et −xz se compensent.</li>
+    <li>3. Bilan : D = E = 0, alors que A, B, C et F ont doublé.</li>
+   </ol>
+   <h4>Forme obtenue</h4><div id="pMat"></div>
   </div>
-
-  <div class="control">
-    <label>Rayon <span id="radiusLabel">1 m</span></label>
-    <input type="range" id="radius" min="0.1" max="5" step="0.1" value="1">
-  </div>
-
-  <canvas id="rotationCanvas"></canvas>
-
-  <div class="formula">
-    I<sub>Δ</sub> = m r²
-  </div>
-
-  <div class="result" id="inertiaResult">I = 2 kg·m²</div>
-</div>
-
-<div class="card">
-  <h3>Conséquence sur l'énergie</h3>
-
-  <div class="control">
-    <label>Vitesse angulaire <span id="omegaLabel">5 rad/s</span></label>
-    <input type="range" id="omega" min="0" max="20" step="1" value="5">
-  </div>
-
-  <div class="formula">
-    E<sub>c</sub> = ½ I<sub>Δ</sub> ω²
-  </div>
-
-  <div class="big-number" id="rotEnergy">25 J</div>
-
-  <div class="tip">
-    À masse constante, doubler la distance à l'axe multiplie
-    le moment d'inertie par 4.
-  </div>
-</div>
-
-<div class="card wide">
-  <h3>Deux répartitions de masse</h3>
-  <p>
-    Compare deux solides de même masse : l'un concentre sa masse près
-    de l'axe, l'autre la place loin de l'axe.
-  </p>
-
-  <div class="control">
-    <label>Distance de la masse A <span id="rALabel">1 m</span></label>
-    <input type="range" id="rA" min="0.1" max="5" step="0.1" value="1">
-  </div>
-
-  <div class="control">
-    <label>Distance de la masse B <span id="rBLabel">3 m</span></label>
-    <input type="range" id="rB" min="0.1" max="5" step="0.1" value="3">
-  </div>
-
-  <div class="formula">
-    I = Σ m<sub>i</sub> r<sub>i</sub>²
-  </div>
-
-  <p>Moment d'inertie A : <strong id="IA">2 kg·m²</strong></p>
-  <p>Moment d'inertie B : <strong id="IB">18 kg·m²</strong></p>
-  <p class="note">
-    Les deux solides ont la même masse totale.
-    Pourtant leur inertie en rotation peut être très différente.
-  </p>
-</div>
-
-</div>
+ </div>
 </section>
 
-<!-- ACTIVITE 4 -->
-<section class="section" id="huygens">
-
-<h2>4. Théorème de Huygens</h2>
-<p class="intro">
-  Comment calculer un moment d'inertie autour d'un axe décalé
-  lorsque l'on connaît le moment d'inertie autour d'un axe passant par G ?
-</p>
-
-<div class="grid">
-
-<div class="card">
-  <h3>Déplace l'axe de rotation</h3>
-
-  <div class="control">
-    <label>Masse <span id="hMassLabel">5 kg</span></label>
-    <input type="range" id="hMass" min="1" max="20" value="5">
+<section id="axe">
+ <h2>4. Axe de symétrie : tourner autour de l'axe ne change rien</h2>
+ <p class="sub">Le solide tourne autour de z, le repère reste fixe. Pour le cylindre (axe de révolution), A, B et F restent constants : tout plan contenant l'axe est un plan de symétrie. Pour le barreau rectangulaire, ils varient avec l'angle, car seuls deux plans sont des plans de symétrie.</p>
+ <div class="card">
+  <div class="tabs" id="bTabs"><button type="button" data-k="cyl" class="on">Cylindre (révolution)</button><button type="button" data-k="blk">Barreau 14 × 6 × 8</button></div>
+  <div class="two">
+   <div><canvas id="cAxe"></canvas>
+    <div class="ctl"><button type="button" class="btn" id="bPlay">Lecture</button>
+     <label>θ <input type="range" id="bTh" min="0" max="360" value="0" aria-label="Angle de rotation du solide"></label></div>
+    <div class="ctl"><label>Plan miroir ψ <input type="range" id="bPsi" min="0" max="180" value="45" aria-label="Angle du plan miroir"></label><span id="bPsiV" class="note"></span></div>
+    <div class="out" id="bVerdict"></div></div>
+   <div><h4>A, B et F selon l'angle θ (kg·cm²)</h4><canvas id="cCur"></canvas>
+    <h4>Matrice dans le repère fixe</h4><div id="bMat"></div><p class="note" id="bEq"></p></div>
   </div>
-
-  <div class="control">
-    <label>Moment au centre de gravité <span id="igLabel">2 kg·m²</span></label>
-    <input type="range" id="ig" min="0.1" max="10" step="0.1" value="2">
-  </div>
-
-  <div class="control">
-    <label>Distance entre les axes <span id="dLabel">1 m</span></label>
-    <input type="range" id="d" min="0" max="5" step="0.1" value="1">
-  </div>
-
-  <canvas id="huygensCanvas"></canvas>
-</div>
-
-<div class="card">
-  <h3>Relation de Huygens</h3>
-
-  <div class="formula">
-    I<sub>Δ</sub> = I<sub>ΔG</sub> + m d²
-  </div>
-
-  <p>Moment autour de l'axe passant par G :</p>
-  <div class="result" id="hIg">2 kg·m²</div>
-
-  <p>Terme de translation :</p>
-  <div class="result" id="hmd">5 kg·m²</div>
-
-  <p>Moment autour de l'axe décalé :</p>
-  <div class="big-number" id="hResult">7 kg·m²</div>
-
-  <div class="tip">
-    De tous les axes parallèles, celui passant par G
-    donne le moment d'inertie minimal.
-  </div>
-</div>
-
-</div>
+ </div>
 </section>
 
-<!-- ACTIVITE 5 -->
-<section class="section" id="matrice">
-
-<h2>5. La matrice d'inertie</h2>
-<p class="intro">
-  La matrice d'inertie caractérise la répartition de la masse
-  dans les trois directions de l'espace.
-</p>
-
-<div class="grid">
-
-<div class="card">
-  <h3>Les moments d'inertie</h3>
-
-  <div class="formula">
-    I<sub>O</sub> =
-    <br>
-    ⎡ A &nbsp; −F &nbsp; −E ⎤
-    <br>
-    ⎢ −F &nbsp; B &nbsp; −D ⎥
-    <br>
-    ⎣ −E &nbsp; −D &nbsp; C ⎦
-  </div>
-
-  <p>
-    A, B et C sont les moments d'inertie associés
-    respectivement aux axes x, y et z.
-  </p>
-
-  <p>
-    D, E et F sont les produits d'inertie.
-    Ils caractérisent les asymétries de répartition de la masse.
-  </p>
-</div>
-
-<div class="card">
-  <h3>Influence des symétries</h3>
-
-  <label for="symmetry">Choisis une particularité géométrique :</label>
-  <select id="symmetry">
-    <option value="none">Aucune symétrie particulière</option>
-    <option value="one">Un plan de symétrie (O,x,y)</option>
-    <option value="two">Deux plans de symétrie</option>
-    <option value="revolution">Solide de révolution autour de z</option>
-    <option value="thin">Épaisseur négligeable suivant z</option>
-  </select>
-
-  <div class="formula" id="matrixResult"></div>
-
-  <div class="tip" id="matrixTip">
-    Les particularités géométriques permettent de déduire
-    la forme de la matrice d'inertie.
-  </div>
-</div>
-
-<div class="card wide">
-  <h3>Axes principaux d'inertie</h3>
-  <p>
-    La matrice d'inertie est symétrique. Il existe donc une base
-    dans laquelle elle est diagonale.
-  </p>
-  <div class="formula">
-    I<sub>G</sub> =
-    ⎡ A' &nbsp; 0 &nbsp; 0 ⎤
-    <br>
-    ⎢ 0 &nbsp; B' &nbsp; 0 ⎥
-    <br>
-    ⎣ 0 &nbsp; 0 &nbsp; C' ⎦
-  </div>
-  <p>
-    Cette base est appelée base principale d'inertie.
-    Les axes associés sont les axes principaux d'inertie.
-  </p>
-</div>
-
-</div>
+<section id="demarche">
+ <h2>5. Quelle forme pour la matrice ?</h2>
+ <p class="sub">Indique les particularités géométriques du solide : la matrice se simplifie en direct. La justification de la forme est exigible, pas son apprentissage par cœur.</p>
+ <div class="card">
+  <label>Axe de révolution <select id="wRev"><option value="">aucun</option><option value="x">(O,x)</option><option value="y">(O,y)</option><option value="z">(O,z)</option></select></label>
+  <label>Dimension négligeable <select id="wThin"><option value="">aucune</option><option value="x">suivant x</option><option value="y">suivant y</option><option value="z">suivant z</option></select></label><br>
+  <label><input type="checkbox" id="wxy"> plan (O,x,y)</label><label><input type="checkbox" id="wxz"> plan (O,x,z)</label><label><input type="checkbox" id="wyz"> plan (O,y,z)</label>
+  <p class="note">Plans de symétrie matérielle formés par les axes du repère d'expression.</p>
+  <div class="mats-row"><div id="wMat"></div><ul class="facts" id="wWhy"></ul></div>
+ </div>
 </section>
 
-<!-- QUIZ -->
-<section class="section" id="quiz">
-
-<h2>6. Quiz final</h2>
-<p class="intro">
-  Vérifie que tu maîtrises les notions essentielles.
-  Une seule réponse est correcte par question.
-</p>
-
-<div class="card">
-  <div id="quizContainer"></div>
-
-  <button class="primary" id="submitQuiz">Corriger le quiz</button>
-  <button class="secondary" id="resetQuiz">Recommencer</button>
-
-  <div class="score" id="scoreBox"></div>
-</div>
-
+<section id="outils">
+ <h2>6. Déplacer la matrice : Huygens généralisé</h2>
+ <p class="sub">Pour un parallélépipède homogène de centre G, matrice en A telle que AG = a·x + b·y + c·z : I<sub>A</sub> = I<sub>G</sub> + m·[[b²+c², −ab, −ac], [−ab, a²+c², −bc], [−ac, −bc, a²+b²]]. Les deux matrices doivent être dans la même base.</p>
+ <div class="card">
+  <label>m (kg) <input type="number" id="hm" value="2" step="0.5" min="0.1"></label>
+  <label>L<sub>x</sub> (cm) <input type="number" id="hLx" value="12" step="1" min="1"></label>
+  <label>L<sub>y</sub> (cm) <input type="number" id="hLy" value="8" step="1" min="1"></label>
+  <label>L<sub>z</sub> (cm) <input type="number" id="hLz" value="5" step="1" min="1"></label><br>
+  <label>a (cm) <input type="number" id="ha" value="3" step="1"></label>
+  <label>b (cm) <input type="number" id="hb" value="2" step="1"></label>
+  <label>c (cm) <input type="number" id="hc" value="0" step="1"></label>
+  <div class="mats-row" id="hOut"></div>
+ </div>
 </section>
 
+<section id="jeux">
+ <h2>7. Entraînement</h2>
+ <div class="card">
+  <div class="tabs" id="trTabs">
+   <button type="button" data-t="tQuiz" class="on">Quiz libre</button><button type="button" data-t="tExam">Mode examen</button><button type="button" data-t="tForm">Quelle forme ?</button><button type="button" data-t="tCards">Cartes mémoire</button>
+  </div>
+  <div class="tp" id="tQuiz"><p class="note">10 questions tirées au hasard, correction immédiate.</p><div id="quiz"></div></div>
+  <div class="tp" id="tExam" hidden><div id="exam"></div></div>
+  <div class="tp" id="tForm" hidden><div id="form"></div></div>
+  <div class="tp" id="tCards" hidden>
+   <div class="card fc" id="fc" role="button" tabindex="0"></div>
+   <p style="text-align:center;margin:10px 0 0"><button type="button" class="btn alt" id="fcP" aria-label="Carte précédente">◀</button> <span id="fcN" class="note"></span> <button type="button" class="btn alt" id="fcNx" aria-label="Carte suivante">▶</button> <button type="button" class="btn alt" id="fcS">Mélanger</button></p>
+   <p class="note" style="text-align:center">Touche la carte pour la retourner.</p>
+  </div>
+ </div>
+</section>
+
+<section id="memo">
+ <h2>8. Fiche mémo</h2>
+ <div class="card">
+  <h4>Badges</h4><div class="chips" id="badges"></div>
+  <div id="memoTxt">
+   <h4>Définitions</h4>
+   <p>A = ∫(y²+z²)dm, B = ∫(x²+z²)dm, C = ∫(x²+y²)dm : moments d'inertie par rapport aux axes (Q,x), (Q,y), (Q,z).<br>
+   D = ∫yz dm, E = ∫xz dm, F = ∫xy dm : produits d'inertie par rapport aux plans (Q,y,z), (Q,x,z), (Q,x,y).<br>
+   Matrice : [[A, −F, −E], [−F, B, −D], [−E, −D, C]], symétrique.</p>
+   <h4>Formes particulières</h4>
+   <p>Un plan de symétrie : les deux produits contenant la coordonnée normale au plan sont nuls ; l'axe normal au plan est axe principal. La réciproque est fausse.<br>
+   Deux plans de symétrie : matrice diagonale, repère principal.<br>
+   Axe de révolution (O,z) : matrice diagonale, A = B, inchangée par toute rotation autour de z.<br>
+   Épaisseur négligeable suivant z : D = E = 0 et C = A + B.</p>
+   <h4>Formules usuelles (au centre de gravité)</h4>
+   <p>Parallélépipède a×b×c : A = m(b²+c²)/12, B = m(a²+c²)/12, C = m(a²+b²)/12.<br>
+   Cylindre plein (axe z) : A = B = m(R²/4 + h²/12), C = mR²/2.</p>
+   <h4>Changer de point ou de base</h4>
+   <p>Huygens : I<sub>Δ</sub> = I<sub>ΔG</sub> + m d². Généralisé : I<sub>A</sub> = I<sub>G</sub> + I<sub>A</sub>(m en G).<br>
+   Changement de base : I(b₂) = P⁻¹ · I(b₁) · P. Matrices à additionner : même base et même point.</p>
+  </div>
+  <button type="button" class="btn" id="copyMemo">Copier la fiche</button> <span class="note" id="copyMsg"></span>
+ </div>
+</section>
 </main>
-
-<footer>
-  Caractériser les masses des solides en mouvement
-</footer>
+<div id="toast" role="status"></div>
 
 <script>
-// ===================================================
-// MODE CLAIR / SOMBRE
-// ===================================================
-
-const themeBtn = document.getElementById("themeBtn");
-
-themeBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-  themeBtn.textContent = document.body.classList.contains("dark")
-    ? "🌙 Mode sombre"
-    : "☀️ Mode clair";
-
-  drawAll();
-});
-
-// ===================================================
-// NAVIGATION
-// ===================================================
-
-document.querySelectorAll(".nav button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav button")
-      .forEach(b => b.classList.remove("active"));
-
-    document.querySelectorAll(".section")
-      .forEach(s => s.classList.remove("active"));
-
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.section)
-      .classList.add("active");
-
-    document.getElementById("progressBar").style.width =
-      ((Array.from(document.querySelectorAll(".nav button"))
-        .indexOf(btn)+1)/6*100) + "%";
-
-    drawAll();
-  });
-});
-
-// ===================================================
-// OUTILS
-// ===================================================
-
-function val(id) {
-  return Number(document.getElementById(id).value);
-}
-
-function fmt(n) {
-  return n.toLocaleString("fr-FR", {
-    maximumFractionDigits: 2
-  });
-}
-
-function updateLabel(id, text) {
-  document.getElementById(id).textContent = text;
-}
-
-function getColors() {
-  const style = getComputedStyle(document.body);
-  return {
-    text: style.getPropertyValue("--text").trim(),
-    accent: style.getPropertyValue("--accent").trim(),
-    accent2: style.getPropertyValue("--accent2").trim(),
-    muted: style.getPropertyValue("--muted").trim(),
-    panel: style.getPropertyValue("--panel2").trim()
-  };
-}
-
-function setupCanvas(id) {
-  const canvas = document.getElementById(id);
-  const rect = canvas.getBoundingClientRect();
-
-  const ratio = window.devicePixelRatio || 1;
-  canvas.width = Math.max(1, rect.width * ratio);
-  canvas.height = 260 * ratio;
-
-  const ctx = canvas.getContext("2d");
-  ctx.scale(ratio, ratio);
-
-  return {ctx, w:rect.width, h:260};
-}
-
-function drawAxis(ctx,w,h,y,color) {
-  ctx.strokeStyle=color;
-  ctx.lineWidth=1.5;
-  ctx.beginPath();
-  ctx.moveTo(25,y);
-  ctx.lineTo(w-20,y);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(w-28,y-5);
-  ctx.lineTo(w-20,y);
-  ctx.lineTo(w-28,y+5);
-  ctx.stroke();
-}
-
-// ===================================================
-// ACTIVITE 1 : INERTIE
-// ===================================================
-
-function updateInertia() {
-  const m=val("mass");
-  const F=val("force");
-  const v=val("speed");
-
-  updateLabel("massLabel",m+" kg");
-  updateLabel("forceLabel",F+" N");
-  updateLabel("speedLabel",v+" m/s");
-
-  document.getElementById("accel").textContent =
-    fmt(F/m)+" m·s⁻²";
-
-  document.getElementById("energy").textContent =
-    fmt(0.5*m*v*v)+" J";
-
-  drawInertia();
-}
-
-function drawInertia() {
-  const {ctx,w,h}=setupCanvas("inertiaCanvas");
-  const c=getColors();
-
-  ctx.clearRect(0,0,w,h);
-
-  drawAxis(ctx,w,h,h*.72,c.muted);
-
-  const m=val("mass");
-  const F=val("force");
-
-  const x=35;
-  const y=h*.72-45;
-  const size=35+Math.sqrt(m)*2.2;
-
-  ctx.fillStyle=c.accent;
-  ctx.fillRect(x,y,size,size);
-
-  ctx.fillStyle=c.text;
-  ctx.font="13px Arial";
-  ctx.fillText("m = "+m+" kg",x,y-12);
-
-  const arrowLen=30+F/1000*100;
-
-  ctx.strokeStyle=c.accent2;
-  ctx.lineWidth=4;
-  ctx.beginPath();
-  ctx.moveTo(x+size+5,y+size/2);
-  ctx.lineTo(x+size+arrowLen,y+size/2);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x+size+arrowLen-10,y+size/2-7);
-  ctx.lineTo(x+size+arrowLen,y+size/2);
-  ctx.lineTo(x+size+arrowLen-10,y+size/2+7);
-  ctx.stroke();
-
-  ctx.fillStyle=c.accent2;
-  ctx.fillText("F = "+F+" N",x+size+8,y+size/2-15);
-}
-
-["mass","force","speed"].forEach(id => {
-  document.getElementById(id).addEventListener("input",updateInertia);
-});
-
-// ===================================================
-// ACTIVITE 2 : CENTRE DE GRAVITE
-// ===================================================
-
-function updateCenter() {
-  const m1=val("m1");
-  const m2=val("m2");
-  const d=val("dist");
-
-  const xG=m2*d/(m1+m2);
-
-  updateLabel("m1Label",m1+" kg");
-  updateLabel("m2Label",m2+" kg");
-  updateLabel("distLabel",d+" m");
-
-  document.getElementById("centerResult").textContent =
-    "xG = "+fmt(xG)+" m";
-
-  drawCenter(xG,d,m1,m2);
-}
-
-function drawCenter(xG,d,m1,m2) {
-  const {ctx,w,h}=setupCanvas("centerCanvas");
-  const c=getColors();
-
-  ctx.clearRect(0,0,w,h);
-
-  const y=h/2;
-  const left=30;
-  const right=w-30;
-  const scale=(right-left)/d;
-
-  drawAxis(ctx,w,h,y,c.muted);
-
-  const x1=left;
-  const x2=left+d*scale;
-  const xGpx=left+xG*scale;
-
-  ctx.fillStyle=c.accent;
-  ctx.beginPath();
-  ctx.arc(x1,y,Math.min(22,8+m1*1.3),0,Math.PI*2);
-  ctx.fill();
-
-  ctx.fillStyle=c.accent2;
-  ctx.beginPath();
-  ctx.arc(x2,y,Math.min(22,8+m2*1.3),0,Math.PI*2);
-  ctx.fill();
-
-  ctx.strokeStyle="#e4a11b";
-  ctx.lineWidth=3;
-  ctx.beginPath();
-  ctx.moveTo(xGpx,y-40);
-  ctx.lineTo(xGpx,y+40);
-  ctx.stroke();
-
-  ctx.fillStyle=c.text;
-  ctx.font="12px Arial";
-  ctx.fillText("m1",x1-8,y+42);
-  ctx.fillText("m2",x2-8,y+42);
-  ctx.fillText("G",xGpx-4,y-48);
-}
-
-// ===================================================
-// ACTIVITE 3 : MOMENT D'INERTIE
-// ===================================================
-
-function updateRotation() {
-  const m=val("rotMass");
-  const r=val("radius");
-  const omega=val("omega");
-
-  const I=m*r*r;
-  const E=0.5*I*omega*omega;
-
-  updateLabel("rotMassLabel",m+" kg");
-  updateLabel("radiusLabel",fmt(r)+" m");
-  updateLabel("omegaLabel",omega+" rad/s");
-
-  document.getElementById("inertiaResult").textContent =
-    "I = "+fmt(I)+" kg·m²";
-
-  document.getElementById("rotEnergy").textContent =
-    fmt(E)+" J";
-
-  drawRotation();
-}
-
-function drawRotation() {
-  const {ctx,w,h}=setupCanvas("rotationCanvas");
-  const c=getColors();
-
-  ctx.clearRect(0,0,w,h);
-
-  const cx=w/2;
-  const cy=h/2;
-
-  ctx.strokeStyle=c.muted;
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.moveTo(cx,15);
-  ctx.lineTo(cx,h-15);
-  ctx.stroke();
-
-  ctx.fillStyle=c.accent;
-  ctx.beginPath();
-  ctx.arc(cx,cy,7,0,Math.PI*2);
-  ctx.fill();
-
-  const r=val("radius");
-  const px=Math.min(r*22,w/2-30);
-
-  ctx.strokeStyle=c.accent2;
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.moveTo(cx,cy);
-  ctx.lineTo(cx+px,cy);
-  ctx.stroke();
-
-  ctx.fillStyle=c.accent2;
-  ctx.beginPath();
-  ctx.arc(cx+px,cy,13,0,Math.PI*2);
-  ctx.fill();
-
-  ctx.fillStyle=c.text;
-  ctx.font="13px Arial";
-  ctx.fillText("r = "+fmt(r)+" m",cx+px/2,cy-12);
-}
-
-function updateComparison() {
-  const rA=val("rA");
-  const rB=val("rB");
-
-  updateLabel("rALabel",fmt(rA)+" m");
-  updateLabel("rBLabel",fmt(rB)+" m");
-
-  document.getElementById("IA").textContent =
-    fmt(2*rA*rA)+" kg·m²";
-
-  document.getElementById("IB").textContent =
-    fmt(2*rB*rB)+" kg·m²";
-}
-
-["rotMass","radius","omega"].forEach(id => {
-  document.getElementById(id).addEventListener("input",updateRotation);
-});
-
-["rA","rB"].forEach(id => {
-  document.getElementById(id).addEventListener("input",updateComparison);
-});
-
-// ===================================================
-// ACTIVITE 4 : HUYGENS
-// ===================================================
-
-function updateHuygens() {
-  const m=val("hMass");
-  const Ig=val("ig");
-  const d=val("d");
-
-  const md=m*d*d;
-  const I=Ig+md;
-
-  updateLabel("hMassLabel",m+" kg");
-  updateLabel("igLabel",fmt(Ig)+" kg·m²");
-  updateLabel("dLabel",fmt(d)+" m");
-
-  document.getElementById("hIg").textContent =
-    fmt(Ig)+" kg·m²";
-
-  document.getElementById("hmd").textContent =
-    fmt(md)+" kg·m²";
-
-  document.getElementById("hResult").textContent =
-    fmt(I)+" kg·m²";
-
-  drawHuygens();
-}
-
-function drawHuygens() {
-  const {ctx,w,h}=setupCanvas("huygensCanvas");
-  const c=getColors();
-
-  ctx.clearRect(0,0,w,h);
-
-  const y=h/2;
-  const xG=w/2-40;
-  const xA=xG+val("d")*35;
-
-  drawAxis(ctx,w,h,y,c.muted);
-
-  ctx.strokeStyle=c.accent;
-  ctx.lineWidth=3;
-  ctx.beginPath();
-  ctx.moveTo(xG,y-45);
-  ctx.lineTo(xG,y+45);
-  ctx.stroke();
-
-  ctx.strokeStyle=c.accent2;
-  ctx.beginPath();
-  ctx.moveTo(xA,y-45);
-  ctx.lineTo(xA,y+45);
-  ctx.stroke();
-
-  ctx.fillStyle=c.text;
-  ctx.font="13px Arial";
-  ctx.fillText("G",xG-5,y+60);
-  ctx.fillText("A",xA-5,y+60);
-  ctx.fillText("d",xG+(xA-xG)/2,y-12);
-}
-
-// ===================================================
-// ACTIVITE 5 : MATRICE D'INERTIE
-// ===================================================
-
-function updateMatrix() {
-  const type=document.getElementById("symmetry").value;
-
-  const result=document.getElementById("matrixResult");
-  const tip=document.getElementById("matrixTip");
-
-  if(type==="none") {
-    result.innerHTML=
-      "⎡ A &nbsp; −F &nbsp; −E ⎤<br>"+
-      "⎢ −F &nbsp; B &nbsp; −D ⎥<br>"+
-      "⎣ −E &nbsp; −D &nbsp; C ⎦";
-
-    tip.textContent=
-      "Sans particularité géométrique connue, on conserve la forme générale.";
-  }
-
-  if(type==="one") {
-    result.innerHTML=
-      "⎡ A &nbsp; −F &nbsp; 0 ⎤<br>"+
-      "⎢ −F &nbsp; B &nbsp; 0 ⎥<br>"+
-      "⎣ 0 &nbsp; 0 &nbsp; C ⎦";
-
-    tip.textContent=
-      "Le plan (O,x,y) est un plan de symétrie. Les produits contenant z sont nuls : D = E = 0.";
-  }
-
-  if(type==="two") {
-    result.innerHTML=
-      "⎡ A &nbsp; 0 &nbsp; 0 ⎤<br>"+
-      "⎢ 0 &nbsp; B &nbsp; 0 ⎥<br>"+
-      "⎣ 0 &nbsp; 0 &nbsp; C ⎦";
-
-    tip.textContent=
-      "Deux plans de symétrie permettent d'obtenir une matrice diagonale dans la base adaptée.";
-  }
-
-  if(type==="revolution") {
-    result.innerHTML=
-      "⎡ A &nbsp; 0 &nbsp; 0 ⎤<br>"+
-      "⎢ 0 &nbsp; A &nbsp; 0 ⎥<br>"+
-      "⎣ 0 &nbsp; 0 &nbsp; C ⎦";
-
-    tip.textContent=
-      "Pour un solide de révolution autour de z, A = B et la matrice est diagonale dans la base adaptée.";
-  }
-
-  if(type==="thin") {
-    result.innerHTML=
-      "⎡ A &nbsp; −F &nbsp; 0 ⎤<br>"+
-      "⎢ −F &nbsp; B &nbsp; 0 ⎥<br>"+
-      "⎣ 0 &nbsp; 0 &nbsp; A+B ⎦";
-
-    tip.textContent=
-      "Pour une épaisseur négligeable suivant z, D = E = 0 et C = A + B.";
-  }
-}
-
-document.getElementById("symmetry").addEventListener("change",updateMatrix);
-
-// ===================================================
-// QUIZ FINAL
-// ===================================================
-
-const questions = [
-{
-  q:"Quelle grandeur suffit à caractériser l'inertie d'un solide en translation ?",
-  choices:["Le moment d'inertie","La masse","Le centre de gravité"],
-  answer:1,
-  exp:"Pour un mouvement de translation, la masse suffit à caractériser l'inertie."
-},
-{
-  q:"Quelle est l'unité du moment d'inertie ?",
-  choices:["kg·m","kg·m²","N·m"],
-  answer:1,
-  exp:"Le moment d'inertie est le produit d'une masse et d'une longueur au carré."
-},
-{
-  q:"Pour une masse ponctuelle, le moment d'inertie autour d'un axe est :",
-  choices:["mr","mr²","m/r"],
-  answer:1,
-  exp:"IΔ = mr². La distance à l'axe intervient au carré."
-},
-{
-  q:"Si on double la distance à l'axe, à masse constante, le moment d'inertie :",
-  choices:["Double","Est multiplié par 4","Ne change pas"],
-  answer:1,
-  exp:"I = mr², donc I' = m(2r)² = 4I."
-},
-{
-  q:"Le centre de gravité d'un solide homogène présentant un centre de symétrie se trouve :",
-  choices:["Au centre de symétrie","Sur un bord","Toujours à l'origine du repère"],
-  answer:0,
-  exp:"Le centre de gravité est situé au centre de symétrie."
-},
-{
-  q:"Le théorème de Huygens permet de :",
-  choices:["Changer de base","Déplacer le moment d'inertie entre deux axes parallèles","Calculer la masse volumique"],
-  answer:1,
-  exp:"IΔ = IΔG + md²."
-},
-{
-  q:"Quelle est la forme de la matrice d'inertie dans une base principale ?",
-  choices:["Toujours nulle","Diagonale","Antisymétrique"],
-  answer:1,
-  exp:"Dans une base principale, les produits d'inertie sont nuls."
-},
-{
-  q:"Un solide possède un plan de symétrie (O,x,y). Quels produits d'inertie sont nuls ?",
-  choices:["D et E","A et B","A et C"],
-  answer:0,
-  exp:"Les produits faisant intervenir z, normale au plan de symétrie, sont nuls."
-},
-{
-  q:"Pour un solide de révolution autour de z, on a :",
-  choices:["A = B","A = C","B = C = 0"],
-  answer:0,
-  exp:"La symétrie de révolution implique A = B."
-},
-{
-  q:"La résultante cinétique d'un solide est :",
-  choices:["mVG","IGΩ","mAG"],
-  answer:0,
-  exp:"Rc = mVG."
-},
-{
-  q:"La résultante dynamique d'un solide est :",
-  choices:["mVG","mAG","IGΩ"],
-  answer:1,
-  exp:"Rd = mAG."
-},
-{
-  q:"Pour additionner deux matrices d'inertie, elles doivent être exprimées :",
-  choices:["Dans la même base","À des points différents","En unités différentes"],
-  answer:0,
-  exp:"Les matrices doivent être exprimées dans la même base."
-}
+const $=id=>document.getElementById(id);
+const fmt=(x,d=3)=>Number.isFinite(x)?x.toLocaleString('fr-FR',{maximumFractionDigits:d}):'—';
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>x*x*(3-2*x);
+const D2R=Math.PI/180;
+const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------- Thème, XP, badges ---------- */
+let TH={};
+function readTheme(){const g=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+ TH={ink:g('--ink'),mut:g('--mut'),line:g('--line'),acc:g('--accent'),i:g('--tr-i'),d:g('--tr-d'),ok:g('--ok'),bad:g('--bad'),surf:g('--surface'),warn:g('--warn')}}
+let themeState=document.documentElement.getAttribute('data-theme')||'auto';
+function applyTheme(){const r=document.documentElement;if(themeState==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',themeState);
+ $('theme').textContent='Thème : '+({auto:'auto',light:'clair',dark:'sombre'})[themeState];readTheme()}
+$('theme').onclick=()=>{themeState=({auto:'light',light:'dark',dark:'auto'})[themeState]||'auto';applyTheme()};
+applyTheme();
+let xp=0;const badges=new Set();
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
+function addXP(n,m){xp+=n;$('lvl').textContent=Math.floor(xp/50)+1;$('xpb').style.width=(xp%50)*2+'%';$('xpt').textContent=xp+' XP';toast('+'+n+' XP'+(m?' · '+m:''))}
+function badge(id,l){if(badges.has(id))return;badges.add(id);const s=document.createElement('span');s.className='chip g';s.textContent='Badge · '+l;$('badges').appendChild(s);toast('Badge : '+l)}
+
+/* ---------- Solides, échantillonnage, moments, symétries (calcul pur) ---------- */
+/*PURE*/
+const M_TOT=2;
+function mulberry(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const E9=1e-9;
+const SOL=[
+ {id:'box',n:'Parallélépipède',pr:[['a','a',4,16,.5,12],['b','b',3,14,.5,8],['c','c',2,12,.5,5]],
+  ext:p=>[p.a/2,p.b/2,p.c/2],
+  in:(p,x,y,z)=>Math.abs(x)<=p.a/2&&Math.abs(y)<=p.b/2&&Math.abs(z)<=p.c/2,
+  exact:(m,p)=>({A:m*(p.b*p.b+p.c*p.c)/12,B:m*(p.a*p.a+p.c*p.c)/12,C:m*(p.a*p.a+p.b*p.b)/12})},
+ {id:'cyl',n:'Cylindre plein',pr:[['R','R',2,8,.5,5],['h','h',2,16,.5,10]],
+  ext:p=>[p.R,p.R,p.h/2],
+  in:(p,x,y,z)=>x*x+y*y<=p.R*p.R+E9&&Math.abs(z)<=p.h/2,
+  exact:(m,p)=>({A:m*(p.R*p.R/4+p.h*p.h/12),B:m*(p.R*p.R/4+p.h*p.h/12),C:m*p.R*p.R/2})},
+ {id:'L',n:'Équerre (plaque en L)',plate:1,pr:[['a','a',6,16,.5,12],['b','b',5,16,.5,9],['w','w',1,5,.5,3],['e','e',.2,6,.1,1.5]],
+  ext:p=>[p.a,p.b,p.e/2],
+  in:(p,x,y,z)=>Math.abs(z)<=p.e/2&&((x>=0&&x<=p.a&&y>=0&&y<=p.w)||(x>=0&&x<=p.w&&y>=0&&y<=p.b))},
+ {id:'T',n:'Plaque en T',plate:1,pr:[['a','a',6,18,.5,14],['b','b',4,16,.5,10],['w','w',1,6,.5,3],['e','e',.2,6,.1,1.5]],
+  ext:p=>[p.a/2,Math.max(p.b,p.w),p.e/2],
+  in:(p,x,y,z)=>Math.abs(z)<=p.e/2&&((Math.abs(x)<=p.a/2&&y>=0&&y<=p.w)||(Math.abs(x)<=p.w/2&&y<=0&&y>=-p.b))},
+ {id:'lug',n:'Cylindre + masselotte',pr:[['R','R',3,8,.5,5],['h','h',4,14,.5,8],['s','masselotte',1,4,.5,2.5],['beta','β (°)',0,180,1,0]],
+  ext:p=>[p.R+p.s,p.R+p.s,p.h/2],
+  in:(p,x,y,z)=>{if(x*x+y*y<=p.R*p.R+E9&&Math.abs(z)<=p.h/2)return true;const b=p.beta*Math.PI/180,xl=p.R*Math.cos(b),yl=p.R*Math.sin(b),zl=p.h/2-p.s/2;return Math.abs(x-xl)<=p.s/2&&Math.abs(y-yl)<=p.s/2&&Math.abs(z-zl)<=p.s/2}},
+ {id:'rod',n:'Barre inclinée',pr:[['L','L',8,24,1,16],['r','r',.5,3,.5,1],['alpha','α (°)',0,90,1,35]],
+  ext:p=>{const e=p.L/2+p.r;return[e,e,e]},
+  in:(p,x,y,z)=>{const a=p.alpha*Math.PI/180,t=x*Math.cos(a)+z*Math.sin(a);return Math.abs(t)<=p.L/2&&x*x+y*y+z*z-t*t<=p.r*p.r+E9}}
 ];
+function sample(s,p){
+ const e=s.ext(p),L=e.map(v=>2*v);let h=Math.cbrt(L[0]*L[1]*L[2]/110000),n;
+ for(let k=0;k<14;k++){n=L.map(l=>Math.max(5,Math.round(l/h)));if(n[0]*n[1]*n[2]<=120000)break;h*=1.12}
+ const X=[],Y=[],Z=[];
+ for(let i=0;i<n[0];i++){const x=-e[0]+(i+.5)*L[0]/n[0];for(let j=0;j<n[1];j++){const y=-e[1]+(j+.5)*L[1]/n[1];for(let k=0;k<n[2];k++){const z=-e[2]+(k+.5)*L[2]/n[2];if(s.in(p,x,y,z)){X.push(x);Y.push(y);Z.push(z)}}}}
+ return{X,Y,Z,n:X.length,e}}
+function centroid(P){let a=0,b=0,c=0;for(let i=0;i<P.n;i++){a+=P.X[i];b+=P.Y[i];c+=P.Z[i]}return[a/P.n,b/P.n,c/P.n]}
+function moments(P,Q){let A=0,B=0,C=0,D=0,E=0,F=0;
+ for(let i=0;i<P.n;i++){const x=P.X[i]-Q[0],y=P.Y[i]-Q[1],z=P.Z[i]-Q[2];A+=y*y+z*z;B+=x*x+z*z;C+=x*x+y*y;D+=y*z;E+=x*z;F+=x*y}
+ const k=M_TOT/P.n;return{A:A*k,B:B*k,C:C*k,D:D*k,E:E*k,F:F*k}}
+function symmetry(s,p,P){
+ const step=Math.max(1,Math.floor(P.n/900)),idx=[];for(let i=0;i<P.n;i+=step)idx.push(i);
+ const ok=f=>idx.every(i=>s.in(p,...f(P.X[i],P.Y[i],P.Z[i])));
+ const rz=a=>{const c=Math.cos(a),s=Math.sin(a);return(x,y,z)=>[x*c-y*s,x*s+y*c,z]};
+ const rx=a=>{const c=Math.cos(a),s=Math.sin(a);return(x,y,z)=>[x,y*c-z*s,y*s+z*c]};
+ const ry=a=>{const c=Math.cos(a),s=Math.sin(a);return(x,y,z)=>[x*c+z*s,y,-x*s+z*c]};
+ const angs=[.7,1.9,3.3];
+ const pl={xy:ok((x,y,z)=>[x,y,-z]),xz:ok((x,y,z)=>[x,-y,z]),yz:ok((x,y,z)=>[-x,y,z])};
+ const rv={x:angs.every(a=>ok(rx(a))),y:angs.every(a=>ok(ry(a))),z:angs.every(a=>ok(rz(a)))};
+ return{pl,rev:rv.z?'z':rv.x?'x':rv.y?'y':null}}
+function formMatrix(o){
+ const pl={...o.planes};if(o.rev==='z'){pl.xz=pl.yz=true}if(o.rev==='x'){pl.xy=pl.xz=true}if(o.rev==='y'){pl.xy=pl.yz=true}
+ let zD=false,zE=false,zF=false;
+ if(pl.xy){zE=zD=true}if(pl.xz){zF=zD=true}if(pl.yz){zF=zE=true}
+ if(o.thin==='z')zE=zD=true;if(o.thin==='x')zF=zE=true;if(o.thin==='y')zF=zD=true;
+ let a='A',b='B',c='C';
+ if(o.rev==='z')b='A';if(o.rev==='x')c='B';if(o.rev==='y')c='A';
+ const cb=(u,v)=>u===v?'2'+u:u+'+'+v;
+ if(o.thin==='z')c=cb(a,b);if(o.thin==='x')a=cb(b,c);if(o.thin==='y')b=cb(a,c);
+ const cells=[a,zF?'0':'−F',zE?'0':'−E',zF?'0':'−F',b,zD?'0':'−D',zE?'0':'−E',zD?'0':'−D',c];
+ return{cells,zeros:cells.map(x=>x==='0')}}
+/*ENDPURE*/
 
-function buildQuiz() {
-  const container=document.getElementById("quizContainer");
-  container.innerHTML="";
+const matHTML=(cells,zeros,cls,sel)=>`<div class="mat${cls?' '+cls:''}">${cells.map((c,i)=>`<span class="${zeros&&zeros[i]?'z':'nz'}${sel===i?' sel':''}" data-i="${i}">${c}</span>`).join('')}</div>`;
 
-  questions.forEach((q,i)=>{
-    const div=document.createElement("div");
-    div.className="quiz-question";
-
-    let html="<p>"+(i+1)+". "+q.q+"</p>";
-
-    q.choices.forEach((choice,j)=>{
-      html+=`
-        <label>
-          <input type="radio" name="q${i}" value="${j}">
-          ${choice}
-        </label>
-      `;
-    });
-
-    html+=`<div class="feedback" id="feedback${i}"></div>`;
-
-    div.innerHTML=html;
-    container.appendChild(div);
-  });
+/* ---------- Moteur 3D (canvas 2D) ---------- */
+const views=[];
+class View{
+ constructor(cv,o){this.cv=cv;this.ctx=cv.getContext('2d');this.yaw=o.yaw??-.8;this.pitch=o.pitch??.5;this.R=o.R||10;this.h=o.h||300;this.auto=false;this.vis=false;this.drag=false;this.draw=o.draw;this.upd=o.upd;this.w=0;
+  cv.classList.add('sc');
+  cv.addEventListener('pointerdown',e=>{this.drag=true;this.lx=e.clientX;this.ly=e.clientY;try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+  cv.addEventListener('pointermove',e=>{if(!this.drag)return;this.yaw-=(e.clientX-this.lx)*.01;if(e.pointerType!=='touch')this.pitch=clamp(this.pitch+(e.clientY-this.ly)*.01,-1.2,1.4);this.lx=e.clientX;this.ly=e.clientY});
+  const end=()=>{this.drag=false};cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  if(window.IntersectionObserver)new IntersectionObserver(es=>{this.vis=es[0].isIntersecting}).observe(cv);else this.vis=true;
+  views.push(this)}
+ resize(){const d=window.devicePixelRatio||1,w=this.cv.clientWidth;if(!w)return;this.w=w;this.cv.style.height=this.h+'px';this.cv.width=Math.round(w*d);this.cv.height=Math.round(this.h*d);this.ctx.setTransform(d,0,0,d,0,0)}
+ P(x,y,z){const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);
+  const x1=x*cy-y*sy,y1=x*sy+y*cy,up=z*cp+y1*sp,dep=y1*cp-z*sp,D=this.R*3.2,f=D/(D+dep);
+  return[this.w/2+x1*f*this.S,this.h*.52-up*f*this.S,dep,f]}
+ pt(x,y,z,col,r,a){const q=this.P(x,y,z);this.L.push({k:0,d:q[2],X:q[0],Y:q[1],r:r*q[3],col,a:a??1})}
+ ln(p,q,col,w,a,dash){const A=this.P(...p),B=this.P(...q);this.L.push({k:1,d:(A[2]+B[2])/2,A,B,col,w:w||1,a:a??1,dash})}
+ pl(pts,col,a,st){const Q=pts.map(p=>this.P(...p));this.L.push({k:2,d:Q.reduce((s,q)=>s+q[2],0)/Q.length,Q,col,a,st})}
+ tx(p,s,col){const q=this.P(...p);this.L.push({k:3,d:-1e9,X:q[0],Y:q[1],s,col})}
+ axes(len){[[[len,0,0],'x',TH.bad],[[0,len,0],'y',TH.ok],[[0,0,len],'z',TH.acc]].forEach(([e,l,c])=>{this.ln([0,0,0],e,c,2,.9);this.tx(e.map(v=>v*1.08),l,c)})}
+ flush(){const c=this.ctx;this.L.sort((a,b)=>b.d-a.d);
+  for(const o of this.L){c.globalAlpha=o.a??1;
+   if(o.k===0){c.fillStyle=o.col;c.beginPath();c.arc(o.X,o.Y,Math.max(.6,o.r),0,6.283);c.fill()}
+   else if(o.k===1){c.strokeStyle=o.col;c.lineWidth=o.w;c.setLineDash(o.dash||[]);c.beginPath();c.moveTo(o.A[0],o.A[1]);c.lineTo(o.B[0],o.B[1]);c.stroke();c.setLineDash([])}
+   else if(o.k===2){c.beginPath();o.Q.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fillStyle=o.col;c.fill();if(o.st){c.globalAlpha=Math.min(1,(o.a||0)*4);c.strokeStyle=o.st;c.lineWidth=1;c.stroke()}}
+   else{c.globalAlpha=1;c.fillStyle=o.col;c.font='500 13px "IBM Plex Mono",ui-monospace,monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(o.s,o.X,o.Y)}}
+  c.globalAlpha=1}
+ render(){if(this.cv.clientWidth!==this.w)this.resize();if(!this.w)return;this.ctx.clearRect(0,0,this.w,this.h);this.L=[];this.S=Math.min(this.w,this.h*1.3)/(2.5*this.R);this.draw(this);this.flush()}
 }
+let lastTs=0;
+function loop(ts){const dt=Math.min(.05,(ts-lastTs)/1000||0);lastTs=ts;
+ for(const v of views)if(v.vis){if(v.auto&&!v.drag)v.yaw+=dt*.3;if(v.upd)v.upd(dt);v.render()}
+ requestAnimationFrame(loop)}
 
-document.getElementById("submitQuiz").addEventListener("click",()=>{
-  let score=0;
-  let answered=0;
+/* ---------- Explorer la matrice ---------- */
+const DEFS=[['A','A = ∫(y²+z²) dm','Moment d\'inertie par rapport à l\'axe (Q,x).'],['F','F = ∫xy dm','Produit d\'inertie par rapport au plan (Q,x,y). Apparaît avec le signe moins.'],['E','E = ∫xz dm','Produit d\'inertie par rapport au plan (Q,x,z).'],
+ ['F','F = ∫xy dm','Même terme : la matrice est symétrique.'],['B','B = ∫(x²+z²) dm','Moment d\'inertie par rapport à l\'axe (Q,y).'],['D','D = ∫yz dm','Produit d\'inertie par rapport au plan (Q,y,z).'],
+ ['E','E = ∫xz dm','Même terme : la matrice est symétrique.'],['D','D = ∫yz dm','Même terme : la matrice est symétrique.'],['C','C = ∫(x²+y²) dm','Moment d\'inertie par rapport à l\'axe (Q,z).']];
+function mxShow(sel){$('exMat').innerHTML=matHTML(['A','−F','−E','−F','B','−D','−E','−D','C'],null,'cl',sel);
+ $('exMat').querySelectorAll('span').forEach(s=>s.onclick=()=>{const i=+s.dataset.i;mxShow(i);const d=DEFS[i];
+  $('exDef').innerHTML=`<b>${d[1]}</b><br>${d[2]}${'ABC'.includes(d[0])?'<br>Toujours positif : plus la matière est éloignée de l\'axe, plus il est grand.':'<br>Il peut être nul ou non. Nul si la répartition est symétrique par rapport à ce plan de coordonnées.'}`})}
+mxShow(-1);
 
-  questions.forEach((q,i)=>{
-    const selected=document.querySelector(`input[name="q${i}"]:checked`);
-    const feedback=document.getElementById("feedback"+i);
-
-    feedback.className="feedback";
-
-    if(!selected) {
-      feedback.textContent="Question non renseignée.";
-      feedback.classList.add("bad");
-      return;
-    }
-
-    answered++;
-
-    if(Number(selected.value)===q.answer) {
-      score++;
-      feedback.textContent="Correct ! "+q.exp;
-      feedback.classList.add("good");
-    } else {
-      feedback.textContent="Incorrect. "+q.exp;
-      feedback.classList.add("bad");
-    }
-  });
-
-  const box=document.getElementById("scoreBox");
-  box.style.display="block";
-
-  const percent=Math.round(score/questions.length*100);
-
-  let message="Continue à revoir le cours et à manipuler les activités.";
-
-  if(percent>=80) {
-    message="Très bien ! Tu maîtrises les notions essentielles.";
-  } else if(percent>=60) {
-    message="Bon travail ! Quelques notions sont à consolider.";
-  }
-
-  box.innerHTML=`
-    <h3>Résultat : ${score}/${questions.length}</h3>
-    <div class="big-number">${percent} %</div>
-    <p>${message}</p>
-    <p>${answered} question(s) renseignée(s).</p>
-  `;
-
-  box.scrollIntoView({behavior:"smooth",block:"nearest"});
-});
-
-document.getElementById("resetQuiz").addEventListener("click",()=>{
-  buildQuiz();
-
-  document.getElementById("scoreBox").style.display="none";
-});
-
-// ===================================================
-// INITIALISATION
-// ===================================================
-
-function drawAll() {
-  updateInertia();
-  updateCenter();
-  updateRotation();
-  updateComparison();
-  updateHuygens();
-  updateMatrix();
+/* ---------- Laboratoire ---------- */
+const LAB={s:SOL[0],P:{},at:'O',R:12,disp:[],G:[0,0,0],sy:{pl:{},rev:null}};
+SOL.forEach(s=>{LAB.P[s.id]={};s.pr.forEach(r=>LAB.P[s.id][r[0]]=r[5])});
+$('labTabs').innerHTML=SOL.map((s,i)=>`<button type="button" data-i="${i}" class="${i?'':'on'}">${s.n}</button>`).join('');
+$('labTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('labTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));LAB.s=SOL[+b.dataset.i];labSliders();labUpdate()});
+function labSliders(){const box=$('labSl');box.innerHTML='';
+ LAB.s.pr.forEach(([k,l,mn,mx,st])=>{const d=document.createElement('div');d.className='row';
+  d.innerHTML=`<label for="ls_${k}">${l}</label><input id="ls_${k}" type="range" min="${mn}" max="${mx}" step="${st}" value="${LAB.P[LAB.s.id][k]}"><output></output>`;
+  const r=d.querySelector('input'),o=d.querySelector('output'),sh=()=>o.textContent=fmt(+r.value,1)+(k==='beta'||k==='alpha'?'°':' cm');sh();
+  r.oninput=()=>{LAB.P[LAB.s.id][k]=+r.value;sh();labUpdate()};box.appendChild(d)})}
+const AX={xy:'(O,x,y)',xz:'(O,x,z)',yz:'(O,y,z)'};
+function labUpdate(){
+ const s=LAB.s,p=LAB.P[s.id],P=sample(s,p),G=centroid(P),Q=LAB.at==='G'?G:[0,0,0],I=moments(P,Q),sy=symmetry(s,p,P);
+ LAB.G=G;LAB.sy=sy;LAB.R=Math.max(...P.e)*1.45;views[0].R=LAB.R;
+ const st=Math.max(1,Math.floor(P.n/1100));LAB.disp=[];for(let i=0;i<P.n;i+=st)LAB.disp.push([P.X[i],P.Y[i],P.Z[i]]);
+ const tol=.003*Math.max(I.A,I.B,I.C),zr=v=>Math.abs(v)<tol,r=v=>zr(v)?'0':fmt(v,2);
+ const thin=!!s.plate&&Math.abs(I.C-I.A-I.B)<.03*I.C&&LAB.at==='O'?'z':null;
+ const f=formMatrix({planes:sy.pl,rev:sy.rev,thin});
+ const num=[I.A,-I.F,-I.E,-I.F,I.B,-I.D,-I.E,-I.D,I.C];
+ const np=['xy','xz','yz'].filter(k=>sy.pl[k]);
+ const chips=np.map(k=>`<span class="chip g">Plan ${AX[k]}</span>`).concat(sy.rev?[`<span class="chip o">Axe de révolution (O,${sy.rev})</span>`]:[]).join('')||'<span class="chip r">Aucune symétrie</span>';
+ const W=[];
+ if(sy.pl.xy)W.push('Plan (O,x,y) : à M(x, y, z) correspond M\'(x, y, −z). Donc E = ∫xz dm = 0 et D = ∫yz dm = 0.');
+ if(sy.pl.xz)W.push('Plan (O,x,z) : à M(x, y, z) correspond M\'(x, −y, z). Donc F = ∫xy dm = 0 et D = 0.');
+ if(sy.pl.yz)W.push('Plan (O,y,z) : à M(x, y, z) correspond M\'(−x, y, z). Donc F = 0 et E = 0.');
+ if(np.length===1)W.push('Un seul plan : l\'axe perpendiculaire au plan est un axe principal d\'inertie.');
+ if(np.length>=2)W.push('Deux plans de symétrie ou plus : la matrice est diagonale et le repère est principal.');
+ if(sy.rev)W.push(`Axe de révolution (O,${sy.rev}) : ${({z:'A = B',x:'B = C',y:'A = C'})[sy.rev]}, et la matrice ne change pas par rotation autour de cet axe.`);
+ if(s.plate)W.push(`Plaque : C/(A+B) = ${fmt(I.C/(I.A+I.B),3)}. Cette valeur tend vers 1 quand l'épaisseur devient négligeable.`);
+ if(!np.length&&!sy.rev)W.push('Aucune symétrie : les six termes sont indépendants, la matrice est pleine.');
+ const zs=[I.D,I.E,I.F].filter(zr).length;if(zs&&!np.length&&!sy.rev)W.push('Certains produits sont nuls sans plan de symétrie : la réciproque est fausse.');
+ let ex='';if(s.exact&&LAB.at==='G'||s.exact&&np.length>=2){const e=s.exact(M_TOT,p);ex=`<h4>Formule exacte</h4><p class="note">A = ${fmt(e.A,2)} · B = ${fmt(e.B,2)} · C = ${fmt(e.C,2)} kg·cm² (somme numérique : écart d'échantillonnage inférieur à 2 %)</p>`}
+ $('labInfo').innerHTML=`<h4>Éléments de symétrie</h4><div class="chips">${chips}</div>
+ <h4>Forme de la matrice (justifiée par la géométrie)</h4>${matHTML(f.cells,f.zeros)}
+ <h4>Valeurs numériques au point ${LAB.at} (kg·cm²)</h4>${matHTML(num.map(r),num.map(zr))}
+ <p class="note">G = (${fmt(G[0],2)} ; ${fmt(G[1],2)} ; ${fmt(G[2],2)}) cm${np.length?' : G est sur les éléments de symétrie.':'.'}${LAB.at==='O'&&Math.hypot(...G)>.05?' G n\'est pas en O : la matrice en G est différente (Huygens).':''}</p>
+ <h4>Pourquoi</h4><ul class="facts">${W.map(w=>`<li>${w}</li>`).join('')}</ul>${ex}`;
 }
+function drawLab(v){
+ v.axes(LAB.R*.95);
+ if($('lPl').checked){const S=LAB.R*.9;[['xy',[[-S,-S,0],[S,-S,0],[S,S,0],[-S,S,0]]],['xz',[[-S,0,-S],[S,0,-S],[S,0,S],[-S,0,S]]],['yz',[[0,-S,-S],[0,S,-S],[0,S,S],[0,-S,S]]]].forEach(([k,q])=>{if(LAB.sy.pl[k])v.pl(q,TH.ok,.13,TH.ok)})}
+ if($('lAx').checked&&LAB.sy.rev){const r=LAB.sy.rev,e=r==='x'?[1,0,0]:r==='y'?[0,1,0]:[0,0,1],L=LAB.R;v.ln(e.map(a=>-a*L),e.map(a=>a*L),TH.warn,2,1,[6,4])}
+ LAB.disp.forEach(q=>v.pt(q[0],q[1],q[2],TH.acc,2,.55));
+ v.pt(LAB.G[0],LAB.G[1],LAB.G[2],TH.d,5.5,1);v.tx([LAB.G[0],LAB.G[1],LAB.G[2]+LAB.R*.12],'G',TH.d);
+ v.pt(0,0,0,TH.ink,3.5,1);v.tx([-LAB.R*.1,-LAB.R*.1,-LAB.R*.1],'O',TH.ink)}
+new View($('cLab'),{R:12,h:340,draw:drawLab});
+$('lPl').onchange=$('lAx').onchange=()=>{};
+$('lAuto').onchange=e=>{views[0].auto=e.target.checked};
+$('lAt').onchange=e=>{LAB.at=e.target.value;labUpdate()};
 
-buildQuiz();
-drawAll();
+/* ---------- Animation : plan de symétrie ---------- */
+const PA={t:0,play:false,done:false,U:[],S:1};
+(function(){const s=SOL.find(x=>x.id==='L'),P=sample(s,{a:14,b:10,w:4,e:5}),idx=[];
+ for(let i=0;i<P.n;i++)if(P.Z[i]>0)idx.push(i);
+ const r=mulberry(11);for(let i=idx.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}
+ PA.U=idx.slice(0,380).map(i=>[P.X[i],P.Y[i],P.Z[i]]);
+ const f={A:0,B:0,C:0};PA.U.forEach(([x,y,z])=>{f.A+=y*y+z*z;f.B+=x*x+z*z;f.C+=x*x+y*y});PA.S=2*Math.max(f.A,f.B,f.C)})();
+const pNames=[['A','A'],['B','B'],['C','C'],['D','D'],['E','E'],['F','F']];
+$('pBars').innerHTML=pNames.map(([k])=>`<div class="b2"><span>${k}</span><div class="track"><div class="fill${'DEF'.includes(k)?' nz':''}" id="pf${k}"></div></div><span id="pv${k}">0,00</span></div>`).join('');
+{const f=formMatrix({planes:{xy:true}});$('pMat').innerHTML=matHTML(f.cells,f.zeros)}
+function addS(S,x,y,z,w){S.A+=w*(y*y+z*z);S.B+=w*(x*x+z*z);S.C+=w*(x*x+y*y);S.D+=w*y*z;S.E+=w*x*z;S.F+=w*x*y}
+function drawPlane(v){
+ const t=PA.t,U=PA.U,K=U.length,k1=Math.ceil(ease(clamp(t/.4))*K),S={A:0,B:0,C:0,D:0,E:0,F:0};let jm=-1,zm=0;
+ v.axes(18);const q=17;v.pl([[-q,-q,0],[q,-q,0],[q,q,0],[-q,q,0]],TH.ok,.12,TH.ok);v.tx([q,q,0],'(O,x,y)',TH.ok);
+ for(let j=0;j<K;j++){const [x,y,z]=U[j];
+  if(j<k1){addS(S,x,y,z,1);v.pt(x,y,z,TH.acc,2.4,.85)}
+  const sj=ease(clamp((t-.45-.35*j/K)/.15));
+  if(sj>0){const z2=z*(1-2*sj);addS(S,x,y,z2,sj);v.pt(x,y,z2,TH.i,2.4,.85);if(sj<1&&jm<0){jm=j;zm=z2}}}
+ if(jm<0)jm=t<.45?Math.max(0,k1-1):K-1;
+ const [mx,my,mz]=U[jm];v.pt(mx,my,mz,TH.acc,6,1);v.tx([mx,my,mz+2.5],'M',TH.acc);
+ if(t>.42){const z2=t>=.95?-mz:(zm||mz);v.pt(mx,my,z2,TH.i,6,1);v.ln([mx,my,mz],[mx,my,z2],TH.ink,1,.7,[4,3]);v.tx([mx,my,z2-2.5],"M'",TH.i)}
+ pNames.forEach(([k])=>{const val=S[k]/PA.S;$('pv'+k).textContent=fmt(val,2);const f=$('pf'+k),w=Math.min(1,Math.abs(val))*50;f.style.left=(val>=0?50:50-w)+'%';f.style.width=w+'%'});
+ [...$('pSteps').children].forEach((li,i)=>li.classList.toggle('on',i===(t<.42?0:t<.95?1:2)));
+ $('pMat').style.opacity=t>=.95?1:.3}
+function updPlane(dt){if(PA.play){PA.t=Math.min(1,PA.t+dt/18);$('pT').value=Math.round(PA.t*1000);
+  if(PA.t>=1){PA.play=false;$('pPlay').textContent='Lecture';if(!PA.done){PA.done=true;badge('plan','Plan de symétrie compris');addXP(15)}}}}
+const vPlan=new View($('cPlan'),{R:17,h:340,yaw:-.9,pitch:.55,draw:drawPlane,upd:updPlane});
+$('pPlay').onclick=()=>{if(PA.t>=1)PA.t=0;PA.play=!PA.play;$('pPlay').textContent=PA.play?'Pause':'Lecture'};
+$('pRe').onclick=()=>{PA.t=0;PA.play=true;$('pPlay').textContent='Pause'};
+$('pT').oninput=e=>{PA.t=e.target.value/1000;PA.play=false;$('pPlay').textContent='Lecture'};
 
-window.addEventListener("resize",drawAll);
+/* ---------- Animation : axe de symétrie ---------- */
+const BS={cyl:{s:SOL.find(x=>x.id==='cyl'),p:{R:5,h:8}},blk:{s:SOL.find(x=>x.id==='box'),p:{a:14,b:6,c:8}}};
+Object.values(BS).forEach(o=>{const P=sample(o.s,o.p),st=Math.max(1,Math.floor(P.n/1500));o.S=[];for(let i=0;i<P.n;i+=st)o.S.push([P.X[i],P.Y[i],P.Z[i]]);
+ const rmax=Math.max(...o.S.map(q=>Math.hypot(q[0],q[1])));
+ o.mk=o.S.map(([x,y])=>{const a=Math.atan2(y,x);return Math.hypot(x,y)>.5*rmax&&a>0&&a<.8});
+ const r=mulberry(5),cand=o.S.filter(q=>Math.hypot(q[0],q[1])>.45*rmax);o.T=[];for(let i=0;i<14;i++)o.T.push(cand[Math.floor(r()*cand.length)]);
+ const dm=M_TOT/o.S.length;o.ang=[];o.cur=[];
+ for(let a=0;a<=360;a+=4){const c=Math.cos(a*D2R),s=Math.sin(a*D2R);let A=0,B=0,F=0;o.S.forEach(([x,y,z])=>{const X=x*c-y*s,Y=x*s+y*c;A+=Y*Y+z*z;B+=X*X+z*z;F+=X*Y});o.ang.push(a);o.cur.push([A*dm,B*dm,F*dm])}
+ const all=o.cur.flat();o.lo=Math.min(0,...all);o.hi=Math.max(...all)});
+const PB={k:'cyl',th:0,psi:45,play:false};
+function chartB(o){const cv=$('cCur');if(!cv.clientWidth)return;const key=PB.k+Math.round(PB.th)+cv.clientWidth+JSON.stringify(TH);if(chartB.key===key)return;chartB.key=key;
+ const sp=(o.hi-o.lo)||1;
+ plot(cv,{h:200,x0:0,x1:360,y0:o.lo-.05*sp,y1:o.hi+.08*sp,s:[{x:o.ang,y:o.cur.map(c=>c[0]),c:TH.acc},{x:o.ang,y:o.cur.map(c=>c[1]),c:TH.i},{x:o.ang,y:o.cur.map(c=>c[2]),c:TH.d}],vl:[{x:PB.th,c:TH.ink,dash:[4,3]}]})}
+function drawAxe(v){
+ const o=BS[PB.k],th=PB.th*D2R,c=Math.cos(th),s=Math.sin(th),psi=PB.psi*D2R,n=[-Math.sin(psi),Math.cos(psi),0],u=[Math.cos(psi),Math.sin(psi),0];
+ v.axes(11);
+ const dm=M_TOT/o.S.length;let A=0,B=0,F=0,C=0;
+ o.S.forEach(([x,y,z],i)=>{const X=x*c-y*s,Y=x*s+y*c;A+=Y*Y+z*z;B+=X*X+z*z;F+=X*Y;C+=X*X+Y*Y;if(i%2===0)v.pt(X,Y,z,o.mk[i]?TH.i:TH.acc,o.mk[i]?2.6:2,o.mk[i]?.95:.5)});
+ A*=dm;B*=dm;F*=dm;C*=dm;
+ let pass=0;
+ o.T.forEach(([x,y,z])=>{const X=x*c-y*s,Y=x*s+y*c,d=X*n[0]+Y*n[1],X2=X-2*d*n[0],Y2=Y-2*d*n[1],inn=o.s.in(o.p,X2*c+Y2*s,-X2*s+Y2*c,z);if(inn)pass++;
+  v.pt(X,Y,z,TH.ink,3.5,1);v.pt(X2,Y2,z,inn?TH.ok:TH.bad,3.5,1);v.ln([X,Y,z],[X2,Y2,z],inn?TH.ok:TH.bad,1,.5)});
+ const sym=pass===o.T.length,H=6,Rr=11;
+ v.pl([[-u[0]*Rr,-u[1]*Rr,-H],[u[0]*Rr,u[1]*Rr,-H],[u[0]*Rr,u[1]*Rr,H],[-u[0]*Rr,-u[1]*Rr,H]],sym?TH.ok:TH.bad,.12,sym?TH.ok:TH.bad);
+ $('bVerdict').innerHTML=`Plan miroir ψ = ${PB.psi}° : ${pass}/${o.T.length} points ont leur symétrique dans le solide. <b>${sym?'C\'est un plan de symétrie.':'Ce n\'est pas un plan de symétrie.'}</b>`;
+ $('bPsiV').textContent=PB.psi+'°';
+ const num=[A,-F,0,-F,B,0,0,0,C].map((x,i)=>i===2||i===5||i===6||i===7?'0':fmt(x,1)),zr=[0,0,1,0,0,1,1,1,0].map(Boolean);
+ $('bMat').innerHTML=matHTML(num,zr);
+ $('bEq').textContent=Math.abs(A-B)<.01*Math.max(A,B)&&Math.abs(F)<.01*Math.max(A,B)?'A = B et F = 0 pour tout θ : la matrice est inchangée par rotation autour de z.':`A ≠ B et F ≠ 0 en général : la matrice dépend de θ (A−B = ${fmt(A-B,1)}).`;
+ chartB(o)}
+function updAxe(dt){if(PB.play){PB.th=(PB.th+dt*40)%360;$('bTh').value=Math.round(PB.th)}}
+const vAxe=new View($('cAxe'),{R:11,h:320,yaw:-.7,pitch:.6,draw:drawAxe,upd:updAxe});
+$('bTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('bTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));PB.k=b.dataset.k;chartB.key=''});
+$('bPlay').onclick=()=>{PB.play=!PB.play;$('bPlay').textContent=PB.play?'Pause':'Lecture'};
+$('bTh').oninput=e=>{PB.th=+e.target.value;PB.play=false;$('bPlay').textContent='Lecture'};
+$('bPsi').oninput=e=>{PB.psi=+e.target.value};
 
+/* ---------- Graphique 2D (courbes A, B, F) ---------- */
+function nice(r,n){const raw=r/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return(f<1.5?1:f<3.5?2:f<7.5?5:10)*p}
+function plot(cv,o){
+ const h=o.h||170,d=window.devicePixelRatio||1,w=cv.clientWidth||300;cv.style.height=h+'px';cv.width=Math.round(w*d);cv.height=Math.round(h*d);const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);
+ const L=46,R=8,T=8,B=20,pw=w-L-R,ph=h-T-B,X=x=>L+(x-o.x0)/(o.x1-o.x0)*pw,Y=y=>T+ph-(y-o.y0)/(o.y1-o.y0)*ph;
+ g.clearRect(0,0,w,h);g.font='11px "IBM Plex Mono",ui-monospace,monospace';g.lineWidth=1;
+ const st=nice(o.y1-o.y0,4),dec=Math.max(0,-Math.floor(Math.log10(st)));g.textAlign='right';g.textBaseline='middle';
+ for(let i=Math.ceil(o.y0/st-1e-9);i*st<=o.y1+1e-9;i++){const y=i*st,py=Y(y);g.strokeStyle=TH.line;g.beginPath();g.moveTo(L,py);g.lineTo(w-R,py);g.stroke();g.fillStyle=TH.mut;g.fillText(y.toFixed(dec),L-5,py)}
+ g.textAlign='center';g.textBaseline='top';
+ for(let v=0;v<=360;v+=90){const px=X(v);g.strokeStyle=TH.line;g.beginPath();g.moveTo(px,T);g.lineTo(px,T+ph);g.stroke();g.fillStyle=TH.mut;g.fillText(v+'°',px,T+ph+4)}
+ g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
+ (o.vl||[]).forEach(l=>{g.strokeStyle=l.c;g.setLineDash(l.dash||[]);g.beginPath();g.moveTo(X(l.x),T);g.lineTo(X(l.x),T+ph);g.stroke()});
+ o.s.forEach(s=>{g.strokeStyle=s.c;g.lineWidth=2;g.setLineDash([]);g.beginPath();s.y.forEach((v,i)=>{const px=X(s.x[i]),py=Y(v);i?g.lineTo(px,py):g.moveTo(px,py)});g.stroke()});
+ g.restore();g.strokeStyle=TH.line;g.lineWidth=1;g.strokeRect(L,T,pw,ph);
+ g.textAlign='left';g.textBaseline='top';[['A',TH.acc],['B',TH.i],['F',TH.d]].forEach(([l,c],i)=>{g.fillStyle=c;g.fillText(l,L+8+i*22,T+4)})}
+
+/* ---------- Assistant de forme ---------- */
+function wizard(){
+ const o={rev:$('wRev').value||null,thin:$('wThin').value||null,planes:{xy:$('wxy').checked,xz:$('wxz').checked,yz:$('wyz').checked}};
+ const f=formMatrix(o),W=[];
+ if(o.planes.xy)W.push('Plan (O,x,y) : E et D nuls (produits contenant z).');
+ if(o.planes.xz)W.push('Plan (O,x,z) : F et D nuls (produits contenant y).');
+ if(o.planes.yz)W.push('Plan (O,y,z) : F et E nuls (produits contenant x).');
+ if(o.rev)W.push(`Axe de révolution (O,${o.rev}) : tout plan contenant l'axe est plan de symétrie, donc matrice diagonale, avec ${({z:'A = B',x:'B = C',y:'A = C'})[o.rev]}.`);
+ if(o.thin)W.push(`Dimension négligeable suivant ${o.thin} : les deux produits contenant ${o.thin} sont nuls et ${({z:'C = A + B',x:'A = B + C',y:'B = A + C'})[o.thin]}.`);
+ const np=Object.values(o.planes).filter(Boolean).length;
+ if(np>=2&&!o.rev)W.push('Deux plans de symétrie : matrice diagonale.');
+ if(!W.length)W.push('Aucune particularité géométrique : la matrice est pleine.');
+ $('wMat').innerHTML=matHTML(f.cells,f.zeros);$('wWhy').innerHTML=W.map(w=>`<li>${w}</li>`).join('')}
+['wRev','wThin','wxy','wxz','wyz'].forEach(i=>$(i).onchange=wizard);wizard();
+
+/* ---------- Huygens généralisé ---------- */
+function huy(){
+ const m=+$('hm').value,Lx=+$('hLx').value,Ly=+$('hLy').value,Lz=+$('hLz').value,a=+$('ha').value,b=+$('hb').value,c=+$('hc').value;
+ if(!(m>0&&Lx>0&&Ly>0&&Lz>0)){$('hOut').innerHTML='Entre des valeurs positives.';return}
+ const IG=[m*(Ly*Ly+Lz*Lz)/12,0,0,0,m*(Lx*Lx+Lz*Lz)/12,0,0,0,m*(Lx*Lx+Ly*Ly)/12];
+ const T=[m*(b*b+c*c),-m*a*b,-m*a*c,-m*a*b,m*(a*a+c*c),-m*b*c,-m*a*c,-m*b*c,m*(a*a+b*b)];
+ const IA=IG.map((v,i)=>v+T[i]),r=v=>Math.abs(v)<1e-9?'0':fmt(v,1),z=v=>Math.abs(v)<1e-9;
+ $('hOut').innerHTML=`<div><h4>I<sub>G</sub></h4>${matHTML(IG.map(r),IG.map(z))}</div><div>+</div><div><h4>I<sub>A</sub>(m en G)</h4>${matHTML(T.map(r),T.map(z))}</div><div>=</div><div><h4>I<sub>A</sub></h4>${matHTML(IA.map(r),IA.map(z))}</div>
+ <p class="note" style="flex-basis:100%">Unités : kg·cm². Vérification sur un seul axe : I(A,x) = I(G,x) + m(b²+c²) = ${fmt(IG[0],1)} + ${fmt(m*(b*b+c*c),1)} = ${fmt(IA[0],1)}. Si AG a une composante sur plusieurs axes, des produits d'inertie apparaissent.</p>`}
+['hm','hLx','hLy','hLz','ha','hb','hc'].forEach(i=>$(i).addEventListener('input',huy));huy();
+
+/* ---------- Banque de questions ---------- */
+const Q=[
+ {q:'Quelle est l\'unité d\'un moment d\'inertie ?',o:['kg·m','kg·m²','N·m','kg·m⁻²'],a:1,e:'I = ∫ r² dm : une masse multipliée par une longueur au carré.'},
+ {q:'Un solide admet le plan de symétrie (O,x,y). Quels produits d\'inertie sont nuls ?',o:['D et E (ceux qui contiennent z)','F seulement','D, E et F','Aucun'],a:0,e:'À M(x, y, z) correspond M\'(x, y, −z) : les intégrales de xz et yz s\'annulent.'},
+ {q:'Un solide admet un plan de symétrie. L\'axe perpendiculaire à ce plan est…',o:['un axe quelconque','un axe principal d\'inertie','un axe de révolution','l\'axe des produits d\'inertie'],a:1,e:'La matrice est de la forme [[A, −F, 0], [−F, B, 0], [0, 0, C]] : l\'axe normal est principal.'},
+ {q:'Deux produits d\'inertie nuls impliquent-ils un plan de symétrie ?',o:['Oui, toujours','Non, la réciproque est fausse','Oui, si le troisième est nul','Seulement pour un cylindre'],a:1,e:'Le plan de symétrie implique la nullité, pas l\'inverse.'},
+ {q:'Deux plans de symétrie parmi les plans du repère : la matrice est…',o:['pleine','diagonale','antisymétrique','nulle'],a:1,e:'Chaque plan annule deux produits ; à deux plans, les trois produits sont nuls.'},
+ {q:'Axe de révolution (O,z) : que dire de A et B ?',o:['A = B','A = C','B = C','A = B = C'],a:0,e:'∫x² dm = ∫y² dm, donc A = ∫(y²+z²)dm = B = ∫(x²+z²)dm.'},
+ {q:'Pour un solide de révolution d\'axe z, la matrice dans la base obtenue par rotation autour de z…',o:['change','reste identique','devient pleine','devient nulle'],a:1,e:'Tout plan contenant l\'axe est un plan de symétrie : la forme [[A,0,0],[0,A,0],[0,0,C]] est invariante.'},
+ {q:'Solide d\'épaisseur négligeable suivant z : quelle relation ?',o:['C = A + B','C = A − B','A = B + C','C = 2A'],a:0,e:'∫(x²+y²)dm ≈ ∫x²dm + ∫y²dm quand z est négligeable. De plus D = E = 0.'},
+ {q:'Théorème de Huygens : I<sub>Δ</sub> = ?',o:['I<sub>ΔG</sub> + m d','I<sub>ΔG</sub> + m d²','I<sub>ΔG</sub> − m d²','m d²'],a:1,e:'d est la distance entre l\'axe Δ et l\'axe parallèle passant par G.'},
+ {q:'Parmi les axes parallèles d\'une direction donnée, le moment d\'inertie minimal est celui de l\'axe…',o:['le plus éloigné','passant par G','passant par O','perpendiculaire au sol'],a:1,e:'I<sub>Δ</sub> = I<sub>ΔG</sub> + m d² est minimal pour d = 0.'},
+ {q:'Où se situe le centre de gravité d\'un solide qui a un axe de symétrie ?',o:['Quelque part dans le solide','Sur cet axe','À l\'extérieur','Sur la surface'],a:1,e:'Le centre de gravité est toujours situé sur les éléments de symétrie.'},
+ {q:'Que caractérisent les produits d\'inertie ?',o:['La masse totale','Une asymétrie de la répartition de la masse','La vitesse de rotation','La position de G'],a:1,e:'Non nuls, ils créent des couples d\'axes différents de l\'axe de rotation : effets de balourd.'},
+ {q:'Cylindre plein de masse m, rayon R, hauteur h (axe z) : C = ?',o:['mR²/2','m(R²/4 + h²/12)','mR²/4','mh²/12'],a:0,e:'C est le moment par rapport à l\'axe du cylindre ; A = B = m(R²/4 + h²/12).'},
+ {q:'Parallélépipède a×b×c, centre G : A = ?',o:['m(b²+c²)/12','m(a²+b²)/12','m(a²+c²)/12','m abc/12'],a:0,e:'A est le moment par rapport à l\'axe (G,x) : il fait intervenir b et c.'},
+ {q:'Une matrice d\'inertie est symétrique. Conséquence ?',o:['Elle est diagonalisable : base principale','Elle est inversible','Tous ses termes sont positifs','Elle est de trace nulle'],a:0,e:'Il existe une base où elle est diagonale : A\', B\', C\' sont les moments principaux.'},
+ {q:'Changement de base d\'une matrice d\'inertie : I(b₂) = ?',o:['P⁻¹ · I(b₁) · P','P · I(b₁)','I(b₁) · P⁻¹','P² · I(b₁)'],a:0,e:'P est la matrice de passage de b₁ à b₂ (vecteurs de b₂ écrits dans b₁).'},
+ {q:'Avant d\'additionner deux matrices d\'inertie, il faut vérifier…',o:['qu\'elles sont dans la même base','qu\'elles ont le même déterminant','qu\'elles sont diagonales','que les masses sont égales'],a:0,e:'Il faut aussi qu\'elles soient exprimées au même point.'},
+ {q:'Pour déplacer la matrice d\'inertie d\'un point quelconque A à un autre point B, on utilise Huygens…',o:['une fois','deux fois, en passant par G','jamais','trois fois'],a:1,e:'Huygens relie G à un point : A → G → B.'},
+ {q:'D = ∫yz dm est le produit d\'inertie par rapport au plan…',o:['(Q,y,z)','(Q,x,y)','(Q,x,z)','(Q,x)'],a:0,e:'D correspond au plan (Q,y,z), E à (Q,x,z) et F à (Q,x,y).'}];
+function packQ(n){return shuffle(Q).slice(0,n).map(q=>({...q,opts:shuffle(q.o.map((t,i)=>({t,ok:i===q.a})))}))}
+(function(){const root=$('trTabs'),bs=root.querySelectorAll('button');bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tp').forEach(p=>p.hidden=p.id!==b.dataset.t)})})();
+
+/* ---------- Quiz libre ---------- */
+let qi=0,qs=0,ql=[];
+function qStart(){ql=packQ(10);qi=0;qs=0;qShow()}
+function qShow(){const box=$('quiz');
+ if(qi>=ql.length){const p=Math.round(100*qs/ql.length);box.innerHTML=`<h3>Score : ${qs}/${ql.length} (${p} %)</h3><p>${p>=80?'Très bien.':'Relis les explications puis recommence.'}</p><button type="button" class="btn" id="qr">Rejouer</button>`;$('qr').onclick=qStart;if(p>=80)badge('quiz','Quiz ≥ 80 %');return}
+ const q=ql[qi];box.innerHTML=`<p class="note">Question ${qi+1}/${ql.length} · score ${qs}</p><p><b>${q.q}</b></p><div class="opts"></div><div class="fb" hidden></div>`;
+ const o=box.querySelector('.opts'),fb=box.querySelector('.fb');
+ q.opts.forEach(op=>{const b=document.createElement('button');b.type='button';b.className='opt';b.innerHTML=op.t;
+  b.onclick=()=>{if(o.dataset.d)return;o.dataset.d=1;o.querySelectorAll('.opt').forEach((x,i)=>{if(q.opts[i].ok)x.classList.add('ok')});
+   if(op.ok){qs++;addXP(10)}else b.classList.add('ko');
+   fb.hidden=false;fb.innerHTML=`${op.ok?'Correct.':'Pas tout à fait.'} ${q.e}<br><br><button type="button" class="btn" id="qn">${qi+1<ql.length?'Suivante':'Voir le score'}</button>`;
+   $('qn').onclick=()=>{qi++;qShow()}};o.appendChild(b)})}
+
+/* ---------- Mode examen ---------- */
+const EX={n:10,secs:420};let ex=null;
+function mmss(s){s=Math.max(0,s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function exIntro(){if(ex&&ex.h)clearInterval(ex.h);ex=null;
+ $('exam').innerHTML=`<p>${EX.n} questions tirées au hasard dans une banque de ${Q.length}, ${EX.secs/60} minutes. Aucune correction avant la fin. Tu peux revenir sur une question et changer ta réponse.</p><p class="note">Chaque bonne réponse vaut 2 points (note sur 20). À 16/20 ou plus, tu gagnes un badge.</p><button type="button" class="btn" id="exGo">Lancer l'examen</button>`;
+ $('exGo').onclick=exStart}
+function exStart(){if(ex&&ex.h)clearInterval(ex.h);
+ ex={q:packQ(EX.n),ans:Array(EX.n).fill(-1),i:0,left:EX.secs,confirm:false,h:null};
+ ex.h=setInterval(()=>{ex.left--;const t=$('exT');if(t){t.textContent=mmss(ex.left);t.classList.toggle('low',ex.left<=60)}if(ex.left<=0)exEnd(true)},1000);exShow()}
+function exShow(){const q=ex.q[ex.i],box=$('exam'),done=ex.ans.filter(a=>a>=0).length;
+ box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span class="note">Question ${ex.i+1}/${EX.n} · ${done} répondue(s)</span><span class="timer${ex.left<=60?' low':''}" id="exT" aria-label="Temps restant">${mmss(ex.left)}</span></div>
+ <div class="exnav">${ex.q.map((_,k)=>`<button type="button" data-k="${k}" class="${ex.ans[k]>=0?'ans ':''}${k===ex.i?'cur':''}" aria-label="Question ${k+1}">${k+1}</button>`).join('')}</div>
+ <p><b>${q.q}</b></p><div class="opts">${q.opts.map((op,k)=>`<button type="button" class="opt${ex.ans[ex.i]===k?' sel':''}" data-o="${k}" aria-pressed="${ex.ans[ex.i]===k}">${op.t}</button>`).join('')}</div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn alt" id="exP"${ex.i===0?' disabled':''}>Précédente</button><button type="button" class="btn alt" id="exN"${ex.i===EX.n-1?' disabled':''}>Suivante</button><button type="button" class="btn" id="exF">Terminer</button></div>
+ ${ex.confirm?`<div class="fb"><b>${EX.n-done} question(s) sans réponse.</b> Terminer quand même ?<br><br><button type="button" class="btn" id="exY">Oui, terminer</button> <button type="button" class="btn alt" id="exC">Continuer</button></div>`:''}`;
+ box.querySelectorAll('.exnav button').forEach(b=>b.onclick=()=>{ex.i=+b.dataset.k;ex.confirm=false;exShow()});
+ box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ex.ans[ex.i]=+b.dataset.o;ex.confirm=false;exShow()});
+ $('exP').onclick=()=>{ex.i--;ex.confirm=false;exShow()};$('exN').onclick=()=>{ex.i++;ex.confirm=false;exShow()};
+ $('exF').onclick=()=>{if(ex.ans.every(a=>a>=0))exEnd(false);else{ex.confirm=true;exShow()}};
+ if(ex.confirm){$('exY').onclick=()=>exEnd(false);$('exC').onclick=()=>{ex.confirm=false;exShow()}}}
+function exEnd(timeout){clearInterval(ex.h);
+ const sc=ex.q.reduce((s,q,k)=>s+(ex.ans[k]>=0&&q.opts[ex.ans[k]].ok?1:0),0),note=sc*2,used=EX.secs-Math.max(0,ex.left);
+ addXP(sc*3,'Examen');if(note>=16)badge('exam','Examen ≥ 16/20');
+ $('exam').innerHTML=`<h3>Note : ${note}/20</h3><p>${timeout?'Temps écoulé. ':''}${sc}/${EX.n} bonnes réponses en ${mmss(used)}.</p>
+ ${ex.q.map((q,k)=>{const a=ex.ans[k],ok=a>=0&&q.opts[a].ok,good=q.opts.find(o=>o.ok).t;return`<div class="qrow ${ok?'ok':'ko'}"><div><b>${k+1}.</b> ${q.q}</div><div>Ta réponse : ${a>=0?q.opts[a].t:'<i>aucune</i>'}</div>${ok?'':`<div>Bonne réponse : ${good}</div>`}<div class="note">${q.e}</div></div>`}).join('')}
+ <button type="button" class="btn" id="exR">Refaire un examen</button>`;$('exR').onclick=exIntro}
+
+/* ---------- Quelle forme ? ---------- */
+const FRM={
+ pleine:{planes:{}},plan:{planes:{xy:true}},planxz:{planes:{xz:true}},diag:{planes:{xy:true,xz:true}},revz:{rev:'z'},mince:{planes:{},thin:'z'},disque:{rev:'z',thin:'z'}};
+const FQ=[
+ ['Parallélépipède homogène, repère centré en G, axes parallèles aux arêtes.','diag','Trois plans de symétrie : matrice diagonale, avec trois moments a priori différents.'],
+ ['Cylindre plein d\'axe (G,z), repère centré en G.','revz','Axe de révolution z : matrice diagonale avec A = B.'],
+ ['Plaque en L épaisse, symétrique par rapport au plan (O,x,y).','plan','Un seul plan (O,x,y) : D = E = 0, mais F n\'est pas nul.'],
+ ['Barre inclinée dans le plan (O,x,z), symétrique par rapport à ce plan.','planxz','Plan (O,x,z) : F = D = 0, E n\'est pas nul.'],
+ ['Plaque mince quelconque dans le plan (O,x,y), sans autre symétrie.','mince','Épaisseur négligeable suivant z : D = E = 0 et C = A + B.'],
+ ['Solide sans aucune particularité géométrique.','pleine','Aucun élément de symétrie : matrice pleine.'],
+ ['Disque mince d\'axe (O,z).','disque','Révolution (A = B) et épaisseur négligeable (C = A + B = 2A).']];
+let fi2=-1,fstreak=0;
+function fNext(){let n;do{n=Math.floor(Math.random()*FQ.length)}while(n===fi2);fi2=n;const it=FQ[n];
+ const ids=shuffle(Object.keys(FRM).filter(k=>k!==it[1])).slice(0,3).concat(it[1]),opts=shuffle(ids),box=$('form');
+ box.innerHTML=`<p class="note">Série : ${fstreak}</p><p><b>${it[0]}</b></p><div class="opts mats">${opts.map(k=>{const f=formMatrix(FRM[k]);return`<button type="button" class="opt" data-k="${k}">${matHTML(f.cells,f.zeros)}</button>`}).join('')}</div><div class="fb" hidden></div>`;
+ const bs=box.querySelectorAll('.opt'),fb=box.querySelector('.fb');let done=false;
+ bs.forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=b.dataset.k===it[1];bs.forEach(x=>{if(x.dataset.k===it[1])x.classList.add('ok')});
+  if(ok){fstreak++;addXP(8);if(fstreak>=4)badge('forme','Série de 4 formes')}else{b.classList.add('ko');fstreak=0}
+  fb.hidden=false;fb.innerHTML=`${ok?'Correct.':'Raté.'} ${it[2]}<br><br><button type="button" class="btn" id="fn">Suivant</button>`;$('fn').onclick=fNext})}
+
+/* ---------- Cartes mémoire ---------- */
+const FC=[
+ ['Moment d\'inertie par rapport à un axe','I<sub>Δ</sub> = ∫ r² dm (kg·m²)'],
+ ['Termes A, B, C','A = ∫(y²+z²)dm · B = ∫(x²+z²)dm · C = ∫(x²+y²)dm'],
+ ['Termes D, E, F','D = ∫yz dm · E = ∫xz dm · F = ∫xy dm (produits d\'inertie)'],
+ ['Matrice d\'inertie','[[A, −F, −E], [−F, B, −D], [−E, −D, C]], symétrique'],
+ ['Un plan de symétrie (O,x,y)','D = E = 0 · l\'axe z est principal · la réciproque est fausse'],
+ ['Deux plans de symétrie','Matrice diagonale · le repère est principal'],
+ ['Axe de révolution (O,z)','Diagonale, A = B · inchangée par rotation autour de z'],
+ ['Épaisseur négligeable suivant z','D = E = 0 et C = A + B'],
+ ['Huygens (axe)','I<sub>Δ</sub> = I<sub>ΔG</sub> + m d²'],
+ ['Huygens généralisé','I<sub>A</sub> = I<sub>G</sub> + m·[[b²+c², −ab, −ac], [−ab, a²+c², −bc], [−ac, −bc, a²+b²]]'],
+ ['Changement de base','I(b₂) = P⁻¹ · I(b₁) · P'],
+ ['Parallélépipède a×b×c','A = m(b²+c²)/12 · B = m(a²+c²)/12 · C = m(a²+b²)/12'],
+ ['Cylindre plein (axe z)','A = B = m(R²/4 + h²/12) · C = mR²/2'],
+ ['Centre de gravité','Toujours sur les éléments de symétrie du solide']];
+let fl=FC.slice(),fci=0,fb=false;
+function fcShow(){const c=$('fc');c.className='card fc'+(fb?' back':'');c.innerHTML=fb?fl[fci][1]:`<b>${fl[fci][0]}</b>`;$('fcN').textContent=`${fci+1}/${fl.length}`}
+const fcFlip=()=>{fb=!fb;fcShow()};
+$('fc').onclick=fcFlip;$('fc').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fcFlip()}};
+$('fcP').onclick=()=>{fci=(fci-1+fl.length)%fl.length;fb=false;fcShow()};
+$('fcNx').onclick=()=>{fci=(fci+1)%fl.length;fb=false;fcShow()};
+$('fcS').onclick=()=>{fl=shuffle(FC);fci=0;fb=false;fcShow()};
+
+/* ---------- Mémo, init ---------- */
+$('copyMemo').onclick=async()=>{const txt=$('memoTxt').innerText;let ok=false;
+ try{await navigator.clipboard.writeText(txt);ok=true}catch(e){try{const r=document.createRange();r.selectNodeContents($('memoTxt'));const s=getSelection();s.removeAllRanges();s.addRange(r)}catch(_){}}
+ $('copyMsg').textContent=ok?'Fiche copiée.':'Copie bloquée ici : le texte est sélectionné, utilise Ctrl+C.'};
+labSliders();labUpdate();qStart();exIntro();fNext();fcShow();
+if(!RM){PA.play=true;$('pPlay').textContent='Pause';PB.play=true;$('bPlay').textContent='Pause'}
+requestAnimationFrame(loop);
+new MutationObserver(readTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(window.matchMedia)matchMedia('(prefers-color-scheme:dark)').addEventListener('change',readTheme);
 </script>
 
 </body>
