@@ -42,8 +42,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Outil | Description |
 |---|---|
-| [Caractériser les masses des solides en mouvement](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Manipuler les notions de masse, centre de gravité, moment d'inertie, théorème de Huygens et matrice d'inertie. La page propose des visualisations interactives, des paramètres à modifier et un quiz pour vérifier les notions essentielles. |
-
+| [Matrices d'inertie et symétries](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Comprendre comment la matrice d'inertie se simplifie selon la géométrie du solide. Laboratoire 3D de solides orientables (dimensions réglables, détection des plans et axes de symétrie, valeurs numériques en O ou en G), animations du plan de symétrie (annulation des produits d'inertie D et E) et de l'axe de révolution (A = B, matrice invariante par rotation), assistant de forme, calculateur de Huygens généralisé, quiz, mode examen, cartes mémoire et fiche mémo. Thème clair ou sombre. |
 
 ## Statique, frottement et dynamique
 
