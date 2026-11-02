@@ -86,6 +86,14 @@ select{width:auto;max-width:100%}
 .mat .z{background:var(--ok-soft);color:var(--ok)}
 .mat .nz{background:var(--accent-soft)}
 .mat.cl span{cursor:pointer}
+.leg{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:.85rem;color:var(--mut)}
+.leg li{display:flex;gap:8px;align-items:flex-start}
+.leg i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px}
+.leg i+i{margin-left:-4px}
+.leg i.pl{border-radius:2px;width:14px;background:var(--ok-soft);border:1px solid var(--ok)}
+.mw{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mw .ml{font:500 1rem var(--f-mono)}
+.mw .mb{font:500 .85rem var(--f-mono);align-self:flex-end;margin-bottom:-4px}
 .mat span.sel{outline:2px solid var(--accent)}
 .bars{display:grid;gap:6px;margin:8px 0}
 .b2{display:grid;grid-template-columns:22px minmax(0,1fr) 52px;gap:8px;align-items:center;font:.85rem var(--f-mono)}
@@ -190,7 +198,14 @@ select{width:auto;max-width:100%}
     <div class="ctl"><button type="button" class="btn" id="bPlay">Lecture</button>
      <label>θ <input type="range" id="bTh" min="0" max="360" value="0" aria-label="Angle de rotation du solide"></label></div>
     <div class="ctl"><label>Plan miroir ψ <input type="range" id="bPsi" min="0" max="180" value="45" aria-label="Angle du plan miroir"></label><span id="bPsiV" class="note"></span></div>
-    <div class="out" id="bVerdict"></div></div>
+    <div class="out" id="bVerdict"></div>
+    <ul class="leg" aria-label="Légende">
+     <li><i style="background:var(--accent)"></i>Éléments de masse du solide</li>
+     <li><i style="background:var(--tr-i)"></i>Secteur de repère : ce sont des éléments de masse comme les autres, colorés pour suivre la rotation du solide</li>
+     <li><i style="background:var(--ink)"></i>Points tests M, choisis au hasard dans le solide</li>
+     <li><i style="background:var(--ok)"></i><i style="background:var(--bad)"></i>Symétrique M' de M par le plan miroir : vert s'il est dans le solide, rouge sinon</li>
+     <li><i class="pl"></i>Plan miroir ψ, vert si c'est un plan de symétrie, rouge sinon</li>
+    </ul></div>
    <div><h4>A, B et F selon l'angle θ (kg·cm²)</h4><canvas id="cCur"></canvas>
     <h4>Matrice dans le repère fixe</h4><div id="bMat"></div><p class="note" id="bEq"></p></div>
   </div>
@@ -390,7 +405,7 @@ function loop(ts){const dt=Math.min(.05,(ts-lastTs)/1000||0);lastTs=ts;
 const DEFS=[['A','A = ∫(y²+z²) dm','Moment d\'inertie par rapport à l\'axe (Q,x).'],['F','F = ∫xy dm','Produit d\'inertie par rapport au plan (Q,x,y). Apparaît avec le signe moins.'],['E','E = ∫xz dm','Produit d\'inertie par rapport au plan (Q,x,z).'],
  ['F','F = ∫xy dm','Même terme : la matrice est symétrique.'],['B','B = ∫(x²+z²) dm','Moment d\'inertie par rapport à l\'axe (Q,y).'],['D','D = ∫yz dm','Produit d\'inertie par rapport au plan (Q,y,z).'],
  ['E','E = ∫xz dm','Même terme : la matrice est symétrique.'],['D','D = ∫yz dm','Même terme : la matrice est symétrique.'],['C','C = ∫(x²+y²) dm','Moment d\'inertie par rapport à l\'axe (Q,z).']];
-function mxShow(sel){$('exMat').innerHTML=matHTML(['A','−F','−E','−F','B','−D','−E','−D','C'],null,'cl',sel);
+function mxShow(sel){$('exMat').innerHTML='<div class="mw"><span class="ml">I(S,Q) =</span>'+matHTML(['A','−F','−E','−F','B','−D','−E','−D','C'],null,'cl',sel)+'<sub class="mb">(x, y, z)</sub></div>';
  $('exMat').querySelectorAll('span').forEach(s=>s.onclick=()=>{const i=+s.dataset.i;mxShow(i);const d=DEFS[i];
   $('exDef').innerHTML=`<b>${d[1]}</b><br>${d[2]}${'ABC'.includes(d[0])?'<br>Toujours positif : plus la matière est éloignée de l\'axe, plus il est grand.':'<br>Il peut être nul ou non. Nul si la répartition est symétrique par rapport à ce plan de coordonnées.'}`})}
 mxShow(-1);
