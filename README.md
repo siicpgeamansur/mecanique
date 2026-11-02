@@ -43,13 +43,13 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Outil | Description |
 |---|---|
-| [Matrices d'inertie et symétries](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Comprendre comment la matrice d'inertie se simplifie selon la géométrie du solide. Laboratoire 3D de solides orientables (dimensions réglables, détection des plans et axes de symétrie, valeurs numériques en O ou en G), animations du plan de symétrie (annulation des produits d'inertie D et E) et de l'axe de révolution (A = B, matrice invariante par rotation), assistant de forme, calculateur de Huygens généralisé, quiz, mode examen, cartes mémoire et fiche mémo. Thème clair ou sombre. |
+| [Matrices d'inertie et symétries](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Comprendre comment la matrice d'inertie se simplifie selon la géométrie du solide.|
 
 ## Énergie cinétique et TEC
 
 | Outil | Description |
 |---|---|
-| [TEC](https://siicpgeamansur.github.io/mecanique/TECl.html) | Choisir le point où écrire le théorème de l'énergie cinétique. |
+| [TEC](https://siicpgeamansur.github.io/mecanique/TEC.html) | Choisir le point où écrire le théorème de l'énergie cinétique. |
 
 ## Statique, frottement et dynamique
 
