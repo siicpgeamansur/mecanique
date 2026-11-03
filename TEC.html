@@ -1,23 +1,16 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>TEC en G ou en M</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
 <style>
-/* Layout : barre d'onglets, puis une zone de dessin (canvas) à gauche et un panneau de réglages à droite, style GeoGebra. */
+/* Layout : barre d'onglets, puis une zone de dessin (canvas) à gauche et un panneau de réglages à droite. */
 :root{
-  --bg:#f3f4f9; --panel:#ffffff; --ink:#23243a; --muted:#6a6d86; --line:#dcdeea;
-  --accent:#6557d2; --accent-soft:#e8e5fb; --gcol:#0e8f84; --mcol:#d9731a;
-  --good:#1b8a4b; --bad:#c23b3b; --canvas:#fbfbfe; --grid:#e6e8f2;
+  --bg:#e9f1fb; --panel:#ffffff; --ink:#0b2545; --muted:#4a6285; --line:#b9cde6;
+  --accent:#0b5fd0; --accent-soft:#d6e6fb; --gcol:#00899c; --mcol:#e08a00;
+  --good:#0b8a4a; --bad:#c8362b; --canvas:#f4f8fe; --grid:#cfdcee;
   --font:'Source Sans 3','Segoe UI',system-ui,sans-serif; --mono:'Source Code Pro',ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#14151f; --panel:#1d1f2e; --ink:#e8e9f5; --muted:#9a9db8; --line:#33364d;
-  --accent:#a79bff; --accent-soft:#2c2956; --gcol:#3fd0c3; --mcol:#ffa14d;
-  --good:#52d08a; --bad:#ff7b7b; --canvas:#181a28; --grid:#2a2d42; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#14151f; --panel:#1d1f2e; --ink:#e8e9f5; --muted:#9a9db8; --line:#33364d;
-  --accent:#a79bff; --accent-soft:#2c2956; --gcol:#3fd0c3; --mcol:#ffa14d;
-  --good:#52d08a; --bad:#ff7b7b; --canvas:#181a28; --grid:#2a2d42; color-scheme:dark}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;margin:0;
   padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -182,8 +175,10 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
     <div class="ctrl"><label for="rr">Rayon du rotor r</label><output id="orr"></output><input type="range" id="rr" min="0.02" max="0.25" step="0.005" value="0.10"></div>
     <div class="ctrl"><label for="mR">Masse m₂</label><output id="omR"></output><input type="range" id="mR" min="0.5" max="10" step="0.1" value="3"></div>
     <div class="ctrl"><label for="kR">Inertie C₂ = k·m₂r²</label><output id="okR"></output><input type="range" id="kR" min="0.2" max="1.5" step="0.05" value="0.5"></div>
+    <div class="ctrl"><label for="vR">Vitesse de lecture</label><output id="ovR"></output><input type="range" id="vR" min="0.1" max="1" step="0.05" value="0.4"></div>
     <div class="ctrl"><label for="thR">Angle initial θ₀</label><output id="othR"></output><input type="range" id="thR" min="2" max="80" step="1" value="12"></div>
     <label class="chk"><input type="checkbox" id="vecR" checked> Montrer Ω et V<sub>G</sub></label>
+    <label class="chk"><input type="checkbox" id="alR" checked> Montrer l'angle α (entre x<sub>i</sub> et x₂)</label>
     <label class="chk"><input type="checkbox" id="cirR" checked> Montrer le point M (vitesse nulle)</label>
     <div class="read">
       <div><span>J<sub>eq</sub></span><b id="rJ"></b></div>
@@ -191,6 +186,8 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
       <div><span>T mesurée</span><b id="rTm"></b></div>
       <div><span>dE<sub>c</sub>/dt</span><b id="rdE"></b></div>
       <div><span>P<sub>ext</sub></span><b id="rP"></b></div>
+      <div><span>θ</span><b id="rTh"></b></div>
+      <div><span>α = −(R/r)·θ</span><b id="rAl"></b></div>
     </div>
     <p class="note">k = 0,5 pour un disque plein, k = 1 pour un anneau. Avec θ₀ grand, la période mesurée s'écarte de T : la linéarisation n'est plus valable.</p>
   </div>
@@ -361,9 +358,21 @@ function drawR(){
   c.fillStyle=css("--accent")+"22";c.strokeStyle=css("--accent");c.lineWidth=2.5;
   c.beginPath();c.arc(X(gx),Y(gy),p.r*sc,0,7);c.fill();c.stroke();
   // rayons marqueurs
-  for(let i=0;i<3;i++){const a=phi+i*2*Math.PI/3+Math.PI/2;c.lineWidth=i?1.5:3;
+  for(let i=0;i<3;i++){const a=phi+i*2*Math.PI/3;c.lineWidth=i?1.5:3;
     c.beginPath();c.moveTo(X(gx),Y(gy));c.lineTo(X(gx+p.r*Math.cos(a)),Y(gy+p.r*Math.sin(a)));c.stroke()}
-  dot(c,X(gx),Y(gy),css("--gcol"),"G");
+  if($("alR").checked){
+    const al=phi-th,rg=p.r*sc,gX=X(gx),gY=Y(gy),col=css("--accent");
+    c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1.3;
+    c.beginPath();c.moveTo(gX,gY);c.lineTo(gX+1.45*rg*Math.cos(th),gY-1.45*rg*Math.sin(th));c.stroke();c.setLineDash([]);
+    c.fillStyle=css("--muted");c.font="600 13px "+css("--font");
+    c.fillText("xi",gX+1.45*rg*Math.cos(th)+4,gY-1.45*rg*Math.sin(th)-4);
+    c.strokeStyle=col;c.lineWidth=1.3;c.beginPath();c.moveTo(gX+rg*Math.cos(phi),gY-rg*Math.sin(phi));c.lineTo(gX+1.45*rg*Math.cos(phi),gY-1.45*rg*Math.sin(phi));c.stroke();
+    c.fillStyle=col;c.fillText("x2",gX+1.45*rg*Math.cos(phi)+4,gY-1.45*rg*Math.sin(phi)-4);
+    c.lineWidth=2.4;c.beginPath();c.arc(gX,gY,0.72*rg,-th,-phi,al>0);c.stroke();
+    const mid=th+al/2;c.font="700 18px "+css("--font");
+    if(Math.abs(al)>0.02)c.fillText("α",gX+0.88*rg*Math.cos(mid)-6,gY-0.88*rg*Math.sin(mid)+6);
+  }
+  dot(c,X(gx),Y(gy),css("--gcol"),"G",-18,20);
   dot(c,X(0),Y(0),css("--ink"),"C",8,-8);
   if($("cirR").checked)dot(c,X(mx),Y(my),css("--mcol"),"M = CIR",8,18);
   if($("vecR").checked){
@@ -379,6 +388,7 @@ function drawR(){
   const Ec=0.5*q.Jm*S.w*S.w,Ep=p.m*g*q.d*(1-Math.cos(th)),Ep0=p.m*g*q.d*(1-Math.cos(p.th0));
   setBar("barsR",0,Ec,Math.max(Ep0,1e-9),"J");setBar("barsR",1,Ep,Math.max(Ep0,1e-9),"J");setBar("barsR",2,Ec+Ep,Math.max(Ep0,1e-9),"J");
   const P_ext=-p.m*g*q.d*S.w*Math.sin(th),dEc=q.Jm*S.w*accR(th,q);
+  $("rTh").textContent=fmt(th*180/Math.PI,1)+" °";$("rAl").textContent=fmt(-(p.R/p.r)*th*180/Math.PI,1)+" °";
   $("rJ").textContent=fmt(q.Jm,4)+" kg·m²";$("rT0").textContent=fmt(q.T0,3)+" s";
   $("rdE").textContent=fmt(dEc,3)+" W";$("rP").textContent=fmt(P_ext,3)+" W";
 }
@@ -415,7 +425,7 @@ function onRotorParams(){
 mkBars("barsR",[["E<sub>c</sub>","var(--gcol)"],["E<sub>p</sub>","var(--mcol)"],["E<sub>m</sub>","var(--accent)"]]);
 bindRange("Rr",onRotorParams,"m",2);bindRange("rr",onRotorParams,"m",3);bindRange("mR",onRotorParams,"kg",1);
 bindRange("kR",onRotorParams,"",2);bindRange("thR",onRotorParams,"°",0);
-$("vecR").onchange=$("cirR").onchange=drawR;
+$("vecR").onchange=$("cirR").onchange=$("alR").onchange=drawR;bindRange("vR",()=>{},"×",2);
 $("playR").onclick=()=>{S.run=!S.run;$("playR").textContent=S.run?"Pause":"Lecture"};
 $("resetR").onclick=()=>{resetR();drawR()};
 $("mG").onclick=()=>{S.method="G";$("mG").setAttribute("aria-pressed","true");$("mM").setAttribute("aria-pressed","false");renderStepsR()};
@@ -558,7 +568,7 @@ let last=performance.now();
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   if(!$("p0").hidden){
-    if(T.S.run){const q=T.rotorQ(),n=10;for(let i=0;i<n;i++)T.stepR(dt/n,q)}
+    if(T.S.run){const q=T.rotorQ(),n=10,ds=dt*(+$("vR").value);for(let i=0;i<n;i++)T.stepR(ds/n,q)}
     T.drawR();
   }else if(!$("p1").hidden){
     if(B.run){
@@ -601,5 +611,3 @@ $("goR").onclick=()=>T.showTab(0);$("goB").onclick=()=>T.showTab(1);
 upd();
 })();
 </script>
-
-</body></html>
