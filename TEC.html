@@ -1,16 +1,16 @@
-<title>TEC en G ou en M</title>
+<title>TEC</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
 <style>
-/* Layout : barre d'onglets, puis une zone de dessin (canvas) à gauche et un panneau de réglages à droite. */
+/* Layout : barre d'onglets, puis une zone de dessin (canvas) à gauche et un panneau de réglages à droite, style GeoGebra. */
 :root{
   --bg:#e9f1fb; --panel:#ffffff; --ink:#0b2545; --muted:#4a6285; --line:#b9cde6;
   --accent:#0b5fd0; --accent-soft:#d6e6fb; --gcol:#00899c; --mcol:#e08a00;
-  --good:#0b8a4a; --bad:#c8362b; --canvas:#f4f8fe; --grid:#cfdcee;
+  --good:#0b8a4a; --bad:#c8362b; --canvas:#f4f8fe; --grid:#cfdcee; --wcol:#8a3fd1; --acol:#178a3b;
   --font:'Source Sans 3','Segoe UI',system-ui,sans-serif; --mono:'Source Code Pro',ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;color-scheme:dark}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;--wcol:#c792ff;--acol:#4ade80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;--wcol:#c792ff;--acol:#4ade80;color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;margin:0;
   padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -60,6 +60,19 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
 .bar i{display:block;height:10px;border-radius:5px;background:var(--accent);width:0;transition:width .05s}
 .bar .trk{background:var(--bg);border-radius:5px;height:10px;overflow:hidden}
 .bar code{font-family:var(--mono);text-align:right}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
+.plots canvas{height:175px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:16px;padding:3px 12px 3px 8px;font-size:.95rem;cursor:pointer;background:var(--bg)}
+.chip i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.chip b{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--muted)}
+.chip input{accent-color:var(--accent);margin:0}
+.tplot{height:215px;margin-top:8px}
+.tors{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:10px}
+.tbox{background:var(--bg);border-radius:8px;padding:6px 10px;min-width:0;overflow-x:auto;border-left:4px solid var(--line)}
+.gbox{border-left-color:var(--gcol)}.mbox{border-left-color:var(--mcol)}
+.tbox .cap{font-size:.78rem;color:var(--muted)}
+.tbox mjx-container{margin:2px 0!important;font-size:92%!important}
 .note{font-size:.9rem;color:var(--muted)}
 .q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:var(--panel)}
 .q p{margin:0 0 8px;font-weight:600}
@@ -72,7 +85,7 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
 
 <div class="wrap">
 <header>
-  <h1>TEC en G ou en M<small>Rotor sur plaques circulaires et roue de vélo : choisir le point où l'on écrit le théorème de l'énergie cinétique</small></h1>
+  <h1>TEC<small>Rotor sur plaques circulaires et roue de vélo : choisir le point où l'on écrit le théorème de l'énergie cinétique</small></h1>
   <button class="btn" id="themeBtn" type="button">Thème clair / sombre</button>
 </header>
 
@@ -163,7 +176,9 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
  <div class="grid">
   <div class="card">
     <canvas id="cvR" aria-label="Rotor roulant sans glisser dans une plaque circulaire"></canvas>
-    <div class="bars" id="barsR"></div>
+    <div class="chips" id="chR" role="group" aria-label="Grandeurs affichées"></div>
+    <canvas id="cvPt" class="tplot" aria-label="Alpha, Omega et V_G en fonction du temps sur une période"></canvas>
+    <div class="tors"><div class="tbox gbox" id="torG"></div><div class="tbox mbox" id="torM"></div></div>
     <div class="row">
       <button class="btn primary" id="playR" type="button">Pause</button>
       <button class="btn" id="resetR" type="button">Relâcher à θ₀</button>
@@ -208,7 +223,10 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
  <div class="grid">
   <div class="card">
     <canvas id="cvB" aria-label="Roue de vélo descendant une pente en roulant sans glisser"></canvas>
-    <div class="bars" id="barsB"></div>
+    <div class="chips" id="chB" role="group" aria-label="Grandeurs affichées"></div>
+    <canvas id="cvTB" class="tplot" aria-label="Angle, vitesse angulaire et vitesse de G en fonction du temps"></canvas>
+    <div class="tors"><div class="tbox gbox" id="torBG"></div><div class="tbox mbox" id="torBI"></div></div>
+    <p class="note" id="bAxes" style="margin:6px 0 0"></p>
     <div class="row">
       <button class="btn primary" id="playB" type="button">Pause</button>
       <button class="btn" id="resetB" type="button">Relancer</button>
@@ -253,6 +271,8 @@ canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px
   <p class="score" id="qScore" aria-live="polite"></p>
 </section>
 </div>
+<script>window.MathJax={options:{enableMenu:false,enableAssistiveMml:false},svg:{fontCache:"none"},startup:{typeset:false}};</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -286,13 +306,35 @@ function setup(cv){
   const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);
   c.clearRect(0,0,w,h);return {c,w,h};
 }
-function arrow(c,x0,y0,x1,y1,col,lab){
-  const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy);if(L<3)return;
-  const ux=dx/L,uy=dy/L;
-  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=2.2;
-  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
-  c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-9*ux+4.5*uy,y1-9*uy-4.5*ux);c.lineTo(x1-9*ux-4.5*uy,y1-9*uy+4.5*ux);c.closePath();c.fill();
+function arrow(c,x0,y0,x1,y1,col,lab,lw){
+  lw=lw||2.2;const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy);if(L<3)return;
+  const ux=dx/L,uy=dy/L,hl=Math.min(L*0.6,lw*4.2),hw=lw*2.1;
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap="round";
+  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1-ux*hl*0.8,y1-uy*hl*0.8);c.stroke();
+  c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-hl*ux+hw*uy,y1-hl*uy-hw*ux);c.lineTo(x1-hl*ux-hw*uy,y1-hl*uy+hw*ux);c.closePath();c.fill();
   if(lab){c.font="600 13px "+css("--font");c.fillText(lab,x1+6,y1-6)}
+}
+function sub(c,x,y,main,s,col,size){
+  size=size||16;c.fillStyle=col;c.font="700 "+size+"px "+css("--font");c.fillText(main,x,y);
+  const w=c.measureText(main).width;c.font="700 "+Math.round(size*0.68)+"px "+css("--font");c.fillText(s,x+w+1,y+size*0.3);
+  return x+w+1+c.measureText(s).width;
+}
+function arcArrow(c,cx,cy,rad,a0,da,col){
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=3.4;c.lineCap="round";
+  c.beginPath();c.arc(cx,cy,rad,-a0,-(a0+da),da>0);c.stroke();
+  const a1=a0+da,s=da>0?1:-1,ex=cx+rad*Math.cos(a1),ey=cy-rad*Math.sin(a1);
+  const tx=-s*Math.sin(a1),ty=-s*Math.cos(a1),nx=-ty,ny=tx;
+  c.beginPath();c.moveTo(ex+11*tx,ey+11*ty);c.lineTo(ex+6*nx,ey+6*ny);c.lineTo(ex-6*nx,ey-6*ny);c.closePath();c.fill();
+  return [cx+(rad+15)*Math.cos(a1),cy-(rad+15)*Math.sin(a1)];
+}
+function scaleBar(c,w,h,sc){
+  const steps=[.005,.01,.02,.05,.1,.2,.5,1,2,5];let L=steps[0];
+  for(const s of steps)if(s*sc<=w*0.22)L=s;
+  const px=L*sc,x=16,y=h-14;
+  c.strokeStyle=css("--ink");c.fillStyle=css("--ink");c.lineWidth=2;c.lineCap="butt";
+  c.beginPath();c.moveTo(x,y);c.lineTo(x+px,y);c.moveTo(x,y-5);c.lineTo(x,y+5);c.moveTo(x+px,y-5);c.lineTo(x+px,y+5);c.stroke();
+  c.font="600 12px "+css("--font");c.textAlign="center";
+  c.fillText(L>=1?L+" m":String(Math.round(L*1000)/10).replace(".",",")+" cm",x+px/2,y-8);c.textAlign="left";
 }
 function dot(c,x,y,col,lab,dx=8,dy=-8){
   c.fillStyle=col;c.beginPath();c.arc(x,y,4.5,0,7);c.fill();
@@ -332,65 +374,130 @@ function stepR(dt,q){
   if(S.prev<0&&S.th>=0){S.cross.push(S.t);if(S.cross.length>=2){const n=S.cross.length;$("rTm").textContent=fmt(S.cross[n-1]-S.cross[n-2],3)+" s"}}
   S.prev=S.th;
 }
+function Kell(k){let a=1,b=Math.sqrt(1-k*k);for(let i=0;i<30;i++){const t=(a+b)/2;b=Math.sqrt(a*b);a=t}return Math.PI/(2*a)}
+function mkChips(id,list){
+  $(id).innerHTML=list.map(x=>`<label class="chip"><input type="checkbox" id="${id}_${x.key}" checked><i style="background:var(${x.col})"></i><span>${x.html}</span><b id="${id}v_${x.key}"></b></label>`).join("");
+}
+function plotTime(cv,Tt,ser,tcur,xlabel){
+  const {c,w,h}=setup(cv),pl=50,pr=12,pt0=30,pb=28;
+  const on=ser.filter(s=>s.on),norm=on.length!==1;
+  if(!on.length){c.fillStyle=css("--muted");c.font="14px "+css("--font");c.textAlign="center";c.fillText("Coche au moins une grandeur",w/2,h/2);c.textAlign="left";return}
+  let lo=0,hi=0;
+  on.forEach(s=>{const k=norm?1/s.max:1;s.v.forEach(y=>{const z=y*k;if(z<lo)lo=z;if(z>hi)hi=z})});
+  const lo0=lo,hi0=hi,pad=0.12*(hi-lo||1);lo-=pad;hi+=pad;
+  const X=t=>pl+t/Tt*(w-pl-pr),Y=y=>pt0+(hi-y)/(hi-lo)*(h-pt0-pb);
+  c.lineWidth=1;c.strokeStyle=css("--line");c.strokeRect(pl,pt0,w-pl-pr,h-pt0-pb);
+  c.strokeStyle=css("--muted");c.beginPath();c.moveTo(pl,Y(0));c.lineTo(w-pr,Y(0));c.stroke();
+  c.fillStyle=css("--muted");c.font="11px "+css("--mono");
+  c.textAlign="center";[0,0.5,1].forEach(u=>{c.beginPath();c.moveTo(X(u*Tt),h-pb);c.lineTo(X(u*Tt),h-pb+4);c.stroke();c.fillText(fmt(u*Tt,2),X(u*Tt),h-pb+16)});
+  c.textAlign="center";c.fillText(xlabel||"t (s)",X(0.75*Tt),h-pb+16);
+  const lab=v=>v===0?"0":norm?String(Math.round(v*100)/100).replace("-","−").replace(".",","):fmt(v,Math.abs(v)<10?2:0);
+  [lo0,0,hi0].filter((v,i,a)=>a.indexOf(v)===i).forEach(v=>c.fillText(lab(v),pl-5,Y(v)+4));
+  c.textAlign="left";
+  if(norm){c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("Grandeurs divisées par leur valeur maximale (la valeur réelle est dans les pastilles)",8,17)}
+  else{const s=on[0],e=sub(c,8,19,s.name,s.sub||"",css("--ink"),15);c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("("+s.unit+")",e+5,19)}
+  on.forEach(s=>{const k=norm?1/s.max:1,n=s.v.length-1;
+    c.strokeStyle=css(s.col);c.lineWidth=2.6;c.lineJoin="round";c.beginPath();
+    s.v.forEach((y,i)=>{const x=X(i/n*Tt);i?c.lineTo(x,Y(y*k)):c.moveTo(x,Y(y*k))});c.stroke()});
+  c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1;c.beginPath();c.moveTo(X(tcur),pt0);c.lineTo(X(tcur),h-pb);c.stroke();c.setLineDash([]);
+  on.forEach(s=>{const k=norm?1/s.max:1;
+    c.fillStyle=css(s.col);c.strokeStyle=css("--panel");c.lineWidth=2;c.beginPath();c.arc(X(tcur),Y(s.cur*k),6.5,0,7);c.fill();c.stroke()});
+}
+const SR={T:1,ser:[]};
+function buildR(){
+  const q=rotorQ(),p=q.p,ck=1-p.R/p.r,N=240;
+  SR.T=q.T0*(2/Math.PI)*Kell(Math.sin(p.th0/2));
+  let th=p.th0,w=0;const dt=SR.T/N,A=[],O=[],V=[];
+  const acc=x=>-p.m*g*q.d*Math.sin(x)/q.Jm;
+  for(let i=0;i<=N;i++){
+    A.push(-(p.R/p.r)*th*180/Math.PI);O.push(ck*w);V.push(q.d*w);
+    const k1=[w,acc(th)],k2=[w+dt/2*k1[1],acc(th+dt/2*k1[0])],k3=[w+dt/2*k2[1],acc(th+dt/2*k2[0])],k4=[w+dt*k3[1],acc(th+dt*k3[0])];
+    th+=dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);w+=dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
+  }
+  const mx=a=>Math.max(1e-9,...a.map(Math.abs));
+  SR.ser=[{key:"a",v:A,max:mx(A),col:"--acol",name:"α",sub:"",unit:"°"},
+          {key:"o",v:O,max:mx(O),col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
+          {key:"v",v:V,max:mx(V),col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
+}
+function drawPlotR(q,th){
+  const p=q.p,ck=1-p.R/p.r;
+  const cur={a:-(p.R/p.r)*th*180/Math.PI,o:ck*S.w,v:q.d*S.w},u={a:" °",o:" rad/s",v:" m/s"};
+  SR.ser.forEach(s=>{s.on=$("chR_"+s.key).checked;s.cur=cur[s.key];$("chRv_"+s.key).textContent=fmt(cur[s.key],s.key==="a"?1:3)+u[s.key]});
+  plotTime($("cvPt"),SR.T,SR.ser,S.t%SR.T);
+}
 function drawR(){
   if($("p0").hidden)return;
-  const q=rotorQ(),{p}=q,{c,w,h}=setup($("cvR"));
+  const q=rotorQ(),p=q.p,{c,w,h}=setup($("cvR"));
   const sc=Math.min(w*0.9/(2*p.R),h*0.86/(1.15*p.R));
-  const ox=w/2,oy=h*0.07+0.0;
-  const X=x=>ox+x*sc,Y=y=>oy+(-y)*sc;       // C à l'origine, y vers le haut
-  const th=S.th,phi=(1-p.R/p.r)*th;
-  // repère et grille légère
-  c.strokeStyle=css("--grid");c.lineWidth=1;
-  for(let i=-5;i<=5;i++){c.beginPath();c.moveTo(X(i*p.R/5),0);c.lineTo(X(i*p.R/5),h);c.stroke()}
-  // plaque
+  const ox=w/2,oy=h*0.07;
+  const X=x=>ox+x*sc,Y=y=>oy-y*sc;
+  const th=S.th,phi=(1-p.R/p.r)*th,al=phi-th;
   c.strokeStyle=css("--muted");c.lineWidth=5;c.beginPath();c.arc(X(0),Y(0),p.R*sc,0.05,Math.PI-0.05);c.stroke();
-  // verticale + rayon CG
-  const gx=(p.R-p.r)*Math.sin(th),gy=-(p.R-p.r)*Math.cos(th);
-  const mx=p.R*Math.sin(th),my=-p.R*Math.cos(th);
+  const gx=(p.R-p.r)*Math.sin(th),gy=-(p.R-p.r)*Math.cos(th),mx=p.R*Math.sin(th),my=-p.R*Math.cos(th);
   c.setLineDash([5,5]);c.strokeStyle=css("--muted");c.lineWidth=1;
   c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(0),Y(-p.R));c.stroke();
   c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(mx),Y(my));c.stroke();c.setLineDash([]);
-  // arc θ
   c.strokeStyle=css("--accent");c.lineWidth=2;
   c.beginPath();c.arc(X(0),Y(0),0.3*p.R*sc,Math.PI/2,Math.PI/2-th,th>0);c.stroke();
-  c.fillStyle=css("--accent");c.font="600 14px "+css("--font");c.fillText("θ",X(0)+(th>=0?8:-20),Y(-0.36*p.R));
-  // rotor
+  c.fillStyle=css("--accent");c.font="700 15px "+css("--font");c.fillText("θ",X(0)+(th>=0?8:-20),Y(-0.36*p.R));
   c.fillStyle=css("--accent")+"22";c.strokeStyle=css("--accent");c.lineWidth=2.5;
   c.beginPath();c.arc(X(gx),Y(gy),p.r*sc,0,7);c.fill();c.stroke();
-  // rayons marqueurs
   for(let i=0;i<3;i++){const a=phi+i*2*Math.PI/3;c.lineWidth=i?1.5:3;
     c.beginPath();c.moveTo(X(gx),Y(gy));c.lineTo(X(gx+p.r*Math.cos(a)),Y(gy+p.r*Math.sin(a)));c.stroke()}
+  const gX=X(gx),gY=Y(gy),rg=p.r*sc;
   if($("alR").checked){
-    const al=phi-th,rg=p.r*sc,gX=X(gx),gY=Y(gy),col=css("--accent");
+    const col=css("--acol");
     c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1.3;
-    c.beginPath();c.moveTo(gX,gY);c.lineTo(gX+1.45*rg*Math.cos(th),gY-1.45*rg*Math.sin(th));c.stroke();c.setLineDash([]);
-    c.fillStyle=css("--muted");c.font="600 13px "+css("--font");
-    c.fillText("xi",gX+1.45*rg*Math.cos(th)+4,gY-1.45*rg*Math.sin(th)-4);
-    c.strokeStyle=col;c.lineWidth=1.3;c.beginPath();c.moveTo(gX+rg*Math.cos(phi),gY-rg*Math.sin(phi));c.lineTo(gX+1.45*rg*Math.cos(phi),gY-1.45*rg*Math.sin(phi));c.stroke();
-    c.fillStyle=col;c.fillText("x2",gX+1.45*rg*Math.cos(phi)+4,gY-1.45*rg*Math.sin(phi)-4);
-    c.lineWidth=2.4;c.beginPath();c.arc(gX,gY,0.72*rg,-th,-phi,al>0);c.stroke();
-    const mid=th+al/2;c.font="700 18px "+css("--font");
-    if(Math.abs(al)>0.02)c.fillText("α",gX+0.88*rg*Math.cos(mid)-6,gY-0.88*rg*Math.sin(mid)+6);
+    c.beginPath();c.moveTo(gX-1.45*rg*Math.cos(th),gY+1.45*rg*Math.sin(th));c.lineTo(gX+1.45*rg*Math.cos(th),gY-1.45*rg*Math.sin(th));c.stroke();c.setLineDash([]);
+    sub(c,gX-1.45*rg*Math.cos(th)-16,gY+1.45*rg*Math.sin(th)+16,"x","i",css("--muted"),14);
+    c.strokeStyle=css("--accent");c.lineWidth=1.3;c.beginPath();c.moveTo(gX+rg*Math.cos(phi),gY-rg*Math.sin(phi));c.lineTo(gX+1.45*rg*Math.cos(phi),gY-1.45*rg*Math.sin(phi));c.stroke();
+    sub(c,gX+1.45*rg*Math.cos(phi)+4,gY-1.45*rg*Math.sin(phi)-4,"x","2",css("--accent"),14);
+    c.strokeStyle=col;c.lineWidth=2.6;c.beginPath();c.arc(gX,gY,0.8*rg,-th,-phi,al>0);c.stroke();
+    const mid=th+al/2;
+    if(Math.abs(al)>0.02){c.fillStyle=col;c.font="700 19px "+css("--font");c.fillText("α",gX+1.12*rg*Math.cos(mid)-6,gY-1.12*rg*Math.sin(mid)+6)}
   }
-  dot(c,X(gx),Y(gy),css("--gcol"),"G",-18,20);
+  dot(c,gX,gY,css("--gcol"),"G",-18,20);
   dot(c,X(0),Y(0),css("--ink"),"C",8,-8);
-  if($("cirR").checked)dot(c,X(mx),Y(my),css("--mcol"),"M = CIR",8,18);
+  if($("cirR").checked){dot(c,X(mx),Y(my),css("--mcol"),null);
+    c.fillStyle=css("--mcol");c.font="700 14px "+css("--font");c.textAlign="center";
+    c.fillText("M = CIR",X(mx)+30*Math.sin(th),Y(my)+30*Math.cos(th)+4);c.textAlign="left"}
   if($("vecR").checked){
-    const vG=(p.R-p.r)*S.w,L=Math.max(-1,Math.min(1,vG*0.6))*0.5*p.R*sc;
-    arrow(c,X(gx),Y(gy),X(gx)+Math.cos(th)*L,Y(gy)-Math.sin(th)*L,css("--gcol"),"VG");
-    const om=(1-p.R/p.r)*S.w;
-    c.strokeStyle=css("--accent");c.lineWidth=2;c.beginPath();
-    const ang=Math.max(-1,Math.min(1,om*0.12))*2.2;
-    c.arc(X(gx),Y(gy),p.r*sc*0.45,-phi-0.5,-phi-0.5-ang,ang>0);c.stroke();
-    c.fillStyle=css("--accent");c.fillText("Ω",X(gx)-6,Y(gy)+p.r*sc*0.45+16);
+    const wm=Math.sqrt(2*p.m*g*q.d*(1-Math.cos(p.th0))/q.Jm)||1e-9;
+    const vmax=q.d*wm,Lmax=Math.min(2.4*rg,0.55*p.R*sc),L=q.d*S.w/vmax*Lmax;
+    const ex=gX+Math.cos(th)*L,ey=gY-Math.sin(th)*L;
+    if(Math.abs(L)>5){arrow(c,gX,gY,ex,ey,css("--gcol"),null,5);
+      sub(c,ex+(L>0?10:-34),ey-12,"V","G",css("--gcol"),20)}
+    const ck=1-p.R/p.r,Om=ck*S.w,Omax=Math.abs(ck)*wm,da=Math.max(-1,Math.min(1,Om/Omax))*4.3;
+    if(Math.abs(da)>0.15){
+      const e=arcArrow(c,gX,gY,0.5*rg,1.2*Math.PI,da,css("--wcol"));
+      c.fillStyle=css("--wcol");c.font="700 21px "+css("--font");c.fillText("Ω",e[0]-8,e[1]+7);
+    }
   }
-  // lecture
-  const Ec=0.5*q.Jm*S.w*S.w,Ep=p.m*g*q.d*(1-Math.cos(th)),Ep0=p.m*g*q.d*(1-Math.cos(p.th0));
-  setBar("barsR",0,Ec,Math.max(Ep0,1e-9),"J");setBar("barsR",1,Ep,Math.max(Ep0,1e-9),"J");setBar("barsR",2,Ec+Ep,Math.max(Ep0,1e-9),"J");
+  scaleBar(c,w,h,sc);
   const P_ext=-p.m*g*q.d*S.w*Math.sin(th),dEc=q.Jm*S.w*accR(th,q);
   $("rTh").textContent=fmt(th*180/Math.PI,1)+" °";$("rAl").textContent=fmt(-(p.R/p.r)*th*180/Math.PI,1)+" °";
   $("rJ").textContent=fmt(q.Jm,4)+" kg·m²";$("rT0").textContent=fmt(q.T0,3)+" s";
   $("rdE").textContent=fmt(dEc,3)+" W";$("rP").textContent=fmt(P_ext,3)+" W";
+  drawPlotR(q,th);
+}
+const tx=(x,d)=>fmt(x,d).replace(",","{,}");
+function typeset(items){
+  const MJ=window.MathJax;
+  if(MJ&&MJ.typesetPromise&&MJ.startup&&MJ.startup.promise){
+    items.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div>\\['+i.tex+'\\]'});
+    const els=items.map(i=>i.el);try{MJ.typesetClear(els)}catch(e){}
+    MJ.startup.promise.then(()=>MJ.typesetPromise(els)).catch(()=>{});return true}
+  items.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div><div class="eq">'+i.fb+'</div>'});return false;
+}
+let tries=0;
+function renderTors(){
+  const q=rotorQ(),p=q.p,ck=1-p.R/p.r;
+  const tg=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{G,2/1}=(R-r)\,\dot\theta\,\vec x_i=${tx(q.d,2)}\,\dot\theta\,\vec x_i\end{array}\right\}_{G}`;
+  const tm=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{M,2/1}=\vec 0\end{array}\right\}_{M}`;
+  const ok=typeset([
+    {el:$("torG"),cap:"Torseur cinématique de 2/1 en G",tex:tg,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>G</sub> = "+fmt(q.d,2)+" θ̇ x<sub>i</sub> }<sub>G</sub>"},
+    {el:$("torM"),cap:"Torseur cinématique de 2/1 en M",tex:tm,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>M</sub> = 0 }<sub>M</sub>"}]);
+  if(!ok&&tries++<40)setTimeout(renderTors,500);
 }
 function renderStepsR(){
   const q=rotorQ(),{p}=q,ck=(1-p.R/p.r);
@@ -420,9 +527,10 @@ function onRotorParams(){
   const R=+$("Rr").value;$("rr").max=(R*0.9).toFixed(3);
   if(+$("rr").value>R*0.9)$("rr").value=R*0.9;
   $("orr").textContent=fmt(+$("rr").value,3)+" m";
-  resetR();renderStepsR();drawR();
+  resetR();buildR();renderStepsR();renderTors();drawR();
 }
-mkBars("barsR",[["E<sub>c</sub>","var(--gcol)"],["E<sub>p</sub>","var(--mcol)"],["E<sub>m</sub>","var(--accent)"]]);
+
+mkChips("chR",[{key:"a",col:"--acol",html:"α"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
 bindRange("Rr",onRotorParams,"m",2);bindRange("rr",onRotorParams,"m",3);bindRange("mR",onRotorParams,"kg",1);
 bindRange("kR",onRotorParams,"",2);bindRange("thR",onRotorParams,"°",0);
 $("vecR").onchange=$("cirR").onchange=$("alR").onchange=drawR;bindRange("vR",()=>{},"×",2);
@@ -430,7 +538,7 @@ $("playR").onclick=()=>{S.run=!S.run;$("playR").textContent=S.run?"Pause":"Lectu
 $("resetR").onclick=()=>{resetR();drawR()};
 $("mG").onclick=()=>{S.method="G";$("mG").setAttribute("aria-pressed","true");$("mM").setAttribute("aria-pressed","false");renderStepsR()};
 $("mM").onclick=()=>{S.method="M";$("mM").setAttribute("aria-pressed","true");$("mG").setAttribute("aria-pressed","false");renderStepsR()};
-window.__tec={$,css,fmt,setup,arrow,dot,mkBars,setBar,bindRange,g,drawR,resetR,stepR,rotorQ,S,onRotorParams,showTab};
+window.__tec={typeset,plotTime,mkChips,sub,arcArrow,scaleBar,$,css,fmt,setup,arrow,dot,mkBars,setBar,bindRange,g,drawR,resetR,stepR,rotorQ,S,onRotorParams,showTab};
 })();
 (function(){
 "use strict";
@@ -445,42 +553,71 @@ function bq(){
   const k=C/(m*rr*rr),a=g*Math.sin(beta)/(1+k);
   return {beta,r:rr,m,C,k,a,f:k*m*a,mu:k*Math.tan(beta)/(1+k),tf:Math.sqrt(2*B.L/a),mj,ms,mh};
 }
+const SB={ser:[],T:1};
+function buildB(){
+  const q=bq(),N=120,P=[],O=[],V=[];
+  for(let i=0;i<=N;i++){const t=q.tf*i/N;P.push(-q.a*t*t/(2*q.r));O.push(-q.a*t/q.r);V.push(q.a*t)}
+  SB.T=q.tf;
+  SB.ser=[{key:"p",v:P,max:Math.abs(P[N])||1e-9,col:"--acol",name:"ψ",sub:"",unit:"rad"},
+          {key:"o",v:O,max:Math.abs(O[N])||1e-9,col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
+          {key:"v",v:V,max:V[N]||1e-9,col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
+}
 function drawB(){
   if($("p1").hidden)return;
-  const q=bq(),{c,w,h}=T.setup($("cvB")),vit=+$("vb").value;
-  const t=Math.min(B.t,q.tf),s=0.5*q.a*t*t,v=q.a*t,om=v/q.r;
-  const sc=Math.min(0.84*w/(B.L*Math.cos(q.beta)+2*q.r),0.62*h/(B.L*Math.sin(q.beta)+2*q.r));
-  const x0=(w-B.L*Math.cos(q.beta)*sc)/2,y0=(h-B.L*Math.sin(q.beta)*sc)/2-q.r*sc*0.1;
+  const q=bq(),{c,w,h}=T.setup($("cvB"));
+  const t=Math.min(B.t,q.tf),s=0.5*q.a*t*t,v=q.a*t;
+  const sc=Math.min((w-90)/(B.L*Math.cos(q.beta)+4.3*q.r),0.62*h/(B.L*Math.sin(q.beta)+2*q.r));
+  const x0=30+1.1*q.r*sc,y0=(h-B.L*Math.sin(q.beta)*sc)/2-q.r*sc*0.1;
+  const cb=Math.cos(q.beta),sb=Math.sin(q.beta),Pt=(x,y)=>[x0+x*cb-y*sb,y0+x*sb+y*cb];
+  const R=q.r*sc,gx=s*sc,gy=-R,vmax=q.a*q.tf;
+  const gcol=css("--gcol"),wcol=css("--wcol");
   c.save();c.translate(x0,y0);c.rotate(q.beta);
-  // sol
-  c.fillStyle=css("--grid");c.fillRect(-0.5*q.r*sc,0,(B.L+q.r)*sc,14);
-  c.strokeStyle=css("--muted");c.lineWidth=3;c.beginPath();c.moveTo(-0.5*q.r*sc,0);c.lineTo((B.L+q.r)*sc,0);c.stroke();
+  c.fillStyle=css("--grid");c.fillRect(-0.5*R,0,B.L*sc+R,14);
+  c.strokeStyle=css("--muted");c.lineWidth=3;c.beginPath();c.moveTo(-0.5*R,0);c.lineTo(B.L*sc+R,0);c.stroke();
   for(let d=0;d<=B.L;d+=0.5){c.lineWidth=1;c.beginPath();c.moveTo(d*sc,0);c.lineTo(d*sc,8);c.stroke()}
-  // bloc fantôme sous la pente
-  if($("ghB").checked){
-    const sb=Math.min(0.5*g*Math.sin(q.beta)*t*t,B.L);
-    c.fillStyle=css("--muted");c.fillRect(sb*sc-7,16,14,10);c.font="12px "+css("--font");c.fillText("bloc sans frottement",sb*sc-50,44);
-  }
-  // roue
-  const gx=s*sc,gy=-q.r*sc,R=q.r*sc;
+  let sbk=0;
+  if($("ghB").checked){sbk=Math.min(0.5*g*Math.sin(q.beta)*t*t,B.L);c.fillStyle=css("--muted");c.fillRect(sbk*sc-7,16,14,10)}
   c.strokeStyle=css("--accent");c.lineWidth=Math.max(3,R*0.09);c.beginPath();c.arc(gx,gy,R,0,7);c.stroke();
-  c.lineWidth=1.2;
-  for(let i=0;i<16;i++){const a=om*0+s/q.r+i*Math.PI/8;c.strokeStyle=i===0?css("--mcol"):css("--accent");c.lineWidth=i===0?2.5:1;
+  for(let i=0;i<16;i++){const a=s/q.r+i*Math.PI/8;c.strokeStyle=i===0?css("--mcol"):css("--accent");c.lineWidth=i===0?2.5:1;
     c.beginPath();c.moveTo(gx,gy);c.lineTo(gx+R*Math.cos(a),gy+R*Math.sin(a));c.stroke()}
   c.fillStyle=css("--panel");c.strokeStyle=css("--accent");c.lineWidth=2;c.beginPath();c.arc(gx,gy,R*0.1,0,7);c.fill();c.stroke();
-  T.dot(c,gx,gy,css("--gcol"),"G",10,-10);
-  T.dot(c,gx,0,css("--mcol"),"I (V = 0)",8,28);
-  // vecteurs
-  const Lv=Math.min(1,v/6)*1.0*R;
-  T.arrow(c,gx,gy-R*1.25,gx+Math.max(8,Lv*1.4),gy-R*1.25,css("--gcol"),"VG");
-  if($("fcB").checked)T.arrow(c,gx,-2,gx-Math.min(1.2*R,q.f/(q.m*g)*R*5),-2,css("--bad"),"f");
+  T.dot(c,gx,gy,gcol,null);T.dot(c,gx,0,css("--mcol"),null);
+  const L=v/vmax*2.2*R;
+  if(L>5)T.arrow(c,gx,gy,gx+L,gy,gcol,null,5);
+  let om=null;
+  const da=-(v/vmax)*4.3;
+  if(Math.abs(da)>0.15)om=T.arcArrow(c,gx,gy,0.5*R,Math.PI*0.9,da,wcol);
+  let fl=0;
+  if($("fcB").checked){fl=Math.min(1.4*R,q.f/(q.m*g)*R*6);if(fl>4)T.arrow(c,gx,-3,gx-fl,-3,css("--bad"),null,3)}
   c.restore();
-  // barres
-  const Ep0=q.m*g*B.L*Math.sin(q.beta),Ec=0.5*(q.m+q.C/(q.r*q.r))*v*v;
-  T.setBar("barsB",0,Ec,Ep0,"J");T.setBar("barsB",1,Ep0-q.m*g*s*Math.sin(q.beta),Ep0,"J");T.setBar("barsB",2,Ec+Ep0-q.m*g*s*Math.sin(q.beta),Ep0,"J");
+  // étiquettes dans le repère de l'écran
+  c.textAlign="left";
+  let p1=Pt(gx,gy);c.fillStyle=gcol;c.font="700 14px "+css("--font");c.fillText("G",p1[0]-18,p1[1]+20);
+  p1=Pt(gx,0);c.fillStyle=css("--mcol");c.fillText("I (V = 0)",p1[0]-24,p1[1]+30);
+  if(L>5){p1=Pt(gx+L+10,gy);T.sub(c,p1[0],p1[1]-8,"V","G",gcol,20)}
+  if(om){p1=Pt(om[0],om[1]);c.fillStyle=wcol;c.font="700 21px "+css("--font");c.fillText("Ω",p1[0]-8,p1[1]+7)}
+  if(fl>4){p1=Pt(gx-fl-14,-8);c.fillStyle=css("--bad");c.font="700 15px "+css("--font");c.fillText("f",p1[0],p1[1])}
+  if($("ghB").checked){p1=Pt(sbk*sc,16);c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("bloc sans frottement",p1[0]-48,p1[1]+30)}
+  T.scaleBar(c,w,h,sc);
+  // graphe temporel
+  const cur={p:-s/q.r,o:-v/q.r,v:v},u={p:" rad",o:" rad/s",v:" m/s"};
+  SB.ser.forEach(e=>{e.on=$("chB_"+e.key).checked;e.cur=cur[e.key];$("chBv_"+e.key).textContent=fmt(cur[e.key],2)+u[e.key]});
+  T.plotTime($("cvTB"),SB.T,SB.ser,t);
   $("bC").textContent=fmt(q.C,4)+" kg·m²";$("bk").textContent=fmt(q.k,3);
   $("ba").textContent=fmt(q.a,3)+" m/s²";$("bf").textContent=fmt(q.f,2)+" N";$("bmu").textContent=fmt(q.mu,3);
   $("bv").textContent=fmt(v,2)+" m/s";
+}
+let btries=0;
+function renderTorsB(){
+  const q=bq(),k=1/q.r,tk=T.fmt(k,2).replace(",","{,}");
+  const tg=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{G,2/0}=\dot s\,\vec x_0\end{array}\right\}_{G}`;
+  const ti=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{I,2/0}=\vec 0\end{array}\right\}_{I}`;
+  const cap="x₀ le long de la pente vers le bas, z₀ = x₀ ∧ y₀ sortant de l'écran";
+  const ok=T.typeset([
+    {el:$("torBG"),cap:"Torseur cinématique de 2/0 en G",tex:tg,fb:"{V₂/₀} = { Ω = −"+T.fmt(k,2)+" ṡ z₀ ; V<sub>G</sub> = ṡ x₀ }<sub>G</sub>"},
+    {el:$("torBI"),cap:"Torseur cinématique de 2/0 en I",tex:ti,fb:"{V₂/₀} = { Ω = −"+T.fmt(k,2)+" ṡ z₀ ; V<sub>I</sub> = 0 }<sub>I</sub>"}]);
+  if(!ok&&btries++<40)setTimeout(renderTorsB,500);
+  $("bAxes").textContent=cap;
 }
 function stepsB(){
   const q=bq(),s=Math.sin(q.beta);
@@ -503,8 +640,8 @@ function stepsB(){
    Le frottement f = ${fmt(q.f,2)} N est non nul mais ne travaille pas. Il faut μ ≥ ${fmt(q.mu,3)} pour rouler sans glisser.`;
 }
 function resetB(){B.t=0;B.hold=0}
-function onB(){resetB();stepsB();drawB()}
-T.mkBars("barsB",[["E<sub>c</sub>","var(--gcol)"],["E<sub>p</sub>","var(--mcol)"],["E<sub>m</sub>","var(--accent)"]]);
+function onB(){resetB();buildB();stepsB();renderTorsB();drawB()}
+T.mkChips("chB",[{key:"p",col:"--acol",html:"ψ"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
 T.bindRange("bb",onB,"°",0);T.bindRange("rb",onB,"m",2);T.bindRange("mj",onB,"kg",2);T.bindRange("ms",onB,"kg",2);T.bindRange("mh",onB,"kg",2);
 T.bindRange("vb",()=>{},"×",2);
 $("ghB").onchange=$("fcB").onchange=drawB;
@@ -580,7 +717,7 @@ function frame(now){
   }
   requestAnimationFrame(frame);
 }
-T.onRotorParams();stepsB();
+T.onRotorParams();buildB();stepsB();renderTorsB();
 const hmap={rotor:0,velo:1,quiz:2,cours:3},hh=location.hash.slice(1);
 if(hh in hmap)T.showTab(hmap[hh]);
 window.addEventListener("hashchange",()=>{const k=location.hash.slice(1);if(k in hmap)T.showTab(hmap[k])});
