@@ -1,6 +1,6 @@
 # Mécanique – Simulateurs interactifs pour les Sciences de l'Ingénieur
 
-Collection d'interfaces web interactives pour visualiser et comprendre les notions de **mécanique** abordées en classes préparatoires (CPGE – SII) : cinématique, torseurs, liaisons, dynamique et statique.
+Collection d'interfaces web interactives pour visualiser et comprendre les notions de **mécanique** abordées en classes préparatoires (CPGE – SII) : cinématique, torseurs, liaisons, dynamique, statique et dimensionnement des actionneurs.
 
 Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
@@ -14,6 +14,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 - [Cinétique et inertie](#cinétique-et-inertie)
 - [Énergie cinétique et TEC](#énergie-cinétique-et-tec)
 - [Statique, frottement et dynamique](#statique-frottement-et-dynamique)
+- [Actionneurs et dimensionnement](#actionneurs-et-dimensionnement)
 - [Utilisation en local](#utilisation-en-local)
 - [Contribuer](#contribuer)
 
@@ -43,7 +44,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Outil | Description |
 |---|---|
-| [Matrices d'inertie et symétries](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Comprendre comment la matrice d'inertie se simplifie selon la géométrie du solide.|
+| [Matrices d'inertie et symétries](https://siicpgeamansur.github.io/mecanique/cinetique.html) | Comprendre comment la matrice d'inertie se simplifie selon la géométrie du solide. |
 
 ## Énergie cinétique et TEC
 
@@ -57,6 +58,12 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 |---|---|
 | [Arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html) | Visualiser le phénomène d'arc-boutement. |
 | [Équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html) | Visualiser l'équilibrage dynamique d'un rotor. |
+
+## Actionneurs et dimensionnement
+
+| Outil | Description |
+|---|---|
+| [Trapèze de vitesse](https://siicpgeamansur.github.io/mecanique/trapeze_vitesse.html) | Commande en trapèze de vitesse d'un actionneur et dimensionnement du moteur sur l'exemple d'un palan (moteur, réducteur à deux étages, tambour, charge). Animation du cycle, couple statique de maintien, couple dynamique en accélération, inertie équivalente, et vérification du moteur (couple de pic, couple efficace, vitesse, accélération maximale admissible). |
 
 ---
 
