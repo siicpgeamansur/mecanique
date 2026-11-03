@@ -63,7 +63,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | Outil | Description |
 |---|---|
-| [Trapèze de vitesse](https://siicpgeamansur.github.io/mecanique/trapeze_vitesse.html) | Commande en trapèze de vitesse d'un actionneur et dimensionnement du moteur sur l'exemple d'un palan (moteur, réducteur à deux étages, tambour, charge). Animation du cycle, couple statique de maintien, couple dynamique en accélération, inertie équivalente, et vérification du moteur (couple de pic, couple efficace, vitesse, accélération maximale admissible). |
+| [Trapèze de vitesse](https://siicpgeamansur.github.io/mecanique/trapeze_de_vitesse.html) | Commande en trapèze de vitesse d'un actionneur et dimensionnement du moteur sur l'exemple d'un palan (moteur, réducteur à deux étages, tambour, charge). Animation du cycle, couple statique de maintien, couple dynamique en accélération, inertie équivalente, et vérification du moteur (couple de pic, couple efficace, vitesse, accélération maximale admissible). |
 
 ---
 
