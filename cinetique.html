@@ -1,750 +1,693 @@
-<title>TEC</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<title>Matrices d'inertie</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout : barre d'onglets, puis une zone de dessin (canvas) à gauche et un panneau de réglages à droite, style GeoGebra. */
+/* Mise en page : bandeau collant, sections en colonne, scènes 3D en canvas 2D (aucune bibliothèque).
+   Couleurs : papier gris-vert, trace principale turquoise, orange pour les symétriques, violet pour les termes dérivés. */
 :root{
-  --bg:#e9f1fb; --panel:#ffffff; --ink:#0b2545; --muted:#4a6285; --line:#b9cde6;
-  --accent:#0b5fd0; --accent-soft:#d6e6fb; --gcol:#00899c; --mcol:#e08a00;
-  --good:#0b8a4a; --bad:#c8362b; --canvas:#f4f8fe; --grid:#cfdcee; --wcol:#8a3fd1; --acol:#178a3b;
-  --font:'Source Sans 3','Segoe UI',system-ui,sans-serif; --mono:'Source Code Pro',ui-monospace,Menlo,monospace;
+ --bg:#f2f5f4;--surface:#ffffff;--ink:#14201e;--mut:#566663;--line:#d5dfdc;
+ --accent:#0a6d73;--accent-soft:#dcefef;--on-accent:#ffffff;
+ --ok:#1a7f4b;--ok-soft:#dff3e8;--bad:#bf3b3b;--bad-soft:#f9e3e1;--warn:#9a6700;--warn-soft:#f7ecd0;
+ --tr-i:#b36b00;--tr-d:#8a3fb5;
+ --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+ --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+ --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;--wcol:#c792ff;--acol:#4ade80;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;--wcol:#c792ff;--acol:#4ade80;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#0e1615;--surface:#152120;--ink:#e4eeec;--mut:#96aaa6;--line:#273a38;
+ --accent:#4fd0c8;--accent-soft:#15302f;--on-accent:#06201f;
+ --ok:#4cd08e;--ok-soft:#12301f;--bad:#ff8080;--bad-soft:#3a1c1c;--warn:#f0c050;--warn-soft:#382d10;--tr-i:#f0a640;--tr-d:#c58cff;color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#0e1615;--surface:#152120;--ink:#e4eeec;--mut:#96aaa6;--line:#273a38;
+ --accent:#4fd0c8;--accent-soft:#15302f;--on-accent:#06201f;
+ --ok:#4cd08e;--ok-soft:#12301f;--bad:#ff8080;--bad-soft:#3a1c1c;--warn:#f0c050;--warn-soft:#382d10;--tr-i:#f0a640;--tr-d:#c58cff;color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;margin:0;
-  padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:1180px;margin:0 auto}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
-h1{font-size:1.45rem;margin:0;font-weight:700;text-wrap:balance}
-h1 small{display:block;font-size:.85rem;font-weight:400;color:var(--muted)}
-h2{font-size:1.1rem;margin:0 0 8px;font-weight:700}
-.btn{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 14px;cursor:pointer}
-.btn:hover{border-color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-:root[data-theme="dark"] .btn.primary{color:#14151f}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#14151f}}
-.btn:focus-visible,input:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
-.tab{font:inherit;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;padding:8px 14px;color:var(--muted);cursor:pointer}
-.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-.pane[hidden]{display:none!important}
-.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
-@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
-canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px solid var(--line);border-radius:8px}
-.ctrl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;margin-bottom:8px}
-.ctrl label{font-size:.92rem}
-.ctrl output{font-family:var(--mono);font-size:.85rem;color:var(--accent);text-align:right;min-width:4.5em}
-.ctrl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
-.row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.chk{display:flex;gap:6px;align-items:center;font-size:.92rem;margin:4px 0}
-.chk input{accent-color:var(--accent)}
-.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
-.read div{background:var(--bg);border-radius:8px;padding:6px 10px;min-width:0}
-.read span{display:block;font-size:.75rem;color:var(--muted);letter-spacing:.02em}
-.read b{font-family:var(--mono);font-size:.95rem;font-weight:600;overflow-wrap:anywhere}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px}
-.seg button{font:inherit;border:0;background:var(--panel);color:var(--ink);padding:6px 16px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
-:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#14151f}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#14151f}}
-.steps{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-.steps li{background:var(--bg);border-radius:8px;padding:8px 12px;min-width:0;overflow-x:auto}
-.steps .t{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block}
-.eq{font-family:var(--mono);font-size:.88rem;white-space:nowrap}
-.G{color:var(--gcol);font-weight:600}.M{color:var(--mcol);font-weight:600}
-.verdict{margin-top:10px;padding:8px 12px;border-radius:8px;background:var(--accent-soft);font-size:.95rem}
-.bars{display:grid;gap:6px;margin-top:10px}
-.bar{display:grid;grid-template-columns:3.2em minmax(0,1fr) 5.5em;gap:8px;align-items:center;font-size:.85rem}
-.bar i{display:block;height:10px;border-radius:5px;background:var(--accent);width:0;transition:width .05s}
-.bar .trk{background:var(--bg);border-radius:5px;height:10px;overflow:hidden}
-.bar code{font-family:var(--mono);text-align:right}
-.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
-.plots canvas{height:175px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:16px;padding:3px 12px 3px 8px;font-size:.95rem;cursor:pointer;background:var(--bg)}
-.chip i{width:12px;height:12px;border-radius:50%;display:inline-block}
-.chip b{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--muted)}
-.chip input{accent-color:var(--accent);margin:0}
-.tplot{height:215px;margin-top:8px}
-.tors{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:10px}
-.tbox{background:var(--bg);border-radius:8px;padding:6px 10px;min-width:0;overflow-x:auto;border-left:4px solid var(--line)}
-.gbox{border-left-color:var(--gcol)}.mbox{border-left-color:var(--mcol)}
-.tbox .cap{font-size:.78rem;color:var(--muted)}
-.tbox mjx-container{margin:2px 0!important;font-size:92%!important}
-.note{font-size:.9rem;color:var(--muted)}
-.q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:var(--panel)}
-.q p{margin:0 0 8px;font-weight:600}
-.q label{display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer}
-.q input{accent-color:var(--accent);margin-top:5px}
-.fb{margin-top:8px;font-size:.93rem}.fb.ok{color:var(--good)}.fb.ko{color:var(--bad)}
-.score{font-size:1.1rem;font-weight:700}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:12;background:var(--surface)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hd{position:sticky;top:env(safe-area-inset-top,0px);z-index:11;background:var(--surface);border-bottom:1px solid var(--line)}
+.hd-in{max-width:1040px;margin:0 auto;padding-block:8px 0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h1{font:600 1.15rem/1.2 var(--f-display);letter-spacing:.02em;margin:0;flex:1;min-width:180px;text-wrap:balance}
+.top h1 small{display:block;font:400 .72rem var(--f-mono);color:var(--mut);letter-spacing:.04em}
+.xp{display:flex;align-items:center;gap:8px;font:.8rem var(--f-mono);color:var(--mut)}
+.bar{width:90px;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+nav{display:flex;gap:4px;overflow-x:auto;padding-block:8px}
+nav a{white-space:nowrap;text-decoration:none;color:var(--mut);padding:3px 11px;border-radius:6px;font-size:.85rem}
+nav a:hover{color:var(--accent);background:var(--accent-soft)}
+main{max-width:1040px;margin:0 auto;padding-block:8px 48px}
+section{margin:32px 0;scroll-margin-top:120px}
+h2{font:600 1.55rem/1.2 var(--f-display);letter-spacing:.01em;margin:0 0 4px;text-wrap:balance}
+h3{font:600 1.15rem/1.3 var(--f-display);margin:.2em 0 .4em}
+h4{margin:.6em 0 .3em;font:500 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.sub{color:var(--mut);margin:0 0 14px;max-width:72ch}
+p{margin:.5em 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.two{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))}
+.rule{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin:12px 0}
+button,input,select{font:inherit;color:inherit}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tabs button,.btn,.opt{cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 12px}
+.tabs button.on,.btn{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.tabs button:hover:not(.on),.opt:hover{border-color:var(--accent)}
+.btn.alt{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.alt:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts{display:grid;gap:8px;margin:10px 0}
+.opts.mats{grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))}
+.opt{text-align:left}
+.opt.ok{background:var(--ok-soft);border-color:var(--ok)}.opt.ko{background:var(--bad-soft);border-color:var(--bad)}.opt.sel{background:var(--accent-soft);border-color:var(--accent)}
+.fb{background:var(--accent-soft);border-radius:8px;padding:10px 12px;margin-top:8px}
+.row{display:grid;grid-template-columns:70px minmax(0,1fr) 84px;gap:8px;align-items:center;margin:4px 0}
+.row input{width:100%;accent-color:var(--accent)}
+.row output{font:.85rem var(--f-mono);color:var(--mut)}
+canvas{width:100%;display:block;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+canvas.sc{touch-action:pan-y;cursor:grab}
+.tfbox{background:var(--accent-soft);border-radius:6px;padding:8px 12px;margin:8px 0;font-family:var(--f-mono);font-size:.9rem;overflow-x:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{padding:2px 10px;border-radius:99px;font-size:.85rem;border:1px solid var(--line)}
+.chip.g{background:var(--ok-soft);border-color:var(--ok)}.chip.r{background:var(--bad-soft);border-color:var(--bad)}.chip.o{background:var(--warn-soft);border-color:var(--warn)}.chip.n{background:var(--accent-soft);border-color:var(--accent)}
+.out{margin-top:8px;padding:8px 10px;background:var(--accent-soft);border-radius:6px;overflow-wrap:anywhere}
+label{display:inline-block;margin:3px 10px 3px 0}
+input[type=number],select{width:100px;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+select{width:auto;max-width:100%}
+.note{color:var(--mut);font-size:.9rem}
+.mats-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.mat{display:inline-grid;grid-template-columns:repeat(3,auto);gap:4px 12px;padding:6px 12px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:6px;font:500 .9rem var(--f-mono);text-align:center;max-width:100%}
+.mat span{padding:2px 6px;border-radius:4px;min-width:3ch;font-variant-numeric:tabular-nums}
+.mat .z{background:var(--ok-soft);color:var(--ok)}
+.mat .nz{background:var(--accent-soft)}
+.mat.cl span{cursor:pointer}
+.leg{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:.85rem;color:var(--mut)}
+.leg li{display:flex;gap:8px;align-items:flex-start}
+.leg i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px}
+.leg i+i{margin-left:-4px}
+.leg i.pl{border-radius:2px;width:14px;background:var(--ok-soft);border:1px solid var(--ok)}
+.mw{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mw .ml{font:500 1rem var(--f-mono)}
+.mw .mb{font:500 .85rem var(--f-mono);align-self:flex-end;margin-bottom:-4px}
+.mat span.sel{outline:2px solid var(--accent)}
+.bars{display:grid;gap:6px;margin:8px 0}
+.b2{display:grid;grid-template-columns:22px minmax(0,1fr) 52px;gap:8px;align-items:center;font:.85rem var(--f-mono)}
+.track{position:relative;height:10px;background:var(--line);border-radius:5px}
+.track::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--mut)}
+.fill{position:absolute;top:0;bottom:0;border-radius:5px;background:var(--accent)}
+.fill.nz{background:var(--tr-d)}
+.steps{margin:8px 0;padding:0;list-style:none;display:grid;gap:6px}
+.steps li{padding:6px 10px;border-radius:6px;border:1px solid var(--line);color:var(--mut)}
+.steps li.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.ctl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.facts{margin:6px 0 0;padding-left:18px}
+.facts li{margin:3px 0}
+.fc{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:1.05rem;cursor:pointer;user-select:none;overflow-wrap:anywhere}
+.fc.back{background:var(--accent-soft);border-color:var(--accent)}
+#badges:empty::before{content:"Aucun badge pour l'instant.";color:var(--mut)}
+.exnav{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.exnav button{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;font:.8rem var(--f-mono)}
+.exnav button.ans{background:var(--accent-soft);border-color:var(--accent)}
+.exnav button.cur{outline:2px solid var(--accent);outline-offset:1px}
+.timer{font:500 1.3rem var(--f-mono);font-variant-numeric:tabular-nums}
+.timer.low{color:var(--bad)}
+.qrow{display:grid;gap:6px;margin:10px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--line)}
+.qrow.ok{background:var(--ok-soft);border-color:var(--ok)}.qrow.ko{background:var(--bad-soft);border-color:var(--bad)}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;opacity:0;transition:.3s;pointer-events:none;z-index:20;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+</head>
+<body>
 
-<div class="wrap">
-<header>
-  <h1>TEC<small>Rotor sur plaques circulaires et roue de vélo : choisir le point où l'on écrit le théorème de l'énergie cinétique</small></h1>
-  <button class="btn" id="themeBtn" type="button">Thème clair / sombre</button>
-</header>
-
-<div class="tabs" role="tablist">
-  <button class="tab" role="tab" id="tab3" aria-selected="true" aria-controls="p3" type="button">Cours</button>
-  <button class="tab" role="tab" id="tab0" aria-selected="false" aria-controls="p0" type="button">2 · Banc d'inertie</button>
-  <button class="tab" role="tab" id="tab1" aria-selected="false" aria-controls="p1" type="button">3 · Roue de vélo</button>
-  <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="p2" type="button">4 · Quiz</button>
+<div class="hd">
+ <div class="hd-in gut">
+  <div class="top">
+   <h1>Matrices d'inertie<small>masses des solides</small></h1>
+   <div class="xp">Niv. <b id="lvl">1</b><div class="bar"><i id="xpb"></i></div><span id="xpt">0 XP</span></div>
+   <button class="btn alt" id="theme" type="button" aria-label="Changer de thème">Thème : auto</button>
+  </div>
+  <nav>
+   <a href="#rappels">Rappels</a><a href="#lab">Labo 3D</a><a href="#plan">Plan de symétrie</a><a href="#axe">Axe de symétrie</a>
+   <a href="#demarche">Démarche</a><a href="#outils">Huygens</a><a href="#jeux">Entraînement</a><a href="#memo">Mémo</a>
+  </nav>
+ </div>
 </div>
+<main class="gut">
 
-<!-- ======== ROTOR ======== -->
-<section class="pane" id="p3" role="tabpanel" aria-labelledby="tab3">
- <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-  <div class="card"><h2>1 · Les torseurs utiles</h2>
-   <p>Un torseur est défini par sa résultante et son moment en un point. On change de point par la relation de Varignon : le moment en Q vaut le moment en P plus QP ∧ résultante.</p>
-   <ol class="steps">
-    <li><span class="t">Cinématique de S/R</span><span class="eq">{V<sub>S/R</sub>} = { Ω<sub>S/R</sub> ; V<sub>P,S/R</sub> }<sub>P</sub> &nbsp; avec &nbsp; V<sub>Q</sub> = V<sub>P</sub> + QP ∧ Ω</span></li>
-    <li><span class="t">Cinétique de S/R</span><span class="eq">{C<sub>S/R</sub>} = { m V<sub>G,S/R</sub> ; σ<sub>P,S/R</sub> }<sub>P</sub> &nbsp; avec &nbsp; σ<sub>P</sub> = σ<sub>G</sub> + PG ∧ m V<sub>G</sub></span><br><span class="note">σ<sub>G</sub> = I<sub>G</sub>(S) Ω : le moment cinétique en G s'obtient avec la matrice d'inertie en G.</span></li>
-    <li><span class="t">Actions mécaniques sur S</span><span class="eq">{T<sub>ext→S</sub>} = { R ; M<sub>P</sub> }<sub>P</sub></span></li>
-   </ol></div>
-
-  <div class="card"><h2>2 · Le comoment</h2>
-   <p>Le comoment de deux torseurs est un scalaire. Il se calcule avec les éléments de réduction écrits au <b>même point</b> P, et sa valeur ne dépend pas de ce point.</p>
-   <div class="verdict"><span class="eq">{A} ⊗ {B} = R<sub>A</sub> · M<sub>P,B</sub> + M<sub>P,A</sub> · R<sub>B</sub></span></div>
-   <ol class="steps" style="margin-top:10px">
-    <li><span class="t">Puissance d'une action mécanique</span><span class="eq">P(ext→S/R) = {T<sub>ext→S</sub>} ⊗ {V<sub>S/R</sub>} = R · V<sub>P,S/R</sub> + M<sub>P</sub> · Ω<sub>S/R</sub></span></li>
-    <li><span class="t">Énergie cinétique</span><span class="eq">E<sub>c</sub>(S/R) = ½ {C<sub>S/R</sub>} ⊗ {V<sub>S/R</sub>} = ½ [ m V<sub>P,S/R</sub> · V<sub>G,S/R</sub> + σ<sub>P,S/R</sub> · Ω<sub>S/R</sub> ]</span></li>
-    <li><span class="t">Liaison parfaite, ou contact sans glissement</span><span class="eq">P = {T}⊗{V} = 0 car la composante de V en jeu (vitesse de glissement) est nulle</span></li>
-   </ol></div>
-
-  <div class="card"><h2>3 · Le théorème de l'énergie cinétique</h2>
-   <p>Dans un référentiel galiléen, pour un ensemble matériel E :</p>
-   <div class="verdict"><span class="eq">dE<sub>c</sub>(E/R<sub>g</sub>)/dt = P(ext→E/R<sub>g</sub>) + P<sub>int</sub>(E)</span></div>
-   <p>Pour un solide unique, P<sub>int</sub> = 0. Les liaisons parfaites ne contribuent pas. On obtient une équation scalaire sans inconnue de liaison, ce qui convient à un système à un degré de liberté.</p>
-   <h2 style="margin-top:14px">Où écrire E<sub>c</sub> ?</h2>
-   <p>Le comoment donne le même nombre en tout point, mais l'expression est plus ou moins longue.</p>
-   <ol class="steps">
-    <li><span class="t">En G (formule de König)</span><span class="eq">E<sub>c</sub> = ½ m V<sub>G</sub>² + ½ Ω · I<sub>G</sub>Ω</span><br><span class="note">Deux termes. Pratique quand I<sub>G</sub> est donnée, comme pour le rotor.</span></li>
-    <li><span class="t">En un point P de vitesse nulle (point fixe ou centre instantané de rotation)</span><span class="eq">V<sub>P</sub> = 0 ⇒ E<sub>c</sub> = ½ Ω · I<sub>P</sub>Ω</span><br><span class="note">Un seul terme. Il suffit de déplacer la matrice d'inertie en P (Huygens). C'est le cas de M pour le rotor et de I pour la roue.</span></li>
-   </ol>
-   <p class="note">Attention : la forme à un terme n'est valable que si V<sub>P</sub> = 0 à l'instant considéré. Un point P quelconque en mouvement garde le terme m V<sub>P</sub>·V<sub>G</sub>.</p></div>
-
-  <div class="card"><h2>4 · Déplacer la matrice d'inertie : Huygens</h2>
-   <p>Si G est le centre de masse de S et si MG = (a, b, c) dans la base choisie :</p>
-   <div class="verdict" style="overflow-x:auto"><span class="eq">I<sub>M</sub>(S) = I<sub>G</sub>(S) + m ·
-     [ b²+c² &nbsp; −ab &nbsp; −ac ; −ab &nbsp; a²+c² &nbsp; −bc ; −ac &nbsp; −bc &nbsp; a²+b² ]</span></div>
-   <p>Sur la diagonale, on retrouve le théorème de Huygens scalaire : I<sub>Δ</sub> = I<sub>Δ<sub>G</sub></sub> + m d², avec d la distance entre les deux axes parallèles. Les termes hors diagonale apparaissent dès que MG n'est pas porté par un axe de la base.</p>
-   <ul class="note" style="padding-left:1.2em">
-    <li>Les deux matrices s'écrivent dans la <b>même base</b>.</li>
-    <li>Un des deux points est obligatoirement G. Pour passer de M à M', on passe par G : on retire m[…] en M, puis on ajoute m[…] en M'.</li>
-    <li>La matrice en M est toujours « plus grande » que celle en G : on ajoute des termes positifs sur la diagonale.</li>
-   </ul>
-   <h2 style="margin-top:14px">Calculateur</h2>
-   <p class="note">Matrice d'inertie en G diagonale (A, B, C), puis vecteur MG. Le préréglage reprend le rotor : MG = r y<sub>i</sub>.</p>
-   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-    <div>
-     <div class="ctrl"><label for="hm">Masse m</label><output id="ohm"></output><input type="range" id="hm" min="0.5" max="10" step="0.1" value="3"></div>
-     <div class="ctrl"><label for="hA">A (axe x)</label><output id="ohA"></output><input type="range" id="hA" min="0" max="0.05" step="0.0005" value="0.0075"></div>
-     <div class="ctrl"><label for="hB">B (axe y)</label><output id="ohB"></output><input type="range" id="hB" min="0" max="0.05" step="0.0005" value="0.0075"></div>
-     <div class="ctrl"><label for="hC">C (axe z)</label><output id="ohC"></output><input type="range" id="hC" min="0" max="0.05" step="0.0005" value="0.015"></div>
-    </div>
-    <div>
-     <div class="ctrl"><label for="hx">a = MG·x</label><output id="ohx"></output><input type="range" id="hx" min="-0.3" max="0.3" step="0.01" value="0"></div>
-     <div class="ctrl"><label for="hy">b = MG·y</label><output id="ohy"></output><input type="range" id="hy" min="-0.3" max="0.3" step="0.01" value="0.1"></div>
-     <div class="ctrl"><label for="hz">c = MG·z</label><output id="ohz"></output><input type="range" id="hz" min="-0.3" max="0.3" step="0.01" value="0"></div>
-     <div class="row"><button class="btn" id="hRotor" type="button">Préréglage rotor</button><button class="btn" id="hDiag" type="button">MG oblique</button></div>
-    </div>
-   </div>
-   <div class="read" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
-    <div><span>I<sub>G</sub>(S), en kg·m²</span><b id="hMG" style="white-space:pre"></b></div>
-    <div><span>I<sub>M</sub>(S) = I<sub>G</sub> + m[…]</span><b id="hMM" style="white-space:pre"></b></div>
-   </div>
-   <p class="note" id="hTxt"></p></div>
-
-  <div class="card"><h2>5 · Méthode en quatre lignes</h2>
-   <ol class="steps">
-    <li><span class="t">Cinématique</span>Exprimer Ω et V<sub>G</sub> avec un seul paramètre (ici θ̇), grâce au roulement sans glissement.</li>
-    <li><span class="t">Choix du point</span>Chercher un point de vitesse nulle. S'il existe, y déplacer la matrice d'inertie.</li>
-    <li><span class="t">Énergie cinétique et puissances</span>Calculer E<sub>c</sub> et ne garder que les puissances qui ne sont pas nulles (poids, moteur, frottement visqueux…).</li>
-    <li><span class="t">TEC</span>Dériver E<sub>c</sub>, égaler à P<sub>ext</sub>, simplifier par θ̇ puis linéariser si besoin.</li>
-   </ol>
-   <p class="note">Les deux onglets suivants appliquent cette méthode au banc d'inertie et à la roue de vélo.</p>
-   <div class="row"><button class="btn primary" id="goR" type="button">Voir le banc d'inertie</button><button class="btn" id="goB" type="button">Voir la roue de vélo</button></div></div>
- </div>
-</section>
-
-<section class="pane" id="p0" role="tabpanel" aria-labelledby="tab0" hidden>
+<section id="rappels">
+ <h2>1. Répartition de la masse</h2>
+ <p class="sub">En rotation, la masse ne suffit plus : sa répartition par rapport aux axes compte. Elle se résume en six nombres, trois moments et trois produits d'inertie, regroupés dans la matrice d'inertie.</p>
  <div class="grid">
-  <div class="card">
-    <canvas id="cvR" aria-label="Rotor roulant sans glisser dans une plaque circulaire"></canvas>
-    <div class="chips" id="chR" role="group" aria-label="Grandeurs affichées"></div>
-    <canvas id="cvPt" class="tplot" aria-label="Alpha, Omega et V_G en fonction du temps sur une période"></canvas>
-    <div class="tors"><div class="tbox gbox" id="torG"></div><div class="tbox mbox" id="torM"></div></div>
-    <div class="row">
-      <button class="btn primary" id="playR" type="button">Pause</button>
-      <button class="btn" id="resetR" type="button">Relâcher à θ₀</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Réglages</h2>
-    <div class="ctrl"><label for="Rr">Rayon des plaques R</label><output id="oRr"></output><input type="range" id="Rr" min="0.10" max="0.60" step="0.01" value="0.30"></div>
-    <div class="ctrl"><label for="rr">Rayon du rotor r</label><output id="orr"></output><input type="range" id="rr" min="0.02" max="0.25" step="0.005" value="0.10"></div>
-    <div class="ctrl"><label for="mR">Masse m₂</label><output id="omR"></output><input type="range" id="mR" min="0.5" max="10" step="0.1" value="3"></div>
-    <div class="ctrl"><label for="kR">Inertie C₂ = k·m₂r²</label><output id="okR"></output><input type="range" id="kR" min="0.2" max="1.5" step="0.05" value="0.5"></div>
-    <div class="ctrl"><label for="vR">Vitesse de lecture</label><output id="ovR"></output><input type="range" id="vR" min="0.1" max="1" step="0.05" value="0.4"></div>
-    <div class="ctrl"><label for="thR">Angle initial θ₀</label><output id="othR"></output><input type="range" id="thR" min="2" max="80" step="1" value="12"></div>
-    <label class="chk"><input type="checkbox" id="vecR" checked> Montrer Ω et V<sub>G</sub></label>
-    <label class="chk"><input type="checkbox" id="alR" checked> Montrer l'angle α (entre x<sub>i</sub> et x₂)</label>
-    <label class="chk"><input type="checkbox" id="cirR" checked> Montrer le point M (vitesse nulle)</label>
-    <div class="read">
-      <div><span>J<sub>eq</sub></span><b id="rJ"></b></div>
-      <div><span>T petites osc.</span><b id="rT0"></b></div>
-      <div><span>T mesurée</span><b id="rTm"></b></div>
-      <div><span>dE<sub>c</sub>/dt</span><b id="rdE"></b></div>
-      <div><span>P<sub>ext</sub></span><b id="rP"></b></div>
-      <div><span>θ</span><b id="rTh"></b></div>
-      <div><span>α = −(R/r)·θ</span><b id="rAl"></b></div>
-    </div>
-    <p class="note">k = 0,5 pour un disque plein, k = 1 pour un anneau. Avec θ₀ grand, la période mesurée s'écarte de T : la linéarisation n'est plus valable.</p>
-  </div>
+  <div class="card"><h3>Moment d'inertie</h3><p>I<sub>Δ</sub>(S) = ∫ r² dm, en kg·m². Plus la matière est loin de l'axe, plus il est grand.</p><p>Huygens : I<sub>Δ</sub> = I<sub>ΔG</sub> + m d². Pour une direction donnée, l'axe passant par G donne le minimum.</p></div>
+  <div class="card"><h3>Produits d'inertie</h3><p>Ils traduisent une asymétrie de la répartition de la masse dans le repère. S'ils sont non nuls, la rotation crée des effets de balourd.</p></div>
+  <div class="card"><h3>Matrice d'inertie</h3><p>Symétrique, donc diagonalisable : il existe une base principale où elle est diagonale (moments principaux A', B', C').</p></div>
  </div>
- <div class="card" style="margin-top:14px">
-   <h2>Écrire le TEC : où se placer ?</h2>
-   <div class="seg" role="group" aria-label="Point de réduction">
-     <button type="button" id="mG" aria-pressed="true">En G</button>
-     <button type="button" id="mM" aria-pressed="false">En M (CIR)</button>
-   </div>
-   <ol class="steps" id="stepsR"></ol>
-   <div class="verdict" id="verdR"></div>
+ <div class="card" style="margin-top:12px">
+  <h3>Explorer la matrice</h3>
+  <div class="two"><div id="exMat"></div><div class="out" id="exDef">Clique sur un terme de la matrice.</div></div>
  </div>
 </section>
 
-<!-- ======== VELO ======== -->
-<section class="pane" id="p1" role="tabpanel" aria-labelledby="tab1" hidden>
- <div class="grid">
-  <div class="card">
-    <canvas id="cvB" aria-label="Roue de vélo descendant une pente en roulant sans glisser"></canvas>
-    <div class="chips" id="chB" role="group" aria-label="Grandeurs affichées"></div>
-    <canvas id="cvTB" class="tplot" aria-label="Angle, vitesse angulaire et vitesse de G en fonction du temps"></canvas>
-    <div class="tors"><div class="tbox gbox" id="torBG"></div><div class="tbox mbox" id="torBI"></div></div>
-    <p class="note" id="bAxes" style="margin:6px 0 0"></p>
-    <div class="row">
-      <button class="btn primary" id="playB" type="button">Pause</button>
-      <button class="btn" id="resetB" type="button">Relancer</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Réglages</h2>
-    <div class="ctrl"><label for="bb">Pente β</label><output id="obb"></output><input type="range" id="bb" min="2" max="40" step="1" value="15"></div>
-    <div class="ctrl"><label for="rb">Rayon de la roue r</label><output id="orb"></output><input type="range" id="rb" min="0.20" max="0.40" step="0.01" value="0.34"></div>
-    <div class="ctrl"><label for="mj">Masse jante + pneu</label><output id="omj"></output><input type="range" id="mj" min="0.3" max="2.5" step="0.05" value="0.9"></div>
-    <div class="ctrl"><label for="ms">Masse des rayons</label><output id="oms"></output><input type="range" id="ms" min="0" max="1" step="0.05" value="0.3"></div>
-    <div class="ctrl"><label for="mh">Masse du moyeu (r<sub>h</sub> = 3 cm)</label><output id="omh"></output><input type="range" id="mh" min="0.1" max="1" step="0.05" value="0.3"></div>
-    <div class="ctrl"><label for="vb">Vitesse de lecture</label><output id="ovb"></output><input type="range" id="vb" min="0.25" max="2" step="0.25" value="1"></div>
-    <label class="chk"><input type="checkbox" id="ghB" checked> Comparer à un bloc qui glisse sans frottement</label>
-    <label class="chk"><input type="checkbox" id="fcB" checked> Montrer la force de frottement en I</label>
-    <div class="read">
-      <div><span>C (axe z)</span><b id="bC"></b></div>
-      <div><span>k = C/(m r²)</span><b id="bk"></b></div>
-      <div><span>Accélération a</span><b id="ba"></b></div>
-      <div><span>Frottement f</span><b id="bf"></b></div>
-      <div><span>μ minimal</span><b id="bmu"></b></div>
-      <div><span>Vitesse v</span><b id="bv"></b></div>
-    </div>
-    <p class="note">La roue est lancée sans vitesse initiale sur 3 m de pente. Un vélo réel a une jante lourde : k proche de 1.</p>
-  </div>
+<section id="lab">
+ <h2>2. Laboratoire 3D</h2>
+ <p class="sub">Chaque point est un élément de masse dm (m = 2 kg, matière homogène). La matrice est obtenue en sommant les intégrales sur ces points. Fais glisser la vue pour tourner. Modifie les dimensions, puis observe quels termes tombent à zéro et pourquoi.</p>
+ <div class="card">
+  <div class="tabs" id="labTabs"></div>
+  <div id="labSl"></div>
+  <label><input type="checkbox" id="lPl" checked> plans de symétrie</label>
+  <label><input type="checkbox" id="lAx" checked> axe de révolution</label>
+  <label><input type="checkbox" id="lAuto"> rotation automatique</label>
+  <label>Matrice au point <select id="lAt"><option value="O">O (origine du repère)</option><option value="G">G (centre de gravité)</option></select></label>
  </div>
- <div class="card" style="margin-top:14px">
-   <h2>Écrire le TEC : où se placer ?</h2>
-   <div class="seg" role="group" aria-label="Point de réduction">
-     <button type="button" id="bG" aria-pressed="true">En G</button>
-     <button type="button" id="bM" aria-pressed="false">En I (contact)</button>
-   </div>
-   <ol class="steps" id="stepsB"></ol>
-   <div class="verdict" id="verdB"></div>
+ <div class="two" style="margin-top:12px"><div><canvas id="cLab"></canvas><p class="note">Axes : x en rouge, y en vert, z en turquoise. O est l'origine du repère, G le centre de gravité.</p></div><div class="card" id="labInfo"></div></div>
+</section>
+
+<section id="plan">
+ <h2>3. Plan de symétrie : pourquoi D et E s'annulent</h2>
+ <p class="sub">Solide : équerre épaisse, symétrique par rapport au plan (O,x,y). On construit ses produits d'inertie en deux temps : la moitié z &gt; 0, puis ses symétriques M'(x, y, −z). Les contributions x·z et x·(−z) se compensent.</p>
+ <div class="two">
+  <div><canvas id="cPlan"></canvas>
+   <div class="ctl"><button type="button" class="btn" id="pPlay">Lecture</button><button type="button" class="btn alt" id="pRe">Rejouer</button><input type="range" id="pT" min="0" max="1000" value="0" aria-label="Progression de l'animation"></div></div>
+  <div class="card">
+   <h4>Intégrales cumulées (relatives au maximum final)</h4>
+   <div class="bars" id="pBars"></div>
+   <ol class="steps" id="pSteps">
+    <li>1. Moitié supérieure seule : E = ∫xz dm et D = ∫yz dm sont non nuls.</li>
+    <li>2. On ajoute les symétriques M'(x, y, −z) : xz et −xz se compensent.</li>
+    <li>3. Bilan : D = E = 0, alors que A, B, C et F ont doublé.</li>
+   </ol>
+   <h4>Forme obtenue</h4><div id="pMat"></div>
+  </div>
  </div>
 </section>
 
-<!-- ======== QUIZ ======== -->
-<section class="pane" id="p2" role="tabpanel" aria-labelledby="tab2" hidden>
-  <div id="quiz"></div>
-  <div class="row"><button class="btn primary" id="qCheck" type="button">Corriger</button><button class="btn" id="qReset" type="button">Recommencer</button></div>
-  <p class="score" id="qScore" aria-live="polite"></p>
+<section id="axe">
+ <h2>4. Axe de symétrie : tourner autour de l'axe ne change rien</h2>
+ <p class="sub">Le solide tourne autour de z, le repère reste fixe. Pour le cylindre (axe de révolution), A, B et F restent constants : tout plan contenant l'axe est un plan de symétrie. Pour le barreau rectangulaire, ils varient avec l'angle, car seuls deux plans sont des plans de symétrie.</p>
+ <div class="card">
+  <div class="tabs" id="bTabs"><button type="button" data-k="cyl" class="on">Cylindre (révolution)</button><button type="button" data-k="blk">Barreau 14 × 6 × 8</button></div>
+  <div class="two">
+   <div><canvas id="cAxe"></canvas>
+    <div class="ctl"><button type="button" class="btn" id="bPlay">Lecture</button>
+     <label>θ <input type="range" id="bTh" min="0" max="360" value="0" aria-label="Angle de rotation du solide"></label></div>
+    <div class="ctl"><label>Plan miroir ψ <input type="range" id="bPsi" min="0" max="180" value="45" aria-label="Angle du plan miroir"></label><span id="bPsiV" class="note"></span></div>
+    <div class="out" id="bVerdict"></div>
+    <ul class="leg" aria-label="Légende">
+     <li><i style="background:var(--accent)"></i>Éléments de masse du solide</li>
+     <li><i style="background:var(--tr-i)"></i>Secteur de repère : ce sont des éléments de masse comme les autres, colorés pour suivre la rotation du solide</li>
+     <li><i style="background:var(--ink)"></i>Points tests M, choisis au hasard dans le solide</li>
+     <li><i style="background:var(--ok)"></i><i style="background:var(--bad)"></i>Symétrique M' de M par le plan miroir : vert s'il est dans le solide, rouge sinon</li>
+     <li><i class="pl"></i>Plan miroir ψ, vert si c'est un plan de symétrie, rouge sinon</li>
+    </ul></div>
+   <div><h4>A, B et F selon l'angle θ (kg·cm²)</h4><canvas id="cCur"></canvas>
+    <h4>Matrice dans le repère fixe</h4><div id="bMat"></div><p class="note" id="bEq"></p></div>
+  </div>
+ </div>
 </section>
-</div>
-<script>window.MathJax={options:{enableMenu:false,enableAssistiveMml:false},svg:{fontCache:"none"},startup:{typeset:false}};</script>
-<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+
+<section id="demarche">
+ <h2>5. Quelle forme pour la matrice ?</h2>
+ <p class="sub">Indique les particularités géométriques du solide : la matrice se simplifie en direct. La justification de la forme est exigible, pas son apprentissage par cœur.</p>
+ <div class="card">
+  <label>Axe de révolution <select id="wRev"><option value="">aucun</option><option value="x">(O,x)</option><option value="y">(O,y)</option><option value="z">(O,z)</option></select></label>
+  <label>Dimension négligeable <select id="wThin"><option value="">aucune</option><option value="x">suivant x</option><option value="y">suivant y</option><option value="z">suivant z</option></select></label><br>
+  <label><input type="checkbox" id="wxy"> plan (O,x,y)</label><label><input type="checkbox" id="wxz"> plan (O,x,z)</label><label><input type="checkbox" id="wyz"> plan (O,y,z)</label>
+  <p class="note">Plans de symétrie matérielle formés par les axes du repère d'expression.</p>
+  <div class="mats-row"><div id="wMat"></div><ul class="facts" id="wWhy"></ul></div>
+ </div>
+</section>
+
+<section id="outils">
+ <h2>6. Déplacer la matrice : Huygens généralisé</h2>
+ <p class="sub">Pour un parallélépipède homogène de centre G, matrice en A telle que AG = a·x + b·y + c·z : I<sub>A</sub> = I<sub>G</sub> + m·[[b²+c², −ab, −ac], [−ab, a²+c², −bc], [−ac, −bc, a²+b²]]. Les deux matrices doivent être dans la même base.</p>
+ <div class="card">
+  <label>m (kg) <input type="number" id="hm" value="2" step="0.5" min="0.1"></label>
+  <label>L<sub>x</sub> (cm) <input type="number" id="hLx" value="12" step="1" min="1"></label>
+  <label>L<sub>y</sub> (cm) <input type="number" id="hLy" value="8" step="1" min="1"></label>
+  <label>L<sub>z</sub> (cm) <input type="number" id="hLz" value="5" step="1" min="1"></label><br>
+  <label>a (cm) <input type="number" id="ha" value="3" step="1"></label>
+  <label>b (cm) <input type="number" id="hb" value="2" step="1"></label>
+  <label>c (cm) <input type="number" id="hc" value="0" step="1"></label>
+  <div class="mats-row" id="hOut"></div>
+ </div>
+</section>
+
+<section id="jeux">
+ <h2>7. Entraînement</h2>
+ <div class="card">
+  <div class="tabs" id="trTabs">
+   <button type="button" data-t="tQuiz" class="on">Quiz libre</button><button type="button" data-t="tExam">Mode examen</button><button type="button" data-t="tForm">Quelle forme ?</button><button type="button" data-t="tCards">Cartes mémoire</button>
+  </div>
+  <div class="tp" id="tQuiz"><p class="note">10 questions tirées au hasard, correction immédiate.</p><div id="quiz"></div></div>
+  <div class="tp" id="tExam" hidden><div id="exam"></div></div>
+  <div class="tp" id="tForm" hidden><div id="form"></div></div>
+  <div class="tp" id="tCards" hidden>
+   <div class="card fc" id="fc" role="button" tabindex="0"></div>
+   <p style="text-align:center;margin:10px 0 0"><button type="button" class="btn alt" id="fcP" aria-label="Carte précédente">◀</button> <span id="fcN" class="note"></span> <button type="button" class="btn alt" id="fcNx" aria-label="Carte suivante">▶</button> <button type="button" class="btn alt" id="fcS">Mélanger</button></p>
+   <p class="note" style="text-align:center">Touche la carte pour la retourner.</p>
+  </div>
+ </div>
+</section>
+
+<section id="memo">
+ <h2>8. Fiche mémo</h2>
+ <div class="card">
+  <h4>Badges</h4><div class="chips" id="badges"></div>
+  <div id="memoTxt">
+   <h4>Définitions</h4>
+   <p>A = ∫(y²+z²)dm, B = ∫(x²+z²)dm, C = ∫(x²+y²)dm : moments d'inertie par rapport aux axes (Q,x), (Q,y), (Q,z).<br>
+   D = ∫yz dm, E = ∫xz dm, F = ∫xy dm : produits d'inertie par rapport aux plans (Q,y,z), (Q,x,z), (Q,x,y).<br>
+   Matrice : [[A, −F, −E], [−F, B, −D], [−E, −D, C]], symétrique.</p>
+   <h4>Formes particulières</h4>
+   <p>Un plan de symétrie : les deux produits contenant la coordonnée normale au plan sont nuls ; l'axe normal au plan est axe principal. La réciproque est fausse.<br>
+   Deux plans de symétrie : matrice diagonale, repère principal.<br>
+   Axe de révolution (O,z) : matrice diagonale, A = B, inchangée par toute rotation autour de z.<br>
+   Épaisseur négligeable suivant z : D = E = 0 et C = A + B.</p>
+   <h4>Formules usuelles (au centre de gravité)</h4>
+   <p>Parallélépipède a×b×c : A = m(b²+c²)/12, B = m(a²+c²)/12, C = m(a²+b²)/12.<br>
+   Cylindre plein (axe z) : A = B = m(R²/4 + h²/12), C = mR²/2.</p>
+   <h4>Changer de point ou de base</h4>
+   <p>Huygens : I<sub>Δ</sub> = I<sub>ΔG</sub> + m d². Généralisé : I<sub>A</sub> = I<sub>G</sub> + I<sub>A</sub>(m en G).<br>
+   Changement de base : I(b₂) = P⁻¹ · I(b₁) · P. Matrices à additionner : même base et même point.</p>
+  </div>
+  <button type="button" class="btn" id="copyMemo">Copier la fiche</button> <span class="note" id="copyMsg"></span>
+ </div>
+</section>
+</main>
+<div id="toast" role="status"></div>
+
 <script>
-(function(){
-"use strict";
 const $=id=>document.getElementById(id);
-const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const f=(x,d=3)=>{if(!isFinite(x))return "–";const a=Math.abs(x);if(a!==0&&(a<1e-3||a>=1e4))return x.toExponential(2);return x.toFixed(d).replace(".",",")};
-const fmt=(x,d)=>f(x,d);
+const fmt=(x,d=3)=>Number.isFinite(x)?x.toLocaleString('fr-FR',{maximumFractionDigits:d}):'—';
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>x*x*(3-2*x);
+const D2R=Math.PI/180;
+const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
-/* ---------- thème ---------- */
-$("themeBtn").onclick=()=>{
-  const el=document.documentElement;
-  const dark=el.dataset.theme?el.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
-  el.dataset.theme=dark?"light":"dark";
-};
+/* ---------- Thème, XP, badges ---------- */
+let TH={};
+function readTheme(){const g=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+ TH={ink:g('--ink'),mut:g('--mut'),line:g('--line'),acc:g('--accent'),i:g('--tr-i'),d:g('--tr-d'),ok:g('--ok'),bad:g('--bad'),surf:g('--surface'),warn:g('--warn')}}
+let themeState=document.documentElement.getAttribute('data-theme')||'auto';
+function applyTheme(){const r=document.documentElement;if(themeState==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',themeState);
+ $('theme').textContent='Thème : '+({auto:'auto',light:'clair',dark:'sombre'})[themeState];readTheme()}
+$('theme').onclick=()=>{themeState=({auto:'light',light:'dark',dark:'auto'})[themeState]||'auto';applyTheme()};
+applyTheme();
+let xp=0;const badges=new Set();
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
+function addXP(n,m){xp+=n;$('lvl').textContent=Math.floor(xp/50)+1;$('xpb').style.width=(xp%50)*2+'%';$('xpt').textContent=xp+' XP';toast('+'+n+' XP'+(m?' · '+m:''))}
+function badge(id,l){if(badges.has(id))return;badges.add(id);const s=document.createElement('span');s.className='chip g';s.textContent='Badge · '+l;$('badges').appendChild(s);toast('Badge : '+l)}
 
-/* ---------- onglets ---------- */
-const tabs=[0,1,2,3];
-function showTab(i){
-  tabs.forEach(j=>{$("tab"+j).setAttribute("aria-selected",j===i);$("p"+j).hidden=j!==i});
-  if(i===0)drawR();
-  if(i===1&&window.__tec&&window.__tec.drawB)window.__tec.drawB();
-  try{history.replaceState(null,"","#"+["rotor","velo","quiz","cours"][i])}catch(e){}
-}
-tabs.forEach(i=>$("tab"+i).onclick=()=>showTab(i));
-
-/* ---------- canvas utilitaires ---------- */
-function setup(cv){
-  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
-  const w=Math.max(100,r.width),h=r.height;
-  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
-  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);
-  c.clearRect(0,0,w,h);return {c,w,h};
-}
-function arrow(c,x0,y0,x1,y1,col,lab,lw){
-  lw=lw||2.2;const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy);if(L<3)return;
-  const ux=dx/L,uy=dy/L,hl=Math.min(L*0.6,lw*4.2),hw=lw*2.1;
-  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap="round";
-  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1-ux*hl*0.8,y1-uy*hl*0.8);c.stroke();
-  c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-hl*ux+hw*uy,y1-hl*uy-hw*ux);c.lineTo(x1-hl*ux-hw*uy,y1-hl*uy+hw*ux);c.closePath();c.fill();
-  if(lab){c.font="600 13px "+css("--font");c.fillText(lab,x1+6,y1-6)}
-}
-function sub(c,x,y,main,s,col,size){
-  size=size||16;c.fillStyle=col;c.font="700 "+size+"px "+css("--font");c.fillText(main,x,y);
-  const w=c.measureText(main).width;c.font="700 "+Math.round(size*0.68)+"px "+css("--font");c.fillText(s,x+w+1,y+size*0.3);
-  return x+w+1+c.measureText(s).width;
-}
-function arcArrow(c,cx,cy,rad,a0,da,col){
-  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=3.4;c.lineCap="round";
-  c.beginPath();c.arc(cx,cy,rad,-a0,-(a0+da),da>0);c.stroke();
-  const a1=a0+da,s=da>0?1:-1,ex=cx+rad*Math.cos(a1),ey=cy-rad*Math.sin(a1);
-  const tx=-s*Math.sin(a1),ty=-s*Math.cos(a1),nx=-ty,ny=tx;
-  c.beginPath();c.moveTo(ex+11*tx,ey+11*ty);c.lineTo(ex+6*nx,ey+6*ny);c.lineTo(ex-6*nx,ey-6*ny);c.closePath();c.fill();
-  return [cx+(rad+15)*Math.cos(a1),cy-(rad+15)*Math.sin(a1)];
-}
-function scaleBar(c,w,h,sc){
-  const steps=[.005,.01,.02,.05,.1,.2,.5,1,2,5];let L=steps[0];
-  for(const s of steps)if(s*sc<=w*0.22)L=s;
-  const px=L*sc,x=16,y=h-14;
-  c.strokeStyle=css("--ink");c.fillStyle=css("--ink");c.lineWidth=2;c.lineCap="butt";
-  c.beginPath();c.moveTo(x,y);c.lineTo(x+px,y);c.moveTo(x,y-5);c.lineTo(x,y+5);c.moveTo(x+px,y-5);c.lineTo(x+px,y+5);c.stroke();
-  c.font="600 12px "+css("--font");c.textAlign="center";
-  c.fillText(L>=1?L+" m":String(Math.round(L*1000)/10).replace(".",",")+" cm",x+px/2,y-8);c.textAlign="left";
-}
-function dot(c,x,y,col,lab,dx=8,dy=-8){
-  c.fillStyle=col;c.beginPath();c.arc(x,y,4.5,0,7);c.fill();
-  if(lab){c.font="600 14px "+css("--font");c.fillText(lab,x+dx,y+dy)}
-}
-function mkBars(id,names){
-  $(id).innerHTML=names.map((n,i)=>`<div class="bar"><span>${n[0]}</span><div class="trk"><i id="${id}${i}" style="background:${n[1]}"></i></div><code id="${id}v${i}"></code></div>`).join("");
-}
-function setBar(id,i,val,max,unit){
-  $(id+i).style.width=Math.max(0,Math.min(100,100*val/max))+"%";
-  $(id+"v"+i).textContent=fmt(val,3)+" "+unit;
-}
-function bindRange(id,fn,unit,d){
-  const e=$(id),o=$("o"+id);
-  const up=()=>{o.textContent=fmt(+e.value,d)+(unit?" "+unit:"")};
-  e.addEventListener("input",()=>{up();fn()});up();
-}
-
-/* =================== ROTOR =================== */
-const g=9.81;
-const S={th:0,w:0,t:0,run:true,cross:[],prev:0,method:"G",tr:[]};
-function P(){return{R:+$("Rr").value,r:+$("rr").value,m:+$("mR").value,k:+$("kR").value,th0:+$("thR").value*Math.PI/180}}
-function rotorQ(){
-  const p=P(),C=p.k*p.m*p.r*p.r,d=p.R-p.r;
-  const Jg=p.m*d*d+C*Math.pow(1-p.R/p.r,2);
-  const IM=C+p.m*p.r*p.r,Jm=IM*Math.pow(d/p.r,2);
-  return {p,C,d,Jg,IM,Jm,T0:2*Math.PI*Math.sqrt(Jm/(p.m*g*d)),A:C/2};
-}
-function resetR(){const q=rotorQ();S.th=q.p.th0;S.w=0;S.t=0;S.cross=[];S.prev=S.th;S.tr=[];$("rTm").textContent="–"}
-function accR(th,q){return -q.p.m*g*q.d*Math.sin(th)/q.Jm}
-function stepR(dt,q){
-  const a=S.th,b=S.w;
-  const k1=[b,accR(a,q)],k2=[b+dt/2*k1[1],accR(a+dt/2*k1[0],q)],k3=[b+dt/2*k2[1],accR(a+dt/2*k2[0],q)],k4=[b+dt*k3[1],accR(a+dt*k3[0],q)];
-  S.th=a+dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);
-  S.w=b+dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
-  S.t+=dt;
-  if(S.prev<0&&S.th>=0){S.cross.push(S.t);if(S.cross.length>=2){const n=S.cross.length;$("rTm").textContent=fmt(S.cross[n-1]-S.cross[n-2],3)+" s"}}
-  S.prev=S.th;
-}
-function Kell(k){let a=1,b=Math.sqrt(1-k*k);for(let i=0;i<30;i++){const t=(a+b)/2;b=Math.sqrt(a*b);a=t}return Math.PI/(2*a)}
-function mkChips(id,list){
-  $(id).innerHTML=list.map(x=>`<label class="chip"><input type="checkbox" id="${id}_${x.key}" checked><i style="background:var(${x.col})"></i><span>${x.html}</span><b id="${id}v_${x.key}"></b></label>`).join("");
-}
-function plotTime(cv,Tt,ser,tcur,xlabel){
-  const {c,w,h}=setup(cv),pl=50,pr=12,pt0=30,pb=28;
-  const on=ser.filter(s=>s.on),norm=on.length!==1;
-  if(!on.length){c.fillStyle=css("--muted");c.font="14px "+css("--font");c.textAlign="center";c.fillText("Coche au moins une grandeur",w/2,h/2);c.textAlign="left";return}
-  let lo=0,hi=0;
-  on.forEach(s=>{const k=norm?1/s.max:1;s.v.forEach(y=>{const z=y*k;if(z<lo)lo=z;if(z>hi)hi=z})});
-  const lo0=lo,hi0=hi,pad=0.12*(hi-lo||1);lo-=pad;hi+=pad;
-  const X=t=>pl+t/Tt*(w-pl-pr),Y=y=>pt0+(hi-y)/(hi-lo)*(h-pt0-pb);
-  c.lineWidth=1;c.strokeStyle=css("--line");c.strokeRect(pl,pt0,w-pl-pr,h-pt0-pb);
-  c.strokeStyle=css("--muted");c.beginPath();c.moveTo(pl,Y(0));c.lineTo(w-pr,Y(0));c.stroke();
-  c.fillStyle=css("--muted");c.font="11px "+css("--mono");
-  c.textAlign="center";[0,0.5,1].forEach(u=>{c.beginPath();c.moveTo(X(u*Tt),h-pb);c.lineTo(X(u*Tt),h-pb+4);c.stroke();c.fillText(fmt(u*Tt,2),X(u*Tt),h-pb+16)});
-  c.textAlign="center";c.fillText(xlabel||"t (s)",X(0.75*Tt),h-pb+16);
-  const lab=v=>v===0?"0":norm?String(Math.round(v*100)/100).replace("-","−").replace(".",","):fmt(v,Math.abs(v)<10?2:0);
-  [lo0,0,hi0].filter((v,i,a)=>a.indexOf(v)===i).forEach(v=>c.fillText(lab(v),pl-5,Y(v)+4));
-  c.textAlign="left";
-  if(norm){c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("Grandeurs divisées par leur valeur maximale (la valeur réelle est dans les pastilles)",8,17)}
-  else{const s=on[0],e=sub(c,8,19,s.name,s.sub||"",css("--ink"),15);c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("("+s.unit+")",e+5,19)}
-  on.forEach(s=>{const k=norm?1/s.max:1,n=s.v.length-1;
-    c.strokeStyle=css(s.col);c.lineWidth=2.6;c.lineJoin="round";c.beginPath();
-    s.v.forEach((y,i)=>{const x=X(i/n*Tt);i?c.lineTo(x,Y(y*k)):c.moveTo(x,Y(y*k))});c.stroke()});
-  c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1;c.beginPath();c.moveTo(X(tcur),pt0);c.lineTo(X(tcur),h-pb);c.stroke();c.setLineDash([]);
-  on.forEach(s=>{const k=norm?1/s.max:1;
-    c.fillStyle=css(s.col);c.strokeStyle=css("--panel");c.lineWidth=2;c.beginPath();c.arc(X(tcur),Y(s.cur*k),6.5,0,7);c.fill();c.stroke()});
-}
-const SR={T:1,ser:[]};
-function buildR(){
-  const q=rotorQ(),p=q.p,ck=1-p.R/p.r,N=240;
-  SR.T=q.T0*(2/Math.PI)*Kell(Math.sin(p.th0/2));
-  let th=p.th0,w=0;const dt=SR.T/N,A=[],O=[],V=[];
-  const acc=x=>-p.m*g*q.d*Math.sin(x)/q.Jm;
-  for(let i=0;i<=N;i++){
-    A.push(-(p.R/p.r)*th*180/Math.PI);O.push(ck*w);V.push(q.d*w);
-    const k1=[w,acc(th)],k2=[w+dt/2*k1[1],acc(th+dt/2*k1[0])],k3=[w+dt/2*k2[1],acc(th+dt/2*k2[0])],k4=[w+dt*k3[1],acc(th+dt*k3[0])];
-    th+=dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);w+=dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
-  }
-  const mx=a=>Math.max(1e-9,...a.map(Math.abs));
-  SR.ser=[{key:"a",v:A,max:mx(A),col:"--acol",name:"α",sub:"",unit:"°"},
-          {key:"o",v:O,max:mx(O),col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
-          {key:"v",v:V,max:mx(V),col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
-}
-function drawPlotR(q,th){
-  const p=q.p,ck=1-p.R/p.r;
-  const cur={a:-(p.R/p.r)*th*180/Math.PI,o:ck*S.w,v:q.d*S.w},u={a:" °",o:" rad/s",v:" m/s"};
-  SR.ser.forEach(s=>{s.on=$("chR_"+s.key).checked;s.cur=cur[s.key];$("chRv_"+s.key).textContent=fmt(cur[s.key],s.key==="a"?1:3)+u[s.key]});
-  plotTime($("cvPt"),SR.T,SR.ser,S.t%SR.T);
-}
-function drawR(){
-  if($("p0").hidden)return;
-  const q=rotorQ(),p=q.p,{c,w,h}=setup($("cvR"));
-  const sc=Math.min(w*0.9/(2*p.R),h*0.86/(1.15*p.R));
-  const ox=w/2,oy=h*0.07;
-  const X=x=>ox+x*sc,Y=y=>oy-y*sc;
-  const th=S.th,phi=(1-p.R/p.r)*th,al=phi-th;
-  c.strokeStyle=css("--muted");c.lineWidth=5;c.beginPath();c.arc(X(0),Y(0),p.R*sc,0.05,Math.PI-0.05);c.stroke();
-  const gx=(p.R-p.r)*Math.sin(th),gy=-(p.R-p.r)*Math.cos(th),mx=p.R*Math.sin(th),my=-p.R*Math.cos(th);
-  c.setLineDash([5,5]);c.strokeStyle=css("--muted");c.lineWidth=1;
-  c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(0),Y(-p.R));c.stroke();
-  c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(mx),Y(my));c.stroke();c.setLineDash([]);
-  c.strokeStyle=css("--accent");c.lineWidth=2;
-  c.beginPath();c.arc(X(0),Y(0),0.3*p.R*sc,Math.PI/2,Math.PI/2-th,th>0);c.stroke();
-  c.fillStyle=css("--accent");c.font="700 15px "+css("--font");c.fillText("θ",X(0)+(th>=0?8:-20),Y(-0.36*p.R));
-  c.fillStyle=css("--accent")+"22";c.strokeStyle=css("--accent");c.lineWidth=2.5;
-  c.beginPath();c.arc(X(gx),Y(gy),p.r*sc,0,7);c.fill();c.stroke();
-  for(let i=0;i<3;i++){const a=phi+i*2*Math.PI/3;c.lineWidth=i?1.5:3;
-    c.beginPath();c.moveTo(X(gx),Y(gy));c.lineTo(X(gx+p.r*Math.cos(a)),Y(gy+p.r*Math.sin(a)));c.stroke()}
-  const gX=X(gx),gY=Y(gy),rg=p.r*sc;
-  if($("alR").checked){
-    const col=css("--acol");
-    c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1.3;
-    c.beginPath();c.moveTo(gX-1.45*rg*Math.cos(th),gY+1.45*rg*Math.sin(th));c.lineTo(gX+1.45*rg*Math.cos(th),gY-1.45*rg*Math.sin(th));c.stroke();c.setLineDash([]);
-    sub(c,gX-1.45*rg*Math.cos(th)-16,gY+1.45*rg*Math.sin(th)+16,"x","i",css("--muted"),14);
-    c.strokeStyle=css("--accent");c.lineWidth=1.3;c.beginPath();c.moveTo(gX+rg*Math.cos(phi),gY-rg*Math.sin(phi));c.lineTo(gX+1.45*rg*Math.cos(phi),gY-1.45*rg*Math.sin(phi));c.stroke();
-    sub(c,gX+1.45*rg*Math.cos(phi)+4,gY-1.45*rg*Math.sin(phi)-4,"x","2",css("--accent"),14);
-    c.strokeStyle=col;c.lineWidth=2.6;c.beginPath();c.arc(gX,gY,0.8*rg,-th,-phi,al>0);c.stroke();
-    const mid=th+al/2;
-    if(Math.abs(al)>0.02){c.fillStyle=col;c.font="700 19px "+css("--font");c.fillText("α",gX+1.12*rg*Math.cos(mid)-6,gY-1.12*rg*Math.sin(mid)+6)}
-  }
-  dot(c,gX,gY,css("--gcol"),"G",-18,20);
-  dot(c,X(0),Y(0),css("--ink"),"C",8,-8);
-  if($("cirR").checked){dot(c,X(mx),Y(my),css("--mcol"),null);
-    c.fillStyle=css("--mcol");c.font="700 14px "+css("--font");c.textAlign="center";
-    c.fillText("M = CIR",X(mx)+30*Math.sin(th),Y(my)+30*Math.cos(th)+4);c.textAlign="left"}
-  if($("vecR").checked){
-    const wm=Math.sqrt(2*p.m*g*q.d*(1-Math.cos(p.th0))/q.Jm)||1e-9;
-    const vmax=q.d*wm,Lmax=Math.min(2.4*rg,0.55*p.R*sc),L=q.d*S.w/vmax*Lmax;
-    const ex=gX+Math.cos(th)*L,ey=gY-Math.sin(th)*L;
-    if(Math.abs(L)>5){arrow(c,gX,gY,ex,ey,css("--gcol"),null,5);
-      sub(c,ex+(L>0?10:-34),ey-12,"V","G",css("--gcol"),20)}
-    const ck=1-p.R/p.r,Om=ck*S.w,Omax=Math.abs(ck)*wm,da=Math.max(-1,Math.min(1,Om/Omax))*4.3;
-    if(Math.abs(da)>0.15){
-      const e=arcArrow(c,gX,gY,0.5*rg,1.2*Math.PI,da,css("--wcol"));
-      c.fillStyle=css("--wcol");c.font="700 21px "+css("--font");c.fillText("Ω",e[0]-8,e[1]+7);
-    }
-  }
-  scaleBar(c,w,h,sc);
-  const P_ext=-p.m*g*q.d*S.w*Math.sin(th),dEc=q.Jm*S.w*accR(th,q);
-  $("rTh").textContent=fmt(th*180/Math.PI,1)+" °";$("rAl").textContent=fmt(-(p.R/p.r)*th*180/Math.PI,1)+" °";
-  $("rJ").textContent=fmt(q.Jm,4)+" kg·m²";$("rT0").textContent=fmt(q.T0,3)+" s";
-  $("rdE").textContent=fmt(dEc,3)+" W";$("rP").textContent=fmt(P_ext,3)+" W";
-  drawPlotR(q,th);
-}
-const tx=(x,d)=>fmt(x,d).replace(",","{,}");
-function typeset(items){
-  const MJ=window.MathJax;
-  if(MJ&&MJ.typesetPromise&&MJ.startup&&MJ.startup.promise){
-    items.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div>\\['+i.tex+'\\]'});
-    const els=items.map(i=>i.el);try{MJ.typesetClear(els)}catch(e){}
-    MJ.startup.promise.then(()=>MJ.typesetPromise(els)).catch(()=>{});return true}
-  items.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div><div class="eq">'+i.fb+'</div>'});return false;
-}
-let tries=0;
-function renderTors(){
-  const q=rotorQ(),p=q.p,ck=1-p.R/p.r;
-  const tg=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{G,2/1}=(R-r)\,\dot\theta\,\vec x_i=${tx(q.d,2)}\,\dot\theta\,\vec x_i\end{array}\right\}_{G}`;
-  const tm=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{M,2/1}=\vec 0\end{array}\right\}_{M}`;
-  const ok=typeset([
-    {el:$("torG"),cap:"Torseur cinématique de 2/1 en G",tex:tg,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>G</sub> = "+fmt(q.d,2)+" θ̇ x<sub>i</sub> }<sub>G</sub>"},
-    {el:$("torM"),cap:"Torseur cinématique de 2/1 en M",tex:tm,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>M</sub> = 0 }<sub>M</sub>"}]);
-  if(!ok&&tries++<40)setTimeout(renderTors,500);
-}
-function renderStepsR(){
-  const q=rotorQ(),{p}=q,ck=(1-p.R/p.r);
-  const ok=Math.abs(q.Jg-q.Jm)<1e-12*Math.max(1,q.Jg);
-  let h="";
-  if(S.method==="G"){
-    h=`<li><span class="t">1 · Cinématique en G</span><span class="eq">Ω<sub>2/1</sub> = (1−R/r) θ̇ z = <b>${fmt(ck,3)}</b> θ̇ z &nbsp;;&nbsp; V<sub>G,2/1</sub> = (R−r) θ̇ x<sub>i</sub> = <b>${fmt(q.d,3)}</b> θ̇ x<sub>i</sub></span><br><span class="note">Il faut établir la relation α̇ = −(R/r) θ̇ avec Varignon entre M et G.</span></li>
-    <li><span class="t">2 · Comoment en G (matrice d'inertie en G, déjà donnée)</span><span class="eq">E<sub>c</sub> = ½ [ m V<sub>G</sub>² + Ω·I<sub>G</sub>Ω ] = ½ [ m(R−r)² + C₂(1−R/r)² ] θ̇²</span><br>
-      <span class="eq"><span class="G">= ½ [ ${fmt(p.m*q.d*q.d,4)} + ${fmt(q.C*ck*ck,4)} ] θ̇² = ½ · ${fmt(q.Jg,4)} θ̇²</span></span></li>
-    <li><span class="t">3 · Puissance extérieure</span><span class="eq">P<sub>ext</sub> = −m g (R−r) θ̇ sin θ &nbsp; (contact en M : puissance nulle)</span></li>
-    <li><span class="t">4 · TEC</span><span class="eq">J<sub>eq</sub> θ̈ + m g (R−r) sin θ = 0 &nbsp; avec J<sub>eq</sub> = <span class="G">${fmt(q.Jg,4)}</span> kg·m²</span></li>`;
-  }else{
-    h=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>M,2/1</sub> = 0</span><br><span class="note">M est le centre instantané de rotation : le mouvement de 2/1 est une rotation pure d'axe (M, z). Seul Ω reste à exprimer : Ω = (R−r)θ̇ / r en norme.</span></li>
-    <li><span class="t">2 · Déplacer la matrice d'inertie en M (Huygens), une seule fois</span>
-      <span class="eq">MG = r y<sub>i</sub> &nbsp;⇒&nbsp; I<sub>M</sub>(2) = diag( A₂ + m r² , A₂ , <span class="M">C₂ + m r²</span> )</span><br>
-      <span class="eq">C₂ + m r² = ${fmt(q.C,5)} + ${fmt(p.m*p.r*p.r,5)} = <span class="M">${fmt(q.IM,5)}</span> kg·m²</span></li>
-    <li><span class="t">3 · Énergie cinétique : V<sub>M</sub> = 0, donc un seul terme</span><span class="eq">E<sub>c</sub> = ½ Ω·I<sub>M</sub>Ω = ½ (C₂ + m r²) [(R−r)/r]² θ̇²</span><br>
-      <span class="eq"><span class="M">= ½ · ${fmt(q.IM,5)} · ${fmt(Math.pow(q.d/p.r,2),3)} θ̇² = ½ · ${fmt(q.Jm,4)} θ̇²</span></span></li>
-    <li><span class="t">4 · Puissance extérieure et TEC</span><span class="eq">P<sub>ext</sub> = −m g (R−r) θ̇ sin θ &nbsp;⇒&nbsp; J<sub>eq</sub> θ̈ + m g (R−r) sin θ = 0</span></li>`;
-  }
-  $("stepsR").innerHTML=h;
-  $("verdR").innerHTML=`J<sub>eq</sub> obtenu en G : <b class="G">${fmt(q.Jg,5)}</b> &nbsp;·&nbsp; en M : <b class="M">${fmt(q.Jm,5)}</b> kg·m² ${ok?"→ identiques":"→ écart"}.
-   Période : T = 2π √[(R−r)(C₂+m r²)/(m g r²)] = <b>${fmt(q.T0,3)} s</b>.
-   ${S.method==="G"?"En G, il faut deux termes de comoment et la cinématique de G.":"En M, un seul terme d'inertie suffit, et la matrice se déplace par Huygens."}`;
-}
-function onRotorParams(){
-  const R=+$("Rr").value;$("rr").max=(R*0.9).toFixed(3);
-  if(+$("rr").value>R*0.9)$("rr").value=R*0.9;
-  $("orr").textContent=fmt(+$("rr").value,3)+" m";
-  resetR();buildR();renderStepsR();renderTors();drawR();
-}
-
-mkChips("chR",[{key:"a",col:"--acol",html:"α"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
-bindRange("Rr",onRotorParams,"m",2);bindRange("rr",onRotorParams,"m",3);bindRange("mR",onRotorParams,"kg",1);
-bindRange("kR",onRotorParams,"",2);bindRange("thR",onRotorParams,"°",0);
-$("vecR").onchange=$("cirR").onchange=$("alR").onchange=drawR;bindRange("vR",()=>{},"×",2);
-$("playR").onclick=()=>{S.run=!S.run;$("playR").textContent=S.run?"Pause":"Lecture"};
-$("resetR").onclick=()=>{resetR();drawR()};
-$("mG").onclick=()=>{S.method="G";$("mG").setAttribute("aria-pressed","true");$("mM").setAttribute("aria-pressed","false");renderStepsR()};
-$("mM").onclick=()=>{S.method="M";$("mM").setAttribute("aria-pressed","true");$("mG").setAttribute("aria-pressed","false");renderStepsR()};
-window.__tec={typeset,plotTime,mkChips,sub,arcArrow,scaleBar,$,css,fmt,setup,arrow,dot,mkBars,setBar,bindRange,g,drawR,resetR,stepR,rotorQ,S,onRotorParams,showTab};
-})();
-(function(){
-"use strict";
-const T=window.__tec,$=T.$,css=T.css,fmt=T.fmt,g=T.g;
-
-/* =================== ROUE DE VELO =================== */
-const B={t:0,run:true,method:"G",hold:0,L:3,rh:0.03};
-function bq(){
-  const r=+$("bb").value,beta=r*Math.PI/180,rr=+$("rb").value;
-  const mj=+$("mj").value,ms=+$("ms").value,mh=+$("mh").value,m=mj+ms+mh;
-  const C=mj*rr*rr+ms*rr*rr/3+0.5*mh*B.rh*B.rh;
-  const k=C/(m*rr*rr),a=g*Math.sin(beta)/(1+k);
-  return {beta,r:rr,m,C,k,a,f:k*m*a,mu:k*Math.tan(beta)/(1+k),tf:Math.sqrt(2*B.L/a),mj,ms,mh};
-}
-const SB={ser:[],T:1};
-function buildB(){
-  const q=bq(),N=120,P=[],O=[],V=[];
-  for(let i=0;i<=N;i++){const t=q.tf*i/N;P.push(-q.a*t*t/(2*q.r));O.push(-q.a*t/q.r);V.push(q.a*t)}
-  SB.T=q.tf;
-  SB.ser=[{key:"p",v:P,max:Math.abs(P[N])||1e-9,col:"--acol",name:"ψ",sub:"",unit:"rad"},
-          {key:"o",v:O,max:Math.abs(O[N])||1e-9,col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
-          {key:"v",v:V,max:V[N]||1e-9,col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
-}
-function drawB(){
-  if($("p1").hidden)return;
-  const q=bq(),{c,w,h}=T.setup($("cvB"));
-  const t=Math.min(B.t,q.tf),s=0.5*q.a*t*t,v=q.a*t;
-  const sc=Math.min((w-90)/(B.L*Math.cos(q.beta)+4.3*q.r),0.62*h/(B.L*Math.sin(q.beta)+2*q.r));
-  const x0=30+1.1*q.r*sc,y0=(h-B.L*Math.sin(q.beta)*sc)/2-q.r*sc*0.1;
-  const cb=Math.cos(q.beta),sb=Math.sin(q.beta),Pt=(x,y)=>[x0+x*cb-y*sb,y0+x*sb+y*cb];
-  const R=q.r*sc,gx=s*sc,gy=-R,vmax=q.a*q.tf;
-  const gcol=css("--gcol"),wcol=css("--wcol");
-  c.save();c.translate(x0,y0);c.rotate(q.beta);
-  c.fillStyle=css("--grid");c.fillRect(-0.5*R,0,B.L*sc+R,14);
-  c.strokeStyle=css("--muted");c.lineWidth=3;c.beginPath();c.moveTo(-0.5*R,0);c.lineTo(B.L*sc+R,0);c.stroke();
-  for(let d=0;d<=B.L;d+=0.5){c.lineWidth=1;c.beginPath();c.moveTo(d*sc,0);c.lineTo(d*sc,8);c.stroke()}
-  let sbk=0;
-  if($("ghB").checked){sbk=Math.min(0.5*g*Math.sin(q.beta)*t*t,B.L);c.fillStyle=css("--muted");c.fillRect(sbk*sc-7,16,14,10)}
-  c.strokeStyle=css("--accent");c.lineWidth=Math.max(3,R*0.09);c.beginPath();c.arc(gx,gy,R,0,7);c.stroke();
-  for(let i=0;i<16;i++){const a=s/q.r+i*Math.PI/8;c.strokeStyle=i===0?css("--mcol"):css("--accent");c.lineWidth=i===0?2.5:1;
-    c.beginPath();c.moveTo(gx,gy);c.lineTo(gx+R*Math.cos(a),gy+R*Math.sin(a));c.stroke()}
-  c.fillStyle=css("--panel");c.strokeStyle=css("--accent");c.lineWidth=2;c.beginPath();c.arc(gx,gy,R*0.1,0,7);c.fill();c.stroke();
-  T.dot(c,gx,gy,gcol,null);T.dot(c,gx,0,css("--mcol"),null);
-  const L=v/vmax*2.2*R;
-  if(L>5)T.arrow(c,gx,gy,gx+L,gy,gcol,null,5);
-  let om=null;
-  const da=-(v/vmax)*4.3;
-  if(Math.abs(da)>0.15)om=T.arcArrow(c,gx,gy,0.5*R,Math.PI*0.9,da,wcol);
-  let fl=0;
-  if($("fcB").checked){fl=Math.min(1.4*R,q.f/(q.m*g)*R*6);if(fl>4)T.arrow(c,gx,-3,gx-fl,-3,css("--bad"),null,3)}
-  c.restore();
-  // étiquettes dans le repère de l'écran
-  c.textAlign="left";
-  let p1=Pt(gx,gy);c.fillStyle=gcol;c.font="700 14px "+css("--font");c.fillText("G",p1[0]-18,p1[1]+20);
-  p1=Pt(gx,0);c.fillStyle=css("--mcol");c.fillText("I (V = 0)",p1[0]-24,p1[1]+30);
-  if(L>5){p1=Pt(gx+L+10,gy);T.sub(c,p1[0],p1[1]-8,"V","G",gcol,20)}
-  if(om){p1=Pt(om[0],om[1]);c.fillStyle=wcol;c.font="700 21px "+css("--font");c.fillText("Ω",p1[0]-8,p1[1]+7)}
-  if(fl>4){p1=Pt(gx-fl-14,-8);c.fillStyle=css("--bad");c.font="700 15px "+css("--font");c.fillText("f",p1[0],p1[1])}
-  if($("ghB").checked){p1=Pt(sbk*sc,16);c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("bloc sans frottement",p1[0]-48,p1[1]+30)}
-  T.scaleBar(c,w,h,sc);
-  // graphe temporel
-  const cur={p:-s/q.r,o:-v/q.r,v:v},u={p:" rad",o:" rad/s",v:" m/s"};
-  SB.ser.forEach(e=>{e.on=$("chB_"+e.key).checked;e.cur=cur[e.key];$("chBv_"+e.key).textContent=fmt(cur[e.key],2)+u[e.key]});
-  T.plotTime($("cvTB"),SB.T,SB.ser,t);
-  $("bC").textContent=fmt(q.C,4)+" kg·m²";$("bk").textContent=fmt(q.k,3);
-  $("ba").textContent=fmt(q.a,3)+" m/s²";$("bf").textContent=fmt(q.f,2)+" N";$("bmu").textContent=fmt(q.mu,3);
-  $("bv").textContent=fmt(v,2)+" m/s";
-}
-let btries=0;
-function renderTorsB(){
-  const q=bq(),k=1/q.r,tk=T.fmt(k,2).replace(",","{,}");
-  const tg=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{G,2/0}=\dot s\,\vec x_0\end{array}\right\}_{G}`;
-  const ti=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{I,2/0}=\vec 0\end{array}\right\}_{I}`;
-  const cap="x₀ le long de la pente vers le bas, z₀ = x₀ ∧ y₀ sortant de l'écran";
-  const ok=T.typeset([
-    {el:$("torBG"),cap:"Torseur cinématique de 2/0 en G",tex:tg,fb:"{V₂/₀} = { Ω = −"+T.fmt(k,2)+" ṡ z₀ ; V<sub>G</sub> = ṡ x₀ }<sub>G</sub>"},
-    {el:$("torBI"),cap:"Torseur cinématique de 2/0 en I",tex:ti,fb:"{V₂/₀} = { Ω = −"+T.fmt(k,2)+" ṡ z₀ ; V<sub>I</sub> = 0 }<sub>I</sub>"}]);
-  if(!ok&&btries++<40)setTimeout(renderTorsB,500);
-  $("bAxes").textContent=cap;
-}
-function stepsB(){
-  const q=bq(),s=Math.sin(q.beta);
-  const meff=q.m+q.C/(q.r*q.r),IM=q.C+q.m*q.r*q.r;
-  let h;
-  if(B.method==="G"){
-    h=`<li><span class="t">1 · Cinématique en G</span><span class="eq">RSG en I : V<sub>I</sub> = 0 ⇒ V<sub>G</sub> = r Ω &nbsp;;&nbsp; Ω = v / r</span></li>
-    <li><span class="t">2 · Comoment en G : deux termes</span><span class="eq">E<sub>c</sub> = ½ m v² + ½ C Ω² = ½ ( m + C/r² ) v²</span><br>
-      <span class="eq"><span class="G">= ½ ( ${fmt(q.m,3)} + ${fmt(q.C/(q.r*q.r),3)} ) v² = ½ · ${fmt(meff,3)} v²</span></span></li>
-    <li><span class="t">3 · Puissance extérieure</span><span class="eq">P<sub>ext</sub> = m g sin β · v &nbsp; (réaction en I : P = 0, car V<sub>I</sub> = 0)</span></li>
-    <li><span class="t">4 · TEC</span><span class="eq">( m + C/r² ) v v̇ = m g sin β v ⇒ a = <span class="G">${fmt(q.a,3)} m/s²</span></span></li>`;
-  }else{
-    h=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>I,2/0</sub> = 0 : I est le centre instantané de rotation, rotation pure d'axe (I, z)</span></li>
-    <li><span class="t">2 · Matrice d'inertie en I par Huygens (IG = r)</span><span class="eq">I<sub>I</sub>(2) · zz = C + m r² = ${fmt(q.C,4)} + ${fmt(q.m*q.r*q.r,4)} = <span class="M">${fmt(IM,4)}</span> kg·m²</span></li>
-    <li><span class="t">3 · Énergie cinétique : un seul terme</span><span class="eq">E<sub>c</sub> = ½ (C + m r²) Ω² = ½ <span class="M">${fmt(IM,4)}</span> (v/r)²</span><br><span class="note">I se déplace sur le sol, mais IG = r reste constant : l'expression vaut à chaque instant, on peut la dériver.</span></li>
-    <li><span class="t">4 · TEC</span><span class="eq">(C + m r²) Ω Ω̇ = m g sin β · r Ω ⇒ a = r Ω̇ = <span class="M">${fmt(q.a,3)} m/s²</span></span></li>`;
-  }
-  $("stepsB").innerHTML=h;
-  $("verdB").innerHTML=`a = g sin β / (1 + k) avec k = C/(m r²) = <b>${fmt(q.k,3)}</b> : la roue descend ${fmt(1+q.k,2)} fois moins vite qu'un bloc sans frottement. Arrivée en <b>${fmt(q.tf,2)} s</b>.
-   Le frottement f = ${fmt(q.f,2)} N est non nul mais ne travaille pas. Il faut μ ≥ ${fmt(q.mu,3)} pour rouler sans glisser.`;
-}
-function resetB(){B.t=0;B.hold=0}
-function onB(){resetB();buildB();stepsB();renderTorsB();drawB()}
-T.mkChips("chB",[{key:"p",col:"--acol",html:"ψ"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
-T.bindRange("bb",onB,"°",0);T.bindRange("rb",onB,"m",2);T.bindRange("mj",onB,"kg",2);T.bindRange("ms",onB,"kg",2);T.bindRange("mh",onB,"kg",2);
-T.bindRange("vb",()=>{},"×",2);
-$("ghB").onchange=$("fcB").onchange=drawB;
-$("playB").onclick=()=>{B.run=!B.run;$("playB").textContent=B.run?"Pause":"Lecture"};
-$("resetB").onclick=resetB;
-$("bG").onclick=()=>{B.method="G";$("bG").setAttribute("aria-pressed","true");$("bM").setAttribute("aria-pressed","false");stepsB()};
-$("bM").onclick=()=>{B.method="I";$("bM").setAttribute("aria-pressed","true");$("bG").setAttribute("aria-pressed","false");stepsB()};
-
-/* =================== QUIZ =================== */
-const Q=[
- {q:"Pour écrire E<sub>c</sub> = ½ Ω·I<sub>M</sub>Ω avec un seul terme, quelle propriété de M utilise-t-on ?",
-  o:["M est le centre de masse du rotor","V<sub>M,2/1</sub> = 0 : le roulement sans glissement fait de M le centre instantané de rotation","M est le point le plus bas de la plaque, donc l'énergie potentielle y est nulle","M est un point fixe de la plaque 1, donc de 2"],a:1,
-  e:"Avec V<sub>M</sub> = 0, le comoment se réduit au seul terme de rotation. M n'est pas fixe : c'est un point géométrique de contact qui se déplace sur la plaque, mais sa vitesse est nulle à l'instant considéré."},
- {q:"Le rotor a pour moment d'inertie C₂ par rapport à (G, z). Que vaut le terme zz de I<sub>M</sub>(2), avec MG = r ?",
-  o:["C₂","C₂ − m r²","C₂ + m r²","C₂ + m (R−r)²"],a:2,
-  e:"Huygens : on ajoute m·d² où d est la distance entre les deux axes parallèles. Ici d = MG = r."},
- {q:"Au contact en M, la force de frottement n'est pas nulle. Pourquoi sa puissance l'est-elle ?",
-  o:["Parce que la force est perpendiculaire à la vitesse","Parce que la vitesse de glissement en M est nulle","Parce que l'action de contact est une action intérieure","Parce que le frottement est négligé"],a:1,
-  e:"La puissance d'une action de contact est le comoment du torseur d'action et du torseur cinématique : elle contient la vitesse de glissement V<sub>M,2/1</sub> = 0. Une force peut être non nulle et ne pas travailler."},
- {q:"On fait tendre C₂ vers 0 (toute la masse au centre). Quelle période retrouve-t-on ?",
-  o:["T = 2π √(r/g)","T = 2π √((R−r)/g), celle d'un pendule simple de longueur R−r","T = 2π √(R/g)","Elle tend vers l'infini"],a:1,
-  e:"Avec C₂ = 0, T = 2π √((R−r)(m r²)/(m g r²)) = 2π √((R−r)/g). Le centre G décrit un cercle de rayon R−r."},
- {q:"Une roue pleine (disque, k = ½) et un cerceau (k = 1) de même masse et de même rayon descendent la même pente. Lequel arrive en premier ?",
-  o:["Le cerceau, car sa masse est à la périphérie","Le disque plein, car a = g sin β / (1+k) est plus grande avec k plus petit","Ils arrivent ensemble, la masse n'intervient pas","Cela dépend du rayon"],a:1,
-  e:"Plus la masse est loin de l'axe, plus il faut d'énergie cinétique de rotation pour une même vitesse : à Ep égale, v est plus petite. a vaut ⅔ g sin β pour le disque et ½ g sin β pour le cerceau."},
- {q:"Quelle puissance fait varier l'énergie cinétique de la roue de vélo qui descend ?",
-  o:["Celle du frottement en I, qui entraîne la rotation","Celle de la réaction normale","Celle du poids seulement","Celles du poids et du frottement"],a:2,
-  e:"Le frottement en I est indispensable pour que la roue tourne, mais sa puissance est nulle (V<sub>I</sub> = 0). La normale aussi. Seul le poids fournit de la puissance."},
- {q:"On veut écrire E<sub>c</sub> = ½ I<sub>A</sub> Ω² en un point A quelconque du solide, en mouvement. Est-ce correct ?",
-  o:["Oui, à condition d'avoir la matrice d'inertie en A","Non, il faut que la vitesse de A soit nulle (ou que A soit sur un axe fixe) ; sinon le comoment compte aussi un terme en V<sub>A</sub>","Oui, car l'énergie cinétique ne dépend pas du point","Non, seul G convient toujours"],a:1,
-  e:"E<sub>c</sub> = ½ {V}⊗{C} s'écrit en n'importe quel point, mais la forme à un terme ½ Ω·I<sub>A</sub>Ω exige V<sub>A</sub> = 0. C'est le cas de M et de I grâce au roulement sans glissement."}
-,
- {q:"On connaît I<sub>G</sub>(S) diagonale et MG = (a, b, 0). Que vaut le terme xy de I<sub>M</sub>(S) ?",
-  o:["0","−m a b","+m a b","m (a² + b²)"],a:1,
-  e:"Le terme hors diagonale de la matrice de Huygens vaut −m·a·b (produit des coordonnées de MG). Il disparaît seulement si MG est porté par un axe de la base."},
- {q:"On connaît I<sub>M</sub>(S) et on veut I<sub>M'</sub>(S). Peut-on appliquer Huygens directement entre M et M' ?",
-  o:["Oui, avec le vecteur MM'","Non : un des deux points doit être le centre de masse G, on passe par G","Oui, mais seulement si M et M' sont sur un même axe","Non, il faut recalculer l'intégrale"],a:1,
-  e:"La formule suppose que G est l'un des deux points. Pour aller de M à M', on retranche d'abord le terme en MG pour revenir en G, puis on ajoute le terme en M'G."}
+/* ---------- Solides, échantillonnage, moments, symétries (calcul pur) ---------- */
+/*PURE*/
+const M_TOT=2;
+function mulberry(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const E9=1e-9;
+const SOL=[
+ {id:'box',n:'Parallélépipède',pr:[['a','a',4,16,.5,12],['b','b',3,14,.5,8],['c','c',2,12,.5,5]],
+  ext:p=>[p.a/2,p.b/2,p.c/2],
+  in:(p,x,y,z)=>Math.abs(x)<=p.a/2&&Math.abs(y)<=p.b/2&&Math.abs(z)<=p.c/2,
+  exact:(m,p)=>({A:m*(p.b*p.b+p.c*p.c)/12,B:m*(p.a*p.a+p.c*p.c)/12,C:m*(p.a*p.a+p.b*p.b)/12})},
+ {id:'cyl',n:'Cylindre plein',pr:[['R','R',2,8,.5,5],['h','h',2,16,.5,10]],
+  ext:p=>[p.R,p.R,p.h/2],
+  in:(p,x,y,z)=>x*x+y*y<=p.R*p.R+E9&&Math.abs(z)<=p.h/2,
+  exact:(m,p)=>({A:m*(p.R*p.R/4+p.h*p.h/12),B:m*(p.R*p.R/4+p.h*p.h/12),C:m*p.R*p.R/2})},
+ {id:'L',n:'Équerre (plaque en L)',plate:1,pr:[['a','a',6,16,.5,12],['b','b',5,16,.5,9],['w','w',1,5,.5,3],['e','e',.2,6,.1,1.5]],
+  ext:p=>[p.a,p.b,p.e/2],
+  in:(p,x,y,z)=>Math.abs(z)<=p.e/2&&((x>=0&&x<=p.a&&y>=0&&y<=p.w)||(x>=0&&x<=p.w&&y>=0&&y<=p.b))},
+ {id:'T',n:'Plaque en T',plate:1,pr:[['a','a',6,18,.5,14],['b','b',4,16,.5,10],['w','w',1,6,.5,3],['e','e',.2,6,.1,1.5]],
+  ext:p=>[p.a/2,Math.max(p.b,p.w),p.e/2],
+  in:(p,x,y,z)=>Math.abs(z)<=p.e/2&&((Math.abs(x)<=p.a/2&&y>=0&&y<=p.w)||(Math.abs(x)<=p.w/2&&y<=0&&y>=-p.b))},
+ {id:'lug',n:'Cylindre + masselotte',pr:[['R','R',3,8,.5,5],['h','h',4,14,.5,8],['s','masselotte',1,4,.5,2.5],['beta','β (°)',0,180,1,0]],
+  ext:p=>[p.R+p.s,p.R+p.s,p.h/2],
+  in:(p,x,y,z)=>{if(x*x+y*y<=p.R*p.R+E9&&Math.abs(z)<=p.h/2)return true;const b=p.beta*Math.PI/180,xl=p.R*Math.cos(b),yl=p.R*Math.sin(b),zl=p.h/2-p.s/2;return Math.abs(x-xl)<=p.s/2&&Math.abs(y-yl)<=p.s/2&&Math.abs(z-zl)<=p.s/2}},
+ {id:'rod',n:'Barre inclinée',pr:[['L','L',8,24,1,16],['r','r',.5,3,.5,1],['alpha','α (°)',0,90,1,35]],
+  ext:p=>{const e=p.L/2+p.r;return[e,e,e]},
+  in:(p,x,y,z)=>{const a=p.alpha*Math.PI/180,t=x*Math.cos(a)+z*Math.sin(a);return Math.abs(t)<=p.L/2&&x*x+y*y+z*z-t*t<=p.r*p.r+E9}}
 ];
-let ans=[],done=false;
-function renderQ(){
-  done=false;ans=[];$("qScore").textContent="";
-  $("quiz").innerHTML=Q.map((x,i)=>`<div class="q" id="q${i}"><p>${i+1}. ${x.q}</p>`+x.o.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"><span>${o}</span></label>`).join("")+`<div class="fb" id="fb${i}"></div></div>`).join("");
-}
-$("qCheck").onclick=()=>{
-  let sc=0,rep=0;
-  Q.forEach((x,i)=>{
-    const sel=document.querySelector(`input[name=q${i}]:checked`),fb=$("fb"+i);
-    if(!sel){fb.className="fb";fb.textContent="";return}
-    rep++;const ok=+sel.value===x.a;if(ok)sc++;
-    fb.className="fb "+(ok?"ok":"ko");
-    fb.innerHTML=(ok?"Correct. ":"Pas tout à fait. ")+x.e;
-  });
-  $("qScore").textContent=rep<Q.length?`${sc} bonne(s) réponse(s) sur ${rep} répondues. Il reste ${Q.length-rep} question(s).`:`Score : ${sc} / ${Q.length}`;
-};
-$("qReset").onclick=renderQ;
-renderQ();
+function sample(s,p){
+ const e=s.ext(p),L=e.map(v=>2*v);let h=Math.cbrt(L[0]*L[1]*L[2]/110000),n;
+ for(let k=0;k<14;k++){n=L.map(l=>Math.max(5,Math.round(l/h)));if(n[0]*n[1]*n[2]<=120000)break;h*=1.12}
+ const X=[],Y=[],Z=[];
+ for(let i=0;i<n[0];i++){const x=-e[0]+(i+.5)*L[0]/n[0];for(let j=0;j<n[1];j++){const y=-e[1]+(j+.5)*L[1]/n[1];for(let k=0;k<n[2];k++){const z=-e[2]+(k+.5)*L[2]/n[2];if(s.in(p,x,y,z)){X.push(x);Y.push(y);Z.push(z)}}}}
+ return{X,Y,Z,n:X.length,e}}
+function centroid(P){let a=0,b=0,c=0;for(let i=0;i<P.n;i++){a+=P.X[i];b+=P.Y[i];c+=P.Z[i]}return[a/P.n,b/P.n,c/P.n]}
+function moments(P,Q){let A=0,B=0,C=0,D=0,E=0,F=0;
+ for(let i=0;i<P.n;i++){const x=P.X[i]-Q[0],y=P.Y[i]-Q[1],z=P.Z[i]-Q[2];A+=y*y+z*z;B+=x*x+z*z;C+=x*x+y*y;D+=y*z;E+=x*z;F+=x*y}
+ const k=M_TOT/P.n;return{A:A*k,B:B*k,C:C*k,D:D*k,E:E*k,F:F*k}}
+function symmetry(s,p,P){
+ const step=Math.max(1,Math.floor(P.n/900)),idx=[];for(let i=0;i<P.n;i+=step)idx.push(i);
+ const ok=f=>idx.every(i=>s.in(p,...f(P.X[i],P.Y[i],P.Z[i])));
+ const rz=a=>{const c=Math.cos(a),s=Math.sin(a);return(x,y,z)=>[x*c-y*s,x*s+y*c,z]};
+ const rx=a=>{const c=Math.cos(a),s=Math.sin(a);return(x,y,z)=>[x,y*c-z*s,y*s+z*c]};
+ const ry=a=>{const c=Math.cos(a),s=Math.sin(a);return(x,y,z)=>[x*c+z*s,y,-x*s+z*c]};
+ const angs=[.7,1.9,3.3];
+ const pl={xy:ok((x,y,z)=>[x,y,-z]),xz:ok((x,y,z)=>[x,-y,z]),yz:ok((x,y,z)=>[-x,y,z])};
+ const rv={x:angs.every(a=>ok(rx(a))),y:angs.every(a=>ok(ry(a))),z:angs.every(a=>ok(rz(a)))};
+ return{pl,rev:rv.z?'z':rv.x?'x':rv.y?'y':null}}
+function formMatrix(o){
+ const pl={...o.planes};if(o.rev==='z'){pl.xz=pl.yz=true}if(o.rev==='x'){pl.xy=pl.xz=true}if(o.rev==='y'){pl.xy=pl.yz=true}
+ let zD=false,zE=false,zF=false;
+ if(pl.xy){zE=zD=true}if(pl.xz){zF=zD=true}if(pl.yz){zF=zE=true}
+ if(o.thin==='z')zE=zD=true;if(o.thin==='x')zF=zE=true;if(o.thin==='y')zF=zD=true;
+ let a='A',b='B',c='C';
+ if(o.rev==='z')b='A';if(o.rev==='x')c='B';if(o.rev==='y')c='A';
+ const cb=(u,v)=>u===v?'2'+u:u+'+'+v;
+ if(o.thin==='z')c=cb(a,b);if(o.thin==='x')a=cb(b,c);if(o.thin==='y')b=cb(a,c);
+ const cells=[a,zF?'0':'−F',zE?'0':'−E',zF?'0':'−F',b,zD?'0':'−D',zE?'0':'−E',zD?'0':'−D',c];
+ return{cells,zeros:cells.map(x=>x==='0')}}
+/*ENDPURE*/
 
-/* =================== BOUCLE =================== */
-let last=performance.now();
-function frame(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(!$("p0").hidden){
-    if(T.S.run){const q=T.rotorQ(),n=10,ds=dt*(+$("vR").value);for(let i=0;i<n;i++)T.stepR(ds/n,q)}
-    T.drawR();
-  }else if(!$("p1").hidden){
-    if(B.run){
-      const q=bq();
-      if(B.t<q.tf)B.t+=dt*(+$("vb").value);
-      else{B.hold+=dt;if(B.hold>1.2)resetB()}
-    }
-    drawB();
-  }
-  requestAnimationFrame(frame);
+const matHTML=(cells,zeros,cls,sel)=>`<div class="mat${cls?' '+cls:''}">${cells.map((c,i)=>`<span class="${zeros&&zeros[i]?'z':'nz'}${sel===i?' sel':''}" data-i="${i}">${c}</span>`).join('')}</div>`;
+
+/* ---------- Moteur 3D (canvas 2D) ---------- */
+const views=[];
+class View{
+ constructor(cv,o){this.cv=cv;this.ctx=cv.getContext('2d');this.yaw=o.yaw??-.8;this.pitch=o.pitch??.5;this.R=o.R||10;this.h=o.h||300;this.auto=false;this.vis=false;this.drag=false;this.draw=o.draw;this.upd=o.upd;this.w=0;
+  cv.classList.add('sc');
+  cv.addEventListener('pointerdown',e=>{this.drag=true;this.lx=e.clientX;this.ly=e.clientY;try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+  cv.addEventListener('pointermove',e=>{if(!this.drag)return;this.yaw-=(e.clientX-this.lx)*.01;if(e.pointerType!=='touch')this.pitch=clamp(this.pitch+(e.clientY-this.ly)*.01,-1.2,1.4);this.lx=e.clientX;this.ly=e.clientY});
+  const end=()=>{this.drag=false};cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  if(window.IntersectionObserver)new IntersectionObserver(es=>{this.vis=es[0].isIntersecting}).observe(cv);else this.vis=true;
+  views.push(this)}
+ resize(){const d=window.devicePixelRatio||1,w=this.cv.clientWidth;if(!w)return;this.w=w;this.cv.style.height=this.h+'px';this.cv.width=Math.round(w*d);this.cv.height=Math.round(this.h*d);this.ctx.setTransform(d,0,0,d,0,0)}
+ P(x,y,z){const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);
+  const x1=x*cy-y*sy,y1=x*sy+y*cy,up=z*cp+y1*sp,dep=y1*cp-z*sp,D=this.R*3.2,f=D/(D+dep);
+  return[this.w/2+x1*f*this.S,this.h*.52-up*f*this.S,dep,f]}
+ pt(x,y,z,col,r,a){const q=this.P(x,y,z);this.L.push({k:0,d:q[2],X:q[0],Y:q[1],r:r*q[3],col,a:a??1})}
+ ln(p,q,col,w,a,dash){const A=this.P(...p),B=this.P(...q);this.L.push({k:1,d:(A[2]+B[2])/2,A,B,col,w:w||1,a:a??1,dash})}
+ pl(pts,col,a,st){const Q=pts.map(p=>this.P(...p));this.L.push({k:2,d:Q.reduce((s,q)=>s+q[2],0)/Q.length,Q,col,a,st})}
+ tx(p,s,col){const q=this.P(...p);this.L.push({k:3,d:-1e9,X:q[0],Y:q[1],s,col})}
+ axes(len){[[[len,0,0],'x',TH.bad],[[0,len,0],'y',TH.ok],[[0,0,len],'z',TH.acc]].forEach(([e,l,c])=>{this.ln([0,0,0],e,c,2,.9);this.tx(e.map(v=>v*1.08),l,c)})}
+ flush(){const c=this.ctx;this.L.sort((a,b)=>b.d-a.d);
+  for(const o of this.L){c.globalAlpha=o.a??1;
+   if(o.k===0){c.fillStyle=o.col;c.beginPath();c.arc(o.X,o.Y,Math.max(.6,o.r),0,6.283);c.fill()}
+   else if(o.k===1){c.strokeStyle=o.col;c.lineWidth=o.w;c.setLineDash(o.dash||[]);c.beginPath();c.moveTo(o.A[0],o.A[1]);c.lineTo(o.B[0],o.B[1]);c.stroke();c.setLineDash([])}
+   else if(o.k===2){c.beginPath();o.Q.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fillStyle=o.col;c.fill();if(o.st){c.globalAlpha=Math.min(1,(o.a||0)*4);c.strokeStyle=o.st;c.lineWidth=1;c.stroke()}}
+   else{c.globalAlpha=1;c.fillStyle=o.col;c.font='500 13px "IBM Plex Mono",ui-monospace,monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(o.s,o.X,o.Y)}}
+  c.globalAlpha=1}
+ render(){if(this.cv.clientWidth!==this.w)this.resize();if(!this.w)return;this.ctx.clearRect(0,0,this.w,this.h);this.L=[];this.S=Math.min(this.w,this.h*1.3)/(2.5*this.R);this.draw(this);this.flush()}
 }
-T.onRotorParams();buildB();stepsB();renderTorsB();
-const hmap={rotor:0,velo:1,quiz:2,cours:3},hh=location.hash.slice(1);
-if(hh in hmap)T.showTab(hmap[hh]);
-window.addEventListener("hashchange",()=>{const k=location.hash.slice(1);if(k in hmap)T.showTab(hmap[k])});
-window.addEventListener("resize",()=>{T.drawR();drawB()});
-T.drawB=drawB;requestAnimationFrame(frame);
-})();
-(function(){
-"use strict";
-const T=window.__tec,$=T.$,f=x=>T.fmt(x,4);
-const bind=(id,u,d)=>T.bindRange(id,upd,u,d);
-function mat(M){return M.map(r=>r.map(v=>(Math.abs(v)<5e-7?"0":f(v)).padStart(8)).join(" ")).join("\n")}
-function upd(){
-  const m=+$("hm").value,A=+$("hA").value,B=+$("hB").value,C=+$("hC").value,a=+$("hx").value,b=+$("hy").value,c=+$("hz").value;
-  const G=[[A,0,0],[0,B,0],[0,0,C]];
-  const H=[[b*b+c*c,-a*b,-a*c],[-a*b,a*a+c*c,-b*c],[-a*c,-b*c,a*a+b*b]];
-  const M=G.map((r,i)=>r.map((v,j)=>v+m*H[i][j]));
-  $("hMG").textContent=mat(G);$("hMM").textContent=mat(M);
-  const off=Math.abs(a*b)+Math.abs(a*c)+Math.abs(b*c)>1e-9;
-  $("hTxt").textContent=off?"MG n'est pas porté par un axe : des termes hors diagonale apparaissent (−m·a·b, −m·a·c, −m·b·c).":
-    "MG est porté par un axe : la matrice reste diagonale. Seuls les deux termes des axes perpendiculaires à MG augmentent de m·d².";
+let lastTs=0;
+function loop(ts){const dt=Math.min(.05,(ts-lastTs)/1000||0);lastTs=ts;
+ for(const v of views)if(v.vis){if(v.auto&&!v.drag)v.yaw+=dt*.3;if(v.upd)v.upd(dt);v.render()}
+ requestAnimationFrame(loop)}
+
+/* ---------- Explorer la matrice ---------- */
+const DEFS=[['A','A = ∫(y²+z²) dm','Moment d\'inertie par rapport à l\'axe (Q,x).'],['F','F = ∫xy dm','Produit d\'inertie par rapport au plan (Q,x,y). Apparaît avec le signe moins.'],['E','E = ∫xz dm','Produit d\'inertie par rapport au plan (Q,x,z).'],
+ ['F','F = ∫xy dm','Même terme : la matrice est symétrique.'],['B','B = ∫(x²+z²) dm','Moment d\'inertie par rapport à l\'axe (Q,y).'],['D','D = ∫yz dm','Produit d\'inertie par rapport au plan (Q,y,z).'],
+ ['E','E = ∫xz dm','Même terme : la matrice est symétrique.'],['D','D = ∫yz dm','Même terme : la matrice est symétrique.'],['C','C = ∫(x²+y²) dm','Moment d\'inertie par rapport à l\'axe (Q,z).']];
+function mxShow(sel){$('exMat').innerHTML='<div class="mw"><span class="ml">I(S,Q) =</span>'+matHTML(['A','−F','−E','−F','B','−D','−E','−D','C'],null,'cl',sel)+'<sub class="mb">(x, y, z)</sub></div>';
+ $('exMat').querySelectorAll('span').forEach(s=>s.onclick=()=>{const i=+s.dataset.i;mxShow(i);const d=DEFS[i];
+  $('exDef').innerHTML=`<b>${d[1]}</b><br>${d[2]}${'ABC'.includes(d[0])?'<br>Toujours positif : plus la matière est éloignée de l\'axe, plus il est grand.':'<br>Il peut être nul ou non. Nul si la répartition est symétrique par rapport à ce plan de coordonnées.'}`})}
+mxShow(-1);
+
+/* ---------- Laboratoire ---------- */
+const LAB={s:SOL[0],P:{},at:'O',R:12,disp:[],G:[0,0,0],sy:{pl:{},rev:null}};
+SOL.forEach(s=>{LAB.P[s.id]={};s.pr.forEach(r=>LAB.P[s.id][r[0]]=r[5])});
+$('labTabs').innerHTML=SOL.map((s,i)=>`<button type="button" data-i="${i}" class="${i?'':'on'}">${s.n}</button>`).join('');
+$('labTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('labTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));LAB.s=SOL[+b.dataset.i];labSliders();labUpdate()});
+function labSliders(){const box=$('labSl');box.innerHTML='';
+ LAB.s.pr.forEach(([k,l,mn,mx,st])=>{const d=document.createElement('div');d.className='row';
+  d.innerHTML=`<label for="ls_${k}">${l}</label><input id="ls_${k}" type="range" min="${mn}" max="${mx}" step="${st}" value="${LAB.P[LAB.s.id][k]}"><output></output>`;
+  const r=d.querySelector('input'),o=d.querySelector('output'),sh=()=>o.textContent=fmt(+r.value,1)+(k==='beta'||k==='alpha'?'°':' cm');sh();
+  r.oninput=()=>{LAB.P[LAB.s.id][k]=+r.value;sh();labUpdate()};box.appendChild(d)})}
+const AX={xy:'(O,x,y)',xz:'(O,x,z)',yz:'(O,y,z)'};
+function labUpdate(){
+ const s=LAB.s,p=LAB.P[s.id],P=sample(s,p),G=centroid(P),Q=LAB.at==='G'?G:[0,0,0],I=moments(P,Q),sy=symmetry(s,p,P);
+ LAB.G=G;LAB.sy=sy;LAB.R=Math.max(...P.e)*1.45;views[0].R=LAB.R;
+ const st=Math.max(1,Math.floor(P.n/1100));LAB.disp=[];for(let i=0;i<P.n;i+=st)LAB.disp.push([P.X[i],P.Y[i],P.Z[i]]);
+ const tol=.003*Math.max(I.A,I.B,I.C),zr=v=>Math.abs(v)<tol,r=v=>zr(v)?'0':fmt(v,2);
+ const thin=!!s.plate&&Math.abs(I.C-I.A-I.B)<.03*I.C&&LAB.at==='O'?'z':null;
+ const f=formMatrix({planes:sy.pl,rev:sy.rev,thin});
+ const num=[I.A,-I.F,-I.E,-I.F,I.B,-I.D,-I.E,-I.D,I.C];
+ const np=['xy','xz','yz'].filter(k=>sy.pl[k]);
+ const chips=np.map(k=>`<span class="chip g">Plan ${AX[k]}</span>`).concat(sy.rev?[`<span class="chip o">Axe de révolution (O,${sy.rev})</span>`]:[]).join('')||'<span class="chip r">Aucune symétrie</span>';
+ const W=[];
+ if(sy.pl.xy)W.push('Plan (O,x,y) : à M(x, y, z) correspond M\'(x, y, −z). Donc E = ∫xz dm = 0 et D = ∫yz dm = 0.');
+ if(sy.pl.xz)W.push('Plan (O,x,z) : à M(x, y, z) correspond M\'(x, −y, z). Donc F = ∫xy dm = 0 et D = 0.');
+ if(sy.pl.yz)W.push('Plan (O,y,z) : à M(x, y, z) correspond M\'(−x, y, z). Donc F = 0 et E = 0.');
+ if(np.length===1)W.push('Un seul plan : l\'axe perpendiculaire au plan est un axe principal d\'inertie.');
+ if(np.length>=2)W.push('Deux plans de symétrie ou plus : la matrice est diagonale et le repère est principal.');
+ if(sy.rev)W.push(`Axe de révolution (O,${sy.rev}) : ${({z:'A = B',x:'B = C',y:'A = C'})[sy.rev]}, et la matrice ne change pas par rotation autour de cet axe.`);
+ if(s.plate)W.push(`Plaque : C/(A+B) = ${fmt(I.C/(I.A+I.B),3)}. Cette valeur tend vers 1 quand l'épaisseur devient négligeable.`);
+ if(!np.length&&!sy.rev)W.push('Aucune symétrie : les six termes sont indépendants, la matrice est pleine.');
+ const zs=[I.D,I.E,I.F].filter(zr).length;if(zs&&!np.length&&!sy.rev)W.push('Certains produits sont nuls sans plan de symétrie : la réciproque est fausse.');
+ let ex='';if(s.exact&&LAB.at==='G'||s.exact&&np.length>=2){const e=s.exact(M_TOT,p);ex=`<h4>Formule exacte</h4><p class="note">A = ${fmt(e.A,2)} · B = ${fmt(e.B,2)} · C = ${fmt(e.C,2)} kg·cm² (somme numérique : écart d'échantillonnage inférieur à 2 %)</p>`}
+ $('labInfo').innerHTML=`<h4>Éléments de symétrie</h4><div class="chips">${chips}</div>
+ <h4>Forme de la matrice (justifiée par la géométrie)</h4>${matHTML(f.cells,f.zeros)}
+ <h4>Valeurs numériques au point ${LAB.at} (kg·cm²)</h4>${matHTML(num.map(r),num.map(zr))}
+ <p class="note">G = (${fmt(G[0],2)} ; ${fmt(G[1],2)} ; ${fmt(G[2],2)}) cm${np.length?' : G est sur les éléments de symétrie.':'.'}${LAB.at==='O'&&Math.hypot(...G)>.05?' G n\'est pas en O : la matrice en G est différente (Huygens).':''}</p>
+ <h4>Pourquoi</h4><ul class="facts">${W.map(w=>`<li>${w}</li>`).join('')}</ul>${ex}`;
 }
-const ids=[["hm","kg",1],["hA","",4],["hB","",4],["hC","",4],["hx","m",2],["hy","m",2],["hz","m",2]];
-ids.forEach(x=>bind(x[0],x[1],x[2]));
-const set=(o)=>{for(const k in o){$(k).value=o[k];$("o"+k).textContent=T.fmt(+o[k],k==="hm"?1:(k[1]==="x"||k[1]==="y"||k[1]==="z")?2:4)+(k==="hm"?" kg":/h[xyz]/.test(k)?" m":"")}upd()};
-$("hRotor").onclick=()=>set({hm:3,hA:0.0075,hB:0.0075,hC:0.015,hx:0,hy:0.1,hz:0});
-$("hDiag").onclick=()=>set({hx:0.1,hy:0.1,hz:0.05});
-$("goR").onclick=()=>T.showTab(0);$("goB").onclick=()=>T.showTab(1);
-upd();
-})();
+function drawLab(v){
+ v.axes(LAB.R*.95);
+ if($('lPl').checked){const S=LAB.R*.9;[['xy',[[-S,-S,0],[S,-S,0],[S,S,0],[-S,S,0]]],['xz',[[-S,0,-S],[S,0,-S],[S,0,S],[-S,0,S]]],['yz',[[0,-S,-S],[0,S,-S],[0,S,S],[0,-S,S]]]].forEach(([k,q])=>{if(LAB.sy.pl[k])v.pl(q,TH.ok,.13,TH.ok)})}
+ if($('lAx').checked&&LAB.sy.rev){const r=LAB.sy.rev,e=r==='x'?[1,0,0]:r==='y'?[0,1,0]:[0,0,1],L=LAB.R;v.ln(e.map(a=>-a*L),e.map(a=>a*L),TH.warn,2,1,[6,4])}
+ LAB.disp.forEach(q=>v.pt(q[0],q[1],q[2],TH.acc,2,.55));
+ v.pt(LAB.G[0],LAB.G[1],LAB.G[2],TH.d,5.5,1);v.tx([LAB.G[0],LAB.G[1],LAB.G[2]+LAB.R*.12],'G',TH.d);
+ v.pt(0,0,0,TH.ink,3.5,1);v.tx([-LAB.R*.1,-LAB.R*.1,-LAB.R*.1],'O',TH.ink)}
+new View($('cLab'),{R:12,h:340,draw:drawLab});
+$('lPl').onchange=$('lAx').onchange=()=>{};
+$('lAuto').onchange=e=>{views[0].auto=e.target.checked};
+$('lAt').onchange=e=>{LAB.at=e.target.value;labUpdate()};
+
+/* ---------- Animation : plan de symétrie ---------- */
+const PA={t:0,play:false,done:false,U:[],S:1};
+(function(){const s=SOL.find(x=>x.id==='L'),P=sample(s,{a:14,b:10,w:4,e:5}),idx=[];
+ for(let i=0;i<P.n;i++)if(P.Z[i]>0)idx.push(i);
+ const r=mulberry(11);for(let i=idx.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}
+ PA.U=idx.slice(0,380).map(i=>[P.X[i],P.Y[i],P.Z[i]]);
+ const f={A:0,B:0,C:0};PA.U.forEach(([x,y,z])=>{f.A+=y*y+z*z;f.B+=x*x+z*z;f.C+=x*x+y*y});PA.S=2*Math.max(f.A,f.B,f.C)})();
+const pNames=[['A','A'],['B','B'],['C','C'],['D','D'],['E','E'],['F','F']];
+$('pBars').innerHTML=pNames.map(([k])=>`<div class="b2"><span>${k}</span><div class="track"><div class="fill${'DEF'.includes(k)?' nz':''}" id="pf${k}"></div></div><span id="pv${k}">0,00</span></div>`).join('');
+{const f=formMatrix({planes:{xy:true}});$('pMat').innerHTML=matHTML(f.cells,f.zeros)}
+function addS(S,x,y,z,w){S.A+=w*(y*y+z*z);S.B+=w*(x*x+z*z);S.C+=w*(x*x+y*y);S.D+=w*y*z;S.E+=w*x*z;S.F+=w*x*y}
+function drawPlane(v){
+ const t=PA.t,U=PA.U,K=U.length,k1=Math.ceil(ease(clamp(t/.4))*K),S={A:0,B:0,C:0,D:0,E:0,F:0};let jm=-1,zm=0;
+ v.axes(18);const q=17;v.pl([[-q,-q,0],[q,-q,0],[q,q,0],[-q,q,0]],TH.ok,.12,TH.ok);v.tx([q,q,0],'(O,x,y)',TH.ok);
+ for(let j=0;j<K;j++){const [x,y,z]=U[j];
+  if(j<k1){addS(S,x,y,z,1);v.pt(x,y,z,TH.acc,2.4,.85)}
+  const sj=ease(clamp((t-.45-.35*j/K)/.15));
+  if(sj>0){const z2=z*(1-2*sj);addS(S,x,y,z2,sj);v.pt(x,y,z2,TH.i,2.4,.85);if(sj<1&&jm<0){jm=j;zm=z2}}}
+ if(jm<0)jm=t<.45?Math.max(0,k1-1):K-1;
+ const [mx,my,mz]=U[jm];v.pt(mx,my,mz,TH.acc,6,1);v.tx([mx,my,mz+2.5],'M',TH.acc);
+ if(t>.42){const z2=t>=.95?-mz:(zm||mz);v.pt(mx,my,z2,TH.i,6,1);v.ln([mx,my,mz],[mx,my,z2],TH.ink,1,.7,[4,3]);v.tx([mx,my,z2-2.5],"M'",TH.i)}
+ pNames.forEach(([k])=>{const val=S[k]/PA.S;$('pv'+k).textContent=fmt(val,2);const f=$('pf'+k),w=Math.min(1,Math.abs(val))*50;f.style.left=(val>=0?50:50-w)+'%';f.style.width=w+'%'});
+ [...$('pSteps').children].forEach((li,i)=>li.classList.toggle('on',i===(t<.42?0:t<.95?1:2)));
+ $('pMat').style.opacity=t>=.95?1:.3}
+function updPlane(dt){if(PA.play){PA.t=Math.min(1,PA.t+dt/18);$('pT').value=Math.round(PA.t*1000);
+  if(PA.t>=1){PA.play=false;$('pPlay').textContent='Lecture';if(!PA.done){PA.done=true;badge('plan','Plan de symétrie compris');addXP(15)}}}}
+const vPlan=new View($('cPlan'),{R:17,h:340,yaw:-.9,pitch:.55,draw:drawPlane,upd:updPlane});
+$('pPlay').onclick=()=>{if(PA.t>=1)PA.t=0;PA.play=!PA.play;$('pPlay').textContent=PA.play?'Pause':'Lecture'};
+$('pRe').onclick=()=>{PA.t=0;PA.play=true;$('pPlay').textContent='Pause'};
+$('pT').oninput=e=>{PA.t=e.target.value/1000;PA.play=false;$('pPlay').textContent='Lecture'};
+
+/* ---------- Animation : axe de symétrie ---------- */
+const BS={cyl:{s:SOL.find(x=>x.id==='cyl'),p:{R:5,h:8}},blk:{s:SOL.find(x=>x.id==='box'),p:{a:14,b:6,c:8}}};
+Object.values(BS).forEach(o=>{const P=sample(o.s,o.p),st=Math.max(1,Math.floor(P.n/1500));o.S=[];for(let i=0;i<P.n;i+=st)o.S.push([P.X[i],P.Y[i],P.Z[i]]);
+ const rmax=Math.max(...o.S.map(q=>Math.hypot(q[0],q[1])));
+ o.mk=o.S.map(([x,y])=>{const a=Math.atan2(y,x);return Math.hypot(x,y)>.5*rmax&&a>0&&a<.8});
+ const r=mulberry(5),cand=o.S.filter(q=>Math.hypot(q[0],q[1])>.45*rmax);o.T=[];for(let i=0;i<14;i++)o.T.push(cand[Math.floor(r()*cand.length)]);
+ const dm=M_TOT/o.S.length;o.ang=[];o.cur=[];
+ for(let a=0;a<=360;a+=4){const c=Math.cos(a*D2R),s=Math.sin(a*D2R);let A=0,B=0,F=0;o.S.forEach(([x,y,z])=>{const X=x*c-y*s,Y=x*s+y*c;A+=Y*Y+z*z;B+=X*X+z*z;F+=X*Y});o.ang.push(a);o.cur.push([A*dm,B*dm,F*dm])}
+ const all=o.cur.flat();o.lo=Math.min(0,...all);o.hi=Math.max(...all)});
+const PB={k:'cyl',th:0,psi:45,play:false};
+function chartB(o){const cv=$('cCur');if(!cv.clientWidth)return;const key=PB.k+Math.round(PB.th)+cv.clientWidth+JSON.stringify(TH);if(chartB.key===key)return;chartB.key=key;
+ const sp=(o.hi-o.lo)||1;
+ plot(cv,{h:200,x0:0,x1:360,y0:o.lo-.05*sp,y1:o.hi+.08*sp,s:[{x:o.ang,y:o.cur.map(c=>c[0]),c:TH.acc},{x:o.ang,y:o.cur.map(c=>c[1]),c:TH.i},{x:o.ang,y:o.cur.map(c=>c[2]),c:TH.d}],vl:[{x:PB.th,c:TH.ink,dash:[4,3]}]})}
+function drawAxe(v){
+ const o=BS[PB.k],th=PB.th*D2R,c=Math.cos(th),s=Math.sin(th),psi=PB.psi*D2R,n=[-Math.sin(psi),Math.cos(psi),0],u=[Math.cos(psi),Math.sin(psi),0];
+ v.axes(11);
+ const dm=M_TOT/o.S.length;let A=0,B=0,F=0,C=0;
+ o.S.forEach(([x,y,z],i)=>{const X=x*c-y*s,Y=x*s+y*c;A+=Y*Y+z*z;B+=X*X+z*z;F+=X*Y;C+=X*X+Y*Y;if(i%2===0)v.pt(X,Y,z,o.mk[i]?TH.i:TH.acc,o.mk[i]?2.6:2,o.mk[i]?.95:.5)});
+ A*=dm;B*=dm;F*=dm;C*=dm;
+ let pass=0;
+ o.T.forEach(([x,y,z])=>{const X=x*c-y*s,Y=x*s+y*c,d=X*n[0]+Y*n[1],X2=X-2*d*n[0],Y2=Y-2*d*n[1],inn=o.s.in(o.p,X2*c+Y2*s,-X2*s+Y2*c,z);if(inn)pass++;
+  v.pt(X,Y,z,TH.ink,3.5,1);v.pt(X2,Y2,z,inn?TH.ok:TH.bad,3.5,1);v.ln([X,Y,z],[X2,Y2,z],inn?TH.ok:TH.bad,1,.5)});
+ const sym=pass===o.T.length,H=6,Rr=11;
+ v.pl([[-u[0]*Rr,-u[1]*Rr,-H],[u[0]*Rr,u[1]*Rr,-H],[u[0]*Rr,u[1]*Rr,H],[-u[0]*Rr,-u[1]*Rr,H]],sym?TH.ok:TH.bad,.12,sym?TH.ok:TH.bad);
+ $('bVerdict').innerHTML=`Plan miroir ψ = ${PB.psi}° : ${pass}/${o.T.length} points ont leur symétrique dans le solide. <b>${sym?'C\'est un plan de symétrie.':'Ce n\'est pas un plan de symétrie.'}</b>`;
+ $('bPsiV').textContent=PB.psi+'°';
+ const num=[A,-F,0,-F,B,0,0,0,C].map((x,i)=>i===2||i===5||i===6||i===7?'0':fmt(x,1)),zr=[0,0,1,0,0,1,1,1,0].map(Boolean);
+ $('bMat').innerHTML=matHTML(num,zr);
+ $('bEq').textContent=Math.abs(A-B)<.01*Math.max(A,B)&&Math.abs(F)<.01*Math.max(A,B)?'A = B et F = 0 pour tout θ : la matrice est inchangée par rotation autour de z.':`A ≠ B et F ≠ 0 en général : la matrice dépend de θ (A−B = ${fmt(A-B,1)}).`;
+ chartB(o)}
+function updAxe(dt){if(PB.play){PB.th=(PB.th+dt*40)%360;$('bTh').value=Math.round(PB.th)}}
+const vAxe=new View($('cAxe'),{R:11,h:320,yaw:-.7,pitch:.6,draw:drawAxe,upd:updAxe});
+$('bTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('bTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));PB.k=b.dataset.k;chartB.key=''});
+$('bPlay').onclick=()=>{PB.play=!PB.play;$('bPlay').textContent=PB.play?'Pause':'Lecture'};
+$('bTh').oninput=e=>{PB.th=+e.target.value;PB.play=false;$('bPlay').textContent='Lecture'};
+$('bPsi').oninput=e=>{PB.psi=+e.target.value};
+
+/* ---------- Graphique 2D (courbes A, B, F) ---------- */
+function nice(r,n){const raw=r/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return(f<1.5?1:f<3.5?2:f<7.5?5:10)*p}
+function plot(cv,o){
+ const h=o.h||170,d=window.devicePixelRatio||1,w=cv.clientWidth||300;cv.style.height=h+'px';cv.width=Math.round(w*d);cv.height=Math.round(h*d);const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);
+ const L=46,R=8,T=8,B=20,pw=w-L-R,ph=h-T-B,X=x=>L+(x-o.x0)/(o.x1-o.x0)*pw,Y=y=>T+ph-(y-o.y0)/(o.y1-o.y0)*ph;
+ g.clearRect(0,0,w,h);g.font='11px "IBM Plex Mono",ui-monospace,monospace';g.lineWidth=1;
+ const st=nice(o.y1-o.y0,4),dec=Math.max(0,-Math.floor(Math.log10(st)));g.textAlign='right';g.textBaseline='middle';
+ for(let i=Math.ceil(o.y0/st-1e-9);i*st<=o.y1+1e-9;i++){const y=i*st,py=Y(y);g.strokeStyle=TH.line;g.beginPath();g.moveTo(L,py);g.lineTo(w-R,py);g.stroke();g.fillStyle=TH.mut;g.fillText(y.toFixed(dec),L-5,py)}
+ g.textAlign='center';g.textBaseline='top';
+ for(let v=0;v<=360;v+=90){const px=X(v);g.strokeStyle=TH.line;g.beginPath();g.moveTo(px,T);g.lineTo(px,T+ph);g.stroke();g.fillStyle=TH.mut;g.fillText(v+'°',px,T+ph+4)}
+ g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
+ (o.vl||[]).forEach(l=>{g.strokeStyle=l.c;g.setLineDash(l.dash||[]);g.beginPath();g.moveTo(X(l.x),T);g.lineTo(X(l.x),T+ph);g.stroke()});
+ o.s.forEach(s=>{g.strokeStyle=s.c;g.lineWidth=2;g.setLineDash([]);g.beginPath();s.y.forEach((v,i)=>{const px=X(s.x[i]),py=Y(v);i?g.lineTo(px,py):g.moveTo(px,py)});g.stroke()});
+ g.restore();g.strokeStyle=TH.line;g.lineWidth=1;g.strokeRect(L,T,pw,ph);
+ g.textAlign='left';g.textBaseline='top';[['A',TH.acc],['B',TH.i],['F',TH.d]].forEach(([l,c],i)=>{g.fillStyle=c;g.fillText(l,L+8+i*22,T+4)})}
+
+/* ---------- Assistant de forme ---------- */
+function wizard(){
+ const o={rev:$('wRev').value||null,thin:$('wThin').value||null,planes:{xy:$('wxy').checked,xz:$('wxz').checked,yz:$('wyz').checked}};
+ const f=formMatrix(o),W=[];
+ if(o.planes.xy)W.push('Plan (O,x,y) : E et D nuls (produits contenant z).');
+ if(o.planes.xz)W.push('Plan (O,x,z) : F et D nuls (produits contenant y).');
+ if(o.planes.yz)W.push('Plan (O,y,z) : F et E nuls (produits contenant x).');
+ if(o.rev)W.push(`Axe de révolution (O,${o.rev}) : tout plan contenant l'axe est plan de symétrie, donc matrice diagonale, avec ${({z:'A = B',x:'B = C',y:'A = C'})[o.rev]}.`);
+ if(o.thin)W.push(`Dimension négligeable suivant ${o.thin} : les deux produits contenant ${o.thin} sont nuls et ${({z:'C = A + B',x:'A = B + C',y:'B = A + C'})[o.thin]}.`);
+ const np=Object.values(o.planes).filter(Boolean).length;
+ if(np>=2&&!o.rev)W.push('Deux plans de symétrie : matrice diagonale.');
+ if(!W.length)W.push('Aucune particularité géométrique : la matrice est pleine.');
+ $('wMat').innerHTML=matHTML(f.cells,f.zeros);$('wWhy').innerHTML=W.map(w=>`<li>${w}</li>`).join('')}
+['wRev','wThin','wxy','wxz','wyz'].forEach(i=>$(i).onchange=wizard);wizard();
+
+/* ---------- Huygens généralisé ---------- */
+function huy(){
+ const m=+$('hm').value,Lx=+$('hLx').value,Ly=+$('hLy').value,Lz=+$('hLz').value,a=+$('ha').value,b=+$('hb').value,c=+$('hc').value;
+ if(!(m>0&&Lx>0&&Ly>0&&Lz>0)){$('hOut').innerHTML='Entre des valeurs positives.';return}
+ const IG=[m*(Ly*Ly+Lz*Lz)/12,0,0,0,m*(Lx*Lx+Lz*Lz)/12,0,0,0,m*(Lx*Lx+Ly*Ly)/12];
+ const T=[m*(b*b+c*c),-m*a*b,-m*a*c,-m*a*b,m*(a*a+c*c),-m*b*c,-m*a*c,-m*b*c,m*(a*a+b*b)];
+ const IA=IG.map((v,i)=>v+T[i]),r=v=>Math.abs(v)<1e-9?'0':fmt(v,1),z=v=>Math.abs(v)<1e-9;
+ $('hOut').innerHTML=`<div><h4>I<sub>G</sub></h4>${matHTML(IG.map(r),IG.map(z))}</div><div>+</div><div><h4>I<sub>A</sub>(m en G)</h4>${matHTML(T.map(r),T.map(z))}</div><div>=</div><div><h4>I<sub>A</sub></h4>${matHTML(IA.map(r),IA.map(z))}</div>
+ <p class="note" style="flex-basis:100%">Unités : kg·cm². Vérification sur un seul axe : I(A,x) = I(G,x) + m(b²+c²) = ${fmt(IG[0],1)} + ${fmt(m*(b*b+c*c),1)} = ${fmt(IA[0],1)}. Si AG a une composante sur plusieurs axes, des produits d'inertie apparaissent.</p>`}
+['hm','hLx','hLy','hLz','ha','hb','hc'].forEach(i=>$(i).addEventListener('input',huy));huy();
+
+/* ---------- Banque de questions ---------- */
+const Q=[
+ {q:'Quelle est l\'unité d\'un moment d\'inertie ?',o:['kg·m','kg·m²','N·m','kg·m⁻²'],a:1,e:'I = ∫ r² dm : une masse multipliée par une longueur au carré.'},
+ {q:'Un solide admet le plan de symétrie (O,x,y). Quels produits d\'inertie sont nuls ?',o:['D et E (ceux qui contiennent z)','F seulement','D, E et F','Aucun'],a:0,e:'À M(x, y, z) correspond M\'(x, y, −z) : les intégrales de xz et yz s\'annulent.'},
+ {q:'Un solide admet un plan de symétrie. L\'axe perpendiculaire à ce plan est…',o:['un axe quelconque','un axe principal d\'inertie','un axe de révolution','l\'axe des produits d\'inertie'],a:1,e:'La matrice est de la forme [[A, −F, 0], [−F, B, 0], [0, 0, C]] : l\'axe normal est principal.'},
+ {q:'Deux produits d\'inertie nuls impliquent-ils un plan de symétrie ?',o:['Oui, toujours','Non, la réciproque est fausse','Oui, si le troisième est nul','Seulement pour un cylindre'],a:1,e:'Le plan de symétrie implique la nullité, pas l\'inverse.'},
+ {q:'Deux plans de symétrie parmi les plans du repère : la matrice est…',o:['pleine','diagonale','antisymétrique','nulle'],a:1,e:'Chaque plan annule deux produits ; à deux plans, les trois produits sont nuls.'},
+ {q:'Axe de révolution (O,z) : que dire de A et B ?',o:['A = B','A = C','B = C','A = B = C'],a:0,e:'∫x² dm = ∫y² dm, donc A = ∫(y²+z²)dm = B = ∫(x²+z²)dm.'},
+ {q:'Pour un solide de révolution d\'axe z, la matrice dans la base obtenue par rotation autour de z…',o:['change','reste identique','devient pleine','devient nulle'],a:1,e:'Tout plan contenant l\'axe est un plan de symétrie : la forme [[A,0,0],[0,A,0],[0,0,C]] est invariante.'},
+ {q:'Solide d\'épaisseur négligeable suivant z : quelle relation ?',o:['C = A + B','C = A − B','A = B + C','C = 2A'],a:0,e:'∫(x²+y²)dm ≈ ∫x²dm + ∫y²dm quand z est négligeable. De plus D = E = 0.'},
+ {q:'Théorème de Huygens : I<sub>Δ</sub> = ?',o:['I<sub>ΔG</sub> + m d','I<sub>ΔG</sub> + m d²','I<sub>ΔG</sub> − m d²','m d²'],a:1,e:'d est la distance entre l\'axe Δ et l\'axe parallèle passant par G.'},
+ {q:'Parmi les axes parallèles d\'une direction donnée, le moment d\'inertie minimal est celui de l\'axe…',o:['le plus éloigné','passant par G','passant par O','perpendiculaire au sol'],a:1,e:'I<sub>Δ</sub> = I<sub>ΔG</sub> + m d² est minimal pour d = 0.'},
+ {q:'Où se situe le centre de gravité d\'un solide qui a un axe de symétrie ?',o:['Quelque part dans le solide','Sur cet axe','À l\'extérieur','Sur la surface'],a:1,e:'Le centre de gravité est toujours situé sur les éléments de symétrie.'},
+ {q:'Que caractérisent les produits d\'inertie ?',o:['La masse totale','Une asymétrie de la répartition de la masse','La vitesse de rotation','La position de G'],a:1,e:'Non nuls, ils créent des couples d\'axes différents de l\'axe de rotation : effets de balourd.'},
+ {q:'Cylindre plein de masse m, rayon R, hauteur h (axe z) : C = ?',o:['mR²/2','m(R²/4 + h²/12)','mR²/4','mh²/12'],a:0,e:'C est le moment par rapport à l\'axe du cylindre ; A = B = m(R²/4 + h²/12).'},
+ {q:'Parallélépipède a×b×c, centre G : A = ?',o:['m(b²+c²)/12','m(a²+b²)/12','m(a²+c²)/12','m abc/12'],a:0,e:'A est le moment par rapport à l\'axe (G,x) : il fait intervenir b et c.'},
+ {q:'Une matrice d\'inertie est symétrique. Conséquence ?',o:['Elle est diagonalisable : base principale','Elle est inversible','Tous ses termes sont positifs','Elle est de trace nulle'],a:0,e:'Il existe une base où elle est diagonale : A\', B\', C\' sont les moments principaux.'},
+ {q:'Changement de base d\'une matrice d\'inertie : I(b₂) = ?',o:['P⁻¹ · I(b₁) · P','P · I(b₁)','I(b₁) · P⁻¹','P² · I(b₁)'],a:0,e:'P est la matrice de passage de b₁ à b₂ (vecteurs de b₂ écrits dans b₁).'},
+ {q:'Avant d\'additionner deux matrices d\'inertie, il faut vérifier…',o:['qu\'elles sont dans la même base','qu\'elles ont le même déterminant','qu\'elles sont diagonales','que les masses sont égales'],a:0,e:'Il faut aussi qu\'elles soient exprimées au même point.'},
+ {q:'Pour déplacer la matrice d\'inertie d\'un point quelconque A à un autre point B, on utilise Huygens…',o:['une fois','deux fois, en passant par G','jamais','trois fois'],a:1,e:'Huygens relie G à un point : A → G → B.'},
+ {q:'D = ∫yz dm est le produit d\'inertie par rapport au plan…',o:['(Q,y,z)','(Q,x,y)','(Q,x,z)','(Q,x)'],a:0,e:'D correspond au plan (Q,y,z), E à (Q,x,z) et F à (Q,x,y).'}];
+function packQ(n){return shuffle(Q).slice(0,n).map(q=>({...q,opts:shuffle(q.o.map((t,i)=>({t,ok:i===q.a})))}))}
+(function(){const root=$('trTabs'),bs=root.querySelectorAll('button');bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tp').forEach(p=>p.hidden=p.id!==b.dataset.t)})})();
+
+/* ---------- Quiz libre ---------- */
+let qi=0,qs=0,ql=[];
+function qStart(){ql=packQ(10);qi=0;qs=0;qShow()}
+function qShow(){const box=$('quiz');
+ if(qi>=ql.length){const p=Math.round(100*qs/ql.length);box.innerHTML=`<h3>Score : ${qs}/${ql.length} (${p} %)</h3><p>${p>=80?'Très bien.':'Relis les explications puis recommence.'}</p><button type="button" class="btn" id="qr">Rejouer</button>`;$('qr').onclick=qStart;if(p>=80)badge('quiz','Quiz ≥ 80 %');return}
+ const q=ql[qi];box.innerHTML=`<p class="note">Question ${qi+1}/${ql.length} · score ${qs}</p><p><b>${q.q}</b></p><div class="opts"></div><div class="fb" hidden></div>`;
+ const o=box.querySelector('.opts'),fb=box.querySelector('.fb');
+ q.opts.forEach(op=>{const b=document.createElement('button');b.type='button';b.className='opt';b.innerHTML=op.t;
+  b.onclick=()=>{if(o.dataset.d)return;o.dataset.d=1;o.querySelectorAll('.opt').forEach((x,i)=>{if(q.opts[i].ok)x.classList.add('ok')});
+   if(op.ok){qs++;addXP(10)}else b.classList.add('ko');
+   fb.hidden=false;fb.innerHTML=`${op.ok?'Correct.':'Pas tout à fait.'} ${q.e}<br><br><button type="button" class="btn" id="qn">${qi+1<ql.length?'Suivante':'Voir le score'}</button>`;
+   $('qn').onclick=()=>{qi++;qShow()}};o.appendChild(b)})}
+
+/* ---------- Mode examen ---------- */
+const EX={n:10,secs:420};let ex=null;
+function mmss(s){s=Math.max(0,s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function exIntro(){if(ex&&ex.h)clearInterval(ex.h);ex=null;
+ $('exam').innerHTML=`<p>${EX.n} questions tirées au hasard dans une banque de ${Q.length}, ${EX.secs/60} minutes. Aucune correction avant la fin. Tu peux revenir sur une question et changer ta réponse.</p><p class="note">Chaque bonne réponse vaut 2 points (note sur 20). À 16/20 ou plus, tu gagnes un badge.</p><button type="button" class="btn" id="exGo">Lancer l'examen</button>`;
+ $('exGo').onclick=exStart}
+function exStart(){if(ex&&ex.h)clearInterval(ex.h);
+ ex={q:packQ(EX.n),ans:Array(EX.n).fill(-1),i:0,left:EX.secs,confirm:false,h:null};
+ ex.h=setInterval(()=>{ex.left--;const t=$('exT');if(t){t.textContent=mmss(ex.left);t.classList.toggle('low',ex.left<=60)}if(ex.left<=0)exEnd(true)},1000);exShow()}
+function exShow(){const q=ex.q[ex.i],box=$('exam'),done=ex.ans.filter(a=>a>=0).length;
+ box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span class="note">Question ${ex.i+1}/${EX.n} · ${done} répondue(s)</span><span class="timer${ex.left<=60?' low':''}" id="exT" aria-label="Temps restant">${mmss(ex.left)}</span></div>
+ <div class="exnav">${ex.q.map((_,k)=>`<button type="button" data-k="${k}" class="${ex.ans[k]>=0?'ans ':''}${k===ex.i?'cur':''}" aria-label="Question ${k+1}">${k+1}</button>`).join('')}</div>
+ <p><b>${q.q}</b></p><div class="opts">${q.opts.map((op,k)=>`<button type="button" class="opt${ex.ans[ex.i]===k?' sel':''}" data-o="${k}" aria-pressed="${ex.ans[ex.i]===k}">${op.t}</button>`).join('')}</div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn alt" id="exP"${ex.i===0?' disabled':''}>Précédente</button><button type="button" class="btn alt" id="exN"${ex.i===EX.n-1?' disabled':''}>Suivante</button><button type="button" class="btn" id="exF">Terminer</button></div>
+ ${ex.confirm?`<div class="fb"><b>${EX.n-done} question(s) sans réponse.</b> Terminer quand même ?<br><br><button type="button" class="btn" id="exY">Oui, terminer</button> <button type="button" class="btn alt" id="exC">Continuer</button></div>`:''}`;
+ box.querySelectorAll('.exnav button').forEach(b=>b.onclick=()=>{ex.i=+b.dataset.k;ex.confirm=false;exShow()});
+ box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ex.ans[ex.i]=+b.dataset.o;ex.confirm=false;exShow()});
+ $('exP').onclick=()=>{ex.i--;ex.confirm=false;exShow()};$('exN').onclick=()=>{ex.i++;ex.confirm=false;exShow()};
+ $('exF').onclick=()=>{if(ex.ans.every(a=>a>=0))exEnd(false);else{ex.confirm=true;exShow()}};
+ if(ex.confirm){$('exY').onclick=()=>exEnd(false);$('exC').onclick=()=>{ex.confirm=false;exShow()}}}
+function exEnd(timeout){clearInterval(ex.h);
+ const sc=ex.q.reduce((s,q,k)=>s+(ex.ans[k]>=0&&q.opts[ex.ans[k]].ok?1:0),0),note=sc*2,used=EX.secs-Math.max(0,ex.left);
+ addXP(sc*3,'Examen');if(note>=16)badge('exam','Examen ≥ 16/20');
+ $('exam').innerHTML=`<h3>Note : ${note}/20</h3><p>${timeout?'Temps écoulé. ':''}${sc}/${EX.n} bonnes réponses en ${mmss(used)}.</p>
+ ${ex.q.map((q,k)=>{const a=ex.ans[k],ok=a>=0&&q.opts[a].ok,good=q.opts.find(o=>o.ok).t;return`<div class="qrow ${ok?'ok':'ko'}"><div><b>${k+1}.</b> ${q.q}</div><div>Ta réponse : ${a>=0?q.opts[a].t:'<i>aucune</i>'}</div>${ok?'':`<div>Bonne réponse : ${good}</div>`}<div class="note">${q.e}</div></div>`}).join('')}
+ <button type="button" class="btn" id="exR">Refaire un examen</button>`;$('exR').onclick=exIntro}
+
+/* ---------- Quelle forme ? ---------- */
+const FRM={
+ pleine:{planes:{}},plan:{planes:{xy:true}},planxz:{planes:{xz:true}},diag:{planes:{xy:true,xz:true}},revz:{rev:'z'},mince:{planes:{},thin:'z'},disque:{rev:'z',thin:'z'}};
+const FQ=[
+ ['Parallélépipède homogène, repère centré en G, axes parallèles aux arêtes.','diag','Trois plans de symétrie : matrice diagonale, avec trois moments a priori différents.'],
+ ['Cylindre plein d\'axe (G,z), repère centré en G.','revz','Axe de révolution z : matrice diagonale avec A = B.'],
+ ['Plaque en L épaisse, symétrique par rapport au plan (O,x,y).','plan','Un seul plan (O,x,y) : D = E = 0, mais F n\'est pas nul.'],
+ ['Barre inclinée dans le plan (O,x,z), symétrique par rapport à ce plan.','planxz','Plan (O,x,z) : F = D = 0, E n\'est pas nul.'],
+ ['Plaque mince quelconque dans le plan (O,x,y), sans autre symétrie.','mince','Épaisseur négligeable suivant z : D = E = 0 et C = A + B.'],
+ ['Solide sans aucune particularité géométrique.','pleine','Aucun élément de symétrie : matrice pleine.'],
+ ['Disque mince d\'axe (O,z).','disque','Révolution (A = B) et épaisseur négligeable (C = A + B = 2A).']];
+let fi2=-1,fstreak=0;
+function fNext(){let n;do{n=Math.floor(Math.random()*FQ.length)}while(n===fi2);fi2=n;const it=FQ[n];
+ const ids=shuffle(Object.keys(FRM).filter(k=>k!==it[1])).slice(0,3).concat(it[1]),opts=shuffle(ids),box=$('form');
+ box.innerHTML=`<p class="note">Série : ${fstreak}</p><p><b>${it[0]}</b></p><div class="opts mats">${opts.map(k=>{const f=formMatrix(FRM[k]);return`<button type="button" class="opt" data-k="${k}">${matHTML(f.cells,f.zeros)}</button>`}).join('')}</div><div class="fb" hidden></div>`;
+ const bs=box.querySelectorAll('.opt'),fb=box.querySelector('.fb');let done=false;
+ bs.forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=b.dataset.k===it[1];bs.forEach(x=>{if(x.dataset.k===it[1])x.classList.add('ok')});
+  if(ok){fstreak++;addXP(8);if(fstreak>=4)badge('forme','Série de 4 formes')}else{b.classList.add('ko');fstreak=0}
+  fb.hidden=false;fb.innerHTML=`${ok?'Correct.':'Raté.'} ${it[2]}<br><br><button type="button" class="btn" id="fn">Suivant</button>`;$('fn').onclick=fNext})}
+
+/* ---------- Cartes mémoire ---------- */
+const FC=[
+ ['Moment d\'inertie par rapport à un axe','I<sub>Δ</sub> = ∫ r² dm (kg·m²)'],
+ ['Termes A, B, C','A = ∫(y²+z²)dm · B = ∫(x²+z²)dm · C = ∫(x²+y²)dm'],
+ ['Termes D, E, F','D = ∫yz dm · E = ∫xz dm · F = ∫xy dm (produits d\'inertie)'],
+ ['Matrice d\'inertie','[[A, −F, −E], [−F, B, −D], [−E, −D, C]], symétrique'],
+ ['Un plan de symétrie (O,x,y)','D = E = 0 · l\'axe z est principal · la réciproque est fausse'],
+ ['Deux plans de symétrie','Matrice diagonale · le repère est principal'],
+ ['Axe de révolution (O,z)','Diagonale, A = B · inchangée par rotation autour de z'],
+ ['Épaisseur négligeable suivant z','D = E = 0 et C = A + B'],
+ ['Huygens (axe)','I<sub>Δ</sub> = I<sub>ΔG</sub> + m d²'],
+ ['Huygens généralisé','I<sub>A</sub> = I<sub>G</sub> + m·[[b²+c², −ab, −ac], [−ab, a²+c², −bc], [−ac, −bc, a²+b²]]'],
+ ['Changement de base','I(b₂) = P⁻¹ · I(b₁) · P'],
+ ['Parallélépipède a×b×c','A = m(b²+c²)/12 · B = m(a²+c²)/12 · C = m(a²+b²)/12'],
+ ['Cylindre plein (axe z)','A = B = m(R²/4 + h²/12) · C = mR²/2'],
+ ['Centre de gravité','Toujours sur les éléments de symétrie du solide']];
+let fl=FC.slice(),fci=0,fb=false;
+function fcShow(){const c=$('fc');c.className='card fc'+(fb?' back':'');c.innerHTML=fb?fl[fci][1]:`<b>${fl[fci][0]}</b>`;$('fcN').textContent=`${fci+1}/${fl.length}`}
+const fcFlip=()=>{fb=!fb;fcShow()};
+$('fc').onclick=fcFlip;$('fc').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fcFlip()}};
+$('fcP').onclick=()=>{fci=(fci-1+fl.length)%fl.length;fb=false;fcShow()};
+$('fcNx').onclick=()=>{fci=(fci+1)%fl.length;fb=false;fcShow()};
+$('fcS').onclick=()=>{fl=shuffle(FC);fci=0;fb=false;fcShow()};
+
+/* ---------- Mémo, init ---------- */
+$('copyMemo').onclick=async()=>{const txt=$('memoTxt').innerText;let ok=false;
+ try{await navigator.clipboard.writeText(txt);ok=true}catch(e){try{const r=document.createRange();r.selectNodeContents($('memoTxt'));const s=getSelection();s.removeAllRanges();s.addRange(r)}catch(_){}}
+ $('copyMsg').textContent=ok?'Fiche copiée.':'Copie bloquée ici : le texte est sélectionné, utilise Ctrl+C.'};
+labSliders();labUpdate();qStart();exIntro();fNext();fcShow();
+if(!RM){PA.play=true;$('pPlay').textContent='Pause';PB.play=true;$('bPlay').textContent='Pause'}
+requestAnimationFrame(loop);
+new MutationObserver(readTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(window.matchMedia)matchMedia('(prefers-color-scheme:dark)').addEventListener('change',readTheme);
 </script>
+
+</body>
+</html>
