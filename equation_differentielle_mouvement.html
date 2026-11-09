@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Équations différentielles du mouvement — ITC · CPGE PSI*</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto;font-family:var(--font-ui)}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+canvas.viz{width:100%;height:340px;display:block;border:1px solid var(--line);border-radius:8px;background:#fafbfc;cursor:default}
+.task-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+.task-row:last-child{border-bottom:0}
+.task-row .chips{margin:0}
+.vec{text-decoration:overline;text-decoration-thickness:1.4px}
+.frac{display:inline-block;text-align:center;vertical-align:middle;margin:0 2px}
+.frac .num{display:block;border-bottom:1px solid currentColor;padding:0 3px;font-size:0.92em}
+.frac .den{display:block;padding:0 3px;font-size:0.92em}
+.big{font-size:16px;margin:4px 0}
+.stepper{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.step-box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--panel)}
+.step-box.done{border-color:var(--ok);background:rgba(30,122,46,.05)}
+.step-box.current{border-color:var(--accent);background:var(--accent-soft)}
+.step-box h4{margin:0 0 6px;font-size:14px;color:var(--accent-ink)}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .task-row{grid-template-columns:1fr}
+  canvas.viz{height:280px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
+        <circle cx="13" cy="13" r="3" fill="#2e6da4"/>
+        <circle cx="5" cy="5" r="2" fill="#1e7a2e"/>
+        <circle cx="5" cy="21" r="2" fill="#1e7a2e"/>
+        <circle cx="21" cy="5" r="2" fill="#c0281f"/>
+        <circle cx="21" cy="21" r="2" fill="#c0281f"/>
+        <g stroke="#8894a4" stroke-width="1.4" fill="none">
+          <line x1="6.5" y1="6.5" x2="10.5" y2="11"/>
+          <line x1="6.5" y1="19.5" x2="10.5" y2="15"/>
+          <line x1="19.5" y1="6.5" x2="15.5" y2="11"/>
+          <line x1="19.5" y1="19.5" x2="15.5" y2="15"/>
+          <circle cx="13" cy="13" r="7" stroke-dasharray="2 2"/>
+        </g>
+      </svg>
+      <span>Équations du mouvement <small>ITC · CPGE PSI*</small></span>
+    </div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-o5-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+const WORKSHOPS = [];
+
+/* ============ ATELIER 1 : TORSEUR DYNAMIQUE ============ */
+const TD = { massPoint: null, movement: null, matrix: null };
+function mountTD(root) {
+  root.innerHTML = '<h2>1. Calcul du torseur dynamique</h2>'
+    + '<p>Le <b>moment dynamique</b> est la partie délicate du torseur dynamique. La démarche ci-dessous permet d\'optimiser sa détermination selon le cas de figure.</p>'
+    + '<p>Répondez aux questions pour savoir quelle formule utiliser.</p>'
+    + '<div id="td-flow"></div>'
+    + '<div id="td-result"></div>'
+    + '<h3>Rappel : relation du champ des moments</h3>'
+    + '<div class="formula"><span class="vec">δ</span><sub>A,S/R</sub> = <span class="vec">δ</span><sub>G,S/R</sub> + <span class="vec">AG</span> ∧ <span class="vec">R</span><sub>d S/R</sub></div>';
+  renderTD();
+}
+function renderTD() {
+  const flow = $('#td-flow'); if (!flow) return; flow.innerHTML = '';
+  flow.append(h('div', { class: 'task-row' },
+    h('b', null, 'Le solide est-il assimilable à une masse ponctuelle (masse concentrée en un point) ?'),
+    h('div', { class: 'chips' },
+      [['y', 'Oui'], ['n', 'Non']].map(([v, l]) => h('button', {
+        type: 'button', class: 'chip' + (TD.massPoint === v ? ' on' : ''),
+        onclick: () => { TD.massPoint = v; TD.movement = null; TD.matrix = null; renderTD(); }
+      }, l)))));
+  if (TD.massPoint === 'n') {
+    flow.append(h('div', { class: 'task-row' },
+      h('b', null, 'Quel est le mouvement de S/R ?'),
+      h('div', { class: 'chips' },
+        [['t', 'Translation'], ['r', 'Rotation axe fixe'], ['o', 'Mouvement quelconque']].map(([v, l]) => h('button', {
+          type: 'button', class: 'chip' + (TD.movement === v ? ' on' : ''),
+          onclick: () => { TD.movement = v; TD.matrix = null; renderTD(); }
+        }, l)))));
+  }
+  if (TD.movement === 'o') {
+    flow.append(h('div', { class: 'task-row' },
+      h('b', null, 'Où est donnée la matrice d\'inertie ?'),
+      h('div', { class: 'chips' },
+        [['G', 'Au point G'], ['A', 'Au point A fixe'], ['Q', 'En un point quelconque']].map(([v, l]) => h('button', {
+          type: 'button', class: 'chip' + (TD.matrix === v ? ' on' : ''),
+          onclick: () => { TD.matrix = v; renderTD(); }
+        }, l)))));
+  }
+  const res = $('#td-result'); if (!res) return; res.innerHTML = '';
+  if (TD.massPoint === 'y') {
+    res.append(h('div', { class: 'verdict yes', html: '<b>Masse ponctuelle en P.</b> Le moment dynamique est nul : <span class="vec">δ</span><sub>P,S/R</sub> = <span class="vec">0</span>. Le torseur dynamique est un <b>glisseur</b> de résultante <i>m</i>·<span class="vec">A</span><sub>P∈S/R</sub>.' }));
+  } else if (TD.movement === 't') {
+    res.append(h('div', { class: 'verdict yes', html: '<b>Translation.</b> En G, le moment dynamique est nul (<span class="vec">σ</span><sub>G,S/R</sub> = <span class="vec">0</span>). Le torseur dynamique est un <b>glisseur</b> : { <i>m</i>·<span class="vec">A</span><sub>G∈S/R</sub> ; <span class="vec">0</span> }<sub>G</sub>. À transporter en A avec le champ des moments.' }));
+  } else if (TD.movement === 'r') {
+    res.append(h('div', { class: 'verdict yes', html: '<b>Rotation autour d\'un axe fixe (O,x), solide équilibré.</b> Le torseur dynamique est un <b>couple</b> : { <span class="vec">0</span> ; <i>J</i><sub>(O,x)</sub>·ω̇·<span class="vec">x</span> }. La résultante dynamique est nulle.' }));
+  } else if (TD.matrix === 'G') {
+    res.append(h('div', { class: 'verdict yes', html: '<b>Matrice en G.</b> ① <span class="vec">σ</span><sub>G,S/R</sub> = <i>I</i><sub>G</sub>(S)·<span class="vec">Ω</span><sub>S/R</sub>. ② <span class="vec">δ</span><sub>G,S/R</sub> = [d<span class="vec">σ</span><sub>G,S/R</sub>/dt]<sub>R</sub>. ③ Transport en A : <span class="vec">δ</span><sub>A</sub> = <span class="vec">δ</span><sub>G</sub> + <span class="vec">AG</span> ∧ <span class="vec">R</span><sub>d</sub>.' }));
+  } else if (TD.matrix === 'A') {
+    res.append(h('div', { class: 'verdict yes', html: '<b>Matrice en A fixe.</b> <span class="vec">δ</span><sub>A,S/R</sub> = [d(<i>I</i><sub>A</sub>(S)·<span class="vec">Ω</span><sub>S/R</sub>)/dt]<sub>R</sub>.' }));
+  } else if (TD.matrix === 'Q') {
+    res.append(h('div', { class: 'verdict yes', html: '<b>Matrice en point quelconque.</b> <span class="vec">δ</span><sub>A</sub> = [d<span class="vec">σ</span><sub>A</sub>/dt]<sub>R</sub> + <i>m</i>·<span class="vec">V</span><sub>A</sub> ∧ <span class="vec">V</span><sub>G∈S/R</sub>. On peut aussi utiliser la dérivation par parties.' }));
+  }
+}
+WORKSHOPS.push({ id: 'td', title: 'Torseur dynamique', hint: 'Arbre de décision pour trouver le moment dynamique.', mount: mountTD, reset: () => { TD.massPoint = null; TD.movement = null; TD.matrix = null; } });
+
+/* ============ ATELIER 2 : PFD INTERACTIF ============ */
+const PFD = { isolant: '3', theorem: 'R', axis: 'x2' };
+function mountPFD(root) {
+  root.innerHTML = '<h2>2. PFD — isoler et projeter</h2>'
+    + '<p>Robot 2 axes : <b>1</b> bâti, <b>2</b> bras (pivot O,z<sub>1</sub>, moteur <i>C<sub>m</sub></i>), <b>3</b> tige (glissière A,x<sub>2</sub>, vérin <i>F<sub>v</sub></i>). On cherche les équations du mouvement en <i>α</i> et <i>λ</i>.</p>'
+    + '<canvas class="viz" id="pfd-canvas" style="height:260px;cursor:default"></canvas>'
+    + '<div class="opts">'
+    + '<div class="fld"><span>Isoler</span><div id="pfd-iso"></div></div>'
+    + '<div class="fld"><span>Théorème</span><div id="pfd-thm"></div></div>'
+    + '<div class="fld"><span>Axe de projection</span><div id="pfd-ax"></div></div>'
+    + '</div>'
+    + '<div id="pfd-result"></div>';
+  renderPFD(); drawPFD();
+}
+function renderPFD() {
+  const isoBox = $('#pfd-iso'); isoBox.innerHTML = '';
+  isoBox.append(h('div', { class: 'chips' }, [['3', '{3}'], ['23', '{2+3}']].map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (PFD.isolant === v ? ' on' : ''),
+    onclick: () => { PFD.isolant = v; renderPFD(); drawPFD(); }
+  }, l))));
+  const thmBox = $('#pfd-thm'); thmBox.innerHTML = '';
+  thmBox.append(h('div', { class: 'chips' }, [['R', 'Résultante'], ['M', 'Moment']].map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (PFD.theorem === v ? ' on' : ''),
+    onclick: () => { PFD.theorem = v; renderPFD(); }
+  }, l))));
+  const axBox = $('#pfd-ax'); axBox.innerHTML = '';
+  axBox.append(h('div', { class: 'chips' }, [['x2', 'x₂'], ['z1', 'z₁']].map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (PFD.axis === v ? ' on' : ''),
+    onclick: () => { PFD.axis = v; renderPFD(); }
+  }, l))));
+
+  const res = $('#pfd-result'); res.innerHTML = '';
+  const key = PFD.isolant + PFD.theorem + PFD.axis;
+  if (key === '3Rx2') {
+    res.append(h('div', { class: 'verdict yes', html:
+      '<b>✓ Équation utile n°1 (translation).</b> Le torseur des actions extérieures sur {3} se réduit à <i>F<sub>v</sub></i>·<span class="vec">x</span><sub>2</sub> (action de 2 sur 3 selon <span class="vec">x</span><sub>2</sub> = 0 par la glissière). La résultante dynamique de 3 en translation vaut <i>m</i><sub>3</sub>·<span class="vec">A</span><sub>G₃/1</sub>.' }));
+    res.append(h('div', { class: 'formula big' }, 'm₃·a·x₂ = F<sub>v</sub>'));
+  } else if (key === '23Mz1') {
+    res.append(h('div', { class: 'verdict yes', html:
+      '<b>✓ Équation utile n°2 (rotation).</b> En isolant {2+3}, les actions de liaison internes disparaissent. Le moment dynamique en O projeté sur <span class="vec">z</span><sub>1</sub> s\'oppose au couple moteur <i>C<sub>m</sub></i>.' }));
+    res.append(h('div', { class: 'formula big' }, 'δ<sub>O,{2+3}/1</sub>·z₁ = C<sub>m</sub>'));
+  } else if (key === '3Mz1') {
+    res.append(h('div', { class: 'verdict no', html:
+      '<b>✗ Équation inutile.</b> Isoler {3} seul et projeter sur <span class="vec">z</span><sub>1</sub> fait apparaître les moments de liaison de la glissière (inconnus). On n\'obtient pas directement une équation du mouvement.' }));
+  } else if (key === '23Rx2') {
+    res.append(h('div', { class: 'verdict no', html:
+      '<b>✗ Équation inutile.</b> La résultante dynamique de {2+3} projetée sur <span class="vec">x</span><sub>2</sub> fait apparaître l\'action de 1 sur 2 dans la liaison pivot (inconnue).' }));
+  } else if (key === '3Rx2' || key === '23Mz1') { /* handled */ }
+  else {
+    res.append(h('div', { class: 'verdict', html: 'Combinaison non standard. Choisissez plutôt <b>{3} + Résultante + x₂</b> ou <b>{2+3} + Moment + z₁</b>.' }));
+  }
+}
+function drawPFD() {
+  const canvas = $('#pfd-canvas'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+
+  const cx = W * 0.35, cy = H * 0.55;
+  const L = Math.min(W, H) * 0.28;
+  const alpha = Math.PI / 4;
+  const ax = cx + L * Math.cos(alpha);
+  const ay = cy - L * Math.sin(alpha);
+
+  // Bâti
+  ctx.fillStyle = '#5a6068';
+  ctx.fillRect(cx - 22, cy + 20, 44, 10);
+  for (let i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.moveTo(cx - 20 + i * 8, cy + 30);
+    ctx.lineTo(cx - 16 + i * 8, cy + 38);
+    ctx.lineTo(cx - 12 + i * 8, cy + 30);
+    ctx.closePath(); ctx.fill();
+  }
+  // Liaison pivot
+  ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#2e6da4'; ctx.fill();
+  ctx.strokeStyle = '#1b4a76'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Bras 2
+  ctx.strokeStyle = PFD.isolant === '23' ? '#c0281f' : '#2e6da4';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ax, ay); ctx.stroke();
+
+  // Tige 3 (glissière)
+  const angle = alpha;
+  const tigeLen = L * 0.8;
+  const dx = Math.cos(angle) * tigeLen, dy = -Math.sin(angle) * tigeLen;
+  ctx.strokeStyle = PFD.isolant === '3' ? '#1e7a2e' : (PFD.isolant === '23' ? '#c0281f' : '#1e7a2e');
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + dx, ay + dy); ctx.stroke();
+  ctx.fillStyle = PFD.isolant === '3' ? '#1e7a2e' : (PFD.isolant === '23' ? '#c0281f' : '#1e7a2e');
+  ctx.beginPath(); ctx.arc(ax + dx, ay + dy, 6, 0, Math.PI * 2); ctx.fill();
+
+  // Frontière d'isolement
+  if (PFD.isolant === '3') {
+    ctx.strokeStyle = '#1e7a2e'; ctx.setLineDash([6, 4]); ctx.lineWidth = 2;
+    ctx.strokeRect(ax - 20, ay - 20, dx + 40, dy + 40);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#1e7a2e'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('E = {3}', ax + 5, ay - 25);
+  } else if (PFD.isolant === '23') {
+    ctx.strokeStyle = '#c0281f'; ctx.setLineDash([6, 4]); ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.hypot(L + tigeLen, tigeLen) + 15, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('E = {2+3}', cx - 30, cy - 90);
+  }
+
+  // Repère
+  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 40, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - 40); ctx.stroke();
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.fillText('x₁', cx + 42, cy + 4);
+  ctx.fillText('y₁', cx - 4, cy - 42);
+
+  // Couple moteur
+  ctx.strokeStyle = '#9a5b00'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, -0.6, 0.6, false); ctx.stroke();
+  const ex = cx + 18 * Math.cos(0.6), ey = cy + 18 * Math.sin(0.6);
+  ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - 5, ey - 3); ctx.lineTo(ex - 5, ey + 3); ctx.closePath();
+  ctx.fillStyle = '#9a5b00'; ctx.fill();
+  ctx.font = 'bold 11px "IBM Plex Sans", sans-serif';
+  ctx.fillText('Cm', cx + 20, cy + 30);
+
+  // Force vérin
+  if (PFD.isolant === '3' || PFD.isolant === '23') {
+    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 2;
+    const fx = ax + dx * 0.5, fy = ay + dy * 0.5;
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + dx * 0.5, fy + dy * 0.5); ctx.stroke();
+    const hx = fx + dx * 0.5, hy = fy + dy * 0.5;
+    ctx.beginPath(); ctx.moveTo(hx, hy);
+    ctx.lineTo(hx - 8 * Math.cos(angle - 0.4), hy - 8 * Math.sin(angle - 0.4));
+    ctx.moveTo(hx, hy);
+    ctx.lineTo(hx - 8 * Math.cos(angle + 0.4), hy - 8 * Math.sin(angle + 0.4));
+    ctx.stroke();
+    ctx.fillStyle = '#c0281f';
+    ctx.fillText('Fv', fx + dx * 0.5 + 8, fy + dy * 0.5 - 8);
+  }
+
+  // Labels 1, 2, 3
+  ctx.font = 'bold 13px "IBM Plex Sans", sans-serif';
+  ctx.fillStyle = '#5a6068'; ctx.fillText('1', cx + 25, cy + 40);
+  ctx.fillStyle = PFD.isolant === '23' ? '#c0281f' : '#2e6da4';
+  ctx.fillText('2', (cx + ax) / 2 - 5, (cy + ay) / 2 - 8);
+  ctx.fillStyle = PFD.isolant === '3' ? '#1e7a2e' : (PFD.isolant === '23' ? '#c0281f' : '#1e7a2e');
+  ctx.fillText('3', ax + dx * 0.5 + 5, ay + dy * 0.5 - 8);
+}
+WORKSHOPS.push({ id: 'pfd', title: 'PFD — isoler', hint: 'Choisir l\'isolant, le théorème et l\'axe pour obtenir l\'équation du mouvement.', mount: mountPFD,
+  reset: () => { PFD.isolant = '3'; PFD.theorem = 'R'; PFD.axis = 'x2'; } });
+
+/* ============ ATELIER 3 : ÉNERGIE CINÉTIQUE ============ */
+const EC = { mode: 'ponct', m: 5, v: 2, J: 0.02, omega: 3, m2: 5, v2: 2, J2: 0.02, omega2: 3 };
+function mountEC(root) {
+  root.innerHTML = '<h2>3. Énergie cinétique</h2>'
+    + '<p>Choisissez une configuration, réglez les paramètres et observez la formule et le résultat. <b>Ec</b> est en Joules.</p>'
+    + '<div class="chips" id="ec-modes"></div>'
+    + '<div id="ec-params"></div>'
+    + '<div class="formula" id="ec-formula"></div>'
+    + '<div id="ec-out"></div>'
+    + '<h3>Démarche générale</h3>'
+    + '<ol><li>Décomposer l\'ensemble en solides élémentaires.</li><li>Pour chaque solide : type de mouvement (translation / rotation axe fixe / quelconque).</li><li>Appliquer la formule adaptée.</li><li>Sommer pour obtenir Ec de l\'ensemble.</li></ol>';
+  renderEC();
+}
+function renderEC() {
+  const modes = [['ponct', 'Masse ponctuelle'], ['trans', 'Translation'], ['rot', 'Rotation axe fixe (O,x)'], ['rotG', 'Rotation axe (G,x)'], ['genG', 'Mouvement quelconque en G'], ['genA', 'Mouvement quelconque en A']];
+  const mb = $('#ec-modes'); mb.innerHTML = '';
+  mb.append(...modes.map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (EC.mode === v ? ' on' : ''),
+    onclick: () => { EC.mode = v; renderEC(); }
+  }, l)));
+  const pb = $('#ec-params'); pb.innerHTML = '';
+  if (EC.mode === 'ponct') {
+    pb.append(h('div', { class: 'opts' },
+      h('label', { class: 'fld' }, h('span', null, 'm = ', h('b', null, String(EC.m))), h('input', { type: 'range', min: 1, max: 100, step: 1, value: EC.m, oninput: e => { EC.m = +e.target.value; renderEC(); } }), ' kg'),
+      h('label', { class: 'fld' }, h('span', null, 'V = ', h('b', null, String(EC.v))), h('input', { type: 'range', min: 0, max: 20, step: 0.5, value: EC.v, oninput: e => { EC.v = +e.target.value; renderEC(); } }), ' m/s')));
+  } else if (EC.mode === 'trans') {
+    pb.append(h('div', { class: 'opts' },
+      h('label', { class: 'fld' }, h('span', null, 'm = ', h('b', null, String(EC.m))), h('input', { type: 'range', min: 1, max: 100, step: 1, value: EC.m, oninput: e => { EC.m = +e.target.value; renderEC(); } }), ' kg'),
+      h('label', { class: 'fld' }, h('span', null, 'V(G) = ', h('b', null, String(EC.v))), h('input', { type: 'range', min: 0, max: 20, step: 0.5, value: EC.v, oninput: e => { EC.v = +e.target.value; renderEC(); } }), ' m/s')));
+  } else if (EC.mode === 'rot' || EC.mode === 'rotG') {
+    pb.append(h('div', { class: 'opts' },
+      h('label', { class: 'fld' }, h('span', null, 'J = ', h('b', null, String(EC.J))), h('input', { type: 'range', min: 0.001, max: 0.2, step: 0.001, value: EC.J, oninput: e => { EC.J = +e.target.value; renderEC(); } }), ' kg·m²'),
+      h('label', { class: 'fld' }, h('span', null, 'ω = ', h('b', null, String(EC.omega))), h('input', { type: 'range', min: 0, max: 20, step: 0.5, value: EC.omega, oninput: e => { EC.omega = +e.target.value; renderEC(); } }), ' rad/s')));
+  } else {
+    pb.append(h('div', { class: 'opts' },
+      h('label', { class: 'fld' }, h('span', null, 'm = ', h('b', null, String(EC.m))), h('input', { type: 'range', min: 1, max: 100, step: 1, value: EC.m, oninput: e => { EC.m = +e.target.value; renderEC(); } }), ' kg'),
+      h('label', { class: 'fld' }, h('span', null, 'V(G) = ', h('b', null, String(EC.v))), h('input', { type: 'range', min: 0, max: 20, step: 0.5, value: EC.v, oninput: e => { EC.v = +e.target.value; renderEC(); } }), ' m/s'),
+      h('label', { class: 'fld' }, h('span', null, 'J = ', h('b', null, String(EC.J))), h('input', { type: 'range', min: 0.001, max: 0.2, step: 0.001, value: EC.J, oninput: e => { EC.J = +e.target.value; renderEC(); } }), ' kg·m²'),
+      h('label', { class: 'fld' }, h('span', null, 'ω = ', h('b', null, String(EC.omega))), h('input', { type: 'range', min: 0, max: 20, step: 0.5, value: EC.omega, oninput: e => { EC.omega = +e.target.value; renderEC(); } }), ' rad/s')));
+  }
+  const fb = $('#ec-formula'); fb.innerHTML = '';
+  const ob = $('#ec-out'); ob.innerHTML = '';
+  let formula = '', val = 0, note = '';
+  if (EC.mode === 'ponct') {
+    formula = 'Ec = ½ · m · V²';
+    val = 0.5 * EC.m * EC.v * EC.v;
+    note = 'Masse ponctuelle : l\'énergie cinétique ne dépend que de la vitesse du point.';
+  } else if (EC.mode === 'trans') {
+    formula = 'Ec = ½ · m · V(G)²';
+    val = 0.5 * EC.m * EC.v * EC.v;
+    note = 'Translation : tous les points ont la même vitesse, le moment cinétique est nul en G.';
+  } else if (EC.mode === 'rot') {
+    formula = 'Ec = ½ · J<sub>(O,x)</sub> · ω²';
+    val = 0.5 * EC.J * EC.omega * EC.omega;
+    note = 'Rotation autour d\'un axe fixe (O,x) : seule la vitesse angulaire intervient.';
+  } else if (EC.mode === 'rotG') {
+    formula = 'Ec = ½ · m · V(G)² + ½ · J<sub>(G,x)</sub> · ω²';
+    val = 0.5 * EC.m * EC.v * EC.v + 0.5 * EC.J * EC.omega * EC.omega;
+    note = 'Rotation autour d\'un axe (G,x) : on combine translation de G et rotation propre.';
+  } else if (EC.mode === 'genG') {
+    formula = 'Ec = ½ · m · V(G)² + ½ · Ω · I<sub>G</sub>(S) · Ω';
+    val = 0.5 * EC.m * EC.v * EC.v + 0.5 * EC.J * EC.omega * EC.omega;
+    note = 'Mouvement quelconque, torseurs exprimés en G.';
+  } else if (EC.mode === 'genA') {
+    formula = 'Ec = ½ · R · V(A) + ½ · σ(A) · Ω';
+    val = 0.5 * EC.m * EC.v * EC.v + 0.5 * EC.J * EC.omega * EC.omega;
+    note = 'Mouvement quelconque, torseurs exprimés en A (fixe dans R). Formule identique en valeur mais calculée différemment.';
+  }
+  fb.innerHTML = formula;
+  ob.append(h('div', { class: 'gstats' },
+    h('div', { class: 'stat' }, h('span', null, 'Ec'), h('b', null, val.toFixed(3) + ' J'))));
+  ob.append(h('div', { class: 'verdict' }, note));
+}
+WORKSHOPS.push({ id: 'ec', title: 'Énergie cinétique', hint: 'Calculateur pour les six configurations classiques.', mount: mountEC, reset: () => { EC.mode = 'ponct'; EC.m = 5; EC.v = 2; EC.J = 0.02; EC.omega = 3; } });
+
+/* ============ ATELIER 4 : INERTIE ÉQUIVALENTE ============ */
+const IE = { Jm: 0.01, Jr: 0.005, k: 0.1, M: 200, r: 0.05 };
+function mountIE(root) {
+  root.innerHTML = '<h2>4. Inertie équivalente — portail motorisé</h2>'
+    + '<p>Chaîne : moteur → réducteur (rapport <i>k</i> &lt; 1) → pignon-crémaillère (rayon <i>r</i>) → portail (masse <i>M</i>).</p>'
+    + '<div class="formula">Ec = ½ · ( J<sub>m</sub> + J<sub>r</sub>·k² + M·k²·r² ) · ω<sub>m</sub>² = ½ · J<sub>eq</sub> · ω<sub>m</sub>²</div>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>J<sub>m</sub> = <b id="ie-jm-out"></b> kg·m²</span><input type="range" id="ie-jm" min="0.001" max="0.05" step="0.001"></label>'
+    + '<label class="fld"><span>J<sub>r</sub> = <b id="ie-jr-out"></b> kg·m²</span><input type="range" id="ie-jr" min="0.001" max="0.05" step="0.001"></label>'
+    + '<label class="fld"><span>k = <b id="ie-k-out"></b></span><input type="range" id="ie-k" min="0.02" max="0.3" step="0.005"></label>'
+    + '<label class="fld"><span>M = <b id="ie-m-out"></b> kg</span><input type="range" id="ie-m" min="10" max="500" step="5"></label>'
+    + '<label class="fld"><span>r = <b id="ie-r-out"></b> m</span><input type="range" id="ie-r" min="0.01" max="0.1" step="0.005"></label>'
+    + '</div>'
+    + '<canvas class="viz" id="ie-canvas" style="height:220px;cursor:default"></canvas>'
+    + '<div id="ie-out"></div>';
+  ['Jm', 'Jr', 'k', 'M', 'r'].forEach(key => {
+    $('#ie-' + key.toLowerCase()).addEventListener('input', e => { IE[key] = +e.target.value; renderIE(); });
+  });
+  renderIE();
+}
+function renderIE() {
+  ['Jm', 'Jr', 'k', 'M', 'r'].forEach(key => {
+    const el = $('#ie-' + key.toLowerCase()); if (el) el.value = IE[key];
+    const out = $('#ie-' + key.toLowerCase() + '-out');
+    if (out) out.textContent = (key === 'Jm' || key === 'Jr') ? IE[key].toFixed(3) : (key === 'k') ? IE[key].toFixed(3) : (key === 'M') ? String(IE[key]) : IE[key].toFixed(3);
+  });
+  const c1 = IE.Jm;
+  const c2 = IE.Jr * IE.k * IE.k;
+  const c3 = IE.M * IE.k * IE.k * IE.r * IE.r;
+  const Jeq = c1 + c2 + c3;
+  const out = $('#ie-out'); out.innerHTML = '';
+  out.append(h('div', { class: 'gstats' },
+    h('div', { class: 'stat' }, h('span', null, 'J_m (rotor)'), h('b', null, c1.toFixed(5))),
+    h('div', { class: 'stat' }, h('span', null, 'J_r·k² (roue)'), h('b', null, c2.toFixed(6))),
+    h('div', { class: 'stat' }, h('span', null, 'M·k²·r² (portail)'), h('b', null, c3.toFixed(5))),
+    h('div', { class: 'stat' }, h('span', null, 'J_eq total'), h('b', null, Jeq.toFixed(5)))));
+  const total = Math.max(Jeq, 1e-9);
+  const p1 = c1 / total * 100, p2 = c2 / total * 100, p3 = c3 / total * 100;
+  out.append(h('div', { class: 'verdict' + (p2 + p3 < 5 ? ' yes' : '') },
+    h('div', null, 'Contributions à J<sub>eq</sub> :'),
+    h('div', { style: 'display:flex;height:24px;border-radius:6px;overflow:hidden;margin-top:6px;background:#eee' },
+      h('div', { style: 'background:#2e6da4;width:' + p1 + '%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px' }, p1 > 10 ? 'J_m ' + p1.toFixed(0) + '%' : ''),
+      h('div', { style: 'background:#1e7a2e;width:' + p2 + '%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px' }, p2 > 10 ? 'J_r ' + p2.toFixed(0) + '%' : ''),
+      h('div', { style: 'background:#c0281f;width:' + p3 + '%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px' }, p3 > 10 ? 'M ' + p3.toFixed(0) + '%' : '')),
+    p2 + p3 < 5 ? h('p', { html: '✓ Les contributions du réducteur et du portail sont <b>négligeables</b> devant J<sub>m</sub>. On peut approcher J<sub>eq</sub> ≈ J<sub>m</sub>.' }) : h('p', { html: 'Les contributions du réducteur et/ou du portail ne sont pas négligeables ici.' })));
+
+  drawIEBars(c1, c2, c3);
+}
+function drawIEBars(c1, c2, c3) {
+  const canvas = $('#ie-canvas'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+
+  const max = Math.max(c1, c2, c3, 1e-6);
+  const items = [
+    { label: 'J_m', val: c1, color: '#2e6da4' },
+    { label: 'J_r·k²', val: c2, color: '#1e7a2e' },
+    { label: 'M·k²·r²', val: c3, color: '#c0281f' }
+  ];
+  const padX = 90, padY = 22;
+  const barH = 30, gap = 20;
+  const chartW = W - padX - 60;
+  items.forEach((it, i) => {
+    const y = padY + i * (barH + gap);
+    ctx.fillStyle = '#111'; ctx.font = '13px "IBM Plex Sans", sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(it.label, padX - 8, y + barH / 2);
+    const w = it.val / max * chartW;
+    ctx.fillStyle = it.color;
+    ctx.fillRect(padX, y, Math.max(2, w), barH);
+    ctx.fillStyle = '#111'; ctx.textAlign = 'left';
+    ctx.font = '12px "IBM Plex Mono", monospace';
+    ctx.fillText(it.val.toFixed(5), padX + Math.max(2, w) + 8, y + barH / 2);
+  });
+}
+WORKSHOPS.push({ id: 'ie', title: 'Inertie équivalente', hint: 'Décomposer J_eq sur un portail motorisé.', mount: mountIE,
+  reset: () => { IE.Jm = 0.01; IE.Jr = 0.005; IE.k = 0.1; IE.M = 200; IE.r = 0.05; } });
+
+/* ============ ATELIER 5 : LIAISON SPHÈRE-PLAN ============ */
+const LS = { hyp: 'parfait' };
+function mountLS(root) {
+  root.innerHTML = '<h2>5. Puissance dissipée — liaison sphère-plan</h2>'
+    + '<p>Selon les hypothèses, la puissance dissipée dans la liaison sphère-plan est nulle ou négative. Choisissez un cas.</p>'
+    + '<div class="chips" id="ls-hyps"></div>'
+    + '<canvas class="viz" id="ls-canvas" style="height:280px;cursor:default"></canvas>'
+    + '<div id="ls-out"></div>';
+  renderLS();
+}
+function renderLS() {
+  const hyps = [['parfait', 'Parfaite'], ['gliss', 'Glissement frotté'], ['roul', 'Roulement sans glissement'], ['roulres', 'Roulement + résistance']];
+  const box = $('#ls-hyps'); box.innerHTML = '';
+  box.append(...hyps.map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (LS.hyp === v ? ' on' : ''),
+    onclick: () => { LS.hyp = v; renderLS(); }
+  }, l)));
+
+  const out = $('#ls-out'); out.innerHTML = '';
+  const data = {
+    parfait: {
+      torseur: 'T₁→₂ = { N⃗ ; 0⃗ }  ·  V₂/₁ = { Ω⃗ ; V⃗_g }',
+      force: 'Effort tangentiel T⃗ = 0⃗ (frottements négligés), moments de pivotement et de roulement nuls.',
+      p: 'P₁↔₂ = 0',
+      note: 'Liaison parfaite : les efforts de contact sont normaux, aucun travail n\'est dissipé.'
+    },
+    gliss: {
+      torseur: 'T₁→₂ = { N⃗ + T⃗ ; 0⃗ }  avec ‖T⃗‖ = f·‖N⃗‖  ·  V₂/₁ = { Ω⃗ ; V⃗_g ≠ 0⃗ }',
+      force: 'Effort tangentiel T⃗ = f·N·u⃗, opposé à V⃗_g. La vitesse de glissement est non nulle.',
+      p: 'P₁↔₂ = T⃗ · V⃗_g < 0',
+      note: 'Glissement avec frottement : la puissance est <b>dissipée</b> (négative), c\'est l\'échauffement du contact.'
+    },
+    roul: {
+      torseur: 'T₁→₂ = { N⃗ + T⃗ ; 0⃗ }  avec ‖T⃗‖ ≤ f·‖N⃗‖  ·  V₂/₁ = { Ω⃗ ; 0⃗ }',
+      force: 'Vitesse de glissement nulle. L\'effort tangentiel est non nul (adhérence), mais la puissance reste nulle car V⃗_g = 0⃗.',
+      p: 'P₁↔₂ = T⃗ · 0⃗ = 0',
+      note: 'Roulement sans glissement : <b>pas de dissipation</b> tant que le glissement est nul.'
+    },
+    roulres: {
+      torseur: 'T₁→₂ = { N⃗ + T⃗ ; M⃗_roul }  avec ‖M⃗_roul‖ = h·‖N⃗‖  ·  V₂/₁ = { Ω⃗ ; 0⃗ }',
+      force: 'Roulement sans glissement + résistance au roulement. Le moment de roulement M⃗_roul est non nul.',
+      p: 'P₁↔₂ = M⃗_roul · Ω⃗ < 0',
+      note: 'Cas rare mais réaliste : la puissance dissipée est due à la résistance au roulement (déformation des surfaces).'
+    }
+  };
+  const d = data[LS.hyp];
+  out.append(h('div', { class: 'verdict' + (LS.hyp === 'parfait' || LS.hyp === 'roul' ? ' yes' : (LS.hyp === 'gliss' || LS.hyp === 'roulres' ? ' warn' : '')) },
+    h('div', { class: 'formula' }, d.torseur),
+    h('p', null, d.force),
+    h('div', { class: 'formula big' }, d.p),
+    h('p', { html: d.note })));
+  drawLS();
+}
+function drawLS() {
+  const canvas = $('#ls-canvas'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+
+  // Plan
+  const px = W * 0.15, py = H * 0.7, pw = W * 0.7, ph = 14;
+  ctx.fillStyle = '#e6eaee';
+  ctx.beginPath();
+  ctx.moveTo(px, py); ctx.lineTo(px + pw * 0.75, py - 8);
+  ctx.lineTo(px + pw, py + ph / 2); ctx.lineTo(px + pw * 0.25, py + ph / 2 + 8);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#8894a4'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Sphère
+  const cx = W * 0.5, cy = py - 40, r = 50;
+  const grad = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.4, 2, cx, cy, r);
+  grad.addColorStop(0, '#b9d3ee');
+  grad.addColorStop(1, '#2e6da4');
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = '#1b4a76'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Point de contact
+  ctx.beginPath(); ctx.arc(cx, cy + r, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#c0281f'; ctx.fill();
+
+  // Normale
+  ctx.strokeStyle = '#1e7a2e'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(cx, cy + r); ctx.lineTo(cx, cy + r - 80); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + r - 80); ctx.lineTo(cx - 5, cy + r - 72); ctx.lineTo(cx + 5, cy + r - 72); ctx.closePath();
+  ctx.fillStyle = '#1e7a2e'; ctx.fill();
+  ctx.font = 'bold 13px "IBM Plex Sans", sans-serif'; ctx.fillStyle = '#1e7a2e';
+  ctx.textAlign = 'left'; ctx.fillText('N⃗', cx + 8, cy + r - 70);
+
+  // Tangente
+  if (LS.hyp === 'gliss' || LS.hyp === 'roul' || LS.hyp === 'roulres') {
+    ctx.strokeStyle = '#9a5b00'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx, cy + r); ctx.lineTo(cx + 80, cy + r); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + 80, cy + r); ctx.lineTo(cx + 72, cy + r - 5); ctx.lineTo(cx + 72, cy + r + 5); ctx.closePath();
+    ctx.fillStyle = '#9a5b00'; ctx.fill();
+    ctx.fillText('T⃗', cx + 84, cy + r + 4);
+  }
+
+  // Vitesse de glissement
+  if (LS.hyp === 'gliss') {
+    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 2.5; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, cy + r + 25); ctx.lineTo(cx + 100, cy + r + 25); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(cx + 100, cy + r + 25); ctx.lineTo(cx + 92, cy + r + 20); ctx.lineTo(cx + 92, cy + r + 30); ctx.closePath();
+    ctx.fillStyle = '#c0281f'; ctx.fill();
+    ctx.fillStyle = '#c0281f'; ctx.font = 'bold 13px "IBM Plex Sans", sans-serif';
+    ctx.fillText('V⃗_g ≠ 0', cx + 104, cy + r + 30);
+  }
+
+  // Moment de roulement
+  if (LS.hyp === 'roulres') {
+    ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx, cy + r, 22, 0.2, 2 * Math.PI - 0.2); ctx.stroke();
+    ctx.beginPath();
+    const ea = 0.2;
+    ctx.moveTo(cx + 22 * Math.cos(ea), cy + r + 22 * Math.sin(ea));
+    ctx.lineTo(cx + 22 * Math.cos(ea) - 8, cy + r + 22 * Math.sin(ea) - 3);
+    ctx.lineTo(cx + 22 * Math.cos(ea) - 8, cy + r + 22 * Math.sin(ea) + 5);
+    ctx.closePath(); ctx.fillStyle = '#7b4fc2'; ctx.fill();
+    ctx.fillStyle = '#7b4fc2'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('M_roul', cx + 28, cy + r + 45);
+  }
+
+  // Labels 1, 2
+  ctx.font = 'bold 14px "IBM Plex Sans", sans-serif';
+  ctx.fillStyle = '#5a6068'; ctx.textAlign = 'left';
+  ctx.fillText('1', px + 10, py + ph + 15);
+  ctx.fillText('2', cx + r + 10, cy);
+}
+WORKSHOPS.push({ id: 'ls', title: 'Liaison sphère-plan', hint: 'Hypothèses de contact et puissance dissipée.', mount: mountLS, reset: () => { LS.hyp = 'parfait'; } });
+
+/* ============ ATELIER 6 : TEC — TREUIL DE LEVAGE ============ */
+const TEC = { step: 0 };
+const TEC_STEPS = [
+  {
+    title: 'Étape 1 — Isoler l\'ensemble E',
+    body: '<p>On isole <b>E = {2 + 3 + 4 + 5}</b> : l\'arbre d\'entrée 2, l\'arbre intermédiaire 3, le tambour 4 et la charge 5.</p>'
+      + '<p>Frontière d\'isolement :</p><ul>'
+      + '<li>En A : liaison pivot de 2/1 et de 4/1</li>'
+      + '<li>En B : liaison pivot de 3/1</li>'
+      + '<li>Contact câble-charge en 5</li>'
+      + '</ul>'
+      + '<p>Les liaisons étant parfaites, les puissances dissipées sont nulles.</p>'
+  },
+  {
+    title: 'Étape 2 — Énergie cinétique',
+    body: '<p>Chaque solide contribue :</p>'
+      + '<ul><li>E<sub>c2/1</sub> = ½·J<sub>2</sub>·ω<sub>2</sub>² (rotation)</li>'
+      + '<li>E<sub>c3/1</sub> = ½·J<sub>3</sub>·ω<sub>3</sub>² (rotation)</li>'
+      + '<li>E<sub>c4/1</sub> = ½·J<sub>4</sub>·ω<sub>4</sub>² (rotation)</li>'
+      + '<li>E<sub>c5/1</sub> = ½·m<sub>5</sub>·V<sub>5</sub>² (translation)</li></ul>'
+      + '<p>Lois entrée-sortie : ω<sub>3</sub> = −(Z<sub>2</sub>/Z<sub>3a</sub>)·ω<sub>2</sub>, ω<sub>4</sub> = −(Z<sub>3b</sub>/Z<sub>4</sub>)·ω<sub>3</sub>, V<sub>5</sub> = R<sub>4</sub>·ω<sub>4</sub>.</p>'
+      + '<p>En exprimant tout en fonction de ω<sub>2</sub> :</p>'
+      + '<div class="formula">E<sub>cE/1</sub> = ½ · J<sub>eq</sub> · ω<sub>2</sub>²</div>'
+      + '<p>avec :</p>'
+      + '<div class="formula">J<sub>eq</sub> = J<sub>2</sub> + J<sub>3</sub>·(Z<sub>2</sub>/Z<sub>3a</sub>)² + J<sub>4</sub>·(Z<sub>2</sub>/Z<sub>3a</sub> · Z<sub>3b</sub>/Z<sub>4</sub>)² + m<sub>5</sub>·R<sub>4</sub>²·(Z<sub>2</sub>/Z<sub>3a</sub> · Z<sub>3b</sub>/Z<sub>4</sub>)²</div>'
+  },
+  {
+    title: 'Étape 3 — Puissances extérieures',
+    body: '<p>Inventaire des puissances des actions extérieures à E :</p>'
+      + '<ul><li><b>Moteur</b> : P = C<sub>m</sub>·ω<sub>2</sub> (couple sur l\'arbre d\'entrée).</li>'
+      + '<li><b>Pesanteur sur 5</b> : P = −m<sub>5</sub>·g·V<sub>5</sub> (la charge est soulevée, travail résistant).</li>'
+      + '<li><b>Liaisons parfaites 1-2, 1-3, 1-4</b> : P = 0.</li>'
+      + '<li><b>Pesanteur sur 2, 3, 4</b> : P = 0 (centres d\'inertie fixes dans le repère 1).</li></ul>'
+      + '<div class="formula">Σ P<sub>ext</sub> = C<sub>m</sub>·ω<sub>2</sub> − m<sub>5</sub>·g·V<sub>5</sub></div>'
+  },
+  {
+    title: 'Étape 4 — Puissances des inter-efforts',
+    body: '<p>Les liaisons entre 2, 3, 4 sont supposées parfaites :</p>'
+      + '<div class="formula">P<sub>inter-efforts</sub> = 0</div>'
+      + '<p>L\'engrènement est supposé sans perte (rendement 1).</p>'
+  },
+  {
+    title: 'Étape 5 — Théorème de l\'énergie cinétique',
+    body: '<p>On applique le TEC à E dans son mouvement par rapport à 1 :</p>'
+      + '<div class="formula">dE<sub>cE/1</sub>/dt = Σ P<sub>ext</sub> + P<sub>inter-efforts</sub></div>'
+      + '<p>Avec E<sub>c</sub> = ½·J<sub>eq</sub>·ω<sub>2</sub>², on obtient dE<sub>c</sub>/dt = J<sub>eq</sub>·ω<sub>2</sub>·ω̇<sub>2</sub>. En simplifiant par ω<sub>2</sub> (supposé non nul) :</p>'
+      + '<div class="formula big">J<sub>eq</sub>·ω̇<sub>2</sub> = C<sub>m</sub> − m<sub>5</sub>·g·R<sub>4</sub>·(Z<sub>2</sub>/Z<sub>3a</sub> · Z<sub>3b</sub>/Z<sub>4</sub>)</div>'
+      + '<p>Cette équation permet de calculer l\'<b>accélération angulaire</b> de l\'arbre d\'entrée en fonction du couple moteur et de la charge.</p>'
+  }
+];
+function mountTEC(root) {
+  root.innerHTML = '<h2>6. TEC — treuil de levage motorisé</h2>'
+    + '<p>Résolution guidée du treuil du cours. À chaque étape, cliquez sur <b>Suivant</b> pour avancer.</p>'
+    + '<div class="stepper" id="tec-steps"></div>'
+    + '<div id="tec-content"></div>'
+    + '<div class="files" style="margin-top:10px">'
+    + '<button class="btn" id="tec-prev">◀ Précédent</button>'
+    + '<button class="btn pri" id="tec-next">Suivant ▶</button>'
+    + '<button class="btn" id="tec-reset">Recommencer</button>'
+    + '</div>';
+  $('#tec-prev').addEventListener('click', () => { if (TEC.step > 0) { TEC.step--; renderTEC(); } });
+  $('#tec-next').addEventListener('click', () => { if (TEC.step < TEC_STEPS.length - 1) { TEC.step++; renderTEC(); } });
+  $('#tec-reset').addEventListener('click', () => { TEC.step = 0; renderTEC(); });
+  renderTEC();
+}
+function renderTEC() {
+  const stepBox = $('#tec-steps'); if (!stepBox) return; stepBox.innerHTML = '';
+  TEC_STEPS.forEach((s, i) => {
+    stepBox.append(h('button', {
+      type: 'button',
+      class: 'chip' + (i === TEC.step ? ' on' : (i < TEC.step ? ' on' : '')),
+      style: i < TEC.step ? 'opacity:.7' : '',
+      onclick: () => { TEC.step = i; renderTEC(); }
+    }, (i + 1) + '. ' + s.title.replace(/^Étape \d+ — /, '')));
+  });
+  const content = $('#tec-content'); content.innerHTML = '';
+  const s = TEC_STEPS[TEC.step];
+  content.append(h('div', { class: 'step-box current' }, h('h4', null, s.title), h('div', { html: s.body })));
+  // Boutons
+  $('#tec-prev').disabled = TEC.step === 0;
+  $('#tec-next').disabled = TEC.step === TEC_STEPS.length - 1;
+}
+WORKSHOPS.push({ id: 'tec', title: 'TEC — treuil', hint: 'Résolution guidée du treuil de levage.', mount: mountTEC, reset: () => { TEC.step = 0; } });
+
+/* ============ ACTIVITÉS ============ */
+const ACT = {
+  td: {
+    title: 'Torseur dynamique', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'torseur',
+    goal: 'Savoir dans quels cas le moment dynamique est nul, et quelle formule utiliser selon le mouvement.',
+    steps: [
+      'Parcourez l\'arbre de décision avec « masse ponctuelle : non » puis « translation ».',
+      'Notez que le moment dynamique est <b>nul en G</b> pour un solide en translation.',
+      'Testez « rotation axe fixe » et observez que le torseur est un <b>couple</b>.',
+      'Terminez avec « mouvement quelconque » et les trois positions de matrice d\'inertie.',
+      'Retenez que le moment dynamique est la dérivée du moment cinétique.'
+    ],
+    defi: { q: 'Pourquoi le moment dynamique en G est-il nul pour un solide en translation ?', a: 'Parce que la vitesse angulaire est nulle : <span class="vec">Ω</span><sub>S/R</sub> = <span class="vec">0</span>, donc <span class="vec">σ</span><sub>G,S/R</sub> = I<sub>G</sub>(S)·<span class="vec">Ω</span> = <span class="vec">0</span> et sa dérivée aussi. Le torseur dynamique est un glisseur.' },
+    qcm: [
+      { q: 'Le torseur dynamique d\'un solide en translation est…', o: ['Un couple', 'Un glisseur', 'Nul', 'Un torseur quelconque'], a: 1, w: 'Résultante non nulle, moment nul en G : c\'est un glisseur.' },
+      { q: 'Le moment dynamique est la dérivée…', o: ['Du moment d\'inertie', 'Du moment cinétique', 'De la quantité d\'accélération', 'De la vitesse'], a: 1, w: 'δ<sub>A,S/R</sub> = [dσ<sub>A,S/R</sub>/dt]<sub>R</sub>.' },
+      { q: 'Pour un solide en rotation d\'axe (O,x) équilibré, la résultante dynamique est…', o: ['J·ω̇·x', 'Nulle', 'm·V(G)', 'Inconnue'], a: 1, w: 'La résultante dynamique est nulle : le torseur dynamique est un couple.' },
+      { q: 'Si la matrice d\'inertie est donnée en G pour un mouvement quelconque, on calcule…', o: ['σ<sub>G</sub> = I<sub>G</sub>·Ω puis δ<sub>G</sub> = dσ<sub>G</sub>/dt', 'Directement δ<sub>G</sub> = I<sub>G</sub>·Ω', 'Rien, δ est nul', 'Seulement la résultante'], a: 0, w: 'Deux étapes : le moment cinétique, puis sa dérivée.' },
+      { q: 'La relation du champ des moments dynamiques s\'écrit…', o: ['δ<sub>A</sub> = δ<sub>G</sub> + AG ∧ R<sub>d</sub>', 'δ<sub>A</sub> = δ<sub>G</sub>', 'δ<sub>A</sub> = R<sub>d</sub> + AG ∧ δ<sub>G</sub>', 'δ<sub>A</sub> = 0'], a: 0, w: 'C\'est la même relation que pour tous les torseurs (torseur cinétique, torseur dynamique).' }
+    ]
+  },
+  pfd: {
+    title: 'PFD — isoler et projeter', level: 'Niveau 3 · Approfondir', time: '30 min', course: 'pfd',
+    goal: 'Choisir correctement l\'isolant, le théorème et l\'axe de projection pour obtenir une équation du mouvement.',
+    steps: [
+      'Sur le robot 2 axes, sélectionnez « Isoler {3} » + « Résultante » + « x₂ ». L\'équation obtenue est-elle utile ?',
+      'Essayez « Isoler {3} » + « Moment » + « z₁ » : apparaît-il des inconnues de liaison ?',
+      'Passez à « Isoler {2+3} » + « Moment » + « z₁ ». Les actions internes ont disparu : l\'équation est utile.',
+      'Testez « Isoler {2+3} » + « Résultante » + « x₂ » : que se passe-t-il ?',
+      'Concluez sur les deux équations scalaires nécessaires pour le robot (2 mobilités).'
+    ],
+    defi: { q: 'Pourquoi faut-il isoler {2+3} et non {2} seul pour obtenir l\'équation en α ?', a: 'En isolant {2} seul, l\'action du vérin (via 3) apparaît comme inconnue dans le torseur des actions extérieures. En isolant {2+3}, cette action devient <b>interne</b> et disparaît. Il ne reste que le couple moteur C<sub>m</sub> et les actions extérieures connues.' },
+    qcm: [
+      { q: 'Le PFD s\'applique…', o: ['Dans un référentiel quelconque', 'Dans un référentiel galiléen', 'Uniquement en statique', 'Seulement aux solides en translation'], a: 1, w: 'Le PFD n\'est valable que dans un référentiel galiléen (fixe par rapport à la Terre ou en translation uniforme rectiligne).' },
+      { q: 'Le PFD s\'écrit…', o: ['D<sub>E/R</sub> = T<sub>E→E</sub>', 'T<sub>E→E</sub> = 0', 'F = m·a uniquement', 'D<sub>E/R</sub> = 0'], a: 0, w: 'Le torseur dynamique de E/R est égal au torseur des actions extérieures appliquées à E.' },
+      { q: 'En statique, le PFD se réduit à…', o: ['T<sub>E→E</sub> = 0', 'F = m·a', 'D<sub>E/R</sub> = 0', 'E<sub>c</sub> = 0'], a: 0, w: 'Le torseur dynamique est nul (pas de mouvement), donc le torseur des actions extérieures aussi : c\'est le PFS.' },
+      { q: 'Pour le robot 2 axes, combien d\'équations scalaires faut-il au total ?', o: ['1', '2', '3', '6'], a: 1, w: 'Le robot a 2 mobilités utiles (α et λ) : il faut 2 équations scalaires pour déterminer les lois de mouvement.' },
+      { q: 'En isolant {2+3}, les actions internes entre 2 et 3…', o: ['Apparaissent dans le bilan', 'Disparaissent du bilan', 'Sont nulles', 'Deviennent motrices'], a: 1, w: 'Les actions internes à un système isolé s\'annulent deux à deux dans le bilan des actions extérieures.' }
+    ]
+  },
+  ec: {
+    title: 'Énergie cinétique', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'ec',
+    goal: 'Choisir la bonne formule d\'énergie cinétique selon le type de mouvement.',
+    steps: [
+      'Sur le calculateur, commencez par « Masse ponctuelle » et vérifiez Ec = ½·m·V².',
+      'Passez à « Translation » : la formule est identique.',
+      'Essayez « Rotation axe (O,x) » : seule la vitesse angulaire intervient.',
+      'Passez à « Rotation axe (G,x) » : combien de termes ?',
+      'Terminez par « Mouvement quelconque en G » : la formule combine résultante et moment cinétique.'
+    ],
+    defi: { q: 'Un solide de masse m et de moment d\'inertie J tourne autour d\'un axe passant par G. Quelle est son énergie cinétique ?', a: 'Ec = ½·m·V(G)² + ½·J<sub>(G,x)</sub>·ω². Si G est sur l\'axe de rotation, V(G) = 0 et il reste Ec = ½·J·ω².' },
+    qcm: [
+      { q: 'L\'énergie cinétique d\'un point matériel de masse m et de vitesse V vaut…', o: ['m·V', '½·m·V²', 'm·V²', '½·m²·V'], a: 1, w: 'Ec = ½·m·V², en Joules.' },
+      { q: 'Pour une rotation autour d\'un axe fixe (O,x), Ec vaut…', o: ['½·m·V²', '½·J<sub>(O,x)</sub>·ω²', '½·J·ω', 'J·ω²'], a: 1, w: 'Seule la vitesse angulaire intervient : Ec = ½·J<sub>(O,x)</sub>·ω².' },
+      { q: 'L\'énergie cinétique d\'un ensemble de solides est…', o: ['La moyenne des Ec', 'La somme des Ec', 'Le maximum des Ec', 'Le produit des Ec'], a: 1, w: 'Ec<sub>E/R</sub> = Σ Ec<sub>Si/R</sub> : c\'est la somme des énergies cinétiques de chaque solide.' },
+      { q: 'Ec est le comoment…', o: ['Du torseur cinétique et du torseur dynamique', 'Du torseur cinétique et du torseur cinématique', 'Du torseur des forces et du torseur cinématique', 'De deux torseurs dynamiques'], a: 1, w: 'Ec<sub>S/R</sub> = ½ · C<sub>S/R</sub> ⊗ V<sub>S/R</sub>, exprimés au même point.' },
+      { q: 'L\'énergie cinétique dépend-elle du point où on exprime les torseurs ?', o: ['Oui', 'Non', 'Seulement en rotation', 'Seulement en translation'], a: 1, w: 'Ec est indépendante du point choisi, à condition d\'exprimer les deux torseurs au même point.' }
+    ]
+  },
+  ie: {
+    title: 'Inertie équivalente', level: 'Niveau 3 · Approfondir', time: '25 min', course: 'inertie',
+    goal: 'Comprendre la notion d\'inertie équivalente ramenée sur un arbre et le rôle du rapport de réduction.',
+    steps: [
+      'Sur le portail motorisé, partez des valeurs par défaut. Observez la décomposition de J<sub>eq</sub>.',
+      'Le terme J<sub>r</sub>·k² est-il négligeable devant J<sub>m</sub> ? Pourquoi ?',
+      'Augmentez M à 500 kg : la contribution du portail change-t-elle beaucoup ?',
+      'Augmentez k à 0,3 : le terme en k² croît fortement. Que se passe-t-il ?',
+      'Concluez : pour un réducteur, les inerties en aval sont multipliées par k² (très petit).'
+    ],
+    defi: { q: 'Pourquoi les inerties des solides situés après un réducteur sont-elles souvent négligeables ?', a: 'Le rapport de réduction k (k &lt; 1) élève les vitesses au carré : le terme J·k² devient très petit. Pour k = 0,1, k² = 0,01 : la contribution est divisée par 100.' },
+    qcm: [
+      { q: 'L\'inertie équivalente ramenée sur un arbre correspond à…', o: ['La masse totale du mécanisme', 'Le moment d\'inertie d\'un solide fictif qui développerait la même Ec', 'La somme des moments d\'inertie', 'Le moment d\'inertie du moteur'], a: 1, w: 'C\'est un moment d\'inertie fictif : Jeq tel que Ec = ½·Jeq·ω².' },
+      { q: 'Pour un réducteur de rapport k < 1, l\'inertie en aval est multipliée par…', o: ['k', 'k²', '1/k', '1/k²'], a: 1, w: 'Quand on ramène l\'inertie sur l\'arbre moteur, le terme est multiplié par (rapport)² = k².' },
+      { q: 'La loi entrée-sortie en vitesse du portail est…', o: ['V = ω·r', 'V = ω/k', 'V = k·ω', 'V = ω²·r'], a: 0, w: 'Le pignon de rayon r transmet V = ω·r à la crémaillère.' },
+      { q: 'L\'inertie équivalente d\'un mécanisme à plusieurs mobilités…', o: ['Est constante', 'Dépend du paramètre de mouvement', 'N\'existe pas', 'Est toujours nulle'], a: 1, w: 'Elle dépend de la position (et donc du temps) si la loi entrée-sortie est non linéaire.' },
+      { q: 'Dans un treuil, pour calculer J<sub>eq</sub> ramené à ω<sub>2</sub>, la masse m₅ se traduit par…', o: ['½·m₅·ω<sub>2</sub>²', '½·m₅·V₅² avec V₅ = R₄·ω₄', 'm₅·g', '½·m₅·g²'], a: 1, w: 'On exprime V₅ en fonction de ω₂ via les rapports de transmission, puis on identifie le coefficient de ω₂²/2.' }
+    ]
+  },
+  ls: {
+    title: 'Liaisons et puissance', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'puissance',
+    goal: 'Savoir quand la puissance dissipée dans une liaison est nulle ou négative.',
+    steps: [
+      'Sur la liaison sphère-plan, sélectionnez « Parfaite » : P = 0. Pourquoi ?',
+      'Passez en « Glissement frotté » : P < 0. D\'où vient la dissipation ?',
+      'Essayez « Roulement sans glissement » : P = 0 même si T ≠ 0. Expliquez.',
+      'Terminez par « Roulement + résistance » : P = M_roul·Ω < 0.',
+      'Retenez que la puissance est <b>nulle</b> si et seulement si V<sub>g</sub> = 0 (sans résistance) ou T = 0.'
+    ],
+    defi: { q: 'Dans le cas du roulement sans glissement parfait, pourquoi P = 0 alors que l\'effort tangentiel T n\'est pas nul ?', a: 'La puissance est P = T·V<sub>g</sub>. Si la vitesse de glissement est nulle (V<sub>g</sub> = 0), le produit est nul, même si T est non nul. L\'effort tangentiel sert à maintenir l\'adhérence (transmettre le mouvement), sans dissiper d\'énergie.' },
+    qcm: [
+      { q: 'Pour une liaison parfaite, la puissance dissipée est…', o: ['Positive', 'Nulle', 'Négative', 'Inconnue'], a: 1, w: 'Frottements négligés et efforts tangentiels nuls : P = 0.' },
+      { q: 'Dans un glissement avec frottement, la puissance est…', o: ['Motrice (positive)', 'Dissipée (négative)', 'Nulle', 'Constante'], a: 1, w: 'Le frottement dissipe de l\'énergie : P = T·V<sub>g</sub> < 0 car T et V<sub>g</sub> sont opposés.' },
+      { q: 'Dans un roulement sans glissement, la puissance dissipée est…', o: ['Négative', 'Positive', 'Nulle (si résistance négligée)', 'Infinie'], a: 2, w: 'V<sub>g</sub> = 0 donc P = T·V<sub>g</sub> = 0, même si T ≠ 0.' },
+      { q: 'La puissance des inter-efforts entre solides d\'un même ensemble est…', o: ['Toujours nulle', 'Toujours positive', 'Négative', 'Variable'], a: 0, w: 'Pour des liaisons parfaites, la puissance des inter-efforts est nulle (les actions internes s\'annulent).' },
+      { q: 'Le moment de résistance au roulement s\'écrit…', o: ['M<sub>roul</sub> = N·h', 'M<sub>roul</sub> = N/h', 'M<sub>roul</sub> = h', 'M<sub>roul</sub> = f·N'], a: 0, w: 'M<sub>roul</sub> = h·N avec h (longueur) le coefficient de résistance au roulement.' }
+    ]
+  },
+  tec: {
+    title: 'TEC — treuil de levage', level: 'Niveau 3 · Approfondir', time: '30 min', course: 'tec',
+    goal: 'Appliquer le théorème de l\'énergie cinétique à un mécanisme multi-solides en chaîne fermée.',
+    steps: [
+      'Parcourez les 5 étapes de l\'atelier pour le treuil.',
+      'Identifiez les 4 énergies cinétiques élémentaires et l\'inertie équivalente J<sub>eq</sub>.',
+      'Faites l\'inventaire des puissances extérieures : moteur, pesanteur sur 5, liaisons parfaites.',
+      'Vérifiez que les inter-efforts sont nuls (liaisons parfaites).',
+      'Écrivez l\'équation finale : J<sub>eq</sub>·ω̇<sub>2</sub> = C<sub>m</sub> − m₅·g·V₅/ω₂.'
+    ],
+    defi: { q: 'Pourquoi le TEC est-il plus rapide que le PFD sur le treuil ?', a: 'Le treuil est un mécanisme en chaîne fermée à 1 mobilité utile. Le PFD exigerait d\'isoler successivement chaque solide et de projeter pour éliminer les actions de liaison (nombreuses). Le TEC donne directement une équation scalaire unique en combinant les puissances, sans avoir à calculer les inter-efforts (nuls car liaisons parfaites).' },
+    qcm: [
+      { q: 'Le TEC s\'écrit…', o: ['dE<sub>c</sub>/dt = Σ P<sub>ext</sub> + P<sub>inter</sub>', 'E<sub>c</sub> = Σ P', 'dE<sub>c</sub>/dt = Σ F', 'E<sub>c</sub> = constante'], a: 0, w: 'La dérivée de l\'énergie cinétique est égale à la somme des puissances (extérieures + inter-efforts).' },
+      { q: 'Pour le treuil, la puissance de la pesanteur sur 5 vaut…', o: ['+m₅·g·V₅', '−m₅·g·V₅', '0', 'm₅·g'], a: 1, w: 'La charge est soulevée : le poids s\'oppose au mouvement, la puissance est résistante (négative).' },
+      { q: 'La puissance du moteur dans le treuil est…', o: ['C<sub>m</sub>·ω<sub>2</sub>', 'C<sub>m</sub>/ω<sub>2</sub>', 'C<sub>m</sub>·ω<sub>2</sub>²', 'm·g·V'], a: 0, w: 'Le couple moteur C<sub>m</sub> agit sur l\'arbre tournant à ω<sub>2</sub>.' },
+      { q: 'Les inter-efforts sont nuls dans le treuil parce que…', o: ['Les solides sont immobiles', 'Les liaisons sont parfaites', 'Le moteur est puissant', 'La charge est lourde'], a: 1, w: 'Liaisons parfaites : P<sub>inter-efforts</sub> = 0. C\'est une hypothèse classique.' },
+      { q: 'Le TEC donne une équation en…', o: ['Vitesses et accélérations', 'Positions seulement', 'Forces seulement', 'Énergies seulement'], a: 0, w: 'dE<sub>c</sub>/dt fait apparaître ω et ω̇ (ou V et a), donc une équation différentielle du mouvement.' }
+    ]
+  }
+};
+
+/* ============ COURS ============ */
+const COURSE = [];
+COURSE.push({ id: 'intro', t: 'Introduction', h: `
+<p>Le <b>principe fondamental de la dynamique</b> permet d'étudier la relation de cause à effet entre les mouvements d'un mécanisme et les actions mécaniques en présence. Ce cours cherche à déterminer les <b>équations différentielles du mouvement</b> : des équations qui lient les paramètres de mouvement et leurs dérivées aux actions mécaniques connues.</p>
+<p>Dans certaines conditions, ces équations peuvent aussi être obtenues par le <b>théorème de l'énergie cinétique</b> (TEC), appelé aussi théorème de l'énergie-puissance.</p>
+<div class="retain"><b>Objectif.</b> Obtenir les lois de mouvement (équations différentielles) d'un mécanisme à partir des actions mécaniques connues (moteurs, vérins, pesanteur).</div>
+` });
+COURSE.push({ id: 'torseur', t: 'Torseur dynamique', h: `
+<h3>Démarche de détermination du moment dynamique</h3>
+<p>Le moment dynamique est la partie délicate du torseur dynamique. On distingue plusieurs cas :</p>
+<ul>
+<li><b>Masse ponctuelle</b> : <span class="vec">δ</span><sub>P,S/R</sub> = <span class="vec">0</span>.</li>
+<li><b>Translation</b> : <span class="vec">δ</span><sub>G,S/R</sub> = <span class="vec">0</span>, torseur glisseur.</li>
+<li><b>Rotation axe fixe (O,x), équilibré</b> : couple { <span class="vec">0</span> ; J·ω̇·<span class="vec">x</span> }.</li>
+<li><b>Mouvement quelconque</b> : matrice d'inertie en G ou en A, puis dérivation.</li>
+</ul>
+<h3>Mouvement de translation</h3>
+<div class="formula"><span class="vec">σ</span><sub>G,S/R</sub> = I<sub>G</sub>(S)·<span class="vec">Ω</span><sub>S/R</sub> = <span class="vec">0</span> ⇒ <span class="vec">δ</span><sub>G,S/R</sub> = [d<span class="vec">σ</span><sub>G</sub>/dt]<sub>R</sub> = <span class="vec">0</span></div>
+<p>Le torseur dynamique est un glisseur : D<sub>S/R</sub> = { m·<span class="vec">A</span><sub>G∈S/R</sub> ; <span class="vec">0</span> }.</p>
+<h3>Rotation d'axe (O,x) fixe, solide équilibré</h3>
+<div class="formula"><span class="vec">σ</span><sub>G,S/R</sub> = J·ω·<span class="vec">x</span> ⇒ <span class="vec">δ</span><sub>G,S/R</sub> = J·ω̇·<span class="vec">x</span></div>
+<p>Le torseur dynamique est un couple : D<sub>S/R</sub> = { <span class="vec">0</span> ; J·ω̇·<span class="vec">x</span> }.</p>
+<div class="retain"><b>À retenir.</b> Translation → glisseur (moment nul en G). Rotation axe fixe équilibré → couple. Quelconque → formule générale avec matrice d'inertie.</div>
+` });
+COURSE.push({ id: 'pfd', t: 'Principe fondamental de la dynamique', h: `
+<h3>Référentiel galiléen</h3>
+<p>Un référentiel est <b>galiléen</b> s'il peut être considéré comme fixe à l'échelle de l'étude : repère fixe par rapport à la Terre, ou en translation rectiligne uniforme par rapport à la Terre.</p>
+<h3>Énoncé</h3>
+<p>Soit E un ensemble de n solides en mouvement par rapport à un repère galiléen R. À chaque instant :</p>
+<div class="formula">D<sub>E/R</sub> = T<sub>Ē→E</sub> &nbsp; soit &nbsp; { R<sub>d E/R</sub> = R<sub>Ē→E</sub> ; δ<sub>A,E/R</sub> = M<sub>A,Ē→E</sub> } ∀A</div>
+<p>Deux théorèmes :</p>
+<ul>
+<li><b>Théorème de la résultante dynamique</b> : R<sub>d E/R</sub> = R<sub>Ē→E</sub>.</li>
+<li><b>Théorème du moment dynamique</b> en A : δ<sub>A,E/R</sub> = M<sub>A,Ē→E</sub>.</li>
+</ul>
+<p>Chacune conduit à 3 équations scalaires (projection sur x, y, z), soit 6 au total.</p>
+<h3>Cas d'équilibre (PFS)</h3>
+<p>Si tous les solides sont immobiles, le torseur dynamique est nul :</p>
+<div class="formula">T<sub>Ē→E</sub> = 0</div>
+<h3>Application</h3>
+<p>Pour déterminer les équations du mouvement, il n'est pas nécessaire d'utiliser les 6 équations scalaires. On cherche autant d'équations que de <b>paramètres cinématiques indépendants</b>, en choisissant :</p>
+<ul>
+<li>les <b>ensembles à isoler</b> (frontière qui fait disparaître les inconnues de liaison) ;</li>
+<li>les <b>équations</b> qui ne font pas apparaître d'actions inconnues ;</li>
+<li>l'<b>axe de projection</b> adapté.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Isoler → inventorier → choisir théorème et axe → projeter. On obtient autant d'équations que de mobilités.</div>
+` });
+COURSE.push({ id: 'ec', t: 'Énergie cinétique', h: `
+<h3>Approche locale</h3>
+<p>Pour un point P de masse m en mouvement à la vitesse V :</p>
+<div class="formula">E<sub>c</sub> = ½ · m · V² &nbsp; (en Joules)</div>
+<h3>Approche globale</h3>
+<p>Pour un solide S, l'énergie cinétique est le comoment du torseur cinétique et du torseur cinématique :</p>
+<div class="formula">E<sub>c S/R</sub> = ½ · C<sub>S/R</sub> ⊗ V<sub>S/R</sub> = ½ · ( <span class="vec">R</span><sub>c S/R</sub> · <span class="vec">V</span><sub>A∈S/R</sub> + <span class="vec">σ</span><sub>A,S/R</sub> · <span class="vec">Ω</span><sub>S/R</sub> )</div>
+<p>Les torseurs doivent être exprimés <b>au même point</b>. L'énergie cinétique est indépendante du point choisi.</p>
+<h3>Cas particuliers</h3>
+<ul>
+<li><b>Masse ponctuelle</b> : E<sub>c</sub> = ½·m·V².</li>
+<li><b>Translation</b> : E<sub>c</sub> = ½·m·V(G)².</li>
+<li><b>Rotation axe fixe (O,x)</b> : E<sub>c</sub> = ½·J<sub>(O,x)</sub>·ω².</li>
+<li><b>Rotation axe (G,x)</b> : E<sub>c</sub> = ½·m·V(G)² + ½·J<sub>(G,x)</sub>·ω².</li>
+<li><b>Mouvement quelconque en G</b> : E<sub>c</sub> = ½·m·V(G)² + ½·<span class="vec">Ω</span>·I<sub>G</sub>(S)·<span class="vec">Ω</span>.</li>
+</ul>
+<h3>Ensemble de solides</h3>
+<div class="formula">E<sub>c E/R</sub> = Σ<sub>i</sub> E<sub>c Si/R</sub></div>
+<div class="retain"><b>À retenir.</b> Décomposer en solides élémentaires, appliquer la formule adaptée au mouvement de chacun, sommer. Attention au point d'expression des torseurs.</div>
+` });
+COURSE.push({ id: 'inertie', t: 'Inertie équivalente', h: `
+<p>Quand on détermine l'énergie cinétique d'un mécanisme à <b>une mobilité utile</b>, on la simplifie en l'exprimant en fonction d'un seul paramètre de mouvement (en général la sortie de l'actionneur).</p>
+<p>On définit l'<b>inertie équivalente</b> J<sub>eq</sub> ramenée sur l'axe moteur comme le moment d'inertie d'un solide fictif qui développerait la même énergie cinétique :</p>
+<div class="formula">E<sub>c E/R</sub> = ½ · J<sub>eq</sub> · ω²</div>
+<h3>Exemple : portail motorisé</h3>
+<p>Chaîne : moteur → réducteur (rapport k) → pignon-crémaillère (rayon r) → portail (masse M).</p>
+<div class="formula">E<sub>c</sub> = ½·J<sub>m</sub>·ω<sub>m</sub>² + ½·J<sub>r</sub>·ω<sub>r</sub>² + ½·M·V²</div>
+<p>Avec ω<sub>r</sub> = k·ω<sub>m</sub> et V = ω<sub>r</sub>·r = k·r·ω<sub>m</sub> :</p>
+<div class="formula">E<sub>c</sub> = ½ · ( J<sub>m</sub> + J<sub>r</sub>·k² + M·k²·r² ) · ω<sub>m</sub>² = ½ · J<sub>eq</sub> · ω<sub>m</sub>²</div>
+<p>Pour un réducteur (k &lt; 1), les inerties en aval sont multipliées par k² et deviennent souvent <b>négligeables</b>.</p>
+<h3>Cas d'un transmetteur non linéaire</h3>
+<p>Pour un mécanisme dont la loi entrée-sortie est non linéaire (bras Maxpid par exemple), l'inertie équivalente <b>dépend de la position</b> et donc du temps. On peut alors utiliser une valeur moyenne ou une linéarisation autour d'un point de fonctionnement.</p>
+<div class="retain"><b>À retenir.</b> J<sub>eq</sub> est un moment d'inertie fictif. Il dépend de la position si la loi entrée-sortie n'est pas linéaire.</div>
+` });
+COURSE.push({ id: 'puissance', t: 'Puissance et liaisons', h: `
+<h3>Puissance d'une action mécanique extérieure</h3>
+<div class="formula">P<sub>AM→S/R</sub> = T<sub>AM→S</sub> ⊗ V<sub>S/R</sub></div>
+<p>Produit du torseur des actions mécaniques par le torseur cinématique. P > 0 → motrice, P < 0 → résistante.</p>
+<h3>Puissance des inter-efforts</h3>
+<p>Puissance de l'action de S<sub>i</sub> sur S<sub>j</sub> dans le mouvement relatif S<sub>j</sub>/S<sub>i</sub> :</p>
+<div class="formula">P<sub>i↔j</sub> = T<sub>i→j</sub> ⊗ V<sub>j/i</sub></div>
+<h3>Liaisons parfaites</h3>
+<p>Frottements et jeux négligés : la puissance dissipée est <b>nulle</b>.</p>
+<div class="formula">P<sub>i↔j</sub> = 0</div>
+<h3>Liaison sphère-plan</h3>
+<table class="ctable"><thead><tr><th>Hypothèse</th><th>Torseur</th><th>Puissance</th></tr></thead><tbody>
+<tr><td>Parfaite</td><td>T = N, M = 0</td><td>P = 0</td></tr>
+<tr><td>Glissement frotté</td><td>T = N + T⃗, ‖T⃗‖ = f·N, V<sub>g</sub> ≠ 0</td><td>P = T⃗·V<sub>g</sub> < 0</td></tr>
+<tr><td>Roulement sans glissement</td><td>V<sub>g</sub> = 0, T⃗ ≠ 0</td><td>P = 0</td></tr>
+<tr><td>Roulement + résistance</td><td>M<sub>roul</sub> = h·N, V<sub>g</sub> = 0</td><td>P = M<sub>roul</sub>·Ω < 0</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Puissance nulle si V<sub>g</sub> = 0 (sans résistance) ou T = 0. Négative si frottement ou résistance au roulement.</div>
+` });
+COURSE.push({ id: 'tec', t: 'Théorème de l\'énergie cinétique', h: `
+<p>Le <b>TEC</b> relie les paramètres de mouvement à leurs dérivées et aux actions mécaniques connues. Il est particulièrement adapté aux <b>chaînes fermées à 1 mobilité utile</b> : il est plus rapide que le PFD.</p>
+<p>L'unique équation obtenue est une <b>combinaison</b> des équations du PFD.</p>
+<h3>Énoncé</h3>
+<div class="formula">dE<sub>c E/R</sub>/dt = P<sub>Ē→E/R</sub> + P<sub>inter-efforts</sub></div>
+<p>Avec P<sub>Ē→E/R</sub> = Σ P<sub>Ē→i/R</sub> (somme des puissances extérieures sur chaque solide).</p>
+<h3>Démarche</h3>
+<ol>
+<li>Isoler l'ensemble E.</li>
+<li>Calculer E<sub>c</sub> = Σ E<sub>c Si/R</sub>.</li>
+<li>Faire l'inventaire des puissances extérieures (moteur, pesanteur, ressorts…).</li>
+<li>Vérifier que P<sub>inter-efforts</sub> = 0 (liaisons parfaites).</li>
+<li>Appliquer le TEC et simplifier pour obtenir l'équation du mouvement.</li>
+</ol>
+<h3>Exemple : treuil de levage</h3>
+<p>Ensemble E = {2, 3, 4, 5} en chaîne fermée, une mobilité utile (ω<sub>2</sub>).</p>
+<p>Énergie cinétique : E<sub>c</sub> = ½·J<sub>eq</sub>·ω<sub>2</sub>².</p>
+<p>Puissances extérieures : C<sub>m</sub>·ω<sub>2</sub> (moteur) − m₅·g·V₅ (pesanteur).</p>
+<p>Inter-efforts : 0 (liaisons parfaites).</p>
+<div class="formula">J<sub>eq</sub>·ω̇<sub>2</sub> = C<sub>m</sub> − m₅·g·R₄·(Z₂/Z₃a · Z₃b/Z₄)</div>
+<div class="retain"><b>À retenir.</b> Le TEC donne une équation scalaire directement, sans avoir à calculer les inter-efforts. Idéal pour les mécanismes à une mobilité.</div>
+` });
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Torseur dynamique</dt><dd>Torseur formé de la résultante dynamique et du moment dynamique en un point.</dd>
+<dt>Résultante dynamique</dt><dd>R<sub>d S/R</sub> = ∫<sub>S</sub> <span class="vec">A</span><sub>P∈S/R</sub> dm.</dd>
+<dt>Moment dynamique</dt><dd>Dérivée du moment cinétique : δ<sub>A</sub> = [dσ<sub>A</sub>/dt]<sub>R</sub>.</dd>
+<dt>Référentiel galiléen</dt><dd>Repère fixe par rapport à la Terre, ou en translation rectiligne uniforme par rapport à elle.</dd>
+<dt>PFD</dt><dd>Principe fondamental de la dynamique : D<sub>E/R</sub> = T<sub>Ē→E</sub> dans un référentiel galiléen.</dd>
+<dt>PFS</dt><dd>Cas particulier du PFD en équilibre : T<sub>Ē→E</sub> = 0.</dd>
+<dt>Énergie cinétique</dt><dd>½·m·V² (point) ou ½·C⊗V (solide). En Joules.</dd>
+<dt>Inertie équivalente</dt><dd>Moment d'inertie fictif J<sub>eq</sub> ramené à un axe, tel que Ec = ½·J<sub>eq</sub>·ω².</dd>
+<dt>Puissance</dt><dd>P = T ⊗ V. Motrice si P > 0, résistante si P < 0.</dd>
+<dt>Inter-efforts</dt><dd>Actions internes entre solides d'un même ensemble isolé.</dd>
+<dt>Liaison parfaite</dt><dd>Liaison sans frottement ni jeu : P = 0.</dd>
+<dt>TEC</dt><dd>Théorème de l'énergie cinétique : dE<sub>c</sub>/dt = Σ P.</dd>
+<dt>Chaîne fermée</dt><dd>Mécanisme dont les solides forment une boucle cinématique.</dd>
+<dt>Mobilité utile</dt><dd>Nombre de paramètres cinématiques indépendants du mécanisme.</dd>
+</dl>
+` });
+
+/* ============ UI ============ */
+const UI = { cur: 'td' };
+const AS = { key: 'td', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'intro' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', {
+    type: 'button', role: 'tab',
+    'aria-pressed': w.id === UI.cur ? 'true' : 'false',
+    'aria-selected': w.id === UI.cur ? 'true' : 'false',
+    onclick: () => gotoWs(w.id)
+  }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab;
+  const keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'QCM (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time));
+    body.append(h('div', { class: 'goal', html: '<b>Objectif.</b> ' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) {
+        b.textContent = 'Confirmer ? Votre travail sera effacé';
+        AS.arm = setTimeout(() => { b.textContent = 'Recommencer l\'atelier'; AS.arm = null; }, 3500);
+        return;
+      }
+      clearTimeout(AS.arm); AS.arm = null;
+      wsById(UI.cur).reset(); mountWs(); renderAct();
+    } }, 'Recommencer l\'atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a;
+        const bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: (show && s.shown ? j === q.a : s.a[i] === j), disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) {
+        const miss = s.a[i] == null && !s.shown;
+        fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w }));
+      }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', {
+    type: 'button', class: s.id === cur.id ? 'on' : '',
+    'aria-current': s.id === cur.id ? 'true' : 'false',
+    onclick: () => go(s.id)
+  }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : équations du mouvement'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l\'atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title },
+    h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')),
+    h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Six ateliers interactifs sur les équations différentielles du mouvement : torseur dynamique, PFD, énergie cinétique, inertie équivalente, liaisons, TEC.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM corrigé.</li><li>Le bouton <b>Cours</b> propose une synthèse rédigée.</li></ul>' +
+    '<h3>Notation</h3><p>Les <span class="vec">vecteurs</span> sont surlignés. Les indices indiquent le repère et le point de réduction.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (UI.cur === 'pfd') drawPFD();
+    else if (UI.cur === 'ie') renderIE();
+    else if (UI.cur === 'ls') drawLS();
+  }, 120);
+});
+
+(function init() {
+  AS.open = !isSmall();
+  renderSeg();
+  mountWs();
+  renderAct();
+  renderCourse();
+})();
+</script>
+</body>
+</html>
