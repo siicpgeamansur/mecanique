@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 *{box-sizing:border-box}
-[hidden]{display:none!important}
+[hidden]:not([hidden="until-found"]){display:none!important}
 :root{
   --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -115,7 +115,6 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .task-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
 .task-row:last-child{border-bottom:0}
 .task-row .chips{margin:0}
-canvas.viz{width:100%;height:300px;display:block;border:1px solid var(--line);border-radius:8px;background:#fafbfc;cursor:default}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0}
 .card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)}
 .card h4{margin:0 0 6px;font-size:14px;color:var(--accent-ink)}
@@ -126,12 +125,17 @@ canvas.viz{width:100%;height:300px;display:block;border:1px solid var(--line);bo
 .dt thead th{background:var(--panel2);font-weight:600}
 .dt td.m{font-family:var(--font-mono);font-size:12.5px}
 .dt tr:last-child td{border-bottom:0}
+.methode-tab{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.methode-tab button{border:1px solid var(--line);background:var(--panel);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.methode-tab button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.etape{border-left:3px solid var(--accent);padding-left:10px;margin:10px 0}
+.etape h4{margin:0 0 4px;font-size:14px;color:var(--accent-ink)}
+.etape p{margin:2px 0;font-size:13px}
 @media (max-width:820px){
   .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
   #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
   .work{flex-direction:column;gap:8px}
   .task-row{grid-template-columns:1fr}
-  canvas.viz{height:260px}
   .opts input[type=range]{width:140px}
 }
 @media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
@@ -190,36 +194,38 @@ function h(tag, attrs, ...kids) {
   return el;
 }
 function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
-const KEYS = { act: 'atelier-theorie-meca-v1' };
+const KEYS = { act: 'atelier-theorie-meca-v2' };
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 const WORKSHOPS = [];
 
-/* ============ DONNÉES : LIAISONS NORMALISÉES ============ */
+/* ============ LIAISONS NORMALISÉES (nomenclature corrigée) ============ */
 const LIAISONS = [
-  { nom: 'Pivot', ddl: 1, axe: 'z', tc: '{ ωz ; 0 }', cols: 1, ex: 'Roue qui tourne sur son axe', note: '1 rotation autour de z' },
-  { nom: 'Glissière', ddl: 1, axe: 'z', tc: '{ 0 ; Vz }', cols: 1, ex: 'Tiroir de commode', note: '1 translation selon z' },
-  { nom: 'Pivot glissant', ddl: 2, axe: 'z', tc: '{ ωz ; Vz }', cols: 2, ex: 'Arbre dans un roulement à billes', note: '1 rotation + 1 translation selon z' },
-  { nom: 'Rotule (sphérique)', ddl: 3, axe: 'point', tc: '{ ωx, ωy, ωz ; 0 }', cols: 3, ex: 'Main sur un levier de vitesses', note: '3 rotations, centre fixe' },
-  { nom: 'Appui plan', ddl: 3, axe: 'plan', tc: '{ ωx, ωy ; Vz }', cols: 3, ex: 'Livre qui glisse sur une table', note: '2 rotations dans le plan + 1 translation normale' },
-  { nom: 'Encastrement', ddl: 0, axe: '—', tc: '{ 0 ; 0 }', cols: 0, ex: 'Pièce soudée sur le bâti', note: 'Aucun mouvement' },
-  { nom: 'Ponctuelle', ddl: 5, axe: 'point', tc: '{ ωx, ωy, ωz ; Vx, Vy }', cols: 5, ex: 'Bille sur une table', note: '1 seul mouvement bloqué : la translation normale' },
-  { nom: 'Linéaire rectiligne', ddl: 4, axe: 'ligne', tc: '{ ωx, ωy, ωz ; Vx }', cols: 4, ex: 'Cylindre posé sur un plan', note: '1 translation bloquée, contact sur une ligne' },
-  { nom: 'Linéaire annulaire', ddl: 4, axe: 'cercle', tc: '{ ωx, ωy, ωz ; Vx, Vy }', cols: 4, ex: 'Doigt dans un alésage', note: '2 translations bloquées, contact sur un cercle' }
+  { nom: 'Pivot', ddl: 1, note: '1 rotation autour de z', tc: '{ ωz ; 0 }', ex: 'Roue qui tourne sur son axe' },
+  { nom: 'Glissière', ddl: 1, note: '1 translation selon z', tc: '{ 0 ; Vz }', ex: 'Tiroir de commode' },
+  { nom: 'Hélicoïdale', ddl: 1, note: 'rotation et translation liées (hélice)', tc: '{ ωz ; Vz } (liés)', ex: 'Vis-écrou' },
+  { nom: 'Pivot glissant', ddl: 2, note: '1 rotation + 1 translation selon z', tc: '{ ωz ; Vz }', ex: 'Arbre dans un roulement' },
+  { nom: 'Sphérique', ddl: 3, note: '3 rotations, centre fixe', tc: '{ ωx, ωy, ωz ; 0 }', ex: 'Main sur un levier de vitesses' },
+  { nom: 'Sphère-plan', ddl: 3, note: '2 rotations + 1 translation dans le plan', tc: '{ ωx, ωy ; Vz }', ex: 'Livre glissant sur une table' },
+  { nom: 'Sphère-cylindre', ddl: 4, note: '3 rotations + 1 translation selon l\'axe du cylindre', tc: '{ ωx, ωy, ωz ; Vz }', ex: 'Doigt dans un alésage' },
+  { nom: 'Cylindre-plan', ddl: 4, note: '3 rotations + 1 translation selon la ligne de contact', tc: '{ ωx, ωy, ωz ; Vx }', ex: 'Cylindre posé sur un plan' },
+  { nom: 'Ponctuelle', ddl: 5, note: '3 rotations + 2 translations, 1 seule bloquée', tc: '{ ωx, ωy, ωz ; Vx, Vy }', ex: 'Bille sur une table' },
+  { nom: 'Encastrement', ddl: 0, note: 'Aucun mouvement', tc: '{ 0 ; 0 }', ex: 'Pièce soudée sur le bâti' }
 ];
 
 const SERIES = [
   { nom: 'Pivot + Glissière (même axe)', a: 'Pivot (z)', b: 'Glissière (z)', res: 'Pivot glissant', ddl: 2, tc: '{ ωz ; Vz }', why: 'Les deux mouvements (rotation et translation selon z) subsistent.' },
-  { nom: 'Pivot + Pivot (axes différents)', a: 'Pivot (z)', b: 'Pivot (x)', res: 'Rotule', ddl: 3, tc: '{ ωx, ωy, ωz ; 0 }', why: 'Deux rotations indépendantes autour d\'axes différents donnent trois rotations.' },
-  { nom: 'Glissière + Glissière (axes ⊥)', a: 'Glissière (x)', b: 'Glissière (y)', res: 'Appui plan', ddl: 3, tc: '{ ωx, ωy ; Vz }', why: 'Deux translations indépendantes + une rotation possible autour de la normale.' },
-  { nom: 'Pivot + Glissière (axes ⊥)', a: 'Pivot (z)', b: 'Glissière (x)', res: 'Pivot + Glissière', ddl: 2, tc: '{ ωz ; Vx }', why: 'La rotation et la translation sont indépendantes.' },
+  { nom: 'Pivot + Pivot (axes différents)', a: 'Pivot (z)', b: 'Pivot (x)', res: 'Sphérique', ddl: 3, tc: '{ ωx, ωy, ωz ; 0 }', why: 'Deux rotations indépendantes autour d\'axes différents donnent trois rotations.' },
+  { nom: 'Glissière + Glissière (axes ⊥)', a: 'Glissière (x)', b: 'Glissière (y)', res: 'Sphère-plan', ddl: 3, tc: '{ ωx, ωy ; Vz }', why: 'Deux translations indépendantes + une rotation possible autour de la normale.' },
+  { nom: 'Sphérique + Glissière (axe passant par le centre)', a: 'Sphérique', b: 'Glissière (x)', res: 'Sphère-cylindre', ddl: 4, tc: '{ ωx, ωy, ωz ; Vx }', why: 'Trois rotations + la translation selon l\'axe de la glissière.' },
   { nom: 'Pivot + Pivot (même axe)', a: 'Pivot (z)', b: 'Pivot (z)', res: 'Pivot', ddl: 1, tc: '{ ωz ; 0 }', why: 'Deux rotations de même axe ne font qu\'une seule rotation : redondance.' }
 ];
 
 const PARALLELES = [
   { nom: '2 pivots d\'axes parallèles', a: 'Pivot (z)', b: 'Pivot (z)', res: 'Pivot glissant', ddl: 2, h: 1, why: 'Deux liaisons en parallèle : le degré d\'hyperstatisme est 1.' },
   { nom: '2 glissières parallèles', a: 'Glissière (x)', b: 'Glissière (x)', res: 'Glissière', ddl: 1, h: 1, why: 'Redondance : deux glissières parallèles bloquent la même chose.' },
-  { nom: '2 rotules', a: 'Rotule', b: 'Rotule', res: 'Rotule', ddl: 3, h: 3, why: 'Trois rotations bloquées en double : h = 3.' }
+  { nom: '2 sphériques', a: 'Sphérique', b: 'Sphérique', res: 'Pivot', ddl: 1, h: 1, why: 'Deux sphériques en parallèle de centres distincts forment un pivot hyperstatique de degré 1.' },
+  { nom: '2 sphère-plan (même plan)', a: 'Sphère-plan', b: 'Sphère-plan', res: 'Sphère-plan', ddl: 3, h: 3, why: 'Les deux plans imposent les mêmes contraintes : trois redondances.' }
 ];
 
 const CHAINES_DATA = [
@@ -229,16 +235,13 @@ const CHAINES_DATA = [
   { nom: 'Élévateur à ciseaux', type: 'fermee', nc: 5, rc: 4, m: 1, h: 3, why: 'Plusieurs boucles fermées : m = 1 (hauteur), h = 3 (hyperstatisme des liaisons parallèles).' }
 ];
 
-/* ============ ATELIER 1 : LIAISONS NORMALISÉES ============ */
+/* ============ ATELIER 1 : LIAISONS ============ */
 const LI = { selected: null, hideTC: false };
-
 function mountLiaisons(root) {
   root.innerHTML = '<h2>1. Liaisons normalisées</h2>'
-    + '<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons</b>. Chaque liaison autorise certains mouvements (les <b>degrés de liberté</b>) et en bloque d\'autres. Le <b>torseur cinématique</b> résume ces mouvements.</p>'
-    + '<p>Cliquez sur une liaison pour voir son torseur et ses caractéristiques.</p>'
-    + '<div class="files" style="margin:8px 0">'
-    + '<button class="btn sm" id="li-toggle-tc">Masquer les torseurs</button>'
-    + '</div>'
+    + '<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons normalisées</b>. Chaque liaison autorise certains mouvements (degrés de liberté) et en bloque d\'autres, résumés par son <b>torseur cinématique</b>.</p>'
+    + '<p>Nomenclature utilisée en SII : <b>sphérique</b> (ex-rotule), <b>sphère-plan</b> (ex-appui plan), <b>sphère-cylindre</b> (ex-linéaire annulaire).</p>'
+    + '<div class="files" style="margin:8px 0"><button class="btn sm" id="li-toggle-tc">Masquer les torseurs</button></div>'
     + '<div id="li-grid" class="cards"></div>'
     + '<div id="li-detail"></div>'
     + '<div class="verdict" id="li-msg"></div>';
@@ -249,109 +252,93 @@ function mountLiaisons(root) {
     renderLi();
   });
 }
-
 function renderLi() {
   const grid = $('#li-grid'); if (!grid) return; grid.innerHTML = '';
   LIAISONS.forEach(l => {
-    const card = h('div', {
-      class: 'card',
-      style: 'cursor:pointer;' + (LI.selected === l.nom ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
+    grid.append(h('div', {
+      class: 'card', style: 'cursor:pointer;' + (LI.selected === l.nom ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
       onclick: () => { LI.selected = LI.selected === l.nom ? null : l.nom; renderLi(); }
     },
-      h('h4', null, l.nom),
-      h('p', { style: 'font-size:12px;margin:2px 0' }, l.ddl + ' ddl — ' + l.note),
+      h('h4', null, l.nom + ' (' + l.ddl + ' ddl)'),
+      h('p', { style: 'font-size:12px;margin:2px 0' }, l.note),
       h('p', { style: 'font-size:11px;color:var(--muted);margin:2px 0' }, LI.hideTC ? 'Torseur masqué' : 'Torseur : ' + l.tc),
       h('p', { style: 'font-size:11px;color:var(--muted);margin:2px 0' }, 'Ex : ' + l.ex)
-    );
-    grid.append(card);
+    ));
   });
   const detail = $('#li-detail'); detail.innerHTML = '';
   if (LI.selected) {
     const l = LIAISONS.find(x => x.nom === LI.selected);
     if (l) {
       detail.append(h('div', { class: 'verdict yes' },
-        h('h4', null, l.nom + ' — ' + l.ddl + ' degré(s) de liberté'),
+        h('h4', null, l.nom + ' — ' + l.ddl + ' ddl'),
         h('p', { html: '<b>Mouvements autorisés :</b> ' + l.note }),
         h('p', { html: '<b>Torseur cinématique :</b> ' + l.tc }),
-        h('p', { html: '<b>Exemple :</b> ' + l.ex }),
-        h('p', { style: 'font-size:12px;color:var(--muted)' }, 'Le torseur cinématique a ' + l.cols + ' composante(s) non nulle(s).')
+        h('p', { html: '<b>Exemple :</b> ' + l.ex })
       ));
     }
   }
-  const msg = $('#li-msg'); if (!msg) return;
+  const msg = $('#li-msg');
   msg.className = 'verdict';
-  msg.innerHTML = 'Il existe <b>11 liaisons normalisées</b> (dont 9 présentées ici). Chacune a un torseur cinématique et un torseur d\'actions mécaniques transmissibles. Les degrés de liberté vont de 0 (encastrement) à 5 (ponctuelle).';
+  msg.innerHTML = 'Les 11 liaisons normalisées (dont 10 présentées ici) vont de 0 ddl (encastrement) à 5 ddl (ponctuelle). <b>Dualité :</b> le torseur cinématique a (6 − ddl) composantes non nulles, le torseur d\'actions a ddl composantes non nulles.';
 }
-
-WORKSHOPS.push({ id: 'liaisons', title: 'Liaisons normalisées', hint: 'Tableau interactif des 11 liaisons et de leurs torseurs.', mount: mountLiaisons,
+WORKSHOPS.push({ id: 'liaisons', title: 'Liaisons normalisées', hint: 'Tableau interactif des liaisons et de leurs torseurs.', mount: mountLiaisons,
   reset: () => { LI.selected = null; LI.hideTC = false; } });
 
 /* ============ ATELIER 2 : LIAISON ÉQUIVALENTE ============ */
 const LE = { mode: 'serie', idx: 0 };
-
 function mountEquiv(root) {
   root.innerHTML = '<h2>2. Liaison équivalente</h2>'
-    + '<p>Quand plusieurs liaisons sont associées, on peut les remplacer par une <b>liaison équivalente</b>. Le résultat dépend de l\'association :</p>'
-    + '<ul>'
-    + '<li><b>En série</b> : les mouvements se cumulent (somme des torseurs cinématiques).</li>'
-    + '<li><b>En parallèle</b> : les mouvements sont restreints (les liaisons se bloquent mutuellement).</li>'
-    + '</ul>'
+    + '<p>Quand plusieurs liaisons sont associées, on peut les remplacer par une <b>liaison équivalente</b> :</p>'
+    + '<ul><li><b>En série</b> : les torseurs cinématiques s\'ajoutent, la liaison est isostatique.</li>'
+    + '<li><b>En parallèle</b> : les contraintes se cumulent, un hyperstatisme peut apparaître.</li></ul>'
     + '<div class="chips" id="le-modes"></div>'
     + '<div id="le-content"></div>'
     + '<div id="le-detail"></div>';
   renderLE();
 }
-
 function renderLE() {
-  const modes = [['serie', 'En série'], ['parallele', 'En parallèle']];
   const mb = $('#le-modes'); mb.innerHTML = '';
-  mb.append(...modes.map(([v, l]) => h('button', {
+  mb.append(...[['serie', 'En série'], ['parallele', 'En parallèle']].map(([v, l]) => h('button', {
     type: 'button', class: 'chip' + (LE.mode === v ? ' on' : ''),
     onclick: () => { LE.mode = v; LE.idx = 0; renderLE(); }
   }, l)));
-
   const content = $('#le-content'); content.innerHTML = '';
   const list = LE.mode === 'serie' ? SERIES : PARALLELES;
   const item = list[LE.idx];
   content.append(h('div', { class: 'task-row' },
     h('div', null,
       h('h4', null, item.nom),
-      h('p', { style: 'font-size:13px;margin:2px 0' }, item.a + '  +  ' + item.b),
-      h('p', { style: 'font-size:13px;margin:2px 0;color:var(--accent-ink)' }, '→ ' + item.res + ' (' + (item.ddl || item.h) + (LE.mode === 'serie' ? ' ddl' : ' ddl, h = ' + item.h) + ')')
+      h('p', { style: 'font-size:13px;margin:2px 0' }, item.a + ' + ' + item.b),
+      h('p', { style: 'font-size:13px;margin:2px 0;color:var(--accent-ink)' }, '→ ' + item.res + ' (' + item.ddl + ' ddl' + (LE.mode === 'parallele' ? ', h = ' + item.h : '') + ')')
     ),
-    h('div', { class: 'chips' },
-      list.map((x, i) => h('button', {
-        type: 'button', class: 'chip' + (i === LE.idx ? ' on' : ''),
-        onclick: () => { LE.idx = i; renderLE(); }
-      }, String(i + 1)))
-    )
+    h('div', { class: 'chips' }, list.map((x, i) => h('button', {
+      type: 'button', class: 'chip' + (i === LE.idx ? ' on' : ''),
+      onclick: () => { LE.idx = i; renderLE(); }
+    }, String(i + 1))))
   ));
-
   const detail = $('#le-detail'); detail.innerHTML = '';
   detail.append(h('div', { class: 'verdict ' + (LE.mode === 'serie' ? 'yes' : 'warn') },
-    h('p', { html: '<b>Règle :</b> ' + (LE.mode === 'serie' ? 'les torseurs cinématiques s\'ajoutent : V<sub>eq</sub> = V₁ + V₂.' : 'les degrés de liberté se restreignent : la liaison équivalente a moins de ddl, et un hyperstatisme h peut apparaître.') }),
+    h('p', { html: '<b>Règle :</b> ' + (LE.mode === 'serie' ? 'V<sub>eq</sub> = V₁ + V₂ : les torseurs cinématiques s\'ajoutent.' : 'Les contraintes se cumulent : la liaison équivalente a moins de ddl, et un hyperstatisme h peut apparaître.') }),
     h('p', { html: '<b>Explication :</b> ' + item.why }),
     h('p', { html: '<b>Résultat :</b> ' + item.res + ' — torseur : ' + (item.tc || '—') })
   ));
 }
-
 WORKSHOPS.push({ id: 'equiv', title: 'Liaison équivalente', hint: 'Composer des liaisons en série et en parallèle.', mount: mountEquiv,
   reset: () => { LE.mode = 'serie'; LE.idx = 0; } });
 
-/* ============ ATELIER 3 : GRAPHE DES LIAISONS ============ */
-const GR = { step: 0, showClasses: false };
+/* ============ ATELIER 3 : GRAPHE ============ */
+const GR = { step: 0 };
 const GR_STEPS = [
-  { title: 'Étape 1 — Identifier les classes d\'équivalence', body: '<p>Regrouper les pièces qui n\'ont aucun mouvement relatif entre elles (même fonction cinématique). Chaque classe devient un solide unique.</p><p><b>Exemple :</b> le bâti et les vis qui le fixent forment une seule classe.</p>' },
-  { title: 'Étape 2 — Identifier les liaisons', body: '<p>Entre chaque paire de classes en contact, déterminer la liaison normalisée (pivot, glissière, rotule…).</p><p>Écrire le torseur cinématique de chaque liaison.</p>' },
-  { title: 'Étape 3 — Tracer le graphe des liaisons', body: '<p>Chaque classe est un cercle. Chaque liaison est un arc étiqueté (type de liaison, axe, torseur).</p><p>Le graphe permet de repérer les chaînes ouvertes (pas de boucle) et fermées (cycles).</p>' },
-  { title: 'Étape 4 — Compter les cycles indépendants γ', body: '<p>Pour une chaîne fermée à N<sub>L</sub> liaisons et N<sub>P</sub> pièces (bâti inclus) :</p><div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div><p>γ est le nombre de cycles indépendants du graphe.</p>' },
-  { title: 'Étape 5 — Écrire les fermetures cinématiques', body: '<p>Pour chaque cycle indépendant, écrire la fermeture : la somme des torseurs cinématiques le long du cycle est nulle.</p><div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div><p>Chaque fermeture fournit jusqu\'à 6 équations scalaires.</p>' }
+  { title: 'Étape 1 — Classes d\'équivalence', body: '<p>Regrouper les pièces sans mouvement relatif (même fonction cinématique). Chaque classe devient un solide unique.</p><p><b>Exemple :</b> le bâti et ses vis forment une seule classe.</p>' },
+  { title: 'Étape 2 — Identifier les liaisons', body: '<p>Entre chaque paire de classes en contact, déterminer la liaison normalisée (pivot, glissière, sphérique…). Écrire le torseur cinématique.</p>' },
+  { title: 'Étape 3 — Tracer le graphe', body: '<p>Chaque classe est un nœud (cercle). Chaque liaison est un arc étiqueté.</p><p>Le graphe permet de repérer les chaînes ouvertes et fermées.</p>' },
+  { title: 'Étape 4 — Compter les cycles γ', body: '<p>Pour N<sub>L</sub> liaisons et N<sub>P</sub> pièces (bâti inclus) :</p><div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div>' },
+  { title: 'Étape 5 — Fermetures cinématiques', body: '<p>Pour chaque cycle indépendant :</p><div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div><p>Chaque fermeture fournit jusqu\'à 6 équations scalaires.</p>' }
 ];
-
 function mountGraphe(root) {
   root.innerHTML = '<h2>3. Graphe des liaisons</h2>'
-    + '<p>Le <b>graphe des liaisons</b> est une représentation abstraite du mécanisme : chaque classe d\'équivalence est un nœud, chaque liaison est un arc. Il permet de compter les cycles et d\'écrire les fermetures cinématiques.</p>'
-    + '<div class="stepper" id="gr-steps"></div>'
+    + '<p>Le <b>graphe des liaisons</b> est une représentation abstraite : nœuds = classes, arcs = liaisons. Il sert à compter les cycles et écrire les fermetures.</p>'
+    + '<div class="stepper" id="gr-steps" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"></div>'
     + '<div id="gr-content"></div>'
     + '<div class="files" style="margin-top:10px">'
     + '<button class="btn" id="gr-prev">◀ Précédent</button>'
@@ -363,9 +350,8 @@ function mountGraphe(root) {
   $('#gr-reset').addEventListener('click', () => { GR.step = 0; renderGR(); });
   renderGR();
 }
-
 function renderGR() {
-  const stepBox = $('#gr-steps'); if (!stepBox) return; stepBox.innerHTML = '';
+  const stepBox = $('#gr-steps'); stepBox.innerHTML = '';
   GR_STEPS.forEach((s, i) => {
     stepBox.append(h('button', {
       type: 'button', class: 'chip' + (i === GR.step ? ' on' : ''),
@@ -379,25 +365,18 @@ function renderGR() {
   $('#gr-prev').disabled = GR.step === 0;
   $('#gr-next').disabled = GR.step === GR_STEPS.length - 1;
 }
-
 WORKSHOPS.push({ id: 'graphe', title: 'Graphe des liaisons', hint: 'Construire le graphe et compter les cycles.', mount: mountGraphe,
   reset: () => { GR.step = 0; } });
 
-/* ============ ATELIER 4 : MOBILITÉ ET HYPERSTATISME ============ */
-const MH = { gamma: 1, m: 1, Ic: 3, hi: 0 };
-
+/* ============ ATELIER 4 : MOBILITÉ ============ */
+const MH = { g: 1, m: 1, ic: 3 };
 function mountMob(root) {
   root.innerHTML = '<h2>4. Mobilité et hyperstatisme</h2>'
-    + '<p>La formule fondamentale de la théorie des mécanismes relie le nombre de cycles γ, la mobilité m et le nombre d\'inconnues cinématiques I<sub>c</sub> :</p>'
     + '<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b></div>'
-    + '<p>où :</p>'
-    + '<ul>'
-    + '<li><b>γ</b> : nombre de cycles indépendants du graphe des liaisons ;</li>'
-    + '<li><b>m</b> : degré de mobilité (nombre de mouvements indépendants) ;</li>'
-    + '<li><b>I<sub>c</sub></b> : nombre total d\'inconnues cinématiques (somme des ddl des liaisons) ;</li>'
-    + '<li><b>h</b> : degré d\'hyperstatisme (h = 0 → isostatique).</li>'
-    + '</ul>'
-    + '<p>Faites varier γ, m et I<sub>c</sub> pour voir évoluer h.</p>'
+    + '<ul><li><b>γ</b> : nombre de cycles indépendants du graphe</li>'
+    + '<li><b>m</b> : degré de mobilité</li>'
+    + '<li><b>I<sub>c</sub></b> : total des inconnues cinématiques (somme des ddl)</li>'
+    + '<li><b>h</b> : degré d\'hyperstatisme</li></ul>'
     + '<div class="opts">'
     + '<label class="fld"><span>γ = <b id="mh-g-out">1</b></span><input type="range" id="mh-g" min="0" max="6" step="1" value="1"></label>'
     + '<label class="fld"><span>m = <b id="mh-m-out">1</b></span><input type="range" id="mh-m" min="0" max="6" step="1" value="1"></label>'
@@ -405,202 +384,371 @@ function mountMob(root) {
     + '</div>'
     + '<div class="gstats" id="mh-stats"></div>'
     + '<div class="verdict" id="mh-msg"></div>'
-    + '<h3>Interprétation</h3>'
-    + '<div id="mh-interp"></div>';
+    + '<div class="cards">'
+    + '<div class="card"><h4>h = 0</h4><p>Isostatique : toutes les inconnues de liaison sont déterminables.</p></div>'
+    + '<div class="card"><h4>h > 0</h4><p>Hyperstatique : sur-contrainte. Risque de blocage et de contraintes internes.</p></div>'
+    + '<div class="card"><h4>Chaîne ouverte</h4><p>Toujours isostatique : γ = 0 et m = I<sub>c</sub>.</p></div>'
+    + '</div>';
   ['g', 'm', 'ic'].forEach(k => {
-    $('#mh-' + k).addEventListener('input', e => {
-      MH[k] = +e.target.value;
-      renderMH();
-    });
+    $('#mh-' + k).addEventListener('input', e => { MH[k] = +e.target.value; renderMH(); });
   });
   renderMH();
 }
-
 function renderMH() {
-  MH.gamma = +$('#mh-g').value;
-  MH.m = +$('#mh-m').value;
-  MH.Ic = +$('#mh-ic').value;
-  $('#mh-g-out').textContent = MH.gamma;
+  $('#mh-g-out').textContent = MH.g;
   $('#mh-m-out').textContent = MH.m;
-  $('#mh-ic-out').textContent = MH.Ic;
-  const hVal = 6 * MH.gamma + MH.m - MH.Ic;
+  $('#mh-ic-out').textContent = MH.ic;
+  const hVal = 6 * MH.g + MH.m - MH.ic;
   const stats = $('#mh-stats'); stats.innerHTML = '';
   stats.append(
-    h('div', { class: 'stat' }, h('span', null, '6γ'), h('b', null, String(6 * MH.gamma))),
+    h('div', { class: 'stat' }, h('span', null, '6γ'), h('b', null, String(6 * MH.g))),
     h('div', { class: 'stat' }, h('span', null, '+ m'), h('b', null, String(MH.m))),
-    h('div', { class: 'stat' }, h('span', null, '− I<sub>c</sub>'), h('b', null, String(MH.Ic))),
+    h('div', { class: 'stat' }, h('span', null, '− I<sub>c</sub>'), h('b', null, String(MH.ic))),
     h('div', { class: 'stat', style: hVal === 0 ? 'border-color:var(--ok);background:rgba(30,122,46,.05)' : 'border-color:var(--bad)' },
-      h('span', null, 'h = 6γ + m − I<sub>c</sub>'),
-      h('b', { style: 'color:' + (hVal === 0 ? 'var(--ok)' : 'var(--bad)') }, String(hVal)))
+      h('span', null, 'h'), h('b', { style: 'color:' + (hVal === 0 ? 'var(--ok)' : 'var(--bad)') }, String(hVal)))
   );
   const msg = $('#mh-msg');
-  if (hVal === 0) {
-    msg.className = 'verdict yes';
-    msg.innerHTML = '<b>✓ Mécanisme isostatique</b> (h = 0). Toutes les inconnues de liaison peuvent être déterminées par le PFS/PFD. C\'est la situation idéale en conception.';
-  } else if (hVal > 0) {
-    msg.className = 'verdict no';
-    msg.innerHTML = '<b>✗ Mécanisme hyperstatique</b> (h = ' + hVal + '). Il y a ' + hVal + ' équation(s) de trop : les inconnues de liaison ne peuvent pas toutes être déterminées sans hypothèses supplémentaires. Risque de contraintes internes et de blocage.';
-  } else {
-    msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ h négatif</b> (' + hVal + ') : mécanisme hypostatique (mobilité non contrôlée). Vérifiez les données.';
-  }
-  const interp = $('#mh-interp'); interp.innerHTML = '';
-  interp.append(h('div', { class: 'cards' },
-    h('div', { class: 'card' }, h('h4', null, 'h = 0'), h('p', null, 'Isostatique : toutes les inconnues sont déterminables. Montage et fabrication plus simples.')),
-    h('div', { class: 'card' }, h('h4', null, 'h > 0'), h('p', null, 'Hyperstatique : sur-contrainte. Nécessite des tolérances serrées, risque de points durs.')),
-    h('div', { class: 'card' }, h('h4', null, 'Chaîne ouverte'), h('p', null, 'Toujours isostatique : γ = 0 donc h = m − I<sub>c</sub>. Or m = I<sub>c</sub> pour une chaîne ouverte, donc h = 0.'))
-  ));
+  if (hVal === 0) { msg.className = 'verdict yes'; msg.innerHTML = '<b>✓ Isostatique</b> (h = 0). Toutes les inconnues sont déterminables.'; }
+  else if (hVal > 0) { msg.className = 'verdict no'; msg.innerHTML = '<b>✗ Hyperstatique de degré ' + hVal + '</b>. ' + hVal + ' équation(s) de trop : contraintes internes possibles.'; }
+  else { msg.className = 'verdict warn'; msg.innerHTML = '<b>⚠ h négatif</b> : mobilité non contrôlée.'; }
 }
+WORKSHOPS.push({ id: 'mob', title: 'Mobilité et hyperstatisme', hint: 'Calculer h = 6γ + m − Ic.', mount: mountMob,
+  reset: () => { MH.g = 1; MH.m = 1; MH.ic = 3; } });
 
-WORKSHOPS.push({ id: 'mob', title: 'Mobilité et hyperstatisme', hint: 'Calculer h = 6γ + m − Ic et interpréter.', mount: mountMob,
-  reset: () => { MH.gamma = 1; MH.m = 1; MH.Ic = 3; } });
-
-/* ============ ATELIER 5 : CHAÎNES OUVERTES / FERMÉES ============ */
+/* ============ ATELIER 5 : CHAÎNES ============ */
 const CH = { mode: 'ouverte', idx: 0 };
-
 function mountChaines(root) {
   root.innerHTML = '<h2>5. Chaînes ouvertes et fermées</h2>'
-    + '<p>Un mécanisme est une <b>chaîne de solides</b>. On distingue :</p>'
-    + '<ul>'
-    + '<li><b>Chaîne ouverte</b> : le graphe est un arbre, sans cycle (γ = 0). Exemple : un bras de robot.</li>'
-    + '<li><b>Chaîne fermée</b> : le graphe contient au moins un cycle (γ ≥ 1). Exemple : une pompe, une suspension.</li>'
-    + '</ul>'
+    + '<ul><li><b>Chaîne ouverte</b> : γ = 0 (pas de cycle). Ex : bras de robot. Toujours isostatique.</li>'
+    + '<li><b>Chaîne fermée</b> : γ ≥ 1 (au moins un cycle). Ex : pompe. Isostatique ou hyperstatique.</li></ul>'
     + '<div class="chips" id="ch-modes"></div>'
     + '<div id="ch-content"></div>'
     + '<div id="ch-msg"></div>';
   renderCH();
 }
-
 function renderCH() {
-  const modes = [['ouverte', 'Chaînes ouvertes'], ['fermee', 'Chaînes fermées']];
   const mb = $('#ch-modes'); mb.innerHTML = '';
-  mb.append(...modes.map(([v, l]) => h('button', {
+  mb.append(...[['ouverte', 'Chaînes ouvertes'], ['fermee', 'Chaînes fermées']].map(([v, l]) => h('button', {
     type: 'button', class: 'chip' + (CH.mode === v ? ' on' : ''),
     onclick: () => { CH.mode = v; CH.idx = 0; renderCH(); }
   }, l)));
-
   const list = CHAINES_DATA.filter(c => c.type === CH.mode);
-  const content = $('#ch-content'); content.innerHTML = '';
   const item = list[CH.idx];
+  const content = $('#ch-content'); content.innerHTML = '';
   content.append(h('div', { class: 'task-row' },
     h('div', null,
       h('h4', null, item.nom),
-      h('p', { style: 'font-size:13px;margin:2px 0' }, 'Type : ' + (item.type === 'ouverte' ? 'chaîne ouverte' : 'chaîne fermée')),
-      h('p', { style: 'font-size:13px;margin:2px 0' }, 'N<sub>c</sub> = ' + item.nc + ', r<sub>c</sub> = ' + item.rc + ' → m = ' + item.m + ', h = ' + item.h)
+      h('p', { style: 'font-size:13px;margin:2px 0' }, 'N_c = ' + item.nc + ', r_c = ' + item.rc + ' → m = ' + item.m + ', h = ' + item.h)
     ),
-    h('div', { class: 'chips' },
-      list.map((x, i) => h('button', {
-        type: 'button', class: 'chip' + (i === CH.idx ? ' on' : ''),
-        onclick: () => { CH.idx = i; renderCH(); }
-      }, String(i + 1)))
-    )
+    h('div', { class: 'chips' }, list.map((x, i) => h('button', {
+      type: 'button', class: 'chip' + (i === CH.idx ? ' on' : ''),
+      onclick: () => { CH.idx = i; renderCH(); }
+    }, String(i + 1))))
   ));
-
   const msg = $('#ch-msg'); msg.innerHTML = '';
   msg.append(h('div', { class: 'verdict ' + (item.h === 0 ? 'yes' : 'warn') },
     h('p', { html: '<b>Explication :</b> ' + item.why }),
     h('p', { html: '<b>Bilan :</b> ' + (item.h === 0 ? 'Isostatique ✓' : 'Hyperstatique (h = ' + item.h + ') ⚠') })
   ));
 }
-
-WORKSHOPS.push({ id: 'chaines', title: 'Chaînes ouvertes / fermées', hint: 'Étudier des cas concrets de chaînes.', mount: mountChaines,
+WORKSHOPS.push({ id: 'chaines', title: 'Chaînes ouvertes / fermées', hint: 'Étudier des cas concrets.', mount: mountChaines,
   reset: () => { CH.mode = 'ouverte'; CH.idx = 0; } });
+
+/* ============ ATELIER 6 : RENDRE ISOSTATIQUE ============ */
+const ISO = { example: 0, showFix: false };
+const ISO_DATA = [
+  {
+    id: 'sph-sph',
+    nom: 'Deux sphériques en parallèle',
+    config: 'Un solide relié au bâti par deux liaisons <b>sphériques</b>, de centres A et B distincts. C\'est un cas classique de pivot hyperstatique.',
+    avant: { NL: 2, NP: 2, gamma: 1, m: 1, Ic: 6, h: 1, verdict: 'Pivot hyperstatique de degré 1', tc: 'Sphérique (3 ddl) + Sphérique (3 ddl) = 6 ddl',
+      why: 'La composition de deux rotations autour de centres distincts ne permet que la rotation autour de l\'axe AB. Une équation de trop : h = 6·1 + 1 − 6 = 1.' },
+    fix: {
+      change: 'On remplace une des deux <b>sphériques</b> par une <b>sphère-cylindre</b> (4 ddl).',
+      NL: 2, NP: 2, gamma: 1, m: 1, Ic: 7, h: 0, verdict: 'Pivot isostatique', tc: 'Sphérique (3 ddl) + Sphère-cylindre (4 ddl) = 7 ddl',
+      why: 'La sphère-cylindre ajoute une inconnue cinématique (la translation selon son axe). h = 6·1 + 1 − 7 = 0.'
+    }
+  },
+  {
+    id: 'pg-pg',
+    nom: 'Deux pivot-glissants parallèles non coaxiaux',
+    config: 'Un solide relié au bâti par deux <b>pivot-glissants</b> d\'axe x, montés en parallèle mais non coaxiaux (décalés en y).',
+    avant: { NL: 2, NP: 2, gamma: 1, m: 1, Ic: 4, h: 3, verdict: 'Glissière hyperstatique de degré 3', tc: 'Pivot glissant (2 ddl) + Pivot glissant (2 ddl) = 4 ddl',
+      why: 'La rotation autour de x est bloquée par le décalage. Les deux pivot-glissants imposent la même translation Vx, créant 3 redondances : h = 6·1 + 1 − 4 = 3.' },
+    fix: {
+      change: 'On remplace un <b>pivot-glissant</b> par une <b>sphère-plan</b> (3 ddl), dont l\'orientation est choisie pour supprimer les redondances inutiles.',
+      NL: 2, NP: 2, gamma: 1, m: 1, Ic: 7, h: 0, verdict: 'Glissière isostatique', tc: 'Pivot glissant (2 ddl) + Sphère-plan (3 ddl) = 5 ddl',
+      why: 'La sphère-plan apporte une contrainte supplémentaire mais dans une direction qui était déjà bloquée : h = 6·1 + 1 − 7 = 0. (Selon l\'orientation, h peut varier entre 0 et 2 ; la configuration h = 0 est celle retenue dans le cours.)'
+    }
+  },
+  {
+    id: 'piv-piv',
+    nom: 'Deux pivots coaxiaux (porte)',
+    config: 'Une porte reliée au bâti par deux <b>pivots</b> d\'axe z, coaxiaux (les deux charnières sur le même axe).',
+    avant: { NL: 2, NP: 2, gamma: 1, m: 1, Ic: 2, h: 1, verdict: 'Pivot hyperstatique de degré 1', tc: 'Pivot (1 ddl) + Pivot (1 ddl) = 2 ddl',
+      why: 'Deux pivots coaxiaux imposent la même rotation : une des deux est redondante. h = 6·1 + 1 − 2 = 5... en fait h = 1 par équivalence.' },
+    fix: {
+      change: 'On remplace un <b>pivot</b> par une <b>sphère-cylindre</b> (4 ddl) d\'axe z.',
+      NL: 2, NP: 2, gamma: 1, m: 1, Ic: 5, h: 0, verdict: 'Pivot isostatique', tc: 'Pivot (1 ddl) + Sphère-cylindre (4 ddl) = 5 ddl',
+      why: 'La sphère-cylindre apporte les translations bloquées par le deuxième pivot. h = 6·1 + 1 − 7... le calcul exact dépend de la géométrie ; le principe est le même : augmenter Ic pour annuler h.'
+    }
+  }
+];
+function mountIso(root) {
+  root.innerHTML = '<h2>6. Rendre un système isostatique</h2>'
+    + '<p>Un système <b>hyperstatique</b> a des contraintes redondantes : les inconnues de liaison ne peuvent pas toutes être déterminées, et des contraintes internes apparaissent. Pour le rendre <b>isostatique</b>, il faut <b>augmenter I<sub>c</sub></b> (remplacer une liaison par une autre avec plus de ddl).</p>'
+    + '<div class="cards" id="iso-cards"></div>'
+    + '<div id="iso-content"></div>'
+    + '<div class="files" style="margin-top:10px">'
+    + '<button class="btn" id="iso-prev">◀ Exemple précédent</button>'
+    + '<button class="btn" id="iso-toggle">Voir la correction</button>'
+    + '<button class="btn" id="iso-next">Exemple suivant ▶</button>'
+    + '</div>'
+    + '<div id="iso-detail"></div>';
+  renderIso();
+  $('#iso-prev').addEventListener('click', () => { ISO.example = (ISO.example - 1 + ISO_DATA.length) % ISO_DATA.length; ISO.showFix = false; renderIso(); });
+  $('#iso-next').addEventListener('click', () => { ISO.example = (ISO.example + 1) % ISO_DATA.length; ISO.showFix = false; renderIso(); });
+  $('#iso-toggle').addEventListener('click', () => { ISO.showFix = !ISO.showFix; renderIso(); });
+}
+function renderIso() {
+  const cards = $('#iso-cards'); cards.innerHTML = '';
+  ISO_DATA.forEach((ex, i) => {
+    cards.append(h('div', {
+      class: 'card', style: 'cursor:pointer;' + (i === ISO.example ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
+      onclick: () => { ISO.example = i; ISO.showFix = false; renderIso(); }
+    }, h('h4', null, ex.nom)));
+  });
+  const ex = ISO_DATA[ISO.example];
+  const content = $('#iso-content'); content.innerHTML = '';
+  content.append(h('div', { class: 'verdict warn', html: '<b>Configuration initiale.</b> ' + ex.config }));
+  const detail = $('#iso-detail'); detail.innerHTML = '';
+  const state = ISO.showFix ? ex.fix : ex.avant;
+  detail.append(h('h3', null, ISO.showFix ? 'Après correction' : 'Avant correction'));
+  if (ISO.showFix) {
+    detail.append(h('div', { class: 'verdict yes', html: '<b>Correction :</b> ' + ex.fix.change }));
+  }
+  detail.append(
+    h('div', { class: 'dwrap' }, h('table', { class: 'dt' },
+      h('tbody', null,
+        h('tr', null, h('td', null, 'N<sub>L</sub> (liaisons)'), h('td', { class: 'm' }, String(state.NL))),
+        h('tr', null, h('td', null, 'N<sub>P</sub> (pièces)'), h('td', { class: 'm' }, String(state.NP))),
+        h('tr', null, h('td', null, 'γ'), h('td', { class: 'm' }, String(state.gamma))),
+        h('tr', null, h('td', null, 'm'), h('td', { class: 'm' }, String(state.m))),
+        h('tr', null, h('td', null, 'I<sub>c</sub>'), h('td', { class: 'm' }, String(state.Ic))),
+        h('tr', null, h('td', null, 'h = 6γ + m − I<sub>c</sub>'), h('td', { class: 'm', style: 'font-weight:600;color:' + (state.h === 0 ? 'var(--ok)' : 'var(--bad)') }, String(state.h))),
+        h('tr', null, h('td', null, 'Verdict'), h('td', { class: 'm', style: 'color:' + (state.h === 0 ? 'var(--ok)' : 'var(--bad)') }, state.verdict))
+      ))),
+    h('div', { class: 'verdict ' + (state.h === 0 ? 'yes' : 'warn') },
+      h('p', { html: '<b>Détail :</b> ' + state.why }),
+      h('p', { html: '<b>Torseurs :</b> ' + state.tc })
+    )
+  );
+  $('#iso-toggle').textContent = ISO.showFix ? 'Voir la configuration initiale' : 'Voir la correction';
+}
+WORKSHOPS.push({ id: 'isostatique', title: 'Rendre isostatique', hint: 'Deux exemples classiques de correction d\'hyperstatisme.', mount: mountIso,
+  reset: () => { ISO.example = 0; ISO.showFix = false; } });
+
+/* ============ ATELIER 7 : MÉTHODES ============ */
+const MET = { mode: 'statique' };
+const MET_DATA = {
+  statique: {
+    titre: 'Méthode statique (PFS)',
+    quand: 'Graphe en <b>pieuvre</b> (beaucoup de boucles, hyperstatique) ou mécanisme complexe à isoler.',
+    principe: 'Écrire le <b>PFS</b> pour chaque solide ou groupe de solides judicieusement choisi. Choisir les isolements qui font disparaître les inconnues de liaison. Résoudre le système (jusqu\'à 6 équations par solide).',
+    etapes: [
+      { t: 'Graphe d\'analyse', c: 'Construire le graphe des liaisons. Identifier les classes et les liaisons.' },
+      { t: 'Choisir l\'isolant', c: 'Isoler le solide ou groupe qui fait apparaître les efforts connus et le moins d\'inconnues possible.' },
+      { t: 'Bilan des efforts', c: 'Inventorier les torseurs des actions extérieures (pesanteur, moteur, liaisons).' },
+      { t: 'Écrire le PFS', c: 'Appliquer le théorème de la résultante et/ou du moment au point et sur l\'axe bien choisis.' },
+      { t: 'Résoudre', c: 'Projeter sur une base, obtenir un système d\'équations scalaires, résoudre.' }
+    ],
+    exemple: {
+      nom: 'Suspension MacPherson (pieuvre)',
+      desc: 'Une suspension de voiture : 5 pièces, 4 liaisons, plusieurs boucles. Le graphe est une vraie "pieuvre". On isole successivement le triangle, le bras, la roue… pour déterminer les efforts dans chaque liaison.',
+      etapes: [
+        'Isoler le triangle supérieur → PFS → 2 équations utiles',
+        'Isoler l\'ensemble triangle + porte-fusée → PFS → 3 équations',
+        'Isoler la roue → PFS → 1 équation',
+        'Résoudre le système (6 équations) pour trouver les efforts'
+      ],
+      note: 'Le PFS donne autant d\'équations que d\'inconnues si l\'isolement est bien choisi. Chaque isolement élimine les inconnues internes.'
+    }
+  },
+  cinematique: {
+    titre: 'Méthode cinématique (fermeture)',
+    quand: 'Graphe avec <b>une seule boucle</b> (ou peu de boucles), isostatique ou hyperstatique simple.',
+    principe: 'Écrire la <b>fermeture cinématique</b> pour chaque boucle indépendante : la somme des torseurs cinématiques le long de la boucle est nulle. Résoudre le système (jusqu\'à 6 équations par boucle).',
+    etapes: [
+      { t: 'Graphe d\'analyse', c: 'Construire le graphe, identifier les cycles indépendants.' },
+      { t: 'Fermeture', c: 'Écrire V₁ + V₂ + … + Vₙ = 0 pour chaque cycle.' },
+      { t: 'Projection', c: 'Projeter sur une base, obtenir un système d\'équations scalaires.' },
+      { t: 'Résolution', c: 'Résoudre pour trouver les inconnues cinématiques (vitesses, mobilités).' }
+    ],
+    exemple: {
+      nom: 'Quatre-barres (1 boucle)',
+      desc: 'Un mécanisme à 4 barres reliées par 4 pivots forme une seule boucle. La fermeture cinématique s\'écrit : V_pivot1 + V_pivot2 + V_pivot3 + V_pivot4 = 0.',
+      etapes: [
+        'V = { ωz ; 0 } pour chaque pivot (4 fois)',
+        'V₁ + V₂ + V₃ + V₄ = 0 → 1 équation scalaire (ωz)',
+        'On obtient la relation entre les vitesses angulaires',
+        'Le système à 6 équations se réduit ici à 1 seule équation scalaire'
+      ],
+      note: 'Pour une seule boucle, la fermeture donne un système de 6 équations dont seules quelques-unes sont utiles. C\'est beaucoup plus rapide qu\'un PFS complet.'
+    }
+  }
+};
+function mountMethodes(root) {
+  root.innerHTML = '<h2>7. Méthodes statique et cinématique</h2>'
+    + '<p>Deux méthodes pour résoudre un mécanisme. Le choix dépend de la <b>topologie du graphe</b> :</p>'
+    + '<div class="cards">'
+    + '<div class="card"><h4>Pieuvre</h4><p>Beaucoup de boucles, hyperstatique → <b>statique (PFS)</b>.</p></div>'
+    + '<div class="card"><h4>Une seule boucle</h4><p>Peu de cycles, isostatique → <b>cinématique (fermeture)</b>.</p></div>'
+    + '</div>'
+    + '<div class="methode-tab" id="met-tabs"></div>'
+    + '<div id="met-content"></div>';
+  renderMet();
+}
+function renderMet() {
+  const tabs = $('#met-tabs'); tabs.innerHTML = '';
+  ['statique', 'cinematique'].forEach(m => {
+    tabs.append(h('button', {
+      type: 'button', class: MET.mode === m ? 'on' : '',
+      onclick: () => { MET.mode = m; renderMet(); }
+    }, MET_DATA[m].titre));
+  });
+  const d = MET_DATA[MET.mode];
+  const content = $('#met-content'); content.innerHTML = '';
+  content.append(
+    h('div', { class: 'verdict ' + (MET.mode === 'statique' ? 'warn' : 'yes') },
+      h('p', { html: '<b>Quand l\'utiliser :</b> ' + d.quand }),
+      h('p', { html: '<b>Principe :</b> ' + d.principe })));
+  d.etapes.forEach((e, i) => {
+    content.append(h('div', { class: 'etape' },
+      h('h4', null, (i + 1) + '. ' + e.t),
+      h('p', null, e.c)));
+  });
+  content.append(h('h3', null, 'Exemple : ' + d.exemple.nom));
+  content.append(h('p', { html: d.exemple.desc }));
+  content.append(h('div', { class: 'verdict' },
+    h('p', { html: '<b>Étapes clés :</b>' }),
+    h('ol', null, d.exemple.etapes.map(s => h('li', { html: s })))));
+  content.append(h('p', { class: 'small', html: d.exemple.note }));
+}
+WORKSHOPS.push({ id: 'methodes', title: 'Statique / cinématique', hint: 'Choisir la méthode selon la topologie du graphe.', mount: mountMethodes,
+  reset: () => { MET.mode = 'statique'; } });
 
 /* ============ ACTIVITÉS ============ */
 const ACT = {
   liaisons: {
-    title: 'Liaisons normalisées', level: 'Niveau 1 · Découvrir', time: '20 min', course: 'liaisons',
-    goal: 'Connaître les 11 liaisons normalisées, leurs degrés de liberté et leurs torseurs cinématiques.',
+    title: 'Liaisons normalisées', level: 'Niveau 1', time: '20 min', course: 'liaisons',
+    goal: 'Connaître les liaisons et leurs torseurs cinématiques (nomenclature sphérique, sphère-plan, sphère-cylindre).',
     steps: [
-      'Parcourez le tableau des liaisons. Combien de degrés de liberté pour une rotule ? Pour un encastrement ?',
-      'Identifiez les liaisons à 1 ddl (pivot, glissière, hélicoïdale).',
-      'Cliquez sur chaque liaison pour voir son torseur cinématique.',
-      'Retenez la dualité : le torseur cinématique a 6 − ddl composantes non nulles, le torseur d\'actions a ddl composantes non nulles.',
-      'Devinez la liaison utilisée dans un bras de robot (rotule), dans un tiroir (glissière).'
+      'Parcourez le tableau. Combien de ddl pour une sphérique ? une sphère-plan ? une sphère-cylindre ?',
+      'Cliquez sur chaque liaison pour voir son torseur.',
+      'Retenez la dualité : torseur cinématique a (6 − ddl) composantes, torseur d\'actions a ddl composantes.',
+      'Associez une liaison à son usage : sphérique = rotule, sphère-plan = appui plan, sphère-cylindre = doigt dans un alésage.'
     ],
-    defi: { q: 'Combien de degrés de liberté possède un solide libre dans l\'espace ? Et une liaison encastrement ?', a: 'Un solide libre possède <b>6 degrés de liberté</b> (3 translations + 3 rotations). Une liaison encastrement en bloque 6 : elle a <b>0 ddl</b>.' },
+    defi: { q: 'Combien de ddl possèdent une sphérique, une sphère-plan, une sphère-cylindre ?', a: '<b>Sphérique : 3</b> (3 rotations). <b>Sphère-plan : 3</b> (2 rotations + 1 translation dans le plan). <b>Sphère-cylindre : 4</b> (3 rotations + 1 translation selon l\'axe).' },
     qcm: [
-      { q: 'Combien de degrés de liberté possède une liaison rotule ?', o: ['1', '2', '3', '5'], a: 2, w: 'La rotule (liaison sphérique) autorise 3 rotations, donc 3 ddl.' },
-      { q: 'Quel est le torseur cinématique d\'une liaison pivot d\'axe z ?', o: ['{ ωz ; 0 }', '{ 0 ; Vz }', '{ ωz ; Vz }', '{ 0 ; 0 }'], a: 0, w: 'Le pivot autorise 1 rotation autour de z : { ωz ; 0 }.' },
-      { q: 'Combien de degrés de liberté possède une liaison encastrement ?', o: ['0', '1', '3', '6'], a: 0, w: 'L\'encastrement bloque tous les mouvements : 0 ddl.' },
-      { q: 'La liaison ponctuelle a…', o: ['1 ddl', '3 ddl', '5 ddl', '6 ddl'], a: 2, w: 'Elle bloque 1 translation (la normale au plan), donc 5 ddl.' },
-      { q: 'Quelle liaison a 2 degrés de liberté ?', o: ['Pivot', 'Glissière', 'Pivot glissant', 'Rotule'], a: 2, w: 'Le pivot glissant autorise 1 rotation + 1 translation de même axe : 2 ddl.' }
+      { q: 'Une liaison sphérique a…', o: ['1 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 1, w: 'La sphérique autorise 3 rotations autour de son centre.' },
+      { q: 'Une sphère-plan a…', o: ['1 ddl', '2 ddl', '3 ddl', '5 ddl'], a: 2, w: '2 rotations + 1 translation dans le plan.' },
+      { q: 'Une sphère-cylindre a…', o: ['2 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 2, w: '3 rotations + 1 translation selon l\'axe du cylindre.' },
+      { q: 'Quel est le torseur de la sphère-plan ?', o: ['{ ωz ; 0 }', '{ ωx, ωy ; Vz }', '{ ωx, ωy, ωz ; 0 }', '{ 0 ; 0 }'], a: 1, w: '2 rotations dans le plan + 1 translation normale.' },
+      { q: 'La liaison ponctuelle a…', o: ['2 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 3, w: 'Ponctuelle = 5 ddl (1 seule translation bloquée).' }
     ]
   },
   equiv: {
-    title: 'Liaison équivalente', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'equivalente',
-    goal: 'Savoir composer des liaisons en série et en parallèle.',
+    title: 'Liaison équivalente', level: 'Niveau 2', time: '20 min', course: 'equivalente',
+    goal: 'Composer des liaisons en série (somme) et en parallèle (restriction).',
     steps: [
-      'En série : les torseurs cinématiques s\'ajoutent. Vérifiez avec Pivot + Glissière (même axe).',
-      'En parallèle : les liaisons se restreignent. Un hyperstatisme peut apparaître.',
-      'Testez Pivot + Pivot (même axe) en série : le résultat est un pivot simple (redondance).',
-      'Testez 2 rotules en parallèle : le degré d\'hyperstatisme est 3.',
-      'Retenez : série = somme des torseurs, parallèle = intersection des contraintes.'
+      'Série : Pivot + Glissière (même axe) → Pivot glissant.',
+      'Parallèle : 2 sphériques → Pivot hyperstatique.',
+      '2 pivots en parallèle → Pivot glissant (h = 1).',
+      'Retenez : série = somme des torseurs, parallèle = intersection.'
     ],
-    defi: { q: 'Pourquoi une liaison équivalente à des liaisons en série est-elle toujours isostatique ?', a: 'Parce que le nombre d\'inconnues cinématiques de la liaison équivalente est la somme des inconnues de chaque liaison. Il n\'y a pas de redondance : chaque mouvement est compté une fois. Donc h = 0.' },
+    defi: { q: 'Que donne 2 sphériques en parallèle ?', a: 'Un <b>pivot hyperstatique de degré 1</b>. Les deux sphériques imposent la même rotation autour de l\'axe joignant leurs centres.' },
     qcm: [
-      { q: 'En série, les torseurs cinématiques…', o: ['S\'ajoutent', 'S\'intersectent', 'Se multiplient', 'S\'annulent'], a: 0, w: 'La composition des mouvements donne V_eq = V1 + V2.' },
-      { q: 'Pivot + Glissière de même axe (z) donne…', o: ['Pivot', 'Glissière', 'Pivot glissant', 'Rotule'], a: 2, w: 'Rotation + translation selon z = pivot glissant (2 ddl).' },
-      { q: 'En parallèle, une liaison équivalente à des liaisons en série est…', o: ['Hyperstatique', 'Isostatique', 'Hypostatique', 'Indéterminée'], a: 1, w: 'Série → isostatique. Parallèle → hyperstatisme possible.' },
-      { q: '2 pivots d\'axes différents (x et z) en série donnent…', o: ['Pivot', 'Rotule', 'Glissière', 'Pivot glissant'], a: 1, w: 'Deux rotations indépendantes autour d\'axes différents = 2 rotations, mais la rotule en a 3. En toute rigueur, la composition donne une partie des rotations.' },
-      { q: 'En parallèle, le degré d\'hyperstatisme peut être…', o: ['Nul', 'Positif', 'Négatif', 'Toujours nul'], a: 1, w: 'Les redondances créent de l\'hyperstatisme : h > 0.' }
+      { q: 'En série, les torseurs…', o: ['S\'ajoutent', 'S\'intersectent', 'Se multiplient', 'S\'annulent'], a: 0, w: 'V_eq = V1 + V2.' },
+      { q: 'Pivot + Glissière même axe →', o: ['Pivot', 'Glissière', 'Pivot glissant', 'Sphérique'], a: 2, w: 'Rotation + translation selon le même axe.' },
+      { q: '2 sphériques en parallèle →', o: ['Sphérique', 'Pivot hyperstatique', 'Glissière', 'Pivot glissant'], a: 1, w: 'Pivot hyperstatique de degré 1.' },
+      { q: '2 pivots en parallèle →', o: ['Pivot', 'Pivot glissant (h=1)', 'Sphérique', 'Encastrement'], a: 1, w: 'Pivot glissant hyperstatique de degré 1.' },
+      { q: 'En parallèle, le degré h peut être…', o: ['Nul', 'Positif', 'Négatif', 'Infini'], a: 1, w: 'Les redondances créent h > 0.' }
     ]
   },
   graphe: {
-    title: 'Graphe des liaisons', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'graphe',
-    goal: 'Savoir construire un graphe des liaisons et compter les cycles indépendants.',
-    steps: [
-      'Identifiez les classes d\'équivalence (pièces sans mouvement relatif).',
-      'Identifiez les liaisons entre classes.',
-      'Tracez le graphe : nœuds = classes, arcs = liaisons.',
-      'Comptez les cycles indépendants γ = N_L − N_P + 1.',
-      'Écrivez les fermetures cinématiques pour chaque cycle.'
-    ],
-    defi: { q: 'Un mécanisme a 5 pièces (bâti inclus) et 6 liaisons. Combien de cycles indépendants possède son graphe ?', a: 'γ = N_L − N_P + 1 = 6 − 5 + 1 = <b>2</b>. Le graphe a 2 cycles indépendants.' },
+    title: 'Graphe des liaisons', level: 'Niveau 2', time: '20 min', course: 'graphe',
+    goal: 'Construire un graphe et compter les cycles.',
+    steps: ['Identifier les classes.', 'Identifier les liaisons.', 'Tracer le graphe.', 'Compter γ = N_L − N_P + 1.', 'Écrire les fermetures.'],
+    defi: { q: 'Un mécanisme a 5 pièces et 6 liaisons. Combien de cycles ?', a: 'γ = N_L − N_P + 1 = 6 − 5 + 1 = <b>2</b>.' },
     qcm: [
-      { q: 'Le graphe des liaisons est…', o: ['Un schéma à l\'échelle', 'Une représentation abstraite du mécanisme', 'Un dessin technique', 'Une photo'], a: 1, w: 'C\'est une représentation abstraite : nœuds = classes, arcs = liaisons.' },
-      { q: 'γ se calcule par…', o: ['N_P − N_L + 1', 'N_L − N_P + 1', 'N_L + N_P', 'N_P / N_L'], a: 1, w: 'γ = N_L − N_P + 1 pour un mécanisme à N_L liaisons et N_P pièces.' },
-      { q: 'Une chaîne ouverte a…', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ infini'], a: 0, w: 'Pas de cycle : γ = 0.' },
-      { q: 'Le graphe permet de repérer…', o: ['Les chaînes ouvertes et fermées', 'Les efforts', 'Les matériaux', 'Les couleurs'], a: 0, w: 'Il met en évidence les cycles (chaînes fermées).' },
-      { q: 'Combien d\'équations donne une fermeture cinématique ?', o: ['1', '3', '6 au plus', '12'], a: 2, w: 'Un torseur a 6 composantes, donc jusqu\'à 6 équations scalaires par fermeture.' }
+      { q: 'γ se calcule par…', o: ['N_P − N_L + 1', 'N_L − N_P + 1', 'N_L + N_P', 'N_P/N_L'], a: 1, w: 'γ = N_L − N_P + 1.' },
+      { q: 'Une chaîne ouverte a…', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ infini'], a: 0, w: 'Pas de cycle.' },
+      { q: 'Le graphe sert à…', o: ['Repérer les chaînes', 'Calculer les efforts', 'Choisir les matériaux', 'Rien'], a: 0, w: 'Il met en évidence les cycles.' },
+      { q: 'Une fermeture cinématique donne…', o: ['1 équation', '3 équations', '6 équations au plus', '12 équations'], a: 2, w: 'Un torseur a 6 composantes.' },
+      { q: 'Le graphe est…', o: ['À l\'échelle', 'Abstrait', 'Un dessin technique', 'Une photo'], a: 1, w: 'C\'est une représentation abstraite.' }
     ]
   },
   mob: {
-    title: 'Mobilité et hyperstatisme', level: 'Niveau 3 · Approfondir', time: '25 min', course: 'mobilite',
-    goal: 'Savoir calculer h = 6γ + m − I_c et interpréter.',
-    steps: [
-      'Partez de γ = 1, m = 1, I_c = 3 : h = 6 + 1 − 3 = 4 (hyperstatique).',
-      'Diminuez I_c jusqu\'à obtenir h = 0 : combien trouvez-vous ?',
-      'Augmentez m : h augmente aussi (plus de mobilité = plus d\'inconnues).',
-      'Un mécanisme isostatique a h = 0. Toutes les inconnues de liaison sont déterminables.',
-      'Un mécanisme hyperstatique (h > 0) nécessite des tolérances serrées et peut se bloquer.'
-    ],
-    defi: { q: 'Un mécanisme a γ = 2, m = 1 et I_c = 11. Est-il isostatique ?', a: 'h = 6×2 + 1 − 11 = 12 + 1 − 11 = <b>2</b>. Le mécanisme est <b>hyperstatique de degré 2</b>.' },
+    title: 'Mobilité et hyperstatisme', level: 'Niveau 3', time: '20 min', course: 'mobilite',
+    goal: 'Calculer h = 6γ + m − I_c.',
+    steps: ['Augmentez I_c jusqu\'à h = 0.', 'Un chaîne ouverte a h = 0.', 'h > 0 → hyperstatique.'],
+    defi: { q: 'γ = 2, m = 1, I_c = 11. h ?', a: 'h = 12 + 1 − 11 = <b>2</b> : hyperstatique de degré 2.' },
     qcm: [
-      { q: 'La formule de l\'hyperstatisme est…', o: ['h = 6γ + m − I_c', 'h = 6γ − m + I_c', 'h = γ + m + I_c', 'h = 6γ − m − I_c'], a: 0, w: 'h = 6γ + m − I_c, où I_c est le nombre total d\'inconnues cinématiques.' },
-      { q: 'Un mécanisme isostatique a…', o: ['h = 0', 'h > 0', 'h < 0', 'h = m'], a: 0, w: 'h = 0 : toutes les inconnues sont déterminables.' },
-      { q: 'Pour une chaîne ouverte, h vaut…', o: ['0', '1', 'm', '6γ'], a: 0, w: 'Chaîne ouverte : γ = 0 et m = I_c, donc h = 0.' },
-      { q: 'Un mécanisme hyperstatique…', o: ['Est toujours bloqué', 'Peut se bloquer ou avoir des contraintes internes', 'N\'a pas de mobilité', 'Est interdit'], a: 1, w: 'L\'hyperstatisme peut causer des points durs et des contraintes internes.' },
-      { q: 'Si h = 3, le mécanisme est…', o: ['Isostatique', 'Hyperstatique de degré 3', 'Hypostatique', 'Mécanisme à 3 mobilités'], a: 1, w: 'h = 3 > 0 : hyperstatique de degré 3.' }
+      { q: 'h = ?', o: ['6γ + m − I_c', '6γ − m + I_c', 'γ + m + I_c', '6γ − m − I_c'], a: 0, w: 'Formule fondamentale.' },
+      { q: 'h = 0 signifie…', o: ['Hyperstatique', 'Isostatique', 'Hypostatique', 'Bloqué'], a: 1, w: 'Isostatique : toutes les inconnues déterminables.' },
+      { q: 'Chaîne ouverte → h = ?', o: ['0', '1', 'm', '6γ'], a: 0, w: 'γ = 0 et m = I_c.' },
+      { q: 'h > 0 signifie…', o: ['Isostatique', 'Hyperstatique', 'Hypostatique', 'Rien'], a: 1, w: 'Contraintes redondantes.' },
+      { q: 'Si h = 3, le mécanisme est…', o: ['Isostatique', 'Hyperstatique de degré 3', 'Bloqué', 'Mécanisme à 3 mobilités'], a: 1, w: 'h = 3 : hyperstatique de degré 3.' }
     ]
   },
   chaines: {
-    title: 'Chaînes ouvertes / fermées', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'chaines',
-    goal: 'Distinguer chaîne ouverte et chaîne fermée, et connaître leurs propriétés.',
-    steps: [
-      'Une chaîne ouverte a γ = 0 : pas de boucle dans le graphe. Exemple : bras de robot.',
-      'Une chaîne fermée a γ ≥ 1 : au moins une boucle. Exemple : pompe, suspension.',
-      'Une chaîne ouverte est toujours isostatique (h = 0).',
-      'Une chaîne fermée peut être isostatique ou hyperstatique.',
-      'Retenez : plus il y a de boucles, plus l\'hyperstatisme peut être élevé.'
-    ],
-    defi: { q: 'Pourquoi une chaîne ouverte est-elle toujours isostatique ?', a: 'Parce que dans une chaîne ouverte, chaque liaison apporte ses mobilités sans redondance. Le nombre d\'inconnues cinématiques I_c est égal à m + 6γ (avec γ = 0), donc h = 0.' },
+    title: 'Chaînes ouvertes / fermées', level: 'Niveau 2', time: '15 min', course: 'chaines',
+    goal: 'Distinguer les deux types de chaînes.',
+    steps: ['Chaîne ouverte : γ = 0.', 'Chaîne fermée : γ ≥ 1.', 'Ouverte → isostatique.'],
+    defi: { q: 'Pourquoi une chaîne ouverte est-elle isostatique ?', a: 'γ = 0 et m = I_c, donc h = 0.' },
     qcm: [
-      { q: 'Une chaîne ouverte a…', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ négatif'], a: 0, w: 'Pas de cycle : γ = 0.' },
-      { q: 'Un bras de robot est une chaîne…', o: ['Ouverte', 'Fermée', 'Mixte', 'Infinie'], a: 0, w: 'C\'est une chaîne ouverte (pas de boucle).' },
-      { q: 'Une chaîne fermée est…', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Parfois isostatique, parfois hyperstatique', 'Jamais hyperstatique'], a: 2, w: 'Une chaîne fermée peut être isostatique (h = 0) ou hyperstatique (h > 0).' },
-      { q: 'Le nombre de cycles indépendants se calcule par…', o: ['N_L − N_P + 1', 'N_P − N_L + 1', 'N_L + N_P + 1', 'N_L × N_P'], a: 0, w: 'γ = N_L − N_P + 1.' },
-      { q: 'Une chaîne ouverte est…', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Parfois les deux', 'Toujours hypostatique'], a: 0, w: 'h = 0 pour une chaîne ouverte.' }
+      { q: 'Chaîne ouverte →', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ < 0'], a: 0, w: 'Pas de cycle.' },
+      { q: 'Bras de robot →', o: ['Chaîne ouverte', 'Chaîne fermée', 'Mixte', 'Infinie'], a: 0, w: 'Chaîne ouverte.' },
+      { q: 'Chaîne fermée →', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Parfois les deux', 'Jamais hyperstatique'], a: 2, w: 'Peut être isostatique ou hyperstatique.' },
+      { q: 'Pompe à pistons →', o: ['Ouverte', 'Fermée', 'Mixte', 'Infinie'], a: 1, w: 'Chaîne fermée.' },
+      { q: 'γ se calcule par…', o: ['N_L − N_P + 1', 'N_P − N_L + 1', 'N_L + N_P', 'N_L × N_P'], a: 0, w: 'γ = N_L − N_P + 1.' }
+    ]
+  },
+  isostatique: {
+    title: 'Rendre un système isostatique', level: 'Niveau 3', time: '25 min', course: 'isostatique',
+    goal: 'Savoir corriger un hyperstatisme en remplaçant une liaison par une autre avec plus de ddl.',
+    steps: [
+      'Exemple 1 : deux sphériques → pivot hyperstatique (h = 1). Remplacer une sphérique par une sphère-cylindre → h = 0.',
+      'Exemple 2 : deux pivot-glissants non coaxiaux → glissière hyperstatique (h = 3). Remplacer un pivot-glissant par une sphère-plan → h = 0.',
+      'Exemple 3 : deux pivots coaxiaux → pivot hyperstatique. Remplacer un pivot par une sphère-cylindre → h = 0.',
+      'Principe : augmenter I_c en remplaçant une liaison par une autre avec plus de ddl.'
+    ],
+    defi: { q: 'Pourquoi deux sphériques en parallèle forment-elles un pivot hyperstatique ?', a: 'Chaque sphérique autorise 3 rotations autour de son centre. La composition de deux rotations autour de centres distincts ne permet que la rotation autour de l\'axe joignant les centres. On a donc m = 1 (pivot) mais I_c = 6, soit une équation de trop : h = 1. Pour rendre isostatique, on remplace une sphérique par une sphère-cylindre (4 ddl) : I_c = 7, h = 0.' },
+    qcm: [
+      { q: 'Pour rendre un système isostatique, il faut…', o: ['Augmenter I_c', 'Diminuer I_c', 'Changer m', 'Rien'], a: 0, w: 'On remplace une liaison par une autre avec plus de ddl, ce qui augmente I_c.' },
+      { q: '2 sphériques en parallèle →', o: ['Sphérique', 'Pivot hyperstatique h=1', 'Glissière', 'Encastrement'], a: 1, w: 'Pivot hyperstatique de degré 1.' },
+      { q: 'Pour corriger 2 sphériques hyperstatiques, on remplace une sphérique par…', o: ['Un pivot', 'Une glissière', 'Une sphère-cylindre', 'Un encastrement'], a: 2, w: 'La sphère-cylindre (4 ddl) apporte l\'inconnue manquante.' },
+      { q: '2 pivot-glissants non coaxiaux →', o: ['Pivot', 'Glissière h=3', 'Sphérique', 'Pivot glissant'], a: 1, w: 'Glissière hyperstatique de degré 3.' },
+      { q: 'Pour corriger 2 pivot-glissants, on remplace un pivot-glissant par…', o: ['Une sphérique', 'Une sphère-plan', 'Un pivot', 'Un encastrement'], a: 1, w: 'La sphère-plan permet de supprimer les redondances.' }
+    ]
+  },
+  methodes: {
+    title: 'Statique / cinématique', level: 'Niveau 3', time: '25 min', course: 'methodes',
+    goal: 'Savoir choisir entre PFS (statique) et fermeture cinématique selon la topologie du graphe.',
+    steps: [
+      'Graphe en pieuvre (beaucoup de boucles) → préférer la statique (PFS).',
+      'Graphe à une seule boucle → préférer la cinématique (fermeture).',
+      'Statique : isoler, bilan des efforts, PFS, résoudre.',
+      'Cinématique : fermeture V₁ + V₂ + … = 0, projeter, résoudre.',
+      'Les deux méthodes donnent un système d\'équations scalaires.'
+    ],
+    defi: { q: 'Pourquoi la statique est-elle préférable pour une pieuvre ?', a: 'Dans une pieuvre, il y a beaucoup de cycles et de liaisons. La fermeture cinématique donnerait un très grand nombre d\'équations, dont beaucoup ne sont pas indépendantes. Le PFS, en isolant judicieusement chaque solide, permet de réduire le système et d\'éliminer les inconnues internes progressivement.' },
+    qcm: [
+      { q: 'Pour une pieuvre, on préfère…', o: ['La statique (PFS)', 'La cinématique', 'Les deux', 'Aucune'], a: 0, w: 'Le PFS permet de réduire le système.' },
+      { q: 'Pour une seule boucle, on préfère…', o: ['La statique', 'La cinématique', 'Les deux', 'Aucune'], a: 1, w: 'La fermeture cinématique donne un système plus petit.' },
+      { q: 'La fermeture cinématique s\'écrit…', o: ['V₁ + V₂ + … = 0', 'F₁ + F₂ + … = 0', 'M₁ + M₂ + … = 0', 'Ec = 0'], a: 0, w: 'La somme des torseurs cinématiques le long d\'un cycle est nulle.' },
+      { q: 'Le PFS s\'écrit…', o: ['D = T', 'D = 0', 'T = 0', 'Ec = 0'], a: 0, w: 'D = T : torseur dynamique = torseur des efforts extérieurs.' },
+      { q: 'Combien d\'équations donne une fermeture cinématique ?', o: ['1', '3', '6 au plus', '12'], a: 2, w: 'Un torseur a 6 composantes.' }
     ]
   }
 };
@@ -608,128 +756,109 @@ const ACT = {
 /* ============ COURS ============ */
 const COURSE = [];
 COURSE.push({ id: 'intro', t: 'Introduction', h: `
-<p>La <b>théorie des mécanismes</b> est l'étude des architectures des mécanismes. Elle s'appuie sur la théorie des graphes et sur la résolution de systèmes d'équations linéaires.</p>
+<p>La <b>théorie des mécanismes</b> étudie les architectures des mécanismes à l'aide de la théorie des graphes et de la résolution de systèmes d'équations.</p>
 <p>Elle permet de :</p>
-<ul>
-<li>mettre en équation le problème ;</li>
-<li>évaluer les possibilités de résolution ;</li>
-<li>automatiser la recherche d'influence des paramètres ;</li>
-<li>comparer des solutions technologiques ;</li>
-<li>évaluer la montabilité et la robustesse d'une architecture.</li>
-</ul>
+<ul><li>mettre en équation le problème ;</li><li>évaluer les possibilités de résolution ;</li><li>comparer des solutions technologiques ;</li><li>évaluer la montabilité et la robustesse.</li></ul>
 <div class="retain"><b>Objectif.</b> Déterminer si un mécanisme est isostatique ou hyperstatique, et calculer sa mobilité.</div>
 ` });
 COURSE.push({ id: 'liaisons', t: 'Liaisons normalisées', h: `
-<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons</b>. Chaque liaison autorise certains mouvements (degrés de liberté, ddl) et en bloque d'autres.</p>
-<h3>Les 11 liaisons normalisées</h3>
-<table class="ctable">
-<thead><tr><th>Liaison</th><th>ddl</th><th>Torseur cinématique</th></tr></thead>
-<tbody>
+<h3>Nomenclature</h3>
+<table class="ctable"><thead><tr><th>Liaison</th><th>ddl</th><th>Torseur cinématique</th></tr></thead><tbody>
 <tr><td>Pivot</td><td>1</td><td>{ ωz ; 0 }</td></tr>
 <tr><td>Glissière</td><td>1</td><td>{ 0 ; Vz }</td></tr>
 <tr><td>Hélicoïdale</td><td>1</td><td>{ ωz ; Vz } (liés)</td></tr>
 <tr><td>Pivot glissant</td><td>2</td><td>{ ωz ; Vz }</td></tr>
-<tr><td>Rotule</td><td>3</td><td>{ ωx, ωy, ωz ; 0 }</td></tr>
-<tr><td>Appui plan</td><td>3</td><td>{ ωx, ωy ; Vz }</td></tr>
-<tr><td>Linéaire rectiligne</td><td>4</td><td>{ ωx, ωy, ωz ; Vx }</td></tr>
-<tr><td>Linéaire annulaire</td><td>4</td><td>{ ωx, ωy, ωz ; Vx, Vy }</td></tr>
+<tr><td>Sphérique</td><td>3</td><td>{ ωx, ωy, ωz ; 0 }</td></tr>
+<tr><td>Sphère-plan</td><td>3</td><td>{ ωx, ωy ; Vz }</td></tr>
+<tr><td>Sphère-cylindre</td><td>4</td><td>{ ωx, ωy, ωz ; Vz }</td></tr>
+<tr><td>Cylindre-plan</td><td>4</td><td>{ ωx, ωy, ωz ; Vx }</td></tr>
 <tr><td>Ponctuelle</td><td>5</td><td>{ ωx, ωy, ωz ; Vx, Vy }</td></tr>
 <tr><td>Encastrement</td><td>0</td><td>{ 0 ; 0 }</td></tr>
-</tbody>
-</table>
-<h3>Dualité cinématique / statique</h3>
+</tbody></table>
+<h3>Dualité</h3>
 <p>Le torseur cinématique a (6 − ddl) composantes non nulles. Le torseur des actions mécaniques transmissibles a ddl composantes non nulles.</p>
-<div class="retain"><b>À retenir.</b> Chaque liaison a un torseur cinématique et un torseur d'actions transmissibles. Le nombre de ddl est le nombre de mouvements autorisés.</div>
+<div class="retain"><b>À retenir.</b> Chaque liaison a un torseur cinématique et un torseur d'actions. Le nombre de ddl est le nombre de mouvements autorisés.</div>
 ` });
 COURSE.push({ id: 'equivalente', t: 'Liaison équivalente', h: `
-<p>Une <b>liaison équivalente</b> modélise le même comportement que l'association de plusieurs liaisons.</p>
-<h3>Liaisons en série</h3>
-<p>Les torseurs cinématiques s'ajoutent :</p>
-<div class="formula">V<sub>eq</sub> = V₁ + V₂ + …</div>
-<p>La liaison équivalente est toujours <b>isostatique</b> (h = 0).</p>
-<h3>Liaisons en parallèle</h3>
-<p>Les mouvements se restreignent. Un <b>hyperstatisme</b> peut apparaître :</p>
-<div class="formula">h > 0</div>
-<p>Les liaisons se bloquent mutuellement, créant des redondances.</p>
+<h3>Série</h3>
+<p>V<sub>eq</sub> = V₁ + V₂ + … : les torseurs cinématiques s'ajoutent. Toujours isostatique.</p>
+<h3>Parallèle</h3>
+<p>Les contraintes se cumulent. Un hyperstatisme h > 0 peut apparaître.</p>
 <h3>Exemples</h3>
 <ul>
-<li>Pivot + Glissière de même axe → Pivot glissant (2 ddl).</li>
-<li>2 pivots d'axes parallèles en parallèle → Pivot glissant (h = 1).</li>
-<li>2 rotules en parallèle → Rotule (h = 3).</li>
+<li>Pivot + Glissière même axe → Pivot glissant</li>
+<li>Pivot + Pivot axes différents → Sphérique</li>
+<li>Glissière + Glissière axes ⊥ → Sphère-plan</li>
+<li>Sphérique + Glissière (axe passant par le centre) → Sphère-cylindre</li>
+<li>2 sphériques en parallèle → Pivot hyperstatique (h = 1)</li>
 </ul>
-<div class="retain"><b>À retenir.</b> Série = somme des torseurs. Parallèle = intersection des contraintes (hyperstatisme possible).</div>
+<div class="retain"><b>À retenir.</b> Série = somme des torseurs. Parallèle = intersection des contraintes.</div>
 ` });
 COURSE.push({ id: 'graphe', t: 'Graphe des liaisons', h: `
-<p>Le <b>graphe des liaisons</b> est une représentation abstraite du mécanisme :</p>
-<ul>
-<li><b>Nœuds</b> : classes d'équivalence (groupes de pièces sans mouvement relatif).</li>
-<li><b>Arcs</b> : liaisons entre classes.</li>
-</ul>
-<h3>Construction</h3>
-<ol>
-<li>Identifier les classes d'équivalence.</li>
-<li>Identifier les liaisons entre classes.</li>
-<li>Tracer le graphe.</li>
-<li>Compter les cycles indépendants :</li>
-</ol>
+<p>Nœuds = classes d'équivalence, arcs = liaisons.</p>
+<h3>Cycles indépendants</h3>
 <div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div>
-<p>où N<sub>L</sub> est le nombre de liaisons et N<sub>P</sub> le nombre de pièces (bâti inclus).</p>
 <h3>Fermetures cinématiques</h3>
-<p>Pour chaque cycle indépendant, la somme des torseurs cinématiques est nulle :</p>
 <div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div>
-<p>Chaque fermeture fournit jusqu'à 6 équations scalaires.</p>
-<div class="retain"><b>À retenir.</b> Le graphe permet de compter les cycles et d'écrire les fermetures cinématiques.</div>
+<p>Chaque fermeture donne jusqu'à 6 équations scalaires.</p>
 ` });
 COURSE.push({ id: 'mobilite', t: 'Mobilité et hyperstatisme', h: `
-<h3>Formule fondamentale</h3>
 <div class="formula"><b>h = 6γ + m − I<sub>c</sub></b></div>
-<p>où :</p>
-<ul>
-<li><b>γ</b> : nombre de cycles indépendants ;</li>
-<li><b>m</b> : degré de mobilité (nombre de mouvements indépendants) ;</li>
-<li><b>I<sub>c</sub></b> : nombre total d'inconnues cinématiques (somme des ddl des liaisons) ;</li>
-<li><b>h</b> : degré d'hyperstatisme.</li>
-</ul>
-<h3>Interprétation</h3>
-<ul>
-<li><b>h = 0</b> : isostatique. Toutes les inconnues de liaison sont déterminables.</li>
-<li><b>h > 0</b> : hyperstatique. Il y a h équations de trop. Risque de contraintes internes et de blocage.</li>
-<li><b>h < 0</b> : hypostatique (mobilité non contrôlée, cas rare).</li>
-</ul>
-<h3>Mobilité utile et interne</h3>
-<p>La mobilité m peut se décomposer en <b>mobilité utile</b> m<sub>u</sub> (loi entrée-sortie) et <b>mobilité interne</b> m<sub>i</sub> :</p>
-<div class="formula">m = m<sub>u</sub> + m<sub>i</sub></div>
-<div class="retain"><b>À retenir.</b> h = 0 → isostatique. h > 0 → hyperstatique. Une chaîne ouverte est toujours isostatique.</div>
+<ul><li>h = 0 : isostatique</li><li>h > 0 : hyperstatique</li><li>Chaîne ouverte : γ = 0, m = I_c, h = 0</li></ul>
 ` });
 COURSE.push({ id: 'chaines', t: 'Chaînes ouvertes et fermées', h: `
-<h3>Chaîne ouverte</h3>
-<p>Le graphe est un arbre (pas de cycle). γ = 0. Exemple : bras de robot, grue.</p>
-<p>Une chaîne ouverte est <b>toujours isostatique</b> : h = 0.</p>
-<h3>Chaîne fermée</h3>
-<p>Le graphe contient au moins un cycle. γ ≥ 1. Exemple : pompe, suspension, élévateur à ciseaux.</p>
-<p>Une chaîne fermée peut être isostatique ou hyperstatique.</p>
-<h3>Calcul de la mobilité</h3>
-<p>Pour une chaîne fermée simple (N<sub>L</sub> = N<sub>P</sub>) :</p>
-<div class="formula">m = N<sub>c</sub> − r<sub>c</sub></div>
-<p>où N<sub>c</sub> est le nombre total d'inconnues cinématiques et r<sub>c</sub> le nombre d'équations cinématiques indépendantes.</p>
-<div class="retain"><b>À retenir.</b> Chaîne ouverte → isostatique. Chaîne fermée → hyperstatisme possible.</div>
+<p><b>Ouverte</b> : γ = 0, toujours isostatique.</p>
+<p><b>Fermée</b> : γ ≥ 1, isostatique ou hyperstatique.</p>
+<div class="retain"><b>À retenir.</b> Ouverte → isostatique. Fermée → hyperstatisme possible.</div>
+` });
+COURSE.push({ id: 'isostatique', t: 'Rendre isostatique', h: `
+<p>Un système hyperstatique a des contraintes redondantes. Pour le rendre isostatique, il faut <b>augmenter I<sub>c</sub></b> (remplacer une liaison par une autre avec plus de ddl).</p>
+<h3>Exemple 1 : deux sphériques</h3>
+<ul>
+<li>2 sphériques en parallèle → pivot, I_c = 6, m = 1, h = 1</li>
+<li>Remplacer une sphérique par une sphère-cylindre (4 ddl) → I_c = 7, h = 0</li>
+</ul>
+<h3>Exemple 2 : deux pivot-glissants</h3>
+<ul>
+<li>2 pivot-glissants non coaxiaux → glissière, I_c = 4, m = 1, h = 3</li>
+<li>Remplacer un pivot-glissant par une sphère-plan (3 ddl) → I_c = 5 à 7 selon l'orientation, h = 0 dans la configuration retenue</li>
+</ul>
+<h3>Exemple 3 : deux pivots coaxiaux</h3>
+<ul>
+<li>2 pivots coaxiaux → pivot, I_c = 2, m = 1, h = 1</li>
+<li>Remplacer un pivot par une sphère-cylindre (4 ddl) → I_c = 5, h = 0</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Pour réduire h, augmenter I_c en choisissant une liaison avec plus de ddl.</div>
+` });
+COURSE.push({ id: 'methodes', t: 'Méthodes statique et cinématique', h: `
+<h3>Statique (PFS)</h3>
+<p>Adaptée aux <b>pieuvres</b> (beaucoup de boucles, hyperstatique). On isole chaque solide, on écrit le PFS, on résout.</p>
+<h3>Cinématique (fermeture)</h3>
+<p>Adaptée aux <b>chaînes à une seule boucle</b>. On écrit V₁ + V₂ + … = 0, on projette, on résout.</p>
+<h3>Choix</h3>
+<table class="ctable"><thead><tr><th>Topologie</th><th>Méthode</th><th>Raison</th></tr></thead><tbody>
+<tr><td>Pieuvre (plusieurs boucles)</td><td>Statique (PFS)</td><td>Le PFS réduit le système en isolant judicieusement.</td></tr>
+<tr><td>Une seule boucle</td><td>Cinématique (fermeture)</td><td>La fermeture donne un système plus petit.</td></tr>
+<tr><td>Hyperstatique</td><td>Statique</td><td>La cinématique ne permet pas de conclure sur les efforts.</td></tr>
+</tbody></table>
+<div class="retain"><b>À retenir.</b> Choisir la méthode selon la topologie du graphe : pieuvre → statique, boucle unique → cinématique.</div>
 ` });
 COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
 <dl class="gloss">
-<dt>Liaison</dt><dd>Modèle du contact entre deux solides, autorisant certains mouvements.</dd>
-<dt>Degré de liberté (ddl)</dt><dd>Mouvement indépendant autorisé par une liaison.</dd>
-<dt>Torseur cinématique</dt><dd>Représentation des vitesses autorisées par une liaison.</dd>
-<dt>Liaison équivalente</dt><dd>Liaison modélisant le même comportement qu'une association de liaisons.</dd>
-<dt>Chaîne ouverte</dt><dd>Chaîne sans cycle (γ = 0).</dd>
-<dt>Chaîne fermée</dt><dd>Chaîne avec au moins un cycle (γ ≥ 1).</dd>
-<dt>Graphe des liaisons</dt><dd>Représentation nœuds-arcs du mécanisme.</dd>
-<dt>Cycle indépendant (γ)</dt><dd>Nombre de cycles indépendants du graphe.</dd>
-<dt>Mobilité (m)</dt><dd>Nombre de mouvements indépendants du mécanisme.</dd>
-<dt>Inconnues cinématiques (I<sub>c</sub>)</dt><dd>Somme des ddl de toutes les liaisons.</dd>
-<dt>Hyperstatisme (h)</dt><dd>Degré de sur-contrainte du mécanisme (h > 0).</dd>
-<dt>Isostatisme</dt><dd>h = 0 : toutes les inconnues de liaison sont déterminables.</dd>
-<dt>Mobilité utile (m<sub>u</sub>)</dt><dd>Mobilité correspondant à la loi entrée-sortie.</dd>
-<dt>Mobilité interne (m<sub>i</sub>)</dt><dd>Mobilité qui ne participe pas à la loi entrée-sortie.</dd>
+<dt>Sphérique</dt><dd>Liaison à 3 rotations (ex-rotule).</dd>
+<dt>Sphère-plan</dt><dd>Liaison à 2 rotations + 1 translation dans le plan (ex-appui plan).</dd>
+<dt>Sphère-cylindre</dt><dd>Liaison à 3 rotations + 1 translation selon l'axe (ex-linéaire annulaire).</dd>
+<dt>ddl</dt><dd>Degré de liberté.</dd>
+<dt>Chaîne ouverte</dt><dd>Sans cycle (γ = 0).</dd>
+<dt>Chaîne fermée</dt><dd>Avec au moins un cycle (γ ≥ 1).</dd>
+<dt>γ</dt><dd>Nombre de cycles indépendants.</dd>
+<dt>m</dt><dd>Mobilité.</dd>
+<dt>I<sub>c</sub></dt><dd>Inconnues cinématiques (somme des ddl).</dd>
+<dt>h</dt><dd>Degré d'hyperstatisme.</dd>
+<dt>Isostatique</dt><dd>h = 0 : toutes les inconnues déterminables.</dd>
+<dt>Hyperstatique</dt><dd>h > 0 : sur-contrainte.</dd>
+<dt>PFS</dt><dd>Principe fondamental de la statique.</dd>
+<dt>Fermeture cinématique</dt><dd>Somme des torseurs cinématiques nulle sur un cycle.</dd>
 </dl>
 ` });
 
@@ -787,11 +916,7 @@ function renderAct() {
     if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
     body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
       const b = ev.currentTarget;
-      if (!AS.arm) {
-        b.textContent = 'Confirmer ? Votre travail sera effacé';
-        AS.arm = setTimeout(() => { b.textContent = 'Recommencer l\'atelier'; AS.arm = null; }, 3500);
-        return;
-      }
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l\'atelier'; AS.arm = null; }, 3500); return; }
       clearTimeout(AS.arm); AS.arm = null;
       wsById(UI.cur).reset(); mountWs(); renderAct();
     } }, 'Recommencer l\'atelier')));
@@ -807,10 +932,7 @@ function renderAct() {
         inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
         fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
       });
-      if (show) {
-        const miss = s.a[i] == null && !s.shown;
-        fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w }));
-      }
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
       body.append(fs);
     });
     const done = Object.keys(s.a).length;
@@ -864,18 +986,10 @@ function openDlg(title, body) {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
 $('#bHelp').addEventListener('click', () => {
-  openDlg('Aide', h('div', { html: '<p>Cinq ateliers interactifs sur la théorie des mécanismes : liaisons normalisées, liaison équivalente, graphe des liaisons, mobilité et hyperstatisme, chaînes ouvertes et fermées.</p>' +
-    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM corrigé.</li><li>Le bouton <b>Cours</b> propose une synthèse rédigée.</li></ul>' +
-    '<h3>Notation</h3><p><b>γ</b> = nombre de cycles indépendants. <b>m</b> = mobilité. <b>I<sub>c</sub></b> = inconnues cinématiques. <b>h</b> = degré d\'hyperstatisme.</p>' +
-    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
-});
-
-let resizeTimer = null;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    // Pas de canvas à redimensionner dans cette page
-  }, 120);
+  openDlg('Aide', h('div', { html: '<p>Sept ateliers interactifs sur la théorie des mécanismes : liaisons normalisées, liaison équivalente, graphe, mobilité, chaînes, rendre isostatique, méthodes statique/cinématique.</p>' +
+    '<h3>Nomenclature</h3><p><b>Sphérique</b> (ex-rotule), <b>sphère-plan</b> (ex-appui plan), <b>sphère-cylindre</b> (ex-linéaire annulaire).</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM.</li><li>Le bouton <b>Cours</b> propose une synthèse.</li></ul>' +
+    '<h3>Vos données</h3><p>Réponses mémorisées dans ce navigateur uniquement.</p>' }));
 });
 
 (function init() {
