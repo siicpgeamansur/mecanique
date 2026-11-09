@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Équilibrer dynamiquement un solide en rotation — ITC · CPGE PSI*</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:180px;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.task-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.task-row:last-child{border-bottom:0}
+.task-row .chips{margin:0}
+canvas.viz{width:100%;height:300px;display:block;border:1px solid var(--line);border-radius:8px;background:#fafbfc;cursor:default}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0}
+.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)}
+.card h4{margin:0 0 6px;font-size:14px;color:var(--accent-ink)}
+.card p{font-size:13px;margin:4px 0}
+.toggle-card{border:2px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;cursor:pointer;background:var(--panel);transition:border-color .15s}
+.toggle-card:hover{border-color:var(--accent)}
+.toggle-card.active{border-color:var(--accent);background:var(--accent-soft)}
+.toggle-card h4{margin:0 0 6px;font-size:14px}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .task-row{grid-template-columns:1fr}
+  canvas.viz{height:260px}
+  .opts input[type=range]{width:140px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}.toggle-card{transition:border-color .15s,background .15s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
+        <circle cx="13" cy="13" r="10" fill="none" stroke="#2e6da4" stroke-width="1.5"/>
+        <circle cx="13" cy="13" r="2" fill="#2e6da4"/>
+        <circle cx="13" cy="13" r="10" fill="none" stroke="#1e7a2e" stroke-width="1.5" stroke-dasharray="2 4"/>
+        <circle cx="19" cy="8" r="2" fill="#c0281f"/>
+        <line x1="13" y1="13" x2="19" y2="8" stroke="#c0281f" stroke-width="1.2" stroke-dasharray="2 2"/>
+        <path d="M 22 13 A 9 9 0 0 1 13 22" fill="none" stroke="#9a5b00" stroke-width="1.5"/>
+      </svg>
+      <span>Équilibrer dynamiquement <small>ITC · CPGE PSI*</small></span>
+    </div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-o7-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+const WORKSHOPS = [];
+
+/* Paramètres physiques réalistes (issus du sujet Centrale-Supélec PSI 2009) */
+const PHY = {
+  M: 10, g: 9.81, L: 0.1, d: 0.05,
+  omega: 2 * Math.PI * 30000 / 60, // 30000 tr/min en rad/s
+  r: 0.05e-3,  // 0.05 mm
+  D: 1e-4,     // kg·m²
+  E: 0
+};
+
+function computeForces(theta, p) {
+  const w2 = p.omega * p.omega;
+  const ct = Math.cos(theta), st = Math.sin(theta);
+  const XA = (p.D * w2 * st) / p.L + (p.M * p.r - p.E / p.L) * w2 * ct - p.M * p.g * (1 + p.d / p.L);
+  const XB = (p.D * w2 * st - p.E * w2 * ct + p.M * p.g * p.d) / p.L;
+  const YA = (p.M * p.r + p.E / p.L) * w2 * st - (p.D * w2 * ct) / p.L;
+  const YB = (-p.D * w2 * ct + p.E * w2 * st) / p.L;
+  return { XA, YA, XB, YB };
+}
+
+/* ============ ATELIER 1 : TYPES DE PROBLÈMES ============ */
+const TYPES_DATA = [
+  { t: "Connaissant les efforts (moteur, pesanteur, vérin), trouver les lois de mouvement", ans: "eff→mvt",
+    why: "C'est le problème classique du PFD/TEC : des efforts aux mouvements." },
+  { t: "Imposer une loi de vitesse en trapèze et déterminer le couple moteur nécessaire", ans: "mvt→eff",
+    why: "C'est le dimensionnement d'actionneur : du mouvement aux efforts." },
+  { t: "Déterminer la répartition de masse pour éviter les vibrations à grande vitesse", ans: "rep",
+    why: "C'est l'équilibrage : du mouvement et des efforts à la répartition des masses." },
+  { t: "Calculer l'effort dans un roulement connaissant la loi de vitesse imposée", ans: "mvt→eff",
+    why: "Le mouvement est imposé, on cherche les efforts transmis dans la liaison." },
+  { t: "Trouver l'équation différentielle du mouvement d'un vérin soumis à une pression", ans: "eff→mvt",
+    why: "Les efforts (pression, pesanteur) sont connus, on cherche le mouvement." },
+  { t: "Placer des masselottes sur une jante pour supprimer les vibrations", ans: "rep",
+    why: "On agit sur la répartition des masses pour annuler les efforts tournants." }
+];
+const ANS_LABEL = { "eff→mvt": "Des efforts aux mouvements", "mvt→eff": "Du mouvement aux efforts", "rep": "Répartition des masses" };
+const TYPES_ST = { assign: {}, checked: false };
+
+function mountTypes(root) {
+  root.innerHTML = '<h2>1. Types de problèmes</h2>'
+    + '<p>En CPGE, on distingue <b>trois grandes familles</b> de problèmes selon ce qui est connu et ce que l\'on cherche :</p>'
+    + '<ul>'
+    + '<li><b>Des efforts aux mouvements</b> : on connaît les efforts, on cherche les lois de mouvement.</li>'
+    + '<li><b>Du mouvement aux efforts</b> : on impose un mouvement, on cherche les efforts (dimensionnement d\'actionneur, calcul d\'efforts de liaison).</li>'
+    + '<li><b>Répartition des masses</b> : on veut répartir la masse pour éviter les vibrations (équilibrage).</li>'
+    + '</ul>'
+    + '<p>Attribuez à chaque étude sa famille, puis cliquez sur <b>Vérifier</b>.</p>'
+    + '<div id="types-rows"></div>'
+    + '<div class="files" style="margin-top:8px"><button class="btn pri" id="types-check" type="button">Vérifier</button><button class="btn" id="types-reset" type="button">Recommencer</button></div>'
+    + '<div class="verdict" id="types-msg"></div>';
+  renderTypes();
+  $('#types-check').addEventListener('click', () => { TYPES_ST.checked = true; renderTypes(); });
+  $('#types-reset').addEventListener('click', () => { TYPES_ST.assign = {}; TYPES_ST.checked = false; renderTypes(); });
+}
+function renderTypes() {
+  const box = $('#types-rows'); if (!box) return; box.innerHTML = '';
+  TYPES_DATA.forEach((task, i) => {
+    const fb = h('div', { class: 'fb', style: 'font-size:12.5px;color:var(--muted);margin-top:2px' });
+    if (TYPES_ST.checked) {
+      const ok = TYPES_ST.assign[i] === task.ans;
+      fb.style.color = ok ? 'var(--ok)' : 'var(--bad)';
+      fb.innerHTML = (ok ? '✓ ' : '✗ Bonne réponse : <b>' + ANS_LABEL[task.ans] + '</b>. ') + task.why;
+    }
+    const chips = h('div', { class: 'chips' });
+    Object.entries(ANS_LABEL).forEach(([key, label]) => {
+      chips.append(h('button', {
+        type: 'button', class: 'chip' + (TYPES_ST.assign[i] === key ? ' on' : ''),
+        onclick: () => { if (TYPES_ST.checked) return; TYPES_ST.assign[i] = TYPES_ST.assign[i] === key ? null : key; renderTypes(); }
+      }, label));
+    });
+    box.append(h('div', { class: 'task-row' }, h('div', null, h('span', null, (i + 1) + '. ' + task.t), fb), chips));
+  });
+  const done = Object.values(TYPES_ST.assign).filter(v => v != null).length;
+  const msg = $('#types-msg'); if (!msg) return;
+  if (TYPES_ST.checked) {
+    let ok = 0; TYPES_DATA.forEach((t, i) => { if (TYPES_ST.assign[i] === t.ans) ok++; });
+    msg.className = 'verdict ' + (ok === TYPES_DATA.length ? 'yes' : 'warn');
+    msg.textContent = 'Score : ' + ok + ' / ' + TYPES_DATA.length + '.';
+  } else { msg.className = 'verdict'; msg.textContent = done + ' / ' + TYPES_DATA.length + ' attribuée(s).'; }
+}
+WORKSHOPS.push({ id: 'types', title: 'Types de problèmes', hint: 'Classer les études en trois familles.', mount: mountTypes,
+  reset: () => { TYPES_ST.assign = {}; TYPES_ST.checked = false; } });
+
+/* ============ ATELIER 2 : SOURCE DES VIBRATIONS ============ */
+const VIB = { r: 0.05, D: 1, E: 0 }; // r en mm, D et E en 10^-4
+function mountVib(root) {
+  root.innerHTML = '<h2>2. Source des vibrations</h2>'
+    + '<p>Un solide mal équilibré en rotation à grande vitesse développe des efforts qui <b>tournent avec lui</b> : ils dépendent de θ, donc du temps. Ces efforts excitent la structure à la fréquence de rotation, ce sont les vibrations.</p>'
+    + '<p>Les formules du PFD appliqué au solide S (issu du sujet Centrale-Supélec PSI 2009) font apparaître trois paramètres : <b>r</b> (décalage radial de G), <b>D</b> et <b>E</b> (produits d\'inertie). Faites-les varier et observez les efforts dans les deux roulements.</p>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>r (décalage radial de G) = <b id="vib-r-out">0.05</b> mm</span><input type="range" id="vib-r" min="0" max="0.2" step="0.01"></label>'
+    + '<label class="fld"><span>D = <b id="vib-D-out">1.0</b> ×10⁻⁴ kg·m²</span><input type="range" id="vib-D" min="0" max="2" step="0.1"></label>'
+    + '<label class="fld"><span>E = <b id="vib-E-out">0.0</b> ×10⁻⁴ kg·m²</span><input type="range" id="vib-E" min="0" max="2" step="0.1"></label>'
+    + '</div>'
+    + '<canvas class="viz" id="vib-plot" style="height:320px"></canvas>'
+    + '<div class="leg" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0"><span><span style="display:inline-block;width:12px;height:3px;background:#2e6da4;vertical-align:middle;margin-right:4px"></span>X_A (roulement A, axe x₀)</span><span><span style="display:inline-block;width:12px;height:3px;background:#1e7a2e;vertical-align:middle;margin-right:4px"></span>Y_A (roulement A, axe y₀)</span><span><span style="display:inline-block;width:12px;height:3px;background:#c0281f;vertical-align:middle;margin-right:4px"></span>X_B (roulement B, axe x₀)</span><span><span style="display:inline-block;width:12px;height:3px;background:#9a5b00;vertical-align:middle;margin-right:4px"></span>Y_B (roulement B, axe y₀)</span></div>'
+    + '<canvas class="viz" id="vib-solid" style="height:240px"></canvas>'
+    + '<div class="verdict" id="vib-msg"></div>';
+  ['r', 'D', 'E'].forEach(k => {
+    $('#vib-' + k).value = VIB[k];
+    $('#vib-' + k).addEventListener('input', e => {
+      VIB[k] = +e.target.value;
+      renderVib();
+    });
+  });
+  renderVib();
+}
+function renderVib() {
+  $('#vib-r-out').textContent = VIB.r.toFixed(2);
+  $('#vib-D-out').textContent = VIB.D.toFixed(1);
+  $('#vib-E-out').textContent = VIB.E.toFixed(1);
+  const p = Object.assign({}, PHY, {
+    r: VIB.r * 1e-3,
+    D: VIB.D * 1e-4,
+    E: VIB.E * 1e-4
+  });
+  // Calculer tous les efforts sur une période
+  const N = 120;
+  const data = [];
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i <= N; i++) {
+    const theta = 2 * Math.PI * i / N;
+    const f = computeForces(theta, p);
+    data.push({ theta, ...f });
+    ['XA', 'YA', 'XB', 'YB'].forEach(k => { if (f[k] < min) min = f[k]; if (f[k] > max) max = f[k]; });
+  }
+  drawVibPlot(data, min, max);
+  drawVibSolid(p);
+  // Message diagnostic
+  const msg = $('#vib-msg');
+  const staticOk = VIB.r < 0.001;
+  const dynOk = VIB.D < 0.001 && VIB.E < 0.001;
+  if (staticOk && dynOk) {
+    msg.className = 'verdict yes';
+    msg.innerHTML = '<b>✓ Solide parfaitement équilibré.</b> Les efforts dans les roulements sont <b>constants</b> au cours du temps : X<sub>A</sub> = ' + data[0].XA.toFixed(0) + ' N, X<sub>B</sub> = ' + data[0].XB.toFixed(0) + ' N, Y<sub>A</sub> = Y<sub>B</sub> = 0. Pas de vibration.</b>';
+  } else if (!staticOk && dynOk) {
+    msg.className = 'verdict warn';
+    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (r ≠ 0, D = E = 0). Les efforts Y<sub>A</sub> et Y<sub>B</sub> varient en sinusoïde à ω : ils tournent avec le solide. Amplitude ~' + Math.round(PHY.M * p.r * p.omega * p.omega) + ' N.';
+  } else if (staticOk && !dynOk) {
+    msg.className = 'verdict warn';
+    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (r = 0, D ou E ≠ 0). Les efforts X<sub>A</sub>, X<sub>B</sub> varient. L\'axe de rotation n\'est pas axe principal d\'inertie. Amplitude ~' + Math.round(Math.hypot(p.D, p.E) * p.omega * p.omega / p.L) + ' N.';
+  } else {
+    msg.className = 'verdict no';
+    msg.innerHTML = '<b>✗ Solide mal équilibré</b> : r, D et E ne sont pas nuls. Les efforts varient de façon cyclique → vibrations. Il faut corriger la répartition des masses.';
+  }
+  // Stats
+  const amp = max - min;
+  // (les stats sont déjà dans le verdict)
+}
+function drawVibPlot(data, min, max) {
+  const canvas = $('#vib-plot'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+  // Marge
+  const pad = 50;
+  const plotW = W - 2 * pad, plotH = H - 2 * pad;
+  // Échelles : x = θ de 0 à 2π, y = efforts
+  const range = Math.max(Math.abs(min), Math.abs(max), 100);
+  const yMin = -range * 1.1, yMax = range * 1.1;
+  const sx = t => pad + (t / (2 * Math.PI)) * plotW;
+  const sy = v => H - pad - ((v - yMin) / (yMax - yMin)) * plotH;
+  // Grille
+  ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const x = pad + (plotW * i) / 4;
+    ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, H - pad); ctx.stroke();
+    const v = yMin + (yMax - yMin) * i / 4;
+    const y = sy(v);
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad, sy(0)); ctx.lineTo(W - pad, sy(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, H - pad); ctx.stroke();
+  // Labels
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= 4; i++) {
+    const t = (2 * Math.PI * i / 4) * 180 / Math.PI;
+    ctx.fillText(t.toFixed(0) + '°', pad + (plotW * i) / 4, H - pad + 18);
+  }
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = yMin + (yMax - yMin) * i / 4;
+    ctx.fillText((v / 1000).toFixed(0) + 'k', pad - 6, sy(v) + 4);
+  }
+  ctx.textAlign = 'center';
+  ctx.fillText('θ', W - pad + 20, sy(0) + 4);
+  ctx.textAlign = 'left';
+  ctx.fillText('Efforts (N)', pad, pad - 8);
+  // Courbes
+  const curves = [
+    { key: 'XA', color: '#2e6da4' },
+    { key: 'YA', color: '#1e7a2e' },
+    { key: 'XB', color: '#c0281f' },
+    { key: 'YB', color: '#9a5b00' }
+  ];
+  curves.forEach(c => {
+    ctx.strokeStyle = c.color; ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = sx(d.theta), y = sy(d[c.key]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+}
+function drawVibSolid(p) {
+  const canvas = $('#vib-solid'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+  // Vue de dessus (regard selon z0) : l'axe de rotation est au centre, G est décalé de r
+  const cx = W / 2, cy = H / 2;
+  // Axe
+  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fillStyle = '#5a6068'; ctx.fill();
+  // Cercle de rayon r (trajectoire de G)
+  const scaleR = 400; // pixels par mm
+  const rPx = Math.max(VIB.r * scaleR, 4);
+  ctx.strokeStyle = '#c0281f'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, rPx, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+  // Position de G (à angle 30° pour l'illustration)
+  const theta = Math.PI / 6;
+  const gx = cx + rPx * Math.cos(theta), gy = cy - rPx * Math.sin(theta);
+  // Solide (rectangle tournant)
+  ctx.save();
+  ctx.translate(cx, cy); ctx.rotate(-theta);
+  ctx.fillStyle = 'rgba(46,109,164,0.15)';
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
+  ctx.fillRect(-70, -35, 140, 70);
+  ctx.strokeRect(-70, -35, 140, 70);
+  ctx.restore();
+  // Point G
+  ctx.beginPath(); ctx.arc(gx, gy, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#c0281f'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('G', gx + 8, gy - 6);
+  // Ligne axe-G
+  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(gx, gy); ctx.stroke();
+  ctx.setLineDash([]);
+  // Label r
+  ctx.fillStyle = '#111'; ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('r = ' + VIB.r.toFixed(2) + ' mm', (cx + gx) / 2, (cy + gy) / 2 - 8);
+  // Axe z0 (sortant) - symbolisé par un point entouré
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fillStyle = '#2e6da4'; ctx.fill();
+  // Label axe
+  ctx.fillStyle = '#2e6da4'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('z₀ (axe)', cx + 12, cy - 12);
+  ctx.fillText('Vue de dessus (selon z₀)', cx - 80, H - 15);
+  // Message r
+  if (VIB.r < 0.001) {
+    ctx.fillStyle = '#1e7a2e'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✓ G est sur l\'axe → équilibrage statique', cx, 25);
+  } else {
+    ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✗ G est décalé de l\'axe → déséquilibre statique', cx, 25);
+  }
+}
+WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques et paramètres d\'équilibrage.', mount: mountVib,
+  reset: () => { VIB.r = 0.05; VIB.D = 1; VIB.E = 0; } });
+
+/* ============ ATELIER 3 : CONDITIONS D'ÉQUILIBRAGE ============ */
+const COND = { r: 0.05, D: 1, E: 0 };
+function mountCond(root) {
+  root.innerHTML = '<h2>3. Conditions d\'équilibrage</h2>'
+    + '<p>Pour annuler l\'influence de θ dans les efforts X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub>, il faut que les trois paramètres soient nuls :</p>'
+    + '<div class="formula">r = 0 &nbsp; et &nbsp; D = 0 &nbsp; et &nbsp; E = 0</div>'
+    + '<p>Ce qui se traduit sur la répartition des masses par deux conditions :</p>'
+    + '<ul>'
+    + '<li><b>Équilibrage statique</b> : G sur l\'axe de rotation (r = 0).</li>'
+    + '<li><b>Équilibrage dynamique</b> : l\'axe de rotation est <b>axe principal d\'inertie</b> (D = E = 0).</li>'
+    + '</ul>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>r = <b id="cond-r-out">0.05</b> mm</span><input type="range" id="cond-r" min="0" max="0.2" step="0.01"></label>'
+    + '<label class="fld"><span>D = <b id="cond-D-out">1.0</b> ×10⁻⁴</span><input type="range" id="cond-D" min="0" max="2" step="0.1"></label>'
+    + '<label class="fld"><span>E = <b id="cond-E-out">0.0</b> ×10⁻⁴</span><input type="range" id="cond-E" min="0" max="2" step="0.1"></label>'
+    + '</div>'
+    + '<div class="gstats" id="cond-stats"></div>'
+    + '<div class="cards" id="cond-cards"></div>'
+    + '<div class="verdict" id="cond-msg"></div>';
+  ['r', 'D', 'E'].forEach(k => {
+    $('#cond-' + k).value = COND[k];
+    $('#cond-' + k).addEventListener('input', e => { COND[k] = +e.target.value; renderCond(); });
+  });
+  renderCond();
+}
+function renderCond() {
+  $('#cond-r-out').textContent = COND.r.toFixed(2);
+  $('#cond-D-out').textContent = COND.D.toFixed(1);
+  $('#cond-E-out').textContent = COND.E.toFixed(1);
+  const staticOK = COND.r < 0.001;
+  const dynOK = COND.D < 0.001 && COND.E < 0.001;
+  // Stats
+  const stats = $('#cond-stats'); stats.innerHTML = '';
+  stats.append(
+    h('div', { class: 'stat', style: staticOK ? 'border-color:var(--ok);background:rgba(30,122,46,.05)' : 'border-color:var(--bad)' },
+      h('span', null, 'Condition statique : r = 0'),
+      h('b', { style: 'color:' + (staticOK ? 'var(--ok)' : 'var(--bad)') }, staticOK ? '✓ r = 0' : '✗ r = ' + COND.r.toFixed(2) + ' mm')),
+    h('div', { class: 'stat', style: dynOK ? 'border-color:var(--ok);background:rgba(30,122,46,.05)' : 'border-color:var(--bad)' },
+      h('span', null, 'Condition dynamique : D = E = 0'),
+      h('b', { style: 'color:' + (dynOK ? 'var(--ok)' : 'var(--bad)') }, dynOK ? '✓ D = E = 0' : '✗ D = ' + COND.D.toFixed(1) + ', E = ' + COND.E.toFixed(1))),
+    h('div', { class: 'stat', style: (staticOK && dynOK) ? 'border-color:var(--ok);background:rgba(30,122,46,.08)' : '' },
+      h('span', null, 'Équilibrage complet'),
+      h('b', { style: 'color:' + ((staticOK && dynOK) ? 'var(--ok)' : 'var(--muted)') }, (staticOK && dynOK) ? '✓ OK' : '— non réalisé')));
+  // Cards
+  const cards = $('#cond-cards'); cards.innerHTML = '';
+  cards.append(
+    h('div', { class: 'card', style: staticOK ? 'border-color:var(--ok)' : '' },
+      h('h4', null, staticOK ? '✓ Statique OK' : '✗ Statique KO'),
+      h('p', { html: 'Le centre d\'inertie G est ' + (staticOK ? 'sur' : 'hors de') + ' l\'axe de rotation.' }),
+      h('p', { html: staticOK ? 'Le solide lâché dans n\'importe quelle position reste en équilibre (sans tourner).' : 'Le solide lâché dans une position autre que celle du point bas va tourner sous l\'effet de la pesanteur.' })),
+    h('div', { class: 'card', style: dynOK ? 'border-color:var(--ok)' : '' },
+      h('h4', null, dynOK ? '✓ Axe principal' : '✗ Axe non principal'),
+      h('p', { html: 'Les produits d\'inertie D et E sont ' + (dynOK ? 'nuls' : 'non nuls') + '.' }),
+      h('p', { html: dynOK ? 'L\'axe de rotation est axe principal d\'inertie : les efforts restent constants.' : 'L\'axe n\'est pas principal : les efforts tournent avec le solide, même à vitesse constante.' })));
+  // Verdict
+  const msg = $('#cond-msg');
+  if (staticOK && dynOK) {
+    msg.className = 'verdict yes';
+    msg.innerHTML = '<b>✓ Équilibrage dynamique complet.</b> Les efforts dans les roulements sont indépendants de θ, donc constants. Pas de vibration. C\'est la situation à atteindre.';
+  } else if (staticOK && !dynOK) {
+    msg.className = 'verdict warn';
+    msg.innerHTML = '<b>⚠ Équilibrage statique seulement.</b> G est sur l\'axe, mais l\'axe n\'est pas principal d\'inertie. Le solide ne tourne pas tout seul sous la pesanteur, mais les roulements voient des efforts cycliques dès qu\'il tourne. <b>Insuffisant en pratique.</b>';
+  } else if (!staticOK && dynOK) {
+    msg.className = 'verdict warn';
+    msg.innerHTML = '<b>⚠ Axe principal seulement.</b> D = E = 0, mais G est décalé : le solide va tourner sous l\'effet de la pesanteur (problème statique). Les efforts Y varient en sinusoïde.';
+  } else {
+    msg.className = 'verdict no';
+    msg.innerHTML = '<b>✗ Aucune condition satisfaite.</b> Il faut à la fois r = 0 et D = E = 0 pour annuler les vibrations.';
+  }
+}
+WORKSHOPS.push({ id: 'cond', title: 'Conditions d\'équilibrage', hint: 'Diagnostic des deux conditions (statique / dynamique).', mount: mountCond,
+  reset: () => { COND.r = 0.05; COND.D = 1; COND.E = 0; } });
+
+/* ============ ATELIER 4 : STATIQUE VS DYNAMIQUE ============ */
+const SD = { mode: 'none' };
+function mountSD(root) {
+  root.innerHTML = '<h2>4. Statique vs dynamique</h2>'
+    + '<p>Les deux équilibrages ne s\'impliquent pas l\'un l\'autre. L\'équilibrage statique seul est <b>sans grand intérêt</b> : il ne garantit pas l\'absence de vibrations en rotation.</p>'
+    + '<p>Cliquez sur un mode pour voir son effet.</p>'
+    + '<div class="toggle-card' + (SD.mode === 'none' ? ' active' : '') + '" data-mode="none">'
+    + '<h4>Aucun équilibrage</h4><p style="font-size:13px;margin:4px 0">r ≠ 0, D ≠ 0, E ≠ 0. Le solide tourne mal : efforts tournants dans les roulements.</p></div>'
+    + '<div class="toggle-card' + (SD.mode === 'stat' ? ' active' : '') + '" data-mode="stat">'
+    + '<h4>Équilibrage statique seulement</h4><p style="font-size:13px;margin:4px 0">r = 0, mais D ou E ≠ 0. Le solide ne tourne plus tout seul, mais les roulements voient encore des efforts cycliques.</p></div>'
+    + '<div class="toggle-card' + (SD.mode === 'dyn' ? ' active' : '') + '" data-mode="dyn">'
+    + '<h4>Équilibrage dynamique</h4><p style="font-size:13px;margin:4px 0">r = 0 et D = E = 0. Les efforts sont constants, aucune vibration.</p></div>'
+    + '<canvas class="viz" id="sd-canvas" style="height:280px"></canvas>'
+    + '<div id="sd-msg"></div>';
+  document.querySelectorAll('#ws .toggle-card').forEach(el => {
+    el.addEventListener('click', () => { SD.mode = el.dataset.mode; mountSD(root); });
+  });
+  drawSD();
+  const msg = $('#sd-msg'); msg.innerHTML = '';
+  const texts = {
+    none: '<div class="verdict no"><b>✗ Aucun équilibrage.</b> Le centre d\'inertie est décalé, l\'axe n\'est pas principal. Les efforts X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> dépendent de θ : vibrations à la fréquence de rotation.</div>',
+    stat: '<div class="verdict warn"><b>⚠ Équilibrage statique seul.</b> G est sur l\'axe : le solide ne tourne plus sous l\'effet de la pesanteur. Mais les produits d\'inertie D et E ne sont pas nuls : les efforts restent cycliques. <b>Insuffisant.</b></div>',
+    dyn: '<div class="verdict yes"><b>✓ Équilibrage dynamique.</b> G sur l\'axe + axe principal d\'inertie. Les efforts dans les roulements sont constants, aucune vibration. C\'est la situation à atteindre en pratique.</div>'
+  };
+  msg.innerHTML = texts[SD.mode];
+}
+function drawSD() {
+  const canvas = $('#sd-canvas'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+  // Deux scènes côte à côte : effet statique (position) et effet dynamique (efforts)
+  const halfW = W / 2;
+  // === Scène 1 : statique ===
+  ctx.fillStyle = '#111'; ctx.font = 'bold 13px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Effet statique (G sur l\'axe ?)', halfW / 2, 22);
+  // Dessiner un solide suspendu en rotation
+  const cx = halfW / 2, cy = H / 2 + 10;
+  const axisY = cy;
+  // Axe
+  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx - 70, axisY); ctx.lineTo(cx + 70, axisY); ctx.stroke();
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left'; ctx.fillText('axe', cx + 72, axisY + 4);
+  // Solide (rectangle) à un angle θ
+  const theta = SD.mode === 'none' ? Math.PI / 6 : 0;
+  ctx.save();
+  ctx.translate(cx, cy); ctx.rotate(-theta);
+  ctx.fillStyle = 'rgba(46,109,164,0.2)';
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
+  ctx.fillRect(-50, -20, 100, 40); ctx.strokeRect(-50, -20, 100, 40);
+  // G
+  let gOffset = 0;
+  if (SD.mode === 'none') gOffset = 15;
+  ctx.fillStyle = '#c0281f';
+  ctx.beginPath(); ctx.arc(gOffset, 0, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left'; ctx.fillText('G', gOffset + 7, 4);
+  ctx.restore();
+  // Message
+  ctx.fillStyle = SD.mode === 'none' ? '#c0281f' : '#1e7a2e';
+  ctx.font = '12px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  if (SD.mode === 'none') {
+    ctx.fillText('G n\'est pas sur l\'axe :', cx, H - 45);
+    ctx.fillText('le solide tourne sous la pesanteur', cx, H - 28);
+  } else {
+    ctx.fillText('G est sur l\'axe :', cx, H - 45);
+    ctx.fillText('le solide reste en équilibre', cx, H - 28);
+  }
+
+  // === Scène 2 : dynamique ===
+  ctx.fillStyle = '#111'; ctx.font = 'bold 13px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Effet dynamique (efforts cycliques ?)', halfW + halfW / 2, 22);
+  const cx2 = halfW + halfW / 2, cy2 = H / 2 + 10;
+  // Deux roulements
+  const bearingL = cx2 - 70, bearingR = cx2 + 70;
+  ctx.fillStyle = '#5a6068'; ctx.fillRect(bearingL - 15, cy2 + 15, 30, 10);
+  ctx.fillRect(bearingR - 15, cy2 + 15, 30, 10);
+  // Solide
+  ctx.save();
+  ctx.translate(cx2, cy2);
+  ctx.fillStyle = 'rgba(46,109,164,0.15)';
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
+  ctx.fillRect(-60, -12, 120, 24); ctx.strokeRect(-60, -12, 120, 24);
+  ctx.restore();
+  // Flèches d'effort
+  const forces = SD.mode === 'dyn'
+    ? [{ x: bearingL, y: cy2 - 25, dx: 0, dy: -15, label: 'constante' }, { x: bearingR, y: cy2 - 25, dx: 0, dy: -15, label: 'constante' }]
+    : SD.mode === 'stat'
+    ? [{ x: bearingL, y: cy2 - 25, dx: 15, dy: -15, label: 'tourne' }, { x: bearingR, y: cy2 - 25, dx: 15, dy: -15, label: 'tourne' }]
+    : [{ x: bearingL, y: cy2 - 25, dx: 20, dy: -20, label: 'tourne' }, { x: bearingR, y: cy2 - 25, dx: 20, dy: -20, label: 'tourne' }];
+  forces.forEach(f => {
+    ctx.strokeStyle = SD.mode === 'dyn' ? '#1e7a2e' : '#c0281f';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + f.dx, f.y + f.dy); ctx.stroke();
+    // Pointe
+    const angle = Math.atan2(f.dy, f.dx);
+    ctx.beginPath();
+    ctx.moveTo(f.x + f.dx, f.y + f.dy);
+    ctx.lineTo(f.x + f.dx - 7 * Math.cos(angle - 0.4), f.y + f.dy - 7 * Math.sin(angle - 0.4));
+    ctx.moveTo(f.x + f.dx, f.y + f.dy);
+    ctx.lineTo(f.x + f.dx - 7 * Math.cos(angle + 0.4), f.y + f.dy - 7 * Math.sin(angle + 0.4));
+    ctx.stroke();
+  });
+  // Message
+  ctx.fillStyle = SD.mode === 'dyn' ? '#1e7a2e' : '#c0281f';
+  ctx.font = '12px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  if (SD.mode === 'dyn') {
+    ctx.fillText('Efforts constants', cx2, H - 45);
+    ctx.fillText('→ pas de vibration', cx2, H - 28);
+  } else if (SD.mode === 'stat') {
+    ctx.fillText('Efforts tournants', cx2, H - 45);
+    ctx.fillText('→ vibrations', cx2, H - 28);
+  } else {
+    ctx.fillText('Efforts tournants', cx2, H - 45);
+    ctx.fillText('→ vibrations', cx2, H - 28);
+  }
+}
+WORKSHOPS.push({ id: 'sd', title: 'Statique vs dynamique', hint: 'Comparer les deux équilibrages.', mount: mountSD,
+  reset: () => { SD.mode = 'none'; } });
+
+/* ============ ATELIER 5 : RÉALISATION PRATIQUE ============ */
+const PR = { answered: {} };
+const PR_QUESTIONS = [
+  { q: 'Ajout de masselottes sur une jante de voiture', ans: 'add', why: 'On ajoute de la masse à un endroit précis pour déplacer le centre d\'inertie vers l\'axe.' },
+  { q: 'Perçage d\'un rotor de moteur électrique', ans: 'rem', why: 'On enlève de la matière par perçage pour déplacer le centre d\'inertie.' },
+  { q: 'Meulage d\'une zone du rotor', ans: 'rem', why: 'On enlève de la matière par meulage pour corriger la répartition des masses.' },
+  { q: 'Machine d\'équilibrage de roue de voiture', ans: 'mes', why: 'Elle mesure l\'amplitude et la position des vibrations pour calculer les corrections à apporter.' },
+  { q: 'Équilibreuse portative sur site', ans: 'mes', why: 'Elle mesure sur site les vibrations pour déterminer les corrections, sans démontage.' },
+  { q: 'Masselottes sur le rotor arrière d\'un hélicoptère', ans: 'add', why: 'On ajoute des masselottes pour équilibrer dynamiquement le rotor.' }
+];
+const PR_LABELS = { add: 'Ajout de matière', rem: 'Enlèvement de matière', mes: 'Mesure / diagnostic' };
+
+function mountPR(root) {
+  root.innerHTML = '<h2>5. Réalisation pratique</h2>'
+    + '<p>Les corrections d\'équilibrage se font par <b>ajout de matière</b> (masselottes) ou <b>enlèvement de matière</b> (perçage, meulage). Les conditions sont déterminées à l\'aide de <b>machines d\'équilibrage</b> qui mesurent les vibrations.</p>'
+    + '<p>Attribuez à chaque situation la méthode correspondante.</p>'
+    + '<div id="pr-rows"></div>'
+    + '<div class="files" style="margin-top:8px"><button class="btn pri" id="pr-check" type="button">Vérifier</button><button class="btn" id="pr-reset" type="button">Recommencer</button></div>'
+    + '<div class="verdict" id="pr-msg"></div>'
+    + '<h3>Exemples industriels</h3>'
+    + '<div class="cards">'
+    + '<div class="card"><h4>Masselottes (ajout)</h4><p>Jante de voiture, rotor d\'hélicoptère. On colle ou visse une petite masse à l\'endroit calculé par la machine.</p></div>'
+    + '<div class="card"><h4>Perçage / meulage (enlèvement)</h4><p>Rotors de moteur électrique, aubes de turbine. On enlève un peu de matière là où c\'est nécessaire.</p></div>'
+    + '<div class="card"><h4>Machines d\'équilibrage</h4><p>Mesurent l\'amplitude et la position des vibrations lors de la rotation. Calculent les corrections.</p></div>'
+    + '<div class="card"><h4>Équilibreuses portatives</h4><p>Pour les interventions sur site (éoliennes, turbines, essieux de train).</p></div>'
+    + '</div>';
+  renderPR();
+  $('#pr-check').addEventListener('click', () => { PR.checked = true; renderPR(); });
+  $('#pr-reset').addEventListener('click', () => { PR.answered = {}; PR.checked = false; renderPR(); });
+}
+function renderPR() {
+  const box = $('#pr-rows'); if (!box) return; box.innerHTML = '';
+  PR_QUESTIONS.forEach((q, i) => {
+    const fb = h('div', { class: 'fb', style: 'font-size:12.5px;color:var(--muted);margin-top:2px' });
+    if (PR.checked) {
+      const ok = PR.answered[i] === q.ans;
+      fb.style.color = ok ? 'var(--ok)' : 'var(--bad)';
+      fb.innerHTML = (ok ? '✓ ' : '✗ Bonne réponse : <b>' + PR_LABELS[q.ans] + '</b>. ') + q.why;
+    }
+    const chips = h('div', { class: 'chips' });
+    Object.entries(PR_LABELS).forEach(([key, label]) => {
+      chips.append(h('button', {
+        type: 'button', class: 'chip' + (PR.answered[i] === key ? ' on' : ''),
+        onclick: () => { if (PR.checked) return; PR.answered[i] = PR.answered[i] === key ? null : key; renderPR(); }
+      }, label));
+    });
+    box.append(h('div', { class: 'task-row' }, h('div', null, h('span', null, (i + 1) + '. ' + q.q), fb), chips));
+  });
+  const done = Object.values(PR.answered).filter(v => v != null).length;
+  const msg = $('#pr-msg'); if (!msg) return;
+  if (PR.checked) {
+    let ok = 0; PR_QUESTIONS.forEach((q, i) => { if (PR.answered[i] === q.ans) ok++; });
+    msg.className = 'verdict ' + (ok === PR_QUESTIONS.length ? 'yes' : 'warn');
+    msg.textContent = 'Score : ' + ok + ' / ' + PR_QUESTIONS.length + '.';
+  } else { msg.className = 'verdict'; msg.textContent = done + ' / ' + PR_QUESTIONS.length + ' attribuée(s).'; }
+}
+WORKSHOPS.push({ id: 'pr', title: 'Réalisation pratique', hint: 'Masselottes, perçage, machines d\'équilibrage.', mount: mountPR,
+  reset: () => { PR.answered = {}; PR.checked = false; } });
+
+/* ============ ACTIVITÉS ============ */
+const ACT = {
+  types: {
+    title: 'Types de problèmes', level: 'Niveau 1 · Découvrir', time: '15 min', course: 'intro',
+    goal: 'Distinguer les trois grandes familles d\'études en CPGE : efforts → mouvements, mouvements → efforts, répartition des masses.',
+    steps: [
+      'Parcourez les six études proposées.',
+      'Pour chacune, demandez-vous : <b>que cherche-t-on ?</b>',
+      'Si on cherche le mouvement et qu\'on connaît les efforts : famille 1.',
+      'Si on cherche les efforts et qu\'on impose le mouvement : famille 2 (dimensionnement, effort de liaison).',
+      'Si on cherche à répartir la masse pour éviter les vibrations : famille 3 (équilibrage).'
+    ],
+    defi: { q: 'Parmi ces problèmes, lesquels correspondent à l\'équilibrage dynamique ?', a: '<b>Placer des masselottes sur une jante</b> et <b>déterminer la répartition de masse pour éviter les vibrations</b>. Ce sont des problèmes de <b>répartition des masses</b>, où l\'on agit sur le solide lui-même.' },
+    qcm: [
+      { q: 'Le PFD appliqué pour trouver la loi de mouvement d\'un mécanisme relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 0, w: 'On connaît les efforts (moteur, pesanteur), on cherche le mouvement.' },
+      { q: 'Dimensionner un actionneur pour imposer une loi de vitesse relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De l\'énergétique'], a: 1, w: 'On impose le mouvement, on cherche le couple ou l\'effort nécessaire.' },
+      { q: 'L\'équilibrage d\'un solide en rotation relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 2, w: 'On agit sur la répartition de masse pour éviter les vibrations.' },
+      { q: 'Un problème de répartition des masses est…', o: ['Fréquent en concours PSI', 'Rare en concours PSI', 'Interdit en PSI', 'Identique à un problème de statique'], a: 0, w: 'C\'est une problématique industrielle récurrente (rotors, turbines, roues), souvent rencontrée aux concours.' },
+      { q: 'Le problème « trouver les efforts dans un roulement connaissant la loi de vitesse » relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 1, w: 'Le mouvement est imposé (loi de vitesse connue), on cherche les efforts transmis.' }
+    ]
+  },
+  vib: {
+    title: 'Source des vibrations', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'probleme',
+    goal: 'Comprendre l\'origine des vibrations : les efforts dans les roulements dépendent de θ quand r, D ou E ne sont pas nuls.',
+    steps: [
+      'Partez des valeurs par défaut (r = 0,05 mm, D = 1, E = 0). Observez les courbes.',
+      'Mettez r = 0 : les courbes Y<sub>A</sub> et Y<sub>B</sub> deviennent-elles constantes ?',
+      'Mettez D = 0 : les courbes X varient-elles encore ?',
+      'Mettez E = 0 et D = 0 : que reste-t-il ?',
+      'Concluez : chaque paramètre non nul crée une composante sinusoïdale à la fréquence ω.'
+    ],
+    defi: { q: 'Pourquoi les vibrations sont-elles si dangereuses à grande vitesse ?', a: 'Les efforts centrifuges sont proportionnels à ω². À 30 000 tr/min (ω ≈ 3141 rad/s), ω² ≈ 10⁷ : un défaut de 0,05 mm sur un rotor de 10 kg produit des efforts de plusieurs milliers de newtons, avec des fluctuations à 500 Hz. Cela use prématurément les roulements et peut rendre le système inutilisable.' },
+    qcm: [
+      { q: 'Les efforts dans les roulements dépendent de θ quand…', o: ['Le solide est immobile', 'Au moins un des paramètres r, D, E est non nul', 'Le moteur est arrêté', 'La vitesse est nulle'], a: 1, w: 'Tant que r, D ou E n\'est pas nul, les efforts contiennent des termes en sin θ et cos θ.' },
+      { q: 'Si r = 0, quels efforts restent variables ?', o: ['Y<sub>A</sub> et Y<sub>B</sub>', 'X<sub>A</sub> et X<sub>B</sub> (si D ou E ≠ 0)', 'Aucun', 'Tous'], a: 1, w: 'r agit sur les termes en Y ; D et E agissent sur les termes en X.' },
+      { q: 'Si D = E = 0 et r ≠ 0, quels efforts varient ?', o: ['X<sub>A</sub> et X<sub>B</sub>', 'Y<sub>A</sub> et Y<sub>B</sub>', 'Aucun', 'Tous'], a: 1, w: 'r apparaît dans YA et YB (termes en sin θ).' },
+      { q: 'À quelle fréquence les efforts varient-ils ?', o: ['À la fréquence de rotation ω', 'À 2ω', 'À ω/2', 'Ils ne varient pas'], a: 0, w: 'Les termes en sin θ et cos θ avec θ = ωt varient à la fréquence ω.' },
+      { q: 'Que se passe-t-il quand r = D = E = 0 ?', o: ['Les efforts sont nuls', 'Les efforts sont constants', 'Les efforts divergent', 'Rien ne change'], a: 1, w: 'Il ne reste que des termes constants (pesanteur). Les efforts ne dépendent plus de θ.' }
+    ]
+  },
+  cond: {
+    title: 'Conditions d\'équilibrage', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'equilibrages',
+    goal: 'Distinguer équilibrage statique (r = 0) et dynamique (r = 0 et D = E = 0).',
+    steps: [
+      'Partez des valeurs par défaut (r = 0,05 mm, D = 1, E = 0) : aucune condition n\'est satisfaite.',
+      'Mettez r = 0 : l\'équilibrage statique est-il OK ? L\'équilibrage dynamique l\'est-il ?',
+      'Mettez aussi D = E = 0 : l\'équilibrage dynamique est-il complet ?',
+      'Remettez r ≠ 0 mais D = E = 0 : qu\'observez-vous ?',
+      'Concluez : le dynamique exige <b>les deux</b> conditions, le statique seul ne suffit pas.'
+    ],
+    defi: { q: 'Pourquoi l\'équilibrage statique seul est-il « sans grand intérêt » ?', a: 'Il garantit seulement que le solide reste en équilibre dans n\'importe quelle position quand il est lâché (la pesanteur ne le fait pas tourner). Mais <b>en rotation</b>, si l\'axe n\'est pas principal d\'inertie (D ou E ≠ 0), les roulements voient toujours des efforts cycliques. Ce sont ces efforts qui causent l\'usure et les vibrations. Il faut donc l\'équilibrage dynamique.' },
+    qcm: [
+      { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = 0', 'E = 0', 'r = D = E = 0'], a: 0, w: 'Le centre d\'inertie G doit être sur l\'axe de rotation.' },
+      { q: 'L\'équilibrage dynamique correspond à…', o: ['r = 0', 'D = E = 0', 'r = 0 ET D = E = 0', 'r = D = 0'], a: 2, w: 'Il faut les deux conditions : G sur l\'axe ET axe principal d\'inertie.' },
+      { q: 'Si r = 0 mais D ≠ 0, le solide est…', o: ['Statiquement équilibré seulement', 'Dynamiquement équilibré', 'Non équilibré du tout', 'Parfaitement équilibré'], a: 0, w: 'L\'équilibrage statique est assuré (G sur l\'axe), mais pas le dynamique (axe non principal).' },
+      { q: 'Un solide dynamiquement équilibré est…', o: ['Forcément statiquement équilibré', 'Pas forcément statiquement équilibré', 'Toujours en mouvement', 'Toujours immobile'], a: 0, w: 'La condition dynamique inclut r = 0, donc l\'équilibrage statique.' },
+      { q: 'L\'équilibrage statique seul garantit…', o: ['L\'absence de vibrations en rotation', 'L\'absence de rotation sous la pesanteur', 'Une vitesse constante', 'Un couple nul'], a: 1, w: 'Il garantit juste que le solide ne tourne pas sous l\'effet de la pesanteur quand il est lâché.' }
+    ]
+  },
+  sd: {
+    title: 'Statique vs dynamique', level: 'Niveau 3 · Approfondir', time: '20 min', course: 'equilibrages',
+    goal: 'Comprendre pourquoi les deux équilibrages sont distincts et pourquoi seul le dynamique compte en pratique.',
+    steps: [
+      'Cliquez sur « Aucun équilibrage » : que voyez-vous à gauche (statique) et à droite (dynamique) ?',
+      'Passez à « Équilibrage statique seulement » : le solide ne tourne plus, mais les efforts restent-ils cycliques ?',
+      'Passez à « Équilibrage dynamique » : les efforts sont-ils constants ?',
+      'Concluez : le statique seul ne suffit pas en pratique, seul le dynamique supprime les vibrations.'
+    ],
+    defi: { q: 'Un rotor est statiquement équilibré (G sur l\'axe) mais a un produit d\'inertie D ≠ 0. Est-il utilisable à grande vitesse ?', a: '<b>Non.</b> Les efforts dans les roulements vont dépendre de θ, avec une amplitude proportionnelle à D·ω². À grande vitesse, ces efforts cycliques usent prématurément les roulements et provoquent des vibrations. Il faut corriger D (par exemple en perçant ou en ajoutant de la matière) pour réaliser l\'équilibrage dynamique complet.' },
+    qcm: [
+      { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = E = 0', 'r = D = E = 0', 'M = 0'], a: 0, w: 'G doit être sur l\'axe de rotation.' },
+      { q: 'L\'équilibrage dynamique correspond à…', o: ['r = 0 seulement', 'D = E = 0 seulement', 'r = 0 et D = E = 0', 'Une vitesse constante'], a: 2, w: 'Les deux conditions sont nécessaires.' },
+      { q: 'Un solide statiquement équilibré mais avec D ≠ 0…', o: ['Ne vibre pas en rotation', 'Vibre en rotation', 'Est inutilisable', 'Ne tourne pas'], a: 1, w: 'Les efforts dépendent encore de θ : il vibre en rotation.' },
+      { q: 'En pratique, quel équilibrage faut-il garantir ?', o: ['Statique seulement', 'Dynamique seulement', 'Les deux (le dynamique inclut le statique)', 'Aucun'], a: 2, w: 'L\'équilibrage dynamique (r = 0 et D = E = 0) est celui qu\'il faut garantir. Il inclut le statique.' },
+      { q: 'Un solide dynamiquement équilibré est…', o: ['Forcément statiquement équilibré', 'Pas forcément statiquement équilibré', 'Toujours immobile', 'Toujours en mouvement'], a: 0, w: 'La condition dynamique inclut r = 0 (statique).' }
+    ]
+  },
+  pr: {
+    title: 'Réalisation pratique', level: 'Niveau 1 · Découvrir', time: '15 min', course: 'pratique',
+    goal: 'Identifier les méthodes d\'équilibrage et le rôle des machines.',
+    steps: [
+      'Parcourez les situations proposées.',
+      'Pour chacune, demandez-vous : ajoute-t-on de la matière, en enlève-t-on, ou mesure-t-on ?',
+      'Les masselottes ajoutent de la matière.',
+      'Le perçage et le meulage enlèvent de la matière.',
+      'Les machines d\'équilibrage mesurent les vibrations pour guider la correction.'
+    ],
+    defi: { q: 'Comment une machine d\'équilibrage détermine-t-elle la correction à apporter ?', a: 'Elle fait tourner le solide à grande vitesse et mesure les vibrations (amplitude et phase) sur les supports. Un calcul (parfois une deuxième mesure avec une masselotte étalon) permet d\'en déduire la position et la masse à ajouter ou à enlever pour annuler le balourd.' },
+    qcm: [
+      { q: 'Une masselotte sur une jante est une correction par…', o: ['Ajout de matière', 'Enlèvement de matière', 'Mesure', 'Aucune des trois'], a: 0, w: 'On ajoute une petite masse à un endroit précis.' },
+      { q: 'Un perçage sur un rotor est une correction par…', o: ['Ajout de matière', 'Enlèvement de matière', 'Mesure', 'Aucune des trois'], a: 1, w: 'On enlève de la matière là où c\'est nécessaire.' },
+      { q: 'Une machine d\'équilibrage sert à…', o: ['Ajouter de la matière', 'Enlever de la matière', 'Mesurer les vibrations pour guider la correction', 'Remplacer les roulements'], a: 2, w: 'Elle mesure l\'amplitude et la phase des vibrations.' },
+      { q: 'L\'équilibrage par enlèvement de matière est souvent utilisé pour…', o: ['Les jantes de voiture', 'Les rotors de moteur, les aubes de turbine', 'Les hélices d\'hélicoptère', 'Les roues de vélo'], a: 1, w: 'Sur les pièces massives (rotors, aubes), on perce ou on meule localement.' },
+      { q: 'L\'équilibrage par ajout de matière est souvent utilisé pour…', o: ['Les rotors de moteur', 'Les jantes de voiture, les hélices', 'Les aubes de turbine', 'Les vilebrequins'], a: 1, w: 'On ajoute des masselottes sur les jantes, les hélices, les rotors d\'hélicoptère.' }
+    ]
+  }
+};
+
+/* ============ COURS ============ */
+const COURSE = [];
+COURSE.push({ id: 'intro', t: 'Introduction', h: `
+<p>En CPGE, on distingue <b>trois grandes familles</b> de problèmes que l'on résout avec le PFD et le TEC.</p>
+<h3>1. Des efforts aux mouvements</h3>
+<p>Connaissant les efforts (pesanteur, moteurs, vérins, ressorts…), on cherche les <b>lois de mouvement</b> des solides. C'est le problème classique du PFD/TEC.</p>
+<h3>2. Du mouvement aux efforts</h3>
+<p>Un mouvement est <b>imposé</b> (immobilité, vitesse constante, loi en trapèze…) et l'on cherche les efforts générés :</p>
+<ul>
+<li><b>Dimensionner un actionneur</b> : déterminer le couple ou l'effort nécessaire pour assurer le mouvement imposé.</li>
+<li><b>Calculer les efforts de liaison</b> : déterminer les composantes du torseur des actions mécaniques transmissibles dans une liaison.</li>
+</ul>
+<h3>3. Répartition des masses</h3>
+<p>On cherche à répartir la masse du solide par rapport à l'axe de rotation pour éviter les vibrations, <b>y compris à vitesse constante</b>. C'est l'<b>équilibrage</b>.</p>
+<div class="retain"><b>Ce cours</b> traite uniquement du troisième type : comment éviter les vibrations d'un solide en rotation à grande vitesse.</div>
+` });
+COURSE.push({ id: 'probleme', t: 'Problème à résoudre', h: `
+<p>De nombreux systèmes comportent un élément en rotation à grande vitesse autour d'un axe fixe : rotors de moteur, turbines, roues, hélices… Le moindre défaut dans la répartition des masses crée des <b>efforts centrifuges tournants</b> qui se transmettent aux roulements et provoquent :</p>
+<ul>
+<li>des <b>vibrations</b> pouvant dégrader les performances ;</li>
+<li>une <b>usure prématurée</b> des éléments de guidage (roulements, paliers) ;</li>
+<li>à terme, une défaillance du système.</li>
+</ul>
+<h3>Exemples industriels</h3>
+<ul>
+<li>Usure anormale des bagues et billes de roulement (moteur de moto).</li>
+<li>Usure des coussinets de bielle d'un moteur thermique.</li>
+<li>Équilibrage d'une turbine de réacteur nucléaire.</li>
+<li>Équilibrage du porte-outil d'un centre d'usinage.</li>
+<li>Équilibrage de la turbine d'un turboréacteur de Boeing 777.</li>
+</ul>
+<h3>Objectif</h3>
+<p>Faire en sorte que les actions mécaniques transmises par les éléments de guidage soient <b>constantes</b> (sens, direction, norme) au cours du mouvement, donc <b>indépendantes de la position, de la vitesse et de l'accélération angulaire</b>. C'est l'<b>équilibrage dynamique</b>.</p>
+<div class="retain"><b>À retenir.</b> Les défauts de répartition des masses créent des efforts qui tournent avec le solide. L'équilibrage vise à les supprimer.</div>
+` });
+COURSE.push({ id: 'solution', t: 'Mise en évidence des solutions', h: `
+<p>Prenons l'exemple du cours : un solide S guidé en rotation par deux roulements A et B, avec :</p>
+<ul>
+<li>AG = d·z₀ + r·x (G décalé de r par rapport à l'axe)</li>
+<li>matrice d'inertie avec les produits D, E, F</li>
+<li>rotation à vitesse ω = θ̇ autour de (A, z₀)</li>
+<li>couple moteur C<sub>m</sub> exercé</li>
+</ul>
+<h3>PFD appliqué à S</h3>
+<p>En isolant S et en écrivant le PFD (résultante dynamique et moment dynamique au point A), on obtient un système de 6 équations scalaires. En projetant sur la base (x₀, y₀, z₀), les composantes des actions de liaison s'écrivent :</p>
+<div class="formula">
+X<sub>A</sub> = (D·ω²·sin θ)/L + (M·r − E/L)·ω²·cos θ − M·g·(1 + d/L)
+</div>
+<div class="formula">
+X<sub>B</sub> = (D·ω²·sin θ − E·ω²·cos θ + M·g·d)/L
+</div>
+<div class="formula">
+Y<sub>A</sub> = (M·r + E/L)·ω²·sin θ − (D·ω²·cos θ)/L
+</div>
+<div class="formula">
+Y<sub>B</sub> = (−D·ω²·cos θ + E·ω²·sin θ)/L
+</div>
+<p>On constate que ces efforts <b>dépendent de θ</b> : ils tournent avec le solide et créent des vibrations.</p>
+<h3>Condition d'équilibrage</h3>
+<p>Pour annuler l'influence de θ, il faut :</p>
+<div class="formula"><b>r = 0</b> et <b>D = 0</b> et <b>E = 0</b></div>
+<p>Sur le plan de la répartition des masses, cela implique :</p>
+<ul>
+<li>Le centre d'inertie G doit être sur l'axe de rotation → <b>équilibrage statique</b>.</li>
+<li>L'axe de rotation doit être <b>axe principal d'inertie</b> → produits d'inertie D et E nuls → <b>équilibrage dynamique</b>.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> r = 0 (statique) et D = E = 0 (axe principal) sont les deux conditions à satisfaire simultanément.</div>
+` });
+COURSE.push({ id: 'equilibrages', t: 'Les deux équilibrages', h: `
+<h3>Équilibrage statique</h3>
+<p>Le centre d'inertie G est <b>sur l'axe de rotation</b> (r = 0). Conséquence : le solide placé dans une position angulaire quelconque reste en équilibre dans cette position lorsqu'il est lâché (la pesanteur ne le fait pas tourner).</p>
+<h3>Équilibrage dynamique</h3>
+<p>L'axe de rotation est <b>axe principal d'inertie</b> du solide. Autrement dit, les produits d'inertie qui font apparaître la direction de l'axe de rotation dans leur expression (D et E ici) sont <b>nuls</b>.</p>
+<h3>Les deux sont-ils équivalents ?</h3>
+<p><b>Non.</b> L'équilibrage statique seul est <b>sans grand intérêt</b> : il ne supprime pas les efforts tournants en rotation. Un solide peut être statiquement équilibré et vibrer en rotation. À l'inverse, un solide peut avoir D = E = 0 (axe principal) et un G décalé (statique KO) : il tourne sous la pesanteur.</p>
+<h3>En pratique</h3>
+<p>C'est l'<b>équilibrage dynamique</b> qu'il faut garantir :</p>
+<ul>
+<li>G sur l'axe (statique) ;</li>
+<li>axe de rotation principal d'inertie (dynamique).</li>
+</ul>
+<p>Les deux conditions réunies assurent que les efforts dans les roulements sont <b>constants</b>, donc sans vibration.</p>
+<div class="retain"><b>À retenir.</b> L'équilibrage dynamique inclut l'équilibrage statique. C'est le seul qui supprime vraiment les vibrations en rotation.</div>
+` });
+COURSE.push({ id: 'pratique', t: 'Réalisation pratique', h: `
+<p>Les corrections d'équilibrage sont réalisées par <b>ajout de matière</b> ou <b>enlèvement de matière</b>, en des endroits précis calculés pour corriger la répartition des masses.</p>
+<h3>Ajout de matière</h3>
+<ul>
+<li><b>Masselottes</b> sur une jante de voiture.</li>
+<li><b>Masselottes</b> sur le rotor arrière d'un hélicoptère.</li>
+<li>Petites masses collées ou vissées sur le rotor.</li>
+</ul>
+<h3>Enlèvement de matière</h3>
+<ul>
+<li><b>Perçage</b> d'un rotor de moteur électrique.</li>
+<li><b>Meulage</b> d'une zone du rotor.</li>
+<li>Perçage/meulage sur des aubes de turbine.</li>
+</ul>
+<h3>Machines d'équilibrage</h3>
+<p>Les conditions d'équilibrage sont déterminées à l'aide de <b>machines d'équilibrage</b> qui mesurent l'amplitude et l'intensité des vibrations lors de la rotation à grande vitesse. Elles calculent la position et la masse des corrections à apporter.</p>
+<ul>
+<li>Machine d'équilibrage de roue de voiture (en atelier).</li>
+<li>Machine d'équilibrage d'essieu de train.</li>
+<li>Équilibreuse portative (intervention sur site : éoliennes, turbines, essieux).</li>
+</ul>
+<h3>Principe de la mesure</h3>
+<p>On fait tourner le solide et on mesure les vibrations sur les supports. Une deuxième mesure avec une masselotte étalon permet de déterminer la correction optimale (position et masse).</p>
+<div class="retain"><b>À retenir.</b> Ajout ou enlèvement de matière selon les contraintes de la pièce. Les machines d'équilibrage guident la correction en mesurant les vibrations.</div>
+` });
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Équilibrage</dt><dd>Action de répartir la masse d'un solide en rotation pour éviter les vibrations.</dd>
+<dt>Équilibrage statique</dt><dd>Centre d'inertie G sur l'axe de rotation (r = 0).</dd>
+<dt>Équilibrage dynamique</dt><dd>G sur l'axe ET axe de rotation principal d'inertie (r = 0, D = E = 0).</dd>
+<dt>Axe principal d'inertie</dt><dd>Axe pour lequel les produits d'inertie correspondants sont nuls.</dd>
+<dt>Produit d'inertie</dt><dd>Terme hors diagonale de la matrice d'inertie (D, E, F).</dd>
+<dt>Balourd</dt><dd>Défaut de répartition des masses créant un effort centrifuge tournant.</dd>
+<dt>Effort centrifuge</dt><dd>Effort dû à la rotation, proportionnel à ω², qui dépend de θ si le solide est mal équilibré.</dd>
+<dt>Masselotte</dt><dd>Petite masse ajoutée en un point pour corriger le balourd.</dd>
+<dt>Machine d'équilibrage</dt><dd>Appareil qui mesure les vibrations pour déterminer les corrections.</dd>
+<dt>Équilibreuse portative</dt><dd>Machine d'équilibrage utilisable sur site.</dd>
+</dl>
+` });
+
+/* ============ UI ============ */
+const UI = { cur: 'types' };
+const AS = { key: 'types', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'intro' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', {
+    type: 'button', role: 'tab',
+    'aria-pressed': w.id === UI.cur ? 'true' : 'false',
+    'aria-selected': w.id === UI.cur ? 'true' : 'false',
+    onclick: () => gotoWs(w.id)
+  }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab;
+  const keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'QCM (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time));
+    body.append(h('div', { class: 'goal', html: '<b>Objectif.</b> ' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) {
+        b.textContent = 'Confirmer ? Votre travail sera effacé';
+        AS.arm = setTimeout(() => { b.textContent = 'Recommencer l\'atelier'; AS.arm = null; }, 3500);
+        return;
+      }
+      clearTimeout(AS.arm); AS.arm = null;
+      wsById(UI.cur).reset(); mountWs(); renderAct();
+    } }, 'Recommencer l\'atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a;
+        const bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: (show && s.shown ? j === q.a : s.a[i] === j), disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) {
+        const miss = s.a[i] == null && !s.shown;
+        fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w }));
+      }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', {
+    type: 'button', class: s.id === cur.id ? 'on' : '',
+    'aria-current': s.id === cur.id ? 'true' : 'false',
+    onclick: () => go(s.id)
+  }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : équilibrage dynamique'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l\'atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title },
+    h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')),
+    h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers interactifs sur l\'équilibrage dynamique des solides en rotation : types de problèmes, source des vibrations, conditions, comparaison statique/dynamique, réalisation pratique.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM corrigé.</li><li>Le bouton <b>Cours</b> propose une synthèse rédigée.</li></ul>' +
+    '<h3>Notation</h3><p><b>r</b> = décalage radial de G (en mm). <b>D</b> et <b>E</b> = produits d\'inertie (en 10⁻⁴ kg·m²). Les efforts X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> sont ceux des roulements.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (UI.cur === 'vib') renderVib();
+    else if (UI.cur === 'sd') drawSD();
+  }, 120);
+});
+
+(function init() {
+  AS.open = !isSmall();
+  renderSeg();
+  mountWs();
+  renderAct();
+  renderCourse();
+})();
+</script>
+</body>
+</html>
