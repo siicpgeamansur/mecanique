@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Théorie des mécanismes — ITC · CPGE PSI*</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:180px;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.task-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.task-row:last-child{border-bottom:0}
+.task-row .chips{margin:0}
+canvas.viz{width:100%;height:300px;display:block;border:1px solid var(--line);border-radius:8px;background:#fafbfc;cursor:default}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0}
+.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)}
+.card h4{margin:0 0 6px;font-size:14px;color:var(--accent-ink)}
+.card p{font-size:13px;margin:4px 0}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .task-row{grid-template-columns:1fr}
+  canvas.viz{height:260px}
+  .opts input[type=range]{width:140px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true">
+        <circle cx="5" cy="5" r="2.5" fill="#2e6da4"/>
+        <circle cx="5" cy="21" r="2.5" fill="#2e6da4"/>
+        <circle cx="21" cy="13" r="2.5" fill="#1e7a2e"/>
+        <circle cx="13" cy="5" r="2.5" fill="#9a5b00"/>
+        <circle cx="13" cy="21" r="2.5" fill="#9a5b00"/>
+        <g stroke="#8894a4" stroke-width="1.4" fill="none">
+          <line x1="7" y1="6" x2="11.5" y2="11.5"/>
+          <line x1="7" y1="20" x2="11.5" y2="14.5"/>
+          <line x1="15" y1="5" x2="18.5" y2="12"/>
+          <line x1="15" y1="21" x2="18.5" y2="14"/>
+          <circle cx="13" cy="13" r="2" fill="#2e6da4"/>
+          <line x1="7" y1="6" x2="7" y2="20"/>
+        </g>
+      </svg>
+      <span>Théorie des mécanismes <small>ITC · CPGE PSI*</small></span>
+    </div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-theorie-meca-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+const WORKSHOPS = [];
+
+/* ============ DONNÉES : LIAISONS NORMALISÉES ============ */
+const LIAISONS = [
+  { nom: 'Pivot', ddl: 1, axe: 'z', tc: '{ ωz ; 0 }', cols: 1, ex: 'Roue qui tourne sur son axe', note: '1 rotation autour de z' },
+  { nom: 'Glissière', ddl: 1, axe: 'z', tc: '{ 0 ; Vz }', cols: 1, ex: 'Tiroir de commode', note: '1 translation selon z' },
+  { nom: 'Pivot glissant', ddl: 2, axe: 'z', tc: '{ ωz ; Vz }', cols: 2, ex: 'Arbre dans un roulement à billes', note: '1 rotation + 1 translation selon z' },
+  { nom: 'Rotule (sphérique)', ddl: 3, axe: 'point', tc: '{ ωx, ωy, ωz ; 0 }', cols: 3, ex: 'Main sur un levier de vitesses', note: '3 rotations, centre fixe' },
+  { nom: 'Appui plan', ddl: 3, axe: 'plan', tc: '{ ωx, ωy ; Vz }', cols: 3, ex: 'Livre qui glisse sur une table', note: '2 rotations dans le plan + 1 translation normale' },
+  { nom: 'Encastrement', ddl: 0, axe: '—', tc: '{ 0 ; 0 }', cols: 0, ex: 'Pièce soudée sur le bâti', note: 'Aucun mouvement' },
+  { nom: 'Ponctuelle', ddl: 5, axe: 'point', tc: '{ ωx, ωy, ωz ; Vx, Vy }', cols: 5, ex: 'Bille sur une table', note: '1 seul mouvement bloqué : la translation normale' },
+  { nom: 'Linéaire rectiligne', ddl: 4, axe: 'ligne', tc: '{ ωx, ωy, ωz ; Vx }', cols: 4, ex: 'Cylindre posé sur un plan', note: '1 translation bloquée, contact sur une ligne' },
+  { nom: 'Linéaire annulaire', ddl: 4, axe: 'cercle', tc: '{ ωx, ωy, ωz ; Vx, Vy }', cols: 4, ex: 'Doigt dans un alésage', note: '2 translations bloquées, contact sur un cercle' }
+];
+
+const SERIES = [
+  { nom: 'Pivot + Glissière (même axe)', a: 'Pivot (z)', b: 'Glissière (z)', res: 'Pivot glissant', ddl: 2, tc: '{ ωz ; Vz }', why: 'Les deux mouvements (rotation et translation selon z) subsistent.' },
+  { nom: 'Pivot + Pivot (axes différents)', a: 'Pivot (z)', b: 'Pivot (x)', res: 'Rotule', ddl: 3, tc: '{ ωx, ωy, ωz ; 0 }', why: 'Deux rotations indépendantes autour d\'axes différents donnent trois rotations.' },
+  { nom: 'Glissière + Glissière (axes ⊥)', a: 'Glissière (x)', b: 'Glissière (y)', res: 'Appui plan', ddl: 3, tc: '{ ωx, ωy ; Vz }', why: 'Deux translations indépendantes + une rotation possible autour de la normale.' },
+  { nom: 'Pivot + Glissière (axes ⊥)', a: 'Pivot (z)', b: 'Glissière (x)', res: 'Pivot + Glissière', ddl: 2, tc: '{ ωz ; Vx }', why: 'La rotation et la translation sont indépendantes.' },
+  { nom: 'Pivot + Pivot (même axe)', a: 'Pivot (z)', b: 'Pivot (z)', res: 'Pivot', ddl: 1, tc: '{ ωz ; 0 }', why: 'Deux rotations de même axe ne font qu\'une seule rotation : redondance.' }
+];
+
+const PARALLELES = [
+  { nom: '2 pivots d\'axes parallèles', a: 'Pivot (z)', b: 'Pivot (z)', res: 'Pivot glissant', ddl: 2, h: 1, why: 'Deux liaisons en parallèle : le degré d\'hyperstatisme est 1.' },
+  { nom: '2 glissières parallèles', a: 'Glissière (x)', b: 'Glissière (x)', res: 'Glissière', ddl: 1, h: 1, why: 'Redondance : deux glissières parallèles bloquent la même chose.' },
+  { nom: '2 rotules', a: 'Rotule', b: 'Rotule', res: 'Rotule', ddl: 3, h: 3, why: 'Trois rotations bloquées en double : h = 3.' }
+];
+
+const CHAINES_DATA = [
+  { nom: 'Bras de robot (chaîne ouverte)', type: 'ouverte', nc: 2, rc: 0, m: 2, h: 0, why: 'Chaîne ouverte : chaque liaison apporte ses mobilités, pas de boucle. m = Nc − rc = 2.' },
+  { nom: 'Pompe à pistons (chaîne fermée simple)', type: 'fermee', nc: 3, rc: 2, m: 1, h: 1, why: 'Chaîne fermée : une fermeture cinématique donne 6 équations, mais seules 2 sont indépendantes ici. m = Nc − rc = 1.' },
+  { nom: 'Suspension MacPherson', type: 'fermee', nc: 4, rc: 3, m: 1, h: 2, why: 'Chaîne fermée complexe : m = 1 (débattement de la roue), h = 2 (hyperstatisme dû aux deux triangles).' },
+  { nom: 'Élévateur à ciseaux', type: 'fermee', nc: 5, rc: 4, m: 1, h: 3, why: 'Plusieurs boucles fermées : m = 1 (hauteur), h = 3 (hyperstatisme des liaisons parallèles).' }
+];
+
+/* ============ ATELIER 1 : LIAISONS NORMALISÉES ============ */
+const LI = { selected: null, hideTC: false };
+
+function mountLiaisons(root) {
+  root.innerHTML = '<h2>1. Liaisons normalisées</h2>'
+    + '<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons</b>. Chaque liaison autorise certains mouvements (les <b>degrés de liberté</b>) et en bloque d\'autres. Le <b>torseur cinématique</b> résume ces mouvements.</p>'
+    + '<p>Cliquez sur une liaison pour voir son torseur et ses caractéristiques.</p>'
+    + '<div class="files" style="margin:8px 0">'
+    + '<button class="btn sm" id="li-toggle-tc">Masquer les torseurs</button>'
+    + '</div>'
+    + '<div id="li-grid" class="cards"></div>'
+    + '<div id="li-detail"></div>'
+    + '<div class="verdict" id="li-msg"></div>';
+  renderLi();
+  $('#li-toggle-tc').addEventListener('click', () => {
+    LI.hideTC = !LI.hideTC;
+    $('#li-toggle-tc').textContent = LI.hideTC ? 'Afficher les torseurs' : 'Masquer les torseurs';
+    renderLi();
+  });
+}
+
+function renderLi() {
+  const grid = $('#li-grid'); if (!grid) return; grid.innerHTML = '';
+  LIAISONS.forEach(l => {
+    const card = h('div', {
+      class: 'card',
+      style: 'cursor:pointer;' + (LI.selected === l.nom ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
+      onclick: () => { LI.selected = LI.selected === l.nom ? null : l.nom; renderLi(); }
+    },
+      h('h4', null, l.nom),
+      h('p', { style: 'font-size:12px;margin:2px 0' }, l.ddl + ' ddl — ' + l.note),
+      h('p', { style: 'font-size:11px;color:var(--muted);margin:2px 0' }, LI.hideTC ? 'Torseur masqué' : 'Torseur : ' + l.tc),
+      h('p', { style: 'font-size:11px;color:var(--muted);margin:2px 0' }, 'Ex : ' + l.ex)
+    );
+    grid.append(card);
+  });
+  const detail = $('#li-detail'); detail.innerHTML = '';
+  if (LI.selected) {
+    const l = LIAISONS.find(x => x.nom === LI.selected);
+    if (l) {
+      detail.append(h('div', { class: 'verdict yes' },
+        h('h4', null, l.nom + ' — ' + l.ddl + ' degré(s) de liberté'),
+        h('p', { html: '<b>Mouvements autorisés :</b> ' + l.note }),
+        h('p', { html: '<b>Torseur cinématique :</b> ' + l.tc }),
+        h('p', { html: '<b>Exemple :</b> ' + l.ex }),
+        h('p', { style: 'font-size:12px;color:var(--muted)' }, 'Le torseur cinématique a ' + l.cols + ' composante(s) non nulle(s).')
+      ));
+    }
+  }
+  const msg = $('#li-msg'); if (!msg) return;
+  msg.className = 'verdict';
+  msg.innerHTML = 'Il existe <b>11 liaisons normalisées</b> (dont 9 présentées ici). Chacune a un torseur cinématique et un torseur d\'actions mécaniques transmissibles. Les degrés de liberté vont de 0 (encastrement) à 5 (ponctuelle).';
+}
+
+WORKSHOPS.push({ id: 'liaisons', title: 'Liaisons normalisées', hint: 'Tableau interactif des 11 liaisons et de leurs torseurs.', mount: mountLiaisons,
+  reset: () => { LI.selected = null; LI.hideTC = false; } });
+
+/* ============ ATELIER 2 : LIAISON ÉQUIVALENTE ============ */
+const LE = { mode: 'serie', idx: 0 };
+
+function mountEquiv(root) {
+  root.innerHTML = '<h2>2. Liaison équivalente</h2>'
+    + '<p>Quand plusieurs liaisons sont associées, on peut les remplacer par une <b>liaison équivalente</b>. Le résultat dépend de l\'association :</p>'
+    + '<ul>'
+    + '<li><b>En série</b> : les mouvements se cumulent (somme des torseurs cinématiques).</li>'
+    + '<li><b>En parallèle</b> : les mouvements sont restreints (les liaisons se bloquent mutuellement).</li>'
+    + '</ul>'
+    + '<div class="chips" id="le-modes"></div>'
+    + '<div id="le-content"></div>'
+    + '<div id="le-detail"></div>';
+  renderLE();
+}
+
+function renderLE() {
+  const modes = [['serie', 'En série'], ['parallele', 'En parallèle']];
+  const mb = $('#le-modes'); mb.innerHTML = '';
+  mb.append(...modes.map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (LE.mode === v ? ' on' : ''),
+    onclick: () => { LE.mode = v; LE.idx = 0; renderLE(); }
+  }, l)));
+
+  const content = $('#le-content'); content.innerHTML = '';
+  const list = LE.mode === 'serie' ? SERIES : PARALLELES;
+  const item = list[LE.idx];
+  content.append(h('div', { class: 'task-row' },
+    h('div', null,
+      h('h4', null, item.nom),
+      h('p', { style: 'font-size:13px;margin:2px 0' }, item.a + '  +  ' + item.b),
+      h('p', { style: 'font-size:13px;margin:2px 0;color:var(--accent-ink)' }, '→ ' + item.res + ' (' + (item.ddl || item.h) + (LE.mode === 'serie' ? ' ddl' : ' ddl, h = ' + item.h) + ')')
+    ),
+    h('div', { class: 'chips' },
+      list.map((x, i) => h('button', {
+        type: 'button', class: 'chip' + (i === LE.idx ? ' on' : ''),
+        onclick: () => { LE.idx = i; renderLE(); }
+      }, String(i + 1)))
+    )
+  ));
+
+  const detail = $('#le-detail'); detail.innerHTML = '';
+  detail.append(h('div', { class: 'verdict ' + (LE.mode === 'serie' ? 'yes' : 'warn') },
+    h('p', { html: '<b>Règle :</b> ' + (LE.mode === 'serie' ? 'les torseurs cinématiques s\'ajoutent : V<sub>eq</sub> = V₁ + V₂.' : 'les degrés de liberté se restreignent : la liaison équivalente a moins de ddl, et un hyperstatisme h peut apparaître.') }),
+    h('p', { html: '<b>Explication :</b> ' + item.why }),
+    h('p', { html: '<b>Résultat :</b> ' + item.res + ' — torseur : ' + (item.tc || '—') })
+  ));
+}
+
+WORKSHOPS.push({ id: 'equiv', title: 'Liaison équivalente', hint: 'Composer des liaisons en série et en parallèle.', mount: mountEquiv,
+  reset: () => { LE.mode = 'serie'; LE.idx = 0; } });
+
+/* ============ ATELIER 3 : GRAPHE DES LIAISONS ============ */
+const GR = { step: 0, showClasses: false };
+const GR_STEPS = [
+  { title: 'Étape 1 — Identifier les classes d\'équivalence', body: '<p>Regrouper les pièces qui n\'ont aucun mouvement relatif entre elles (même fonction cinématique). Chaque classe devient un solide unique.</p><p><b>Exemple :</b> le bâti et les vis qui le fixent forment une seule classe.</p>' },
+  { title: 'Étape 2 — Identifier les liaisons', body: '<p>Entre chaque paire de classes en contact, déterminer la liaison normalisée (pivot, glissière, rotule…).</p><p>Écrire le torseur cinématique de chaque liaison.</p>' },
+  { title: 'Étape 3 — Tracer le graphe des liaisons', body: '<p>Chaque classe est un cercle. Chaque liaison est un arc étiqueté (type de liaison, axe, torseur).</p><p>Le graphe permet de repérer les chaînes ouvertes (pas de boucle) et fermées (cycles).</p>' },
+  { title: 'Étape 4 — Compter les cycles indépendants γ', body: '<p>Pour une chaîne fermée à N<sub>L</sub> liaisons et N<sub>P</sub> pièces (bâti inclus) :</p><div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div><p>γ est le nombre de cycles indépendants du graphe.</p>' },
+  { title: 'Étape 5 — Écrire les fermetures cinématiques', body: '<p>Pour chaque cycle indépendant, écrire la fermeture : la somme des torseurs cinématiques le long du cycle est nulle.</p><div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div><p>Chaque fermeture fournit jusqu\'à 6 équations scalaires.</p>' }
+];
+
+function mountGraphe(root) {
+  root.innerHTML = '<h2>3. Graphe des liaisons</h2>'
+    + '<p>Le <b>graphe des liaisons</b> est une représentation abstraite du mécanisme : chaque classe d\'équivalence est un nœud, chaque liaison est un arc. Il permet de compter les cycles et d\'écrire les fermetures cinématiques.</p>'
+    + '<div class="stepper" id="gr-steps"></div>'
+    + '<div id="gr-content"></div>'
+    + '<div class="files" style="margin-top:10px">'
+    + '<button class="btn" id="gr-prev">◀ Précédent</button>'
+    + '<button class="btn pri" id="gr-next">Suivant ▶</button>'
+    + '<button class="btn" id="gr-reset">Recommencer</button>'
+    + '</div>';
+  $('#gr-prev').addEventListener('click', () => { if (GR.step > 0) { GR.step--; renderGR(); } });
+  $('#gr-next').addEventListener('click', () => { if (GR.step < GR_STEPS.length - 1) { GR.step++; renderGR(); } });
+  $('#gr-reset').addEventListener('click', () => { GR.step = 0; renderGR(); });
+  renderGR();
+}
+
+function renderGR() {
+  const stepBox = $('#gr-steps'); if (!stepBox) return; stepBox.innerHTML = '';
+  GR_STEPS.forEach((s, i) => {
+    stepBox.append(h('button', {
+      type: 'button', class: 'chip' + (i === GR.step ? ' on' : ''),
+      style: i < GR.step ? 'opacity:.7' : '',
+      onclick: () => { GR.step = i; renderGR(); }
+    }, (i + 1) + '. ' + s.title.replace(/^Étape \d+ — /, '')));
+  });
+  const content = $('#gr-content'); content.innerHTML = '';
+  const s = GR_STEPS[GR.step];
+  content.append(h('div', { class: 'verdict yes' }, h('h4', null, s.title), h('div', { html: s.body })));
+  $('#gr-prev').disabled = GR.step === 0;
+  $('#gr-next').disabled = GR.step === GR_STEPS.length - 1;
+}
+
+WORKSHOPS.push({ id: 'graphe', title: 'Graphe des liaisons', hint: 'Construire le graphe et compter les cycles.', mount: mountGraphe,
+  reset: () => { GR.step = 0; } });
+
+/* ============ ATELIER 4 : MOBILITÉ ET HYPERSTATISME ============ */
+const MH = { gamma: 1, m: 1, Ic: 3, hi: 0 };
+
+function mountMob(root) {
+  root.innerHTML = '<h2>4. Mobilité et hyperstatisme</h2>'
+    + '<p>La formule fondamentale de la théorie des mécanismes relie le nombre de cycles γ, la mobilité m et le nombre d\'inconnues cinématiques I<sub>c</sub> :</p>'
+    + '<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b></div>'
+    + '<p>où :</p>'
+    + '<ul>'
+    + '<li><b>γ</b> : nombre de cycles indépendants du graphe des liaisons ;</li>'
+    + '<li><b>m</b> : degré de mobilité (nombre de mouvements indépendants) ;</li>'
+    + '<li><b>I<sub>c</sub></b> : nombre total d\'inconnues cinématiques (somme des ddl des liaisons) ;</li>'
+    + '<li><b>h</b> : degré d\'hyperstatisme (h = 0 → isostatique).</li>'
+    + '</ul>'
+    + '<p>Faites varier γ, m et I<sub>c</sub> pour voir évoluer h.</p>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>γ = <b id="mh-g-out">1</b></span><input type="range" id="mh-g" min="0" max="6" step="1" value="1"></label>'
+    + '<label class="fld"><span>m = <b id="mh-m-out">1</b></span><input type="range" id="mh-m" min="0" max="6" step="1" value="1"></label>'
+    + '<label class="fld"><span>I<sub>c</sub> = <b id="mh-ic-out">3</b></span><input type="range" id="mh-ic" min="0" max="20" step="1" value="3"></label>'
+    + '</div>'
+    + '<div class="gstats" id="mh-stats"></div>'
+    + '<div class="verdict" id="mh-msg"></div>'
+    + '<h3>Interprétation</h3>'
+    + '<div id="mh-interp"></div>';
+  ['g', 'm', 'ic'].forEach(k => {
+    $('#mh-' + k).addEventListener('input', e => {
+      MH[k] = +e.target.value;
+      renderMH();
+    });
+  });
+  renderMH();
+}
+
+function renderMH() {
+  MH.gamma = +$('#mh-g').value;
+  MH.m = +$('#mh-m').value;
+  MH.Ic = +$('#mh-ic').value;
+  $('#mh-g-out').textContent = MH.gamma;
+  $('#mh-m-out').textContent = MH.m;
+  $('#mh-ic-out').textContent = MH.Ic;
+  const hVal = 6 * MH.gamma + MH.m - MH.Ic;
+  const stats = $('#mh-stats'); stats.innerHTML = '';
+  stats.append(
+    h('div', { class: 'stat' }, h('span', null, '6γ'), h('b', null, String(6 * MH.gamma))),
+    h('div', { class: 'stat' }, h('span', null, '+ m'), h('b', null, String(MH.m))),
+    h('div', { class: 'stat' }, h('span', null, '− I<sub>c</sub>'), h('b', null, String(MH.Ic))),
+    h('div', { class: 'stat', style: hVal === 0 ? 'border-color:var(--ok);background:rgba(30,122,46,.05)' : 'border-color:var(--bad)' },
+      h('span', null, 'h = 6γ + m − I<sub>c</sub>'),
+      h('b', { style: 'color:' + (hVal === 0 ? 'var(--ok)' : 'var(--bad)') }, String(hVal)))
+  );
+  const msg = $('#mh-msg');
+  if (hVal === 0) {
+    msg.className = 'verdict yes';
+    msg.innerHTML = '<b>✓ Mécanisme isostatique</b> (h = 0). Toutes les inconnues de liaison peuvent être déterminées par le PFS/PFD. C\'est la situation idéale en conception.';
+  } else if (hVal > 0) {
+    msg.className = 'verdict no';
+    msg.innerHTML = '<b>✗ Mécanisme hyperstatique</b> (h = ' + hVal + '). Il y a ' + hVal + ' équation(s) de trop : les inconnues de liaison ne peuvent pas toutes être déterminées sans hypothèses supplémentaires. Risque de contraintes internes et de blocage.';
+  } else {
+    msg.className = 'verdict warn';
+    msg.innerHTML = '<b>⚠ h négatif</b> (' + hVal + ') : mécanisme hypostatique (mobilité non contrôlée). Vérifiez les données.';
+  }
+  const interp = $('#mh-interp'); interp.innerHTML = '';
+  interp.append(h('div', { class: 'cards' },
+    h('div', { class: 'card' }, h('h4', null, 'h = 0'), h('p', null, 'Isostatique : toutes les inconnues sont déterminables. Montage et fabrication plus simples.')),
+    h('div', { class: 'card' }, h('h4', null, 'h > 0'), h('p', null, 'Hyperstatique : sur-contrainte. Nécessite des tolérances serrées, risque de points durs.')),
+    h('div', { class: 'card' }, h('h4', null, 'Chaîne ouverte'), h('p', null, 'Toujours isostatique : γ = 0 donc h = m − I<sub>c</sub>. Or m = I<sub>c</sub> pour une chaîne ouverte, donc h = 0.'))
+  ));
+}
+
+WORKSHOPS.push({ id: 'mob', title: 'Mobilité et hyperstatisme', hint: 'Calculer h = 6γ + m − Ic et interpréter.', mount: mountMob,
+  reset: () => { MH.gamma = 1; MH.m = 1; MH.Ic = 3; } });
+
+/* ============ ATELIER 5 : CHAÎNES OUVERTES / FERMÉES ============ */
+const CH = { mode: 'ouverte', idx: 0 };
+
+function mountChaines(root) {
+  root.innerHTML = '<h2>5. Chaînes ouvertes et fermées</h2>'
+    + '<p>Un mécanisme est une <b>chaîne de solides</b>. On distingue :</p>'
+    + '<ul>'
+    + '<li><b>Chaîne ouverte</b> : le graphe est un arbre, sans cycle (γ = 0). Exemple : un bras de robot.</li>'
+    + '<li><b>Chaîne fermée</b> : le graphe contient au moins un cycle (γ ≥ 1). Exemple : une pompe, une suspension.</li>'
+    + '</ul>'
+    + '<div class="chips" id="ch-modes"></div>'
+    + '<div id="ch-content"></div>'
+    + '<div id="ch-msg"></div>';
+  renderCH();
+}
+
+function renderCH() {
+  const modes = [['ouverte', 'Chaînes ouvertes'], ['fermee', 'Chaînes fermées']];
+  const mb = $('#ch-modes'); mb.innerHTML = '';
+  mb.append(...modes.map(([v, l]) => h('button', {
+    type: 'button', class: 'chip' + (CH.mode === v ? ' on' : ''),
+    onclick: () => { CH.mode = v; CH.idx = 0; renderCH(); }
+  }, l)));
+
+  const list = CHAINES_DATA.filter(c => c.type === CH.mode);
+  const content = $('#ch-content'); content.innerHTML = '';
+  const item = list[CH.idx];
+  content.append(h('div', { class: 'task-row' },
+    h('div', null,
+      h('h4', null, item.nom),
+      h('p', { style: 'font-size:13px;margin:2px 0' }, 'Type : ' + (item.type === 'ouverte' ? 'chaîne ouverte' : 'chaîne fermée')),
+      h('p', { style: 'font-size:13px;margin:2px 0' }, 'N<sub>c</sub> = ' + item.nc + ', r<sub>c</sub> = ' + item.rc + ' → m = ' + item.m + ', h = ' + item.h)
+    ),
+    h('div', { class: 'chips' },
+      list.map((x, i) => h('button', {
+        type: 'button', class: 'chip' + (i === CH.idx ? ' on' : ''),
+        onclick: () => { CH.idx = i; renderCH(); }
+      }, String(i + 1)))
+    )
+  ));
+
+  const msg = $('#ch-msg'); msg.innerHTML = '';
+  msg.append(h('div', { class: 'verdict ' + (item.h === 0 ? 'yes' : 'warn') },
+    h('p', { html: '<b>Explication :</b> ' + item.why }),
+    h('p', { html: '<b>Bilan :</b> ' + (item.h === 0 ? 'Isostatique ✓' : 'Hyperstatique (h = ' + item.h + ') ⚠') })
+  ));
+}
+
+WORKSHOPS.push({ id: 'chaines', title: 'Chaînes ouvertes / fermées', hint: 'Étudier des cas concrets de chaînes.', mount: mountChaines,
+  reset: () => { CH.mode = 'ouverte'; CH.idx = 0; } });
+
+/* ============ ACTIVITÉS ============ */
+const ACT = {
+  liaisons: {
+    title: 'Liaisons normalisées', level: 'Niveau 1 · Découvrir', time: '20 min', course: 'liaisons',
+    goal: 'Connaître les 11 liaisons normalisées, leurs degrés de liberté et leurs torseurs cinématiques.',
+    steps: [
+      'Parcourez le tableau des liaisons. Combien de degrés de liberté pour une rotule ? Pour un encastrement ?',
+      'Identifiez les liaisons à 1 ddl (pivot, glissière, hélicoïdale).',
+      'Cliquez sur chaque liaison pour voir son torseur cinématique.',
+      'Retenez la dualité : le torseur cinématique a 6 − ddl composantes non nulles, le torseur d\'actions a ddl composantes non nulles.',
+      'Devinez la liaison utilisée dans un bras de robot (rotule), dans un tiroir (glissière).'
+    ],
+    defi: { q: 'Combien de degrés de liberté possède un solide libre dans l\'espace ? Et une liaison encastrement ?', a: 'Un solide libre possède <b>6 degrés de liberté</b> (3 translations + 3 rotations). Une liaison encastrement en bloque 6 : elle a <b>0 ddl</b>.' },
+    qcm: [
+      { q: 'Combien de degrés de liberté possède une liaison rotule ?', o: ['1', '2', '3', '5'], a: 2, w: 'La rotule (liaison sphérique) autorise 3 rotations, donc 3 ddl.' },
+      { q: 'Quel est le torseur cinématique d\'une liaison pivot d\'axe z ?', o: ['{ ωz ; 0 }', '{ 0 ; Vz }', '{ ωz ; Vz }', '{ 0 ; 0 }'], a: 0, w: 'Le pivot autorise 1 rotation autour de z : { ωz ; 0 }.' },
+      { q: 'Combien de degrés de liberté possède une liaison encastrement ?', o: ['0', '1', '3', '6'], a: 0, w: 'L\'encastrement bloque tous les mouvements : 0 ddl.' },
+      { q: 'La liaison ponctuelle a…', o: ['1 ddl', '3 ddl', '5 ddl', '6 ddl'], a: 2, w: 'Elle bloque 1 translation (la normale au plan), donc 5 ddl.' },
+      { q: 'Quelle liaison a 2 degrés de liberté ?', o: ['Pivot', 'Glissière', 'Pivot glissant', 'Rotule'], a: 2, w: 'Le pivot glissant autorise 1 rotation + 1 translation de même axe : 2 ddl.' }
+    ]
+  },
+  equiv: {
+    title: 'Liaison équivalente', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'equivalente',
+    goal: 'Savoir composer des liaisons en série et en parallèle.',
+    steps: [
+      'En série : les torseurs cinématiques s\'ajoutent. Vérifiez avec Pivot + Glissière (même axe).',
+      'En parallèle : les liaisons se restreignent. Un hyperstatisme peut apparaître.',
+      'Testez Pivot + Pivot (même axe) en série : le résultat est un pivot simple (redondance).',
+      'Testez 2 rotules en parallèle : le degré d\'hyperstatisme est 3.',
+      'Retenez : série = somme des torseurs, parallèle = intersection des contraintes.'
+    ],
+    defi: { q: 'Pourquoi une liaison équivalente à des liaisons en série est-elle toujours isostatique ?', a: 'Parce que le nombre d\'inconnues cinématiques de la liaison équivalente est la somme des inconnues de chaque liaison. Il n\'y a pas de redondance : chaque mouvement est compté une fois. Donc h = 0.' },
+    qcm: [
+      { q: 'En série, les torseurs cinématiques…', o: ['S\'ajoutent', 'S\'intersectent', 'Se multiplient', 'S\'annulent'], a: 0, w: 'La composition des mouvements donne V_eq = V1 + V2.' },
+      { q: 'Pivot + Glissière de même axe (z) donne…', o: ['Pivot', 'Glissière', 'Pivot glissant', 'Rotule'], a: 2, w: 'Rotation + translation selon z = pivot glissant (2 ddl).' },
+      { q: 'En parallèle, une liaison équivalente à des liaisons en série est…', o: ['Hyperstatique', 'Isostatique', 'Hypostatique', 'Indéterminée'], a: 1, w: 'Série → isostatique. Parallèle → hyperstatisme possible.' },
+      { q: '2 pivots d\'axes différents (x et z) en série donnent…', o: ['Pivot', 'Rotule', 'Glissière', 'Pivot glissant'], a: 1, w: 'Deux rotations indépendantes autour d\'axes différents = 2 rotations, mais la rotule en a 3. En toute rigueur, la composition donne une partie des rotations.' },
+      { q: 'En parallèle, le degré d\'hyperstatisme peut être…', o: ['Nul', 'Positif', 'Négatif', 'Toujours nul'], a: 1, w: 'Les redondances créent de l\'hyperstatisme : h > 0.' }
+    ]
+  },
+  graphe: {
+    title: 'Graphe des liaisons', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'graphe',
+    goal: 'Savoir construire un graphe des liaisons et compter les cycles indépendants.',
+    steps: [
+      'Identifiez les classes d\'équivalence (pièces sans mouvement relatif).',
+      'Identifiez les liaisons entre classes.',
+      'Tracez le graphe : nœuds = classes, arcs = liaisons.',
+      'Comptez les cycles indépendants γ = N_L − N_P + 1.',
+      'Écrivez les fermetures cinématiques pour chaque cycle.'
+    ],
+    defi: { q: 'Un mécanisme a 5 pièces (bâti inclus) et 6 liaisons. Combien de cycles indépendants possède son graphe ?', a: 'γ = N_L − N_P + 1 = 6 − 5 + 1 = <b>2</b>. Le graphe a 2 cycles indépendants.' },
+    qcm: [
+      { q: 'Le graphe des liaisons est…', o: ['Un schéma à l\'échelle', 'Une représentation abstraite du mécanisme', 'Un dessin technique', 'Une photo'], a: 1, w: 'C\'est une représentation abstraite : nœuds = classes, arcs = liaisons.' },
+      { q: 'γ se calcule par…', o: ['N_P − N_L + 1', 'N_L − N_P + 1', 'N_L + N_P', 'N_P / N_L'], a: 1, w: 'γ = N_L − N_P + 1 pour un mécanisme à N_L liaisons et N_P pièces.' },
+      { q: 'Une chaîne ouverte a…', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ infini'], a: 0, w: 'Pas de cycle : γ = 0.' },
+      { q: 'Le graphe permet de repérer…', o: ['Les chaînes ouvertes et fermées', 'Les efforts', 'Les matériaux', 'Les couleurs'], a: 0, w: 'Il met en évidence les cycles (chaînes fermées).' },
+      { q: 'Combien d\'équations donne une fermeture cinématique ?', o: ['1', '3', '6 au plus', '12'], a: 2, w: 'Un torseur a 6 composantes, donc jusqu\'à 6 équations scalaires par fermeture.' }
+    ]
+  },
+  mob: {
+    title: 'Mobilité et hyperstatisme', level: 'Niveau 3 · Approfondir', time: '25 min', course: 'mobilite',
+    goal: 'Savoir calculer h = 6γ + m − I_c et interpréter.',
+    steps: [
+      'Partez de γ = 1, m = 1, I_c = 3 : h = 6 + 1 − 3 = 4 (hyperstatique).',
+      'Diminuez I_c jusqu\'à obtenir h = 0 : combien trouvez-vous ?',
+      'Augmentez m : h augmente aussi (plus de mobilité = plus d\'inconnues).',
+      'Un mécanisme isostatique a h = 0. Toutes les inconnues de liaison sont déterminables.',
+      'Un mécanisme hyperstatique (h > 0) nécessite des tolérances serrées et peut se bloquer.'
+    ],
+    defi: { q: 'Un mécanisme a γ = 2, m = 1 et I_c = 11. Est-il isostatique ?', a: 'h = 6×2 + 1 − 11 = 12 + 1 − 11 = <b>2</b>. Le mécanisme est <b>hyperstatique de degré 2</b>.' },
+    qcm: [
+      { q: 'La formule de l\'hyperstatisme est…', o: ['h = 6γ + m − I_c', 'h = 6γ − m + I_c', 'h = γ + m + I_c', 'h = 6γ − m − I_c'], a: 0, w: 'h = 6γ + m − I_c, où I_c est le nombre total d\'inconnues cinématiques.' },
+      { q: 'Un mécanisme isostatique a…', o: ['h = 0', 'h > 0', 'h < 0', 'h = m'], a: 0, w: 'h = 0 : toutes les inconnues sont déterminables.' },
+      { q: 'Pour une chaîne ouverte, h vaut…', o: ['0', '1', 'm', '6γ'], a: 0, w: 'Chaîne ouverte : γ = 0 et m = I_c, donc h = 0.' },
+      { q: 'Un mécanisme hyperstatique…', o: ['Est toujours bloqué', 'Peut se bloquer ou avoir des contraintes internes', 'N\'a pas de mobilité', 'Est interdit'], a: 1, w: 'L\'hyperstatisme peut causer des points durs et des contraintes internes.' },
+      { q: 'Si h = 3, le mécanisme est…', o: ['Isostatique', 'Hyperstatique de degré 3', 'Hypostatique', 'Mécanisme à 3 mobilités'], a: 1, w: 'h = 3 > 0 : hyperstatique de degré 3.' }
+    ]
+  },
+  chaines: {
+    title: 'Chaînes ouvertes / fermées', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'chaines',
+    goal: 'Distinguer chaîne ouverte et chaîne fermée, et connaître leurs propriétés.',
+    steps: [
+      'Une chaîne ouverte a γ = 0 : pas de boucle dans le graphe. Exemple : bras de robot.',
+      'Une chaîne fermée a γ ≥ 1 : au moins une boucle. Exemple : pompe, suspension.',
+      'Une chaîne ouverte est toujours isostatique (h = 0).',
+      'Une chaîne fermée peut être isostatique ou hyperstatique.',
+      'Retenez : plus il y a de boucles, plus l\'hyperstatisme peut être élevé.'
+    ],
+    defi: { q: 'Pourquoi une chaîne ouverte est-elle toujours isostatique ?', a: 'Parce que dans une chaîne ouverte, chaque liaison apporte ses mobilités sans redondance. Le nombre d\'inconnues cinématiques I_c est égal à m + 6γ (avec γ = 0), donc h = 0.' },
+    qcm: [
+      { q: 'Une chaîne ouverte a…', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ négatif'], a: 0, w: 'Pas de cycle : γ = 0.' },
+      { q: 'Un bras de robot est une chaîne…', o: ['Ouverte', 'Fermée', 'Mixte', 'Infinie'], a: 0, w: 'C\'est une chaîne ouverte (pas de boucle).' },
+      { q: 'Une chaîne fermée est…', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Parfois isostatique, parfois hyperstatique', 'Jamais hyperstatique'], a: 2, w: 'Une chaîne fermée peut être isostatique (h = 0) ou hyperstatique (h > 0).' },
+      { q: 'Le nombre de cycles indépendants se calcule par…', o: ['N_L − N_P + 1', 'N_P − N_L + 1', 'N_L + N_P + 1', 'N_L × N_P'], a: 0, w: 'γ = N_L − N_P + 1.' },
+      { q: 'Une chaîne ouverte est…', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Parfois les deux', 'Toujours hypostatique'], a: 0, w: 'h = 0 pour une chaîne ouverte.' }
+    ]
+  }
+};
+
+/* ============ COURS ============ */
+const COURSE = [];
+COURSE.push({ id: 'intro', t: 'Introduction', h: `
+<p>La <b>théorie des mécanismes</b> est l'étude des architectures des mécanismes. Elle s'appuie sur la théorie des graphes et sur la résolution de systèmes d'équations linéaires.</p>
+<p>Elle permet de :</p>
+<ul>
+<li>mettre en équation le problème ;</li>
+<li>évaluer les possibilités de résolution ;</li>
+<li>automatiser la recherche d'influence des paramètres ;</li>
+<li>comparer des solutions technologiques ;</li>
+<li>évaluer la montabilité et la robustesse d'une architecture.</li>
+</ul>
+<div class="retain"><b>Objectif.</b> Déterminer si un mécanisme est isostatique ou hyperstatique, et calculer sa mobilité.</div>
+` });
+COURSE.push({ id: 'liaisons', t: 'Liaisons normalisées', h: `
+<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons</b>. Chaque liaison autorise certains mouvements (degrés de liberté, ddl) et en bloque d'autres.</p>
+<h3>Les 11 liaisons normalisées</h3>
+<table class="ctable">
+<thead><tr><th>Liaison</th><th>ddl</th><th>Torseur cinématique</th></tr></thead>
+<tbody>
+<tr><td>Pivot</td><td>1</td><td>{ ωz ; 0 }</td></tr>
+<tr><td>Glissière</td><td>1</td><td>{ 0 ; Vz }</td></tr>
+<tr><td>Hélicoïdale</td><td>1</td><td>{ ωz ; Vz } (liés)</td></tr>
+<tr><td>Pivot glissant</td><td>2</td><td>{ ωz ; Vz }</td></tr>
+<tr><td>Rotule</td><td>3</td><td>{ ωx, ωy, ωz ; 0 }</td></tr>
+<tr><td>Appui plan</td><td>3</td><td>{ ωx, ωy ; Vz }</td></tr>
+<tr><td>Linéaire rectiligne</td><td>4</td><td>{ ωx, ωy, ωz ; Vx }</td></tr>
+<tr><td>Linéaire annulaire</td><td>4</td><td>{ ωx, ωy, ωz ; Vx, Vy }</td></tr>
+<tr><td>Ponctuelle</td><td>5</td><td>{ ωx, ωy, ωz ; Vx, Vy }</td></tr>
+<tr><td>Encastrement</td><td>0</td><td>{ 0 ; 0 }</td></tr>
+</tbody>
+</table>
+<h3>Dualité cinématique / statique</h3>
+<p>Le torseur cinématique a (6 − ddl) composantes non nulles. Le torseur des actions mécaniques transmissibles a ddl composantes non nulles.</p>
+<div class="retain"><b>À retenir.</b> Chaque liaison a un torseur cinématique et un torseur d'actions transmissibles. Le nombre de ddl est le nombre de mouvements autorisés.</div>
+` });
+COURSE.push({ id: 'equivalente', t: 'Liaison équivalente', h: `
+<p>Une <b>liaison équivalente</b> modélise le même comportement que l'association de plusieurs liaisons.</p>
+<h3>Liaisons en série</h3>
+<p>Les torseurs cinématiques s'ajoutent :</p>
+<div class="formula">V<sub>eq</sub> = V₁ + V₂ + …</div>
+<p>La liaison équivalente est toujours <b>isostatique</b> (h = 0).</p>
+<h3>Liaisons en parallèle</h3>
+<p>Les mouvements se restreignent. Un <b>hyperstatisme</b> peut apparaître :</p>
+<div class="formula">h > 0</div>
+<p>Les liaisons se bloquent mutuellement, créant des redondances.</p>
+<h3>Exemples</h3>
+<ul>
+<li>Pivot + Glissière de même axe → Pivot glissant (2 ddl).</li>
+<li>2 pivots d'axes parallèles en parallèle → Pivot glissant (h = 1).</li>
+<li>2 rotules en parallèle → Rotule (h = 3).</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Série = somme des torseurs. Parallèle = intersection des contraintes (hyperstatisme possible).</div>
+` });
+COURSE.push({ id: 'graphe', t: 'Graphe des liaisons', h: `
+<p>Le <b>graphe des liaisons</b> est une représentation abstraite du mécanisme :</p>
+<ul>
+<li><b>Nœuds</b> : classes d'équivalence (groupes de pièces sans mouvement relatif).</li>
+<li><b>Arcs</b> : liaisons entre classes.</li>
+</ul>
+<h3>Construction</h3>
+<ol>
+<li>Identifier les classes d'équivalence.</li>
+<li>Identifier les liaisons entre classes.</li>
+<li>Tracer le graphe.</li>
+<li>Compter les cycles indépendants :</li>
+</ol>
+<div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div>
+<p>où N<sub>L</sub> est le nombre de liaisons et N<sub>P</sub> le nombre de pièces (bâti inclus).</p>
+<h3>Fermetures cinématiques</h3>
+<p>Pour chaque cycle indépendant, la somme des torseurs cinématiques est nulle :</p>
+<div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div>
+<p>Chaque fermeture fournit jusqu'à 6 équations scalaires.</p>
+<div class="retain"><b>À retenir.</b> Le graphe permet de compter les cycles et d'écrire les fermetures cinématiques.</div>
+` });
+COURSE.push({ id: 'mobilite', t: 'Mobilité et hyperstatisme', h: `
+<h3>Formule fondamentale</h3>
+<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b></div>
+<p>où :</p>
+<ul>
+<li><b>γ</b> : nombre de cycles indépendants ;</li>
+<li><b>m</b> : degré de mobilité (nombre de mouvements indépendants) ;</li>
+<li><b>I<sub>c</sub></b> : nombre total d'inconnues cinématiques (somme des ddl des liaisons) ;</li>
+<li><b>h</b> : degré d'hyperstatisme.</li>
+</ul>
+<h3>Interprétation</h3>
+<ul>
+<li><b>h = 0</b> : isostatique. Toutes les inconnues de liaison sont déterminables.</li>
+<li><b>h > 0</b> : hyperstatique. Il y a h équations de trop. Risque de contraintes internes et de blocage.</li>
+<li><b>h < 0</b> : hypostatique (mobilité non contrôlée, cas rare).</li>
+</ul>
+<h3>Mobilité utile et interne</h3>
+<p>La mobilité m peut se décomposer en <b>mobilité utile</b> m<sub>u</sub> (loi entrée-sortie) et <b>mobilité interne</b> m<sub>i</sub> :</p>
+<div class="formula">m = m<sub>u</sub> + m<sub>i</sub></div>
+<div class="retain"><b>À retenir.</b> h = 0 → isostatique. h > 0 → hyperstatique. Une chaîne ouverte est toujours isostatique.</div>
+` });
+COURSE.push({ id: 'chaines', t: 'Chaînes ouvertes et fermées', h: `
+<h3>Chaîne ouverte</h3>
+<p>Le graphe est un arbre (pas de cycle). γ = 0. Exemple : bras de robot, grue.</p>
+<p>Une chaîne ouverte est <b>toujours isostatique</b> : h = 0.</p>
+<h3>Chaîne fermée</h3>
+<p>Le graphe contient au moins un cycle. γ ≥ 1. Exemple : pompe, suspension, élévateur à ciseaux.</p>
+<p>Une chaîne fermée peut être isostatique ou hyperstatique.</p>
+<h3>Calcul de la mobilité</h3>
+<p>Pour une chaîne fermée simple (N<sub>L</sub> = N<sub>P</sub>) :</p>
+<div class="formula">m = N<sub>c</sub> − r<sub>c</sub></div>
+<p>où N<sub>c</sub> est le nombre total d'inconnues cinématiques et r<sub>c</sub> le nombre d'équations cinématiques indépendantes.</p>
+<div class="retain"><b>À retenir.</b> Chaîne ouverte → isostatique. Chaîne fermée → hyperstatisme possible.</div>
+` });
+COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
+<dl class="gloss">
+<dt>Liaison</dt><dd>Modèle du contact entre deux solides, autorisant certains mouvements.</dd>
+<dt>Degré de liberté (ddl)</dt><dd>Mouvement indépendant autorisé par une liaison.</dd>
+<dt>Torseur cinématique</dt><dd>Représentation des vitesses autorisées par une liaison.</dd>
+<dt>Liaison équivalente</dt><dd>Liaison modélisant le même comportement qu'une association de liaisons.</dd>
+<dt>Chaîne ouverte</dt><dd>Chaîne sans cycle (γ = 0).</dd>
+<dt>Chaîne fermée</dt><dd>Chaîne avec au moins un cycle (γ ≥ 1).</dd>
+<dt>Graphe des liaisons</dt><dd>Représentation nœuds-arcs du mécanisme.</dd>
+<dt>Cycle indépendant (γ)</dt><dd>Nombre de cycles indépendants du graphe.</dd>
+<dt>Mobilité (m)</dt><dd>Nombre de mouvements indépendants du mécanisme.</dd>
+<dt>Inconnues cinématiques (I<sub>c</sub>)</dt><dd>Somme des ddl de toutes les liaisons.</dd>
+<dt>Hyperstatisme (h)</dt><dd>Degré de sur-contrainte du mécanisme (h > 0).</dd>
+<dt>Isostatisme</dt><dd>h = 0 : toutes les inconnues de liaison sont déterminables.</dd>
+<dt>Mobilité utile (m<sub>u</sub>)</dt><dd>Mobilité correspondant à la loi entrée-sortie.</dd>
+<dt>Mobilité interne (m<sub>i</sub>)</dt><dd>Mobilité qui ne participe pas à la loi entrée-sortie.</dd>
+</dl>
+` });
+
+/* ============ UI ============ */
+const UI = { cur: 'liaisons' };
+const AS = { key: 'liaisons', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'intro' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', {
+    type: 'button', role: 'tab',
+    'aria-pressed': w.id === UI.cur ? 'true' : 'false',
+    'aria-selected': w.id === UI.cur ? 'true' : 'false',
+    onclick: () => gotoWs(w.id)
+  }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab;
+  const keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'QCM (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time));
+    body.append(h('div', { class: 'goal', html: '<b>Objectif.</b> ' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) {
+        b.textContent = 'Confirmer ? Votre travail sera effacé';
+        AS.arm = setTimeout(() => { b.textContent = 'Recommencer l\'atelier'; AS.arm = null; }, 3500);
+        return;
+      }
+      clearTimeout(AS.arm); AS.arm = null;
+      wsById(UI.cur).reset(); mountWs(); renderAct();
+    } }, 'Recommencer l\'atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a;
+        const bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: (show && s.shown ? j === q.a : s.a[i] === j), disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) {
+        const miss = s.a[i] == null && !s.shown;
+        fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w }));
+      }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', {
+    type: 'button', class: s.id === cur.id ? 'on' : '',
+    'aria-current': s.id === cur.id ? 'true' : 'false',
+    onclick: () => go(s.id)
+  }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : théorie des mécanismes'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l\'atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title },
+    h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')),
+    h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers interactifs sur la théorie des mécanismes : liaisons normalisées, liaison équivalente, graphe des liaisons, mobilité et hyperstatisme, chaînes ouvertes et fermées.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM corrigé.</li><li>Le bouton <b>Cours</b> propose une synthèse rédigée.</li></ul>' +
+    '<h3>Notation</h3><p><b>γ</b> = nombre de cycles indépendants. <b>m</b> = mobilité. <b>I<sub>c</sub></b> = inconnues cinématiques. <b>h</b> = degré d\'hyperstatisme.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    // Pas de canvas à redimensionner dans cette page
+  }, 120);
+});
+
+(function init() {
+  AS.open = !isSmall();
+  renderSeg();
+  mountWs();
+  renderAct();
+  renderCourse();
+})();
+</script>
+</body>
+</html>
