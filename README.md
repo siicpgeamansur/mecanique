@@ -20,6 +20,8 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 ---
 
+| [Equa diff mvt](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Équations différentielles de mouvement. |
+
 ## Géométrie et paramétrage
 
 | Outil | Description |
