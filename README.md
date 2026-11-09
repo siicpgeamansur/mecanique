@@ -22,6 +22,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 | [Equa diff mvt](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Équations différentielles de mouvement. |
 | [Equilibrage](https://siicpgeamansur.github.io/mecanique/equilibrage.html) | Équilibrage d’un solide en rotation. |
+| [Theorie des mécanismes](https://siicpgeamansur.github.io/mecanique/TdM.html) | Théorie des mecanismes. |
 
 ## Géométrie et paramétrage
 
