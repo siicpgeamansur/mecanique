@@ -88,13 +88,8 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
 .cbody h3{font-size:16.5px;margin:22px 0 6px}
 .cbody p,.cbody li{font-size:14.5px;line-height:1.6}
 .cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
-.cbody table{display:block;overflow-x:auto;max-width:100%}
-.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
-.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
-.ctable th{background:var(--panel2);font-weight:600}
 .retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
 .formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
-pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
 .gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
 .cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
 #ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
@@ -186,7 +181,6 @@ function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 const WORKSHOPS = [];
 
-/* Paramètres physiques réalistes */
 const PHY = {
   M: 10, g: 9.81, L: 0.1, d: 0.05,
   omega: 2 * Math.PI * 30000 / 60,
@@ -228,7 +222,7 @@ function mountTypes(root) {
     + '<p>En CPGE, on distingue <b>trois grandes familles</b> de problèmes selon ce qui est connu et ce que l\'on cherche :</p>'
     + '<ul>'
     + '<li><b>Des efforts aux mouvements</b> : on connaît les efforts, on cherche les lois de mouvement.</li>'
-    + '<li><b>Du mouvement aux efforts</b> : on impose un mouvement, on cherche les efforts (dimensionnement d\'actionneur, calcul d\'efforts de liaison).</li>'
+    + '<li><b>Du mouvement aux efforts</b> : on impose un mouvement, on cherche les efforts.</li>'
     + '<li><b>Répartition des masses</b> : on veut répartir la masse pour éviter les vibrations (équilibrage).</li>'
     + '</ul>'
     + '<p>Attribuez à chaque étude sa famille, puis cliquez sur <b>Vérifier</b>.</p>'
@@ -310,7 +304,7 @@ function mountVib(root) {
     + '<li><b>une inclinaison</b> de l\'axe du cylindre par rapport à (AB) : les produits d\'inertie D et E ne sont plus nuls, déséquilibre <b>dynamique</b>.</li>'
     + '</ul>'
     + '<p><b>Remarque de physique.</b> Une translation pure d\'un cylindre parfait ne crée <b>pas</b> de produit d\'inertie (symétrie de révolution). Pour obtenir D ≠ 0 ou E ≠ 0, il faut <b>incliner</b> l\'axe. Les valeurs r, D, E affichées sont calculées à partir de la géométrie (cylindre de 10 kg, R = 5 cm, L = 10 cm).</p>'
-    + '<p class="small">D et E sont les produits d\'inertie du cylindre <b>dans le repère lié au rotor</b> : ce sont des constantes. C\'est la projection des efforts centrifuges sur les roulements fixes qui fait apparaître les sin θ, cos θ dans les formules des efforts.</p>'
+    + '<p class="small"><b>Convention.</b> Les valeurs D et E affichées sont les produits d\'inertie du cylindre <b>dans le repère lié au rotor</b> : elles sont <b>constantes</b> (propriétés de la répartition des masses). Si on les exprime dans le repère <b>fixe</b> (x₀, y₀, z₀), les composantes transverses <b>oscillent à la fréquence ω</b> (ou 2ω) : c\'est l\'origine du couple tournant. Les formules des efforts utilisent la convention « amplitudes constantes × sin θ, cos θ », ce qui est strictement équivalent.</p>'
     + '<div class="opts">'
     + '<label class="fld"><span>Translation verticale = <b id="vib-a-out">0.05</b> mm</span><input type="range" id="vib-a" min="0" max="0.2" step="0.005"></label>'
     + '<label class="fld"><span>Inclinaison α = <b id="vib-al-out">0.0</b> °</span><input type="range" id="vib-al" min="-8" max="8" step="0.2"></label>'
@@ -366,20 +360,22 @@ function vibUpdate() {
   $('#vib-al-out').textContent = VIB.alpha.toFixed(1);
   $('#vib-w-out').textContent = VIB.N;
 
+  const theta = VIB.theta;
   const stats = $('#vib-derived');
   stats.innerHTML = '';
   stats.append(
     h('div', { class: 'stat' },
-      h('span', null, 'r = |OG| (calculé)'),
-      h('b', { style: 'color:' + (d.r > 1e-6 ? 'var(--bad)' : 'var(--ok)') },
-        (d.r * 1000).toFixed(3) + ' mm')),
+      h('span', null, 'r = |OG| (repère lié)'),
+      h('b', { style: 'color:' + (d.r > 1e-6 ? 'var(--bad)' : 'var(--ok)') }, (d.r * 1000).toFixed(3) + ' mm')),
     h('div', { class: 'stat' },
-      h('span', null, 'D (calculé)'),
+      h('span', null, 'D (repère lié, constant)'),
       h('b', null, (d.D * 1e4).toFixed(2) + ' ×10⁻⁴')),
     h('div', { class: 'stat' },
-      h('span', null, 'E (calculé)'),
-      h('b', { style: 'color:' + (Math.abs(d.E) > 1e-6 ? 'var(--bad)' : 'var(--ok)') },
-        (d.E * 1e4).toFixed(2) + ' ×10⁻⁴'))
+      h('span', null, 'E (repère lié, constant)'),
+      h('b', { style: 'color:' + (Math.abs(d.E) > 1e-6 ? 'var(--bad)' : 'var(--ok)') }, (d.E * 1e4).toFixed(2) + ' ×10⁻⁴')),
+    h('div', { class: 'stat', style: 'background:var(--accent-soft);border-color:var(--accent)' },
+      h('span', null, 'D·sinθ − E·cosθ (repère fixe, θ = ' + (theta * 180 / Math.PI).toFixed(0) + '°)'),
+      h('b', { style: 'color:var(--accent-ink)' }, ((d.D * Math.sin(theta) - d.E * Math.cos(theta)) * 1e4).toFixed(2) + ' ×10⁻⁴'))
   );
 
   const slow = vibSlowFactor();
@@ -406,10 +402,10 @@ function vibUpdate() {
     msg.innerHTML = '<b>✓ Cylindre parfaitement équilibré.</b> Les efforts dans les roulements sont <b>constants</b> : aucune vibration.';
   } else if (!staticOk && dynOk) {
     msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (translation, pas d\'inclinaison). G tourne autour de l\'axe : les efforts varient à la fréquence ω. Amplitude ~' + amp + ' N.';
+    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (translation, pas d\'inclinaison). G tourne autour de l\'axe : les efforts Y<sub>A</sub>, Y<sub>B</sub> varient à ω. Amplitude ~' + amp + ' N.';
   } else if (staticOk && !dynOk) {
     msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (inclinaison, G sur l\'axe). Les produits d\'inertie D, E ne sont pas nuls : efforts cycliques. Amplitude ~' + amp + ' N.';
+    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (inclinaison, G sur l\'axe). Les produits d\'inertie D, E ne sont pas nuls : efforts X cycliques. Amplitude ~' + amp + ' N.';
   } else {
     msg.className = 'verdict no';
     msg.innerHTML = '<b>✗ Défauts statique ET dynamique.</b> Les efforts varient à ω. Amplitude ~' + amp + ' N.';
@@ -418,10 +414,7 @@ function vibUpdate() {
   drawVib();
 }
 
-function drawVib() {
-  drawVibSolid();
-  drawVibPlot();
-}
+function drawVib() { drawVibSolid(); drawVibPlot(); }
 
 function drawVibSolid() {
   const canvas = $('#vib-solid'); if (!canvas) return;
@@ -436,66 +429,70 @@ function drawVibSolid() {
 
   const halfW = W / 2;
   const theta = VIB.theta;
+  const alRad = VIB.alpha * Math.PI / 180;
+  const aPix = Math.min(VIB.a * 80, 40);
+  const yG = aPix * Math.sin(theta);
 
-  // ================= Vue de côté =================
+  // ===== Vue de côté (selon x₀) =====
   const cx1 = halfW / 2, cy1 = H / 2;
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Vue de côté — montage du cylindre', cx1, 16);
+  ctx.fillText('Vue de côté (selon x₀)', cx1, 16);
 
+  // Arbre fixe
   ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(cx1 - halfW * 0.44, cy1); ctx.lineTo(cx1 + halfW * 0.44, cy1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx1 - halfW * 0.42, cy1); ctx.lineTo(cx1 + halfW * 0.42, cy1); ctx.stroke();
 
-  drawBearing(ctx, cx1 - halfW * 0.34, cy1);
-  drawBearing(ctx, cx1 + halfW * 0.34, cy1);
+  // Roulements
+  drawBearing(ctx, cx1 - halfW * 0.32, cy1);
+  drawBearing(ctx, cx1 + halfW * 0.32, cy1);
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('A', cx1 - halfW * 0.34, cy1 + 42);
-  ctx.fillText('B', cx1 + halfW * 0.34, cy1 + 42);
+  ctx.fillText('A', cx1 - halfW * 0.32, cy1 + 42);
+  ctx.fillText('B', cx1 + halfW * 0.32, cy1 + 42);
 
-  const aPix = Math.min(VIB.a * 80, 45);
-  const alRad = VIB.alpha * Math.PI / 180;
-  const cylW = halfW * 0.5, cylH = 46;
+  // Cylindre : rectangle décalé de yG et incliné de α
+  const cylW = halfW * 0.5, cylH = 44;
   ctx.save();
-  ctx.translate(cx1, cy1 - aPix);
+  ctx.translate(cx1, cy1 - yG);
   ctx.rotate(alRad);
   ctx.fillStyle = 'rgba(46,109,164,0.15)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
   ctx.fillRect(-cylW / 2, -cylH / 2, cylW, cylH);
   ctx.strokeRect(-cylW / 2, -cylH / 2, cylW, cylH);
   ctx.setLineDash([4, 3]); ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(-cylW / 2 - 14, 0); ctx.lineTo(cylW / 2 + 14, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-cylW / 2 - 12, 0); ctx.lineTo(cylW / 2 + 12, 0); ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
 
-  const gx = cx1, gy = cy1 - aPix;
-  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
-  ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(gx, gy); ctx.stroke();
-  ctx.setLineDash([]);
+  // Marqueur de rotation (oscille avec θ)
+  const markerY = cy1 - yG - (cylH / 2) * Math.cos(theta);
+  ctx.beginPath(); ctx.arc(cx1, markerY, 4, 0, 2 * Math.PI);
+  ctx.fillStyle = '#9a5b00'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // G
+  const gx = cx1, gy = cy1 - yG;
   ctx.beginPath(); ctx.arc(gx, gy, 6, 0, 2 * Math.PI);
   ctx.fillStyle = '#c0281f'; ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'left'; ctx.fillText('G', gx + 9, gy + 4);
 
+  // Séparateur
   ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(halfW, 10); ctx.lineTo(halfW, H - 10); ctx.stroke();
 
-  // ================= Vue de face =================
+  // ===== Vue de face (selon z₀) =====
   const fx = halfW + halfW / 2, fy = H / 2;
-  const R = Math.min(halfW, H) * 0.3;
+  const R = Math.min(halfW, H) * 0.22;
+  const aVis = Math.min(VIB.a * 200, R * 0.65);
 
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Vue de face (selon z₀) — rotation', fx, 16);
+  ctx.fillText('Vue de face (selon z₀)', fx, 16);
 
-  ctx.beginPath(); ctx.arc(fx, fy, R, 0, 2 * Math.PI);
-  ctx.fillStyle = 'rgba(46,109,164,0.10)';
-  ctx.fill();
-  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.2;
-  ctx.stroke();
-
-  const aVis = Math.min(VIB.a * 200, R * 0.85);
+  // Trajectoire de G
   if (aVis > 2) {
     ctx.setLineDash([3, 4]);
     ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1;
@@ -503,44 +500,63 @@ function drawVibSolid() {
     ctx.setLineDash([]);
   }
 
-  ctx.beginPath(); ctx.arc(fx, fy, 4, 0, 2 * Math.PI);
-  ctx.fillStyle = '#5a6068'; ctx.fill();
-
+  // Position de G
   const gxF = fx + aVis * Math.cos(theta);
   const gyF = fy - aVis * Math.sin(theta);
-  ctx.setLineDash([3, 2]);
-  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.4;
+
+  // Axe (fixe)
+  ctx.beginPath(); ctx.arc(fx, fy, 3, 0, 2 * Math.PI);
+  ctx.fillStyle = '#5a6068'; ctx.fill();
+
+  // Ligne axe ↔ G
+  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1; ctx.setLineDash([3, 2]);
   ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(gxF, gyF); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.beginPath(); ctx.arc(gxF, gyF, 7, 0, 2 * Math.PI);
-  ctx.fillStyle = '#c0281f'; ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left'; ctx.fillText('G', gxF + 10, gyF + 4);
 
+  // Cylindre (cercle) centré sur G
+  ctx.beginPath(); ctx.arc(gxF, gyF, R, 0, 2 * Math.PI);
+  ctx.fillStyle = 'rgba(46,109,164,0.10)';
+  ctx.fill();
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Repère tournant (ligne intérieure)
+  const mkX = gxF + R * Math.cos(theta);
+  const mkY = gyF - R * Math.sin(theta);
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(gxF, gyF); ctx.lineTo(mkX, mkY); ctx.stroke();
+
+  // Inclinaison
   if (Math.abs(VIB.alpha) > 0.1) {
     const alphaVis = Math.min(Math.abs(VIB.alpha) * 4, R * 0.6) * Math.sign(VIB.alpha);
     ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(fx, fy);
-    ctx.lineTo(fx + alphaVis * Math.cos(theta), fy - alphaVis * Math.sin(theta));
+    ctx.moveTo(gxF, gyF);
+    ctx.lineTo(gxF + alphaVis * Math.sin(theta), gyF - alphaVis * Math.cos(theta));
     ctx.stroke();
-    ctx.fillStyle = '#7b4fc2'; ctx.font = '10px "IBM Plex Sans", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('inclinaison', fx + alphaVis * Math.cos(theta) + 4, fy - alphaVis * Math.sin(theta) - 4);
   }
 
+  // G
+  ctx.beginPath(); ctx.arc(gxF, gyF, 6, 0, 2 * Math.PI);
+  ctx.fillStyle = '#c0281f'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left'; ctx.fillText('G', gxF + 9, gyF - 8);
+
+  // θ
   ctx.fillStyle = '#9a5b00'; ctx.font = '12px "IBM Plex Mono", monospace';
   ctx.textAlign = 'center';
   ctx.fillText('θ = ' + (theta * 180 / Math.PI).toFixed(0) + '°', fx, H - 12);
 
+  // Axes
   ctx.strokeStyle = '#b9bfc7'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
-  ctx.beginPath(); ctx.moveTo(fx - R - 12, fy); ctx.lineTo(fx + R + 12, fy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(fx, fy - R - 12); ctx.lineTo(fx, fy + R + 12); ctx.stroke();
+  const span = R + aVis + 12;
+  ctx.beginPath(); ctx.moveTo(fx - span, fy); ctx.lineTo(fx + span, fy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fx, fy - span); ctx.lineTo(fx, fy + span); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#8a929c'; ctx.font = '10px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'left'; ctx.fillText('x₀', fx + R + 14, fy + 4);
-  ctx.fillText('y₀', fx + 4, fy - R - 14);
+  ctx.textAlign = 'left'; ctx.fillText('x₀', fx + span + 2, fy + 4);
+  ctx.fillText('y₀', fx + 4, fy - span - 2);
 }
 
 function drawBearing(ctx, x, y) {
@@ -660,8 +676,18 @@ function vibAnim(t) {
   VIB.theta += vibOmegaVis() * dt;
   if (VIB.theta > 2 * Math.PI) VIB.theta -= 2 * Math.PI;
   const canvas = $('#vib-solid');
-  if (canvas && canvas.offsetParent !== null) drawVib();
+  if (canvas && canvas.offsetParent !== null) { vibUpdateFast(); }
   VIB.raf = requestAnimationFrame(vibAnim);
+}
+function vibUpdateFast() {
+  const theta = VIB.theta;
+  const d = vibDerived();
+  const statProj = document.querySelectorAll('#vib-derived .stat')[3];
+  if (statProj) {
+    statProj.querySelector('span').textContent = 'D·sinθ − E·cosθ (repère fixe, θ = ' + (theta * 180 / Math.PI).toFixed(0) + '°)';
+    statProj.querySelector('b').textContent = ((d.D * Math.sin(theta) - d.E * Math.cos(theta)) * 1e4).toFixed(2) + ' ×10⁻⁴';
+  }
+  drawVib();
 }
 
 WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques, translation et inclinaison du cylindre.',
@@ -724,7 +750,7 @@ function renderCond() {
   const msg = $('#cond-msg');
   if (staticOK && dynOK) {
     msg.className = 'verdict yes';
-    msg.innerHTML = '<b>✓ Équilibrage dynamique complet.</b> Les efforts dans les roulements sont indépendants de θ, donc constants. Pas de vibration.';
+    msg.innerHTML = '<b>✓ Équilibrage dynamique complet.</b> Les efforts dans les roulements sont constants. Pas de vibration.';
   } else if (staticOK && !dynOK) {
     msg.className = 'verdict warn';
     msg.innerHTML = '<b>⚠ Équilibrage statique seulement.</b> G est sur l\'axe, mais l\'axe n\'est pas principal d\'inertie. <b>Insuffisant en pratique.</b>';
@@ -746,11 +772,11 @@ function mountSD(root) {
     + '<p>Les deux équilibrages ne s\'impliquent pas l\'un l\'autre. L\'équilibrage statique seul est <b>sans grand intérêt</b> : il ne garantit pas l\'absence de vibrations en rotation.</p>'
     + '<p>Cliquez sur un mode pour voir son effet.</p>'
     + '<div class="toggle-card' + (SD.mode === 'none' ? ' active' : '') + '" data-mode="none">'
-    + '<h4>Aucun équilibrage</h4><p style="font-size:13px;margin:4px 0">r ≠ 0, D ≠ 0, E ≠ 0. Le solide tourne mal : efforts tournants dans les roulements.</p></div>'
+    + '<h4>Aucun équilibrage</h4><p style="font-size:13px;margin:4px 0">Cylindre incliné et G décalé : les deux défauts sont présents.</p></div>'
     + '<div class="toggle-card' + (SD.mode === 'stat' ? ' active' : '') + '" data-mode="stat">'
-    + '<h4>Équilibrage statique seulement</h4><p style="font-size:13px;margin:4px 0">r = 0, mais D ou E ≠ 0. Les roulements voient encore des efforts cycliques.</p></div>'
+    + '<h4>Équilibrage statique seulement</h4><p style="font-size:13px;margin:4px 0">Cylindre incliné, mais G sur l\'axe : les roulements voient encore des efforts cycliques.</p></div>'
     + '<div class="toggle-card' + (SD.mode === 'dyn' ? ' active' : '') + '" data-mode="dyn">'
-    + '<h4>Équilibrage dynamique</h4><p style="font-size:13px;margin:4px 0">r = 0 et D = E = 0. Les efforts sont constants, aucune vibration.</p></div>'
+    + '<h4>Équilibrage dynamique</h4><p style="font-size:13px;margin:4px 0">Cylindre droit et G sur l\'axe : efforts constants, aucune vibration.</p></div>'
     + '<canvas class="viz" id="sd-canvas" style="height:280px"></canvas>'
     + '<div id="sd-msg"></div>';
   document.querySelectorAll('#ws .toggle-card').forEach(el => {
@@ -759,9 +785,9 @@ function mountSD(root) {
   drawSD();
   const msg = $('#sd-msg'); msg.innerHTML = '';
   const texts = {
-    none: '<div class="verdict no"><b>✗ Aucun équilibrage.</b> Le centre d\'inertie est décalé, l\'axe n\'est pas principal. Les efforts X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> dépendent de θ : vibrations à la fréquence de rotation.</div>',
-    stat: '<div class="verdict warn"><b>⚠ Équilibrage statique seul.</b> G est sur l\'axe : le solide ne tourne plus sous l\'effet de la pesanteur. Mais les produits d\'inertie D et E ne sont pas nuls : les efforts restent cycliques. <b>Insuffisant.</b></div>',
-    dyn: '<div class="verdict yes"><b>✓ Équilibrage dynamique.</b> G sur l\'axe + axe principal d\'inertie. Les efforts dans les roulements sont constants, aucune vibration.</div>'
+    none: '<div class="verdict no"><b>✗ Aucun équilibrage.</b> G est décalé et le cylindre est incliné : déséquilibre statique ET dynamique. Les efforts X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> dépendent de θ → vibrations à la fréquence de rotation.</div>',
+    stat: '<div class="verdict warn"><b>⚠ Équilibrage statique seulement.</b> G est sur l\'axe (cylindre ne tourne pas sous la pesanteur), mais le cylindre reste incliné : D et E ne sont pas nuls, les efforts restent cycliques. <b>Insuffisant en pratique.</b></div>',
+    dyn: '<div class="verdict yes"><b>✓ Équilibrage dynamique.</b> Cylindre droit + G sur l\'axe : efforts dans les roulements constants, aucune vibration.</div>'
   };
   msg.innerHTML = texts[SD.mode];
 }
@@ -785,21 +811,22 @@ function drawSD() {
   ctx.beginPath(); ctx.moveTo(cx - 70, axisY); ctx.lineTo(cx + 70, axisY); ctx.stroke();
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'left'; ctx.fillText('axe', cx + 72, axisY + 4);
-  const theta = SD.mode === 'none' ? Math.PI / 6 : 0;
+  // Tilt : 'none' et 'stat' ont un cylindre incliné
+  const tilt = (SD.mode === 'none' || SD.mode === 'stat') ? Math.PI / 6 : 0;
   ctx.save();
-  ctx.translate(cx, cy); ctx.rotate(-theta);
+  ctx.translate(cx, cy); ctx.rotate(-tilt);
   ctx.fillStyle = 'rgba(46,109,164,0.2)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
   ctx.fillRect(-50, -20, 100, 40); ctx.strokeRect(-50, -20, 100, 40);
-  let gOffset = 0;
-  if (SD.mode === 'none') gOffset = 15;
+  // G : 'none' → offset ; 'stat' et 'dyn' → centre (sur l'axe)
+  let gOffset = (SD.mode === 'none') ? 15 : 0;
   ctx.fillStyle = '#c0281f';
   ctx.beginPath(); ctx.arc(gOffset, 0, 5, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'left'; ctx.fillText('G', gOffset + 7, 4);
   ctx.restore();
-  ctx.fillStyle = SD.mode === 'none' ? '#c0281f' : '#1e7a2e';
+  ctx.fillStyle = (SD.mode === 'none') ? '#c0281f' : '#1e7a2e';
   ctx.font = '12px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
   if (SD.mode === 'none') {
@@ -818,6 +845,7 @@ function drawSD() {
   ctx.fillRect(bearingR - 15, cy2 + 15, 30, 10);
   ctx.save();
   ctx.translate(cx2, cy2);
+  ctx.rotate((SD.mode === 'none' || SD.mode === 'stat') ? -Math.PI / 12 : 0);
   ctx.fillStyle = 'rgba(46,109,164,0.15)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
   ctx.fillRect(-60, -12, 120, 24); ctx.strokeRect(-60, -12, 120, 24);
@@ -926,8 +954,8 @@ const ACT = {
     ],
     defi: { q: 'Parmi ces problèmes, lesquels correspondent à l\'équilibrage dynamique ?', a: '<b>Placer des masselottes sur une jante</b> et <b>déterminer la répartition de masse pour éviter les vibrations</b>. Ce sont des problèmes de <b>répartition des masses</b>.' },
     qcm: [
-      { q: 'Le PFD appliqué pour trouver la loi de mouvement d\'un mécanisme relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 0, w: 'On connaît les efforts (moteur, pesanteur), on cherche le mouvement.' },
-      { q: 'Dimensionner un actionneur pour imposer une loi de vitesse relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De l\'énergétique'], a: 1, w: 'On impose le mouvement, on cherche le couple ou l\'effort nécessaire.' },
+      { q: 'Le PFD appliqué pour trouver la loi de mouvement d\'un mécanisme relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 0, w: 'On connaît les efforts, on cherche le mouvement.' },
+      { q: 'Dimensionner un actionneur pour imposer une loi de vitesse relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De l\'énergétique'], a: 1, w: 'On impose le mouvement, on cherche le couple.' },
       { q: 'L\'équilibrage d\'un solide en rotation relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 2, w: 'On agit sur la répartition de masse pour éviter les vibrations.' },
       { q: 'Un problème de répartition des masses est…', o: ['Fréquent en concours PSI', 'Rare en concours PSI', 'Interdit en PSI', 'Identique à un problème de statique'], a: 0, w: 'C\'est une problématique industrielle récurrente.' },
       { q: 'Le problème « trouver les efforts dans un roulement connaissant la loi de vitesse » relève de…', o: ['Des efforts aux mouvements', 'Du mouvement aux efforts', 'De la répartition des masses', 'De la statique'], a: 1, w: 'Le mouvement est imposé, on cherche les efforts transmis.' }
@@ -937,17 +965,17 @@ const ACT = {
     title: 'Source des vibrations', level: 'Niveau 2 · Comprendre', time: '25 min', course: 'probleme',
     goal: 'Comprendre l\'origine des vibrations : les efforts dans les roulements dépendent de θ quand r, D ou E ne sont pas nuls.',
     steps: [
-      'Partez des valeurs par défaut (translation 0,05 mm, inclinaison 0°) et lancez l\'animation.',
+      'Partez des valeurs par défaut et lancez l\'animation.',
       'Mettez la translation à 0 : le déséquilibre statique disparaît.',
       'Faites varier l\'inclinaison : elle crée D et E (déséquilibre dynamique).',
       'Concluez : chaque paramètre non nul crée une composante sinusoïdale à la fréquence ω.'
     ],
-    defi: { q: 'Pourquoi les vibrations sont-elles si dangereuses à grande vitesse ?', a: 'Les efforts centrifuges sont proportionnels à ω². À 30 000 tr/min (ω ≈ 3141 rad/s), ω² ≈ 10⁷ : un défaut de 0,05 mm sur un rotor de 10 kg produit des efforts de plusieurs milliers de newtons, avec des fluctuations à 500 Hz.' },
+    defi: { q: 'Pourquoi les vibrations sont-elles si dangereuses à grande vitesse ?', a: 'Les efforts centrifuges sont proportionnels à ω². À 30 000 tr/min, un défaut de 0,05 mm sur un rotor de 10 kg produit des efforts de plusieurs milliers de newtons, avec des fluctuations à 500 Hz.' },
     qcm: [
       { q: 'Les efforts dans les roulements dépendent de θ quand…', o: ['Le solide est immobile', 'Au moins un des paramètres r, D, E est non nul', 'Le moteur est arrêté', 'La vitesse est nulle'], a: 1, w: 'Tant que r, D ou E n\'est pas nul, les efforts contiennent des termes en sin θ et cos θ.' },
-      { q: 'Si r = 0, quels efforts restent variables ?', o: ['Y<sub>A</sub> et Y<sub>B</sub>', 'X<sub>A</sub> et X<sub>B</sub> (si D ou E ≠ 0)', 'Aucun', 'Tous'], a: 1, w: 'r agit sur les termes en Y ; D et E agissent sur les termes en X.' },
+      { q: 'Les produits d\'inertie D et E exprimés dans le repère lié au rotor sont…', o: ['Variables avec θ', 'Constants', 'Toujours nuls', 'Toujours infinis'], a: 1, w: 'Ce sont des propriétés de la répartition des masses, donc constants dans le repère lié. Dans le repère fixe, ils oscillent à ω.' },
       { q: 'Si D = E = 0 et r ≠ 0, quels efforts varient ?', o: ['X<sub>A</sub> et X<sub>B</sub>', 'Y<sub>A</sub> et Y<sub>B</sub>', 'Aucun', 'Tous'], a: 1, w: 'r apparaît dans YA et YB.' },
-      { q: 'À quelle fréquence les efforts varient-ils ?', o: ['À la fréquence de rotation ω', 'À 2ω', 'À ω/2', 'Ils ne varient pas'], a: 0, w: 'Les termes en sin θ et cos θ varient à la fréquence ω.' },
+      { q: 'À quelle fréquence les efforts varient-ils ?', o: ['À la fréquence de rotation ω', 'À 2ω', 'À ω/2', 'Ils ne varient pas'], a: 0, w: 'Les termes en sin θ, cos θ varient à ω.' },
       { q: 'Que se passe-t-il quand r = D = E = 0 ?', o: ['Les efforts sont nuls', 'Les efforts sont constants', 'Les efforts divergent', 'Rien ne change'], a: 1, w: 'Il ne reste que des termes constants (pesanteur).' }
     ]
   },
@@ -955,32 +983,32 @@ const ACT = {
     title: 'Conditions d\'équilibrage', level: 'Niveau 2 · Comprendre', time: '20 min', course: 'equilibrages',
     goal: 'Distinguer équilibrage statique (r = 0) et dynamique (r = 0 et D = E = 0).',
     steps: [
-      'Partez des valeurs par défaut (r = 0,05 mm, D = 1, E = 0) : aucune condition n\'est satisfaite.',
+      'Partez des valeurs par défaut : aucune condition n\'est satisfaite.',
       'Mettez r = 0 : l\'équilibrage statique est-il OK ? L\'équilibrage dynamique l\'est-il ?',
       'Mettez aussi D = E = 0 : l\'équilibrage dynamique est-il complet ?',
       'Concluez : le dynamique exige <b>les deux</b> conditions.'
     ],
-    defi: { q: 'Pourquoi l\'équilibrage statique seul est-il « sans grand intérêt » ?', a: 'Il garantit seulement que le solide reste en équilibre quand il est lâché. Mais <b>en rotation</b>, si l\'axe n\'est pas principal d\'inertie (D ou E ≠ 0), les roulements voient toujours des efforts cycliques.' },
+    defi: { q: 'Pourquoi l\'équilibrage statique seul est-il « sans grand intérêt » ?', a: 'Il garantit seulement que le solide reste en équilibre quand il est lâché. Mais en rotation, si l\'axe n\'est pas principal d\'inertie, les roulements voient toujours des efforts cycliques.' },
     qcm: [
-      { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = 0', 'E = 0', 'r = D = E = 0'], a: 0, w: 'Le centre d\'inertie G doit être sur l\'axe de rotation.' },
-      { q: 'L\'équilibrage dynamique correspond à…', o: ['r = 0', 'D = E = 0', 'r = 0 ET D = E = 0', 'r = D = 0'], a: 2, w: 'Il faut les deux conditions.' },
-      { q: 'Si r = 0 mais D ≠ 0, le solide est…', o: ['Statiquement équilibré seulement', 'Dynamiquement équilibré', 'Non équilibré du tout', 'Parfaitement équilibré'], a: 0, w: 'L\'équilibrage statique est assuré, pas le dynamique.' },
+      { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = 0', 'E = 0', 'r = D = E = 0'], a: 0, w: 'G doit être sur l\'axe de rotation.' },
+      { q: 'L\'équilibrage dynamique correspond à…', o: ['r = 0', 'D = E = 0', 'r = 0 ET D = E = 0', 'r = D = 0'], a: 2, w: 'Les deux conditions sont nécessaires.' },
+      { q: 'Si r = 0 mais D ≠ 0, le solide est…', o: ['Statiquement équilibré seulement', 'Dynamiquement équilibré', 'Non équilibré du tout', 'Parfaitement équilibré'], a: 0, w: 'Statique OK, dynamique KO.' },
       { q: 'Un solide dynamiquement équilibré est…', o: ['Forcément statiquement équilibré', 'Pas forcément statiquement équilibré', 'Toujours en mouvement', 'Toujours immobile'], a: 0, w: 'La condition dynamique inclut r = 0.' },
       { q: 'L\'équilibrage statique seul garantit…', o: ['L\'absence de vibrations en rotation', 'L\'absence de rotation sous la pesanteur', 'Une vitesse constante', 'Un couple nul'], a: 1, w: 'Il garantit juste que le solide ne tourne pas sous la pesanteur.' }
     ]
   },
   sd: {
     title: 'Statique vs dynamique', level: 'Niveau 3 · Approfondir', time: '20 min', course: 'equilibrages',
-    goal: 'Comprendre pourquoi les deux équilibrages sont distincts et pourquoi seul le dynamique compte en pratique.',
+    goal: 'Comprendre pourquoi les deux équilibrages sont distincts.',
     steps: [
-      'Cliquez sur « Aucun équilibrage » : que voyez-vous ?',
-      'Passez à « Équilibrage statique seulement » : le solide ne tourne plus, mais les efforts restent cycliques ?',
-      'Passez à « Équilibrage dynamique » : les efforts sont-ils constants ?',
+      'Cliquez sur « Aucun équilibrage » : cylindre incliné, G décalé.',
+      'Passez à « Équilibrage statique seulement » : cylindre incliné, G sur l\'axe (bien observer).',
+      'Passez à « Équilibrage dynamique » : cylindre droit, G sur l\'axe.',
       'Concluez : le statique seul ne suffit pas en pratique.'
     ],
-    defi: { q: 'Un rotor est statiquement équilibré (G sur l\'axe) mais a un produit d\'inertie D ≠ 0. Est-il utilisable à grande vitesse ?', a: '<b>Non.</b> Les efforts dans les roulements dépendent de θ, avec une amplitude proportionnelle à D·ω².' },
+    defi: { q: 'Un rotor est statiquement équilibré mais a un produit d\'inertie D ≠ 0. Est-il utilisable à grande vitesse ?', a: '<b>Non.</b> Les efforts dans les roulements dépendent de θ, avec une amplitude proportionnelle à D·ω².' },
     qcm: [
-      { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = E = 0', 'r = D = E = 0', 'M = 0'], a: 0, w: 'G doit être sur l\'axe de rotation.' },
+      { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = E = 0', 'r = D = E = 0', 'M = 0'], a: 0, w: 'G doit être sur l\'axe.' },
       { q: 'L\'équilibrage dynamique correspond à…', o: ['r = 0 seulement', 'D = E = 0 seulement', 'r = 0 et D = E = 0', 'Une vitesse constante'], a: 2, w: 'Les deux conditions sont nécessaires.' },
       { q: 'Un solide statiquement équilibré mais avec D ≠ 0…', o: ['Ne vibre pas en rotation', 'Vibre en rotation', 'Est inutilisable', 'Ne tourne pas'], a: 1, w: 'Les efforts dépendent encore de θ.' },
       { q: 'En pratique, quel équilibrage faut-il garantir ?', o: ['Statique seulement', 'Dynamique seulement', 'Les deux (le dynamique inclut le statique)', 'Aucun'], a: 2, w: 'L\'équilibrage dynamique est celui qu\'il faut garantir.' },
@@ -992,10 +1020,7 @@ const ACT = {
     goal: 'Identifier les méthodes d\'équilibrage et le rôle des machines.',
     steps: [
       'Parcourez les situations proposées.',
-      'Pour chacune, demandez-vous : ajoute-t-on de la matière, en enlève-t-on, ou mesure-t-on ?',
-      'Les masselottes ajoutent de la matière.',
-      'Le perçage et le meulage enlèvent de la matière.',
-      'Les machines d\'équilibrage mesurent les vibrations.'
+      'Pour chacune, demandez-vous : ajoute-t-on de la matière, en enlève-t-on, ou mesure-t-on ?'
     ],
     defi: { q: 'Comment une machine d\'équilibrage détermine-t-elle la correction ?', a: 'Elle fait tourner le solide et mesure les vibrations (amplitude et phase). Un calcul permet d\'en déduire la position et la masse à ajouter ou à enlever.' },
     qcm: [
@@ -1011,17 +1036,17 @@ const ACT = {
 /* ============ COURS ============ */
 const COURSE = [];
 COURSE.push({ id: 'intro', t: 'Introduction', h: `
-<p>En CPGE, on distingue <b>trois grandes familles</b> de problèmes que l'on résout avec le PFD et le TEC.</p>
+<p>En CPGE, on distingue <b>trois grandes familles</b> de problèmes.</p>
 <h3>1. Des efforts aux mouvements</h3>
-<p>Connaissant les efforts (pesanteur, moteurs, vérins, ressorts…), on cherche les <b>lois de mouvement</b>.</p>
+<p>Connaissant les efforts, on cherche les <b>lois de mouvement</b>.</p>
 <h3>2. Du mouvement aux efforts</h3>
 <p>Un mouvement est <b>imposé</b> et l'on cherche les efforts générés : dimensionner un actionneur, calculer les efforts de liaison.</p>
 <h3>3. Répartition des masses</h3>
 <p>On cherche à répartir la masse pour éviter les vibrations, <b>y compris à vitesse constante</b>. C'est l'<b>équilibrage</b>.</p>
-<div class="retain"><b>Ce cours</b> traite uniquement du troisième type : comment éviter les vibrations d'un solide en rotation à grande vitesse.</div>
+<div class="retain"><b>Ce cours</b> traite uniquement du troisième type.</div>
 ` });
 COURSE.push({ id: 'probleme', t: 'Problème à résoudre', h: `
-<p>De nombreux systèmes comportent un élément en rotation à grande vitesse : rotors de moteur, turbines, roues, hélices… Le moindre défaut dans la répartition des masses crée des <b>efforts centrifuges tournants</b> qui provoquent :</p>
+<p>De nombreux systèmes comportent un élément en rotation à grande vitesse. Le moindre défaut dans la répartition des masses crée des <b>efforts centrifuges tournants</b> qui provoquent :</p>
 <ul>
 <li>des <b>vibrations</b> ;</li>
 <li>une <b>usure prématurée</b> des roulements ;</li>
@@ -1030,13 +1055,12 @@ COURSE.push({ id: 'probleme', t: 'Problème à résoudre', h: `
 <h3>Exemples industriels</h3>
 <ul>
 <li>Usure anormale des bagues et billes de roulement.</li>
-<li>Usure des coussinets de bielle d'un moteur thermique.</li>
 <li>Équilibrage d'une turbine de réacteur nucléaire.</li>
 <li>Équilibrage du porte-outil d'un centre d'usinage.</li>
 <li>Équilibrage de la turbine d'un turboréacteur de Boeing 777.</li>
 </ul>
 <h3>Objectif</h3>
-<p>Faire en sorte que les actions mécaniques transmises par les éléments de guidage soient <b>constantes</b> au cours du mouvement. C'est l'<b>équilibrage dynamique</b>.</p>
+<p>Rendre les actions mécaniques dans les éléments de guidage <b>constantes</b>. C'est l'<b>équilibrage dynamique</b>.</p>
 <div class="retain"><b>À retenir.</b> Les défauts de répartition des masses créent des efforts qui tournent avec le solide.</div>
 ` });
 COURSE.push({ id: 'solution', t: 'Mise en évidence des solutions', h: `
@@ -1047,7 +1071,6 @@ COURSE.push({ id: 'solution', t: 'Mise en évidence des solutions', h: `
 <li>rotation à vitesse ω autour de (A, z₀)</li>
 </ul>
 <h3>PFD appliqué à S</h3>
-<p>En isolant S et en écrivant le PFD, on obtient les composantes des actions de liaison :</p>
 <div class="formula">X<sub>A</sub> = (D·ω²·sin θ)/L + (M·r − E/L)·ω²·cos θ − M·g·(1 + d/L)</div>
 <div class="formula">X<sub>B</sub> = (D·ω²·sin θ − E·ω²·cos θ + M·g·d)/L</div>
 <div class="formula">Y<sub>A</sub> = (M·r + E/L)·ω²·sin θ − (D·ω²·cos θ)/L</div>
@@ -1059,21 +1082,21 @@ COURSE.push({ id: 'solution', t: 'Mise en évidence des solutions', h: `
 <li>G sur l'axe de rotation → <b>équilibrage statique</b>.</li>
 <li>Axe de rotation = axe principal d'inertie → <b>équilibrage dynamique</b>.</li>
 </ul>
-<div class="retain"><b>À retenir.</b> r = 0 et D = E = 0 sont les deux conditions à satisfaire simultanément.</div>
+<div class="retain"><b>À retenir.</b> r = 0 et D = E = 0 doivent être satisfaits simultanément.</div>
 ` });
 COURSE.push({ id: 'equilibrages', t: 'Les deux équilibrages', h: `
 <h3>Équilibrage statique</h3>
-<p>Le centre d'inertie G est <b>sur l'axe de rotation</b> (r = 0). Le solide lâché dans une position quelconque reste en équilibre dans cette position.</p>
+<p>Le centre d'inertie G est <b>sur l'axe de rotation</b> (r = 0).</p>
 <h3>Équilibrage dynamique</h3>
-<p>L'axe de rotation est <b>axe principal d'inertie</b> du solide. Les produits d'inertie D et E sont <b>nuls</b>.</p>
+<p>L'axe de rotation est <b>axe principal d'inertie</b> du solide (D = E = 0).</p>
 <h3>Les deux sont-ils équivalents ?</h3>
-<p><b>Non.</b> L'équilibrage statique seul est <b>sans grand intérêt</b> : il ne supprime pas les efforts tournants en rotation. Un solide peut être statiquement équilibré et vibrer en rotation.</p>
+<p><b>Non.</b> L'équilibrage statique seul est <b>sans grand intérêt</b> : il ne supprime pas les efforts tournants en rotation.</p>
 <h3>En pratique</h3>
-<p>C'est l'<b>équilibrage dynamique</b> qu'il faut garantir : G sur l'axe et axe de rotation principal d'inertie.</p>
-<div class="retain"><b>À retenir.</b> L'équilibrage dynamique inclut l'équilibrage statique. C'est le seul qui supprime vraiment les vibrations.</div>
+<p>C'est l'<b>équilibrage dynamique</b> qu'il faut garantir : G sur l'axe et axe principal d'inertie.</p>
+<div class="retain"><b>À retenir.</b> L'équilibrage dynamique inclut l'équilibrage statique.</div>
 ` });
 COURSE.push({ id: 'pratique', t: 'Réalisation pratique', h: `
-<p>Les corrections se font par <b>ajout</b> ou <b>enlèvement</b> de matière, aux endroits calculés pour corriger la répartition des masses.</p>
+<p>Les corrections se font par <b>ajout</b> ou <b>enlèvement</b> de matière.</p>
 <h3>Ajout de matière</h3>
 <ul>
 <li>Masselottes sur une jante de voiture.</li>
@@ -1088,23 +1111,20 @@ COURSE.push({ id: 'pratique', t: 'Réalisation pratique', h: `
 <p>Les conditions sont déterminées à l'aide de <b>machines d'équilibrage</b> qui mesurent l'amplitude et l'intensité des vibrations lors de la rotation.</p>
 <ul>
 <li>Machine d'équilibrage de roue de voiture.</li>
-<li>Machine d'équilibrage d'essieu de train.</li>
 <li>Équilibreuse portative (intervention sur site).</li>
 </ul>
-<div class="retain"><b>À retenir.</b> Ajout ou enlèvement de matière selon les contraintes. Les machines guident la correction.</div>
+<div class="retain"><b>À retenir.</b> Ajout ou enlèvement de matière. Les machines guident la correction.</div>
 ` });
 COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
 <dl class="gloss">
 <dt>Équilibrage</dt><dd>Répartir la masse d'un solide en rotation pour éviter les vibrations.</dd>
 <dt>Équilibrage statique</dt><dd>Centre d'inertie G sur l'axe de rotation (r = 0).</dd>
-<dt>Équilibrage dynamique</dt><dd>G sur l'axe ET axe de rotation principal d'inertie (r = 0, D = E = 0).</dd>
+<dt>Équilibrage dynamique</dt><dd>G sur l'axe ET axe principal d'inertie (r = 0, D = E = 0).</dd>
 <dt>Axe principal d'inertie</dt><dd>Axe pour lequel les produits d'inertie sont nuls.</dd>
 <dt>Produit d'inertie</dt><dd>Terme hors diagonale de la matrice d'inertie (D, E, F).</dd>
 <dt>Balourd</dt><dd>Défaut de répartition créant un effort centrifuge tournant.</dd>
-<dt>Effort centrifuge</dt><dd>Effort proportionnel à ω², dépend de θ si mal équilibré.</dd>
 <dt>Masselotte</dt><dd>Petite masse ajoutée pour corriger le balourd.</dd>
 <dt>Machine d'équilibrage</dt><dd>Appareil qui mesure les vibrations pour déterminer les corrections.</dd>
-<dt>Équilibreuse portative</dt><dd>Machine d'équilibrage utilisable sur site.</dd>
 </dl>
 ` });
 
@@ -1241,8 +1261,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg')
 $('#bHelp').addEventListener('click', () => {
   openDlg('Aide', h('div', { html: '<p>Cinq ateliers interactifs sur l\'équilibrage dynamique des solides en rotation.</p>' +
     '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM corrigé.</li><li>Le bouton <b>Cours</b> propose une synthèse rédigée.</li></ul>' +
-    '<h3>Atelier 2</h3><p>Le bouton <b>Pause / Démarrer</b> bloque ou relance la rotation du cylindre autour de (AB). Le bouton <b>α = 0</b> annule l\'inclinaison de l\'axe du cylindre. La vitesse d\'animation est ralentie pour rester lisible, le facteur est affiché sous les curseurs.</p>' +
-    '<h3>Notation</h3><p><b>r</b> = décalage radial de G (mm). <b>D</b> et <b>E</b> = produits d\'inertie (×10⁻⁴ kg·m²). X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> = efforts dans les roulements.</p>' }));
+    '<h3>Atelier 2</h3><p>Le bouton <b>Pause / Démarrer</b> bloque ou relance la rotation du cylindre autour de (AB). Le bouton <b>α = 0</b> annule l\'inclinaison. Les vues de côté et de face sont synchronisées : G oscille dans la vue de côté, en accord avec sa trajectoire circulaire dans la vue de face. La vitesse est ralentie pour rester lisible, le facteur est affiché.</p>' +
+    '<h3>Notation</h3><p><b>r</b> = décalage radial de G (mm). <b>D</b> et <b>E</b> = produits d\'inertie dans le repère lié au rotor (×10⁻⁴ kg·m²). X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> = efforts dans les roulements.</p>' }));
 });
 
 let resizeTimer = null;
