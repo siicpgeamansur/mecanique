@@ -269,43 +269,60 @@ WORKSHOPS.push({ id: 'types', title: 'Types de problèmes', hint: 'Classer les �
   reset: () => { TYPES_ST.assign = {}; TYPES_ST.checked = false; } });
 
 /* ============ ATELIER 2 : SOURCE DES VIBRATIONS ============ */
+const CYL = { M: 10, R: 0.05, Lc: 0.1 }; // cylindre : 10 kg, R = 5 cm, longueur 10 cm
 const VIB = {
-  r: 0.05,      // décalage radial de G (mm)
-  D: 1,         // ×10⁻⁴
-  E: 0,         // ×10⁻⁴
-  N: 30000,     // tr/min
-  omega: 3141,  // rad/s
+  a: 0.05,        // translation verticale (mm)
+  alpha: 0,       // inclinaison de l'axe du cylindre (°)
+  N: 30000,       // tr/min
+  omega: 3141.59,
   theta: 0,
   playing: true,
   raf: null,
   lastT: null
 };
 
-function getVibParams() {
-  return Object.assign({}, PHY, {
-    r: VIB.r * 1e-3,
-    D: VIB.D * 1e-4,
-    E: VIB.E * 1e-4,
-    omega: VIB.omega
-  });
+function vibDerived() {
+  const { M, R, Lc } = CYL;
+  const Iaxe = M * R * R / 2;
+  const Iperp = M * (3 * R * R + Lc * Lc) / 12;
+  const al = VIB.alpha * Math.PI / 180;
+  const r = VIB.a * 1e-3;
+  const D = 0;
+  const E = (Iperp - Iaxe) * Math.sin(al) * Math.cos(al) + M * r * PHY.d;
+  return { r, D, E, Iaxe, Iperp };
 }
 
+function vibParams() {
+  const d = vibDerived();
+  return Object.assign({}, PHY, { r: d.r, D: d.D, E: d.E, omega: VIB.omega });
+}
+
+// Ralenti visuel : on garde une vitesse visuelle entre 0,4 et 6 rad/s
+function vibOmegaVis() { return Math.max(0.4, Math.min(VIB.omega / 1000, 6)); }
+function vibSlowFactor() { return VIB.omega / vibOmegaVis(); }
+
 function mountVib(root) {
-  stopVibAnimation();
-  root.innerHTML = '<h2>2. Source des vibrations</h2>'
-    + '<p>Un solide mal équilibré en rotation à grande vitesse développe des efforts qui <b>tournent avec lui</b> : ils dépendent de θ, donc du temps. Ces efforts excitent la structure à la fréquence de rotation, ce sont les vibrations.</p>'
-    + '<p>Le cylindre est monté sur un arbre guidé par deux roulements (liaison pivot). Le décalage de son centre de gravité G crée un déséquilibre statique (r). Les produits d\'inertie D et E caractérisent le déséquilibre dynamique. Lancez l\'animation pour voir les efforts osciller.</p>'
+  stopVibAnim();
+  root.innerHTML =
+    '<h2>2. Source des vibrations</h2>'
+    + '<p>Le cylindre est monté sur un arbre guidé en rotation par deux roulements A et B (liaison pivot d\'axe (AB)). Deux défauts de montage suffisent à créer des vibrations :</p>'
+    + '<ul>'
+    + '<li><b>une translation verticale</b> du cylindre par rapport à l\'axe : le centre de gravité G quitte l\'axe, ce qui crée un déséquilibre <b>statique</b> (r = |OG|) ;</li>'
+    + '<li><b>une inclinaison</b> de l\'axe du cylindre par rapport à (AB) : les produits d\'inertie D et E ne sont plus nuls, ce qui crée un déséquilibre <b>dynamique</b>.</li>'
+    + '</ul>'
+    + '<p><b>Remarque de physique.</b> Une translation pure d\'un cylindre parfait ne crée <b>pas</b> de produit d\'inertie : par symétrie, le cylindre reste de révolution autour d\'un axe parallèle à (AB). Pour obtenir D ≠ 0 ou E ≠ 0, il faut <b>incliner</b> l\'axe du cylindre (ou avoir un défaut de masse). C\'est pourquoi les deux réglages sont proposés ci-dessous ; les valeurs de r, D et E sont calculées à partir de la géométrie (cylindre de 10 kg, R = 5 cm, L = 10 cm).</p>'
     + '<div class="opts">'
-    + '<label class="fld"><span>Décalage r = <b id="vib-r-out">0.05</b> mm</span><input type="range" id="vib-r" min="0" max="0.2" step="0.005"></label>'
-    + '<label class="fld"><span>D = <b id="vib-D-out">1.0</b> ×10⁻⁴</span><input type="range" id="vib-D" min="0" max="2" step="0.1"></label>'
-    + '<label class="fld"><span>E = <b id="vib-E-out">0.0</b> ×10⁻⁴</span><input type="range" id="vib-E" min="0" max="2" step="0.1"></label>'
+    + '<label class="fld"><span>Translation verticale = <b id="vib-a-out">0.05</b> mm</span><input type="range" id="vib-a" min="0" max="0.2" step="0.005"></label>'
+    + '<label class="fld"><span>Inclinaison α = <b id="vib-al-out">0.0</b> °</span><input type="range" id="vib-al" min="-8" max="8" step="0.2"></label>'
     + '<label class="fld"><span>Vitesse = <b id="vib-w-out">30000</b> tr/min</span><input type="range" id="vib-w" min="1000" max="60000" step="1000"></label>'
     + '</div>'
+    + '<div class="gstats" id="vib-derived"></div>'
+    + '<div class="small" id="vib-note" style="margin-bottom:8px"></div>'
     + '<div class="files" style="margin:4px 0 10px">'
     + '<button class="btn pri" id="vib-play" type="button">Pause</button>'
     + '<button class="btn" id="vib-zero" type="button">θ = 0</button>'
     + '</div>'
-    + '<canvas class="viz" id="vib-solid" style="height:280px"></canvas>'
+    + '<canvas class="viz" id="vib-solid" style="height:300px"></canvas>'
     + '<canvas class="viz" id="vib-plot" style="height:300px"></canvas>'
     + '<div class="leg" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0">'
     + '<span><span style="display:inline-block;width:12px;height:3px;background:#2e6da4;vertical-align:middle;margin-right:4px"></span>X<sub>A</sub></span>'
@@ -315,44 +332,60 @@ function mountVib(root) {
     + '</div>'
     + '<div class="verdict" id="vib-msg"></div>';
 
-  $('#vib-r').value = VIB.r;
-  $('#vib-D').value = VIB.D;
-  $('#vib-E').value = VIB.E;
+  $('#vib-a').value = VIB.a;
+  $('#vib-al').value = VIB.alpha;
   $('#vib-w').value = VIB.N;
   $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
 
-  $('#vib-r').addEventListener('input', e => { VIB.r = +e.target.value; renderVibControls(); drawVib(); });
-  $('#vib-D').addEventListener('input', e => { VIB.D = +e.target.value; renderVibControls(); drawVib(); });
-  $('#vib-E').addEventListener('input', e => { VIB.E = +e.target.value; renderVibControls(); drawVib(); });
+  $('#vib-a').addEventListener('input', e => { VIB.a = +e.target.value; vibUpdate(); });
+  $('#vib-al').addEventListener('input', e => { VIB.alpha = +e.target.value; vibUpdate(); });
   $('#vib-w').addEventListener('input', e => {
     VIB.N = +e.target.value;
     VIB.omega = 2 * Math.PI * VIB.N / 60;
-    renderVibControls(); drawVib();
+    vibUpdate();
   });
   $('#vib-play').addEventListener('click', () => {
     VIB.playing = !VIB.playing;
     $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
-    if (VIB.playing) startVibAnimation(); else stopVibAnimation();
+    if (VIB.playing) startVibAnim(); else stopVibAnim();
   });
   $('#vib-zero').addEventListener('click', () => { VIB.theta = 0; drawVib(); });
 
-  renderVibControls();
-  drawVib();
-  if (VIB.playing) startVibAnimation();
+  vibUpdate();
+  if (VIB.playing) startVibAnim();
 }
 
-function renderVibControls() {
-  const rEl = $('#vib-r-out'); if (!rEl) return;
-  rEl.textContent = VIB.r.toFixed(2);
-  $('#vib-D-out').textContent = VIB.D.toFixed(1);
-  $('#vib-E-out').textContent = VIB.E.toFixed(1);
+function vibUpdate() {
+  const d = vibDerived();
+  $('#vib-a-out').textContent = VIB.a.toFixed(2);
+  $('#vib-al-out').textContent = VIB.alpha.toFixed(1);
   $('#vib-w-out').textContent = VIB.N;
 
-  const msg = $('#vib-msg'); if (!msg) return;
-  const p = getVibParams();
-  const staticOk = VIB.r < 0.001;
-  const dynOk = VIB.D < 0.001 && VIB.E < 0.001;
+  const stats = $('#vib-derived');
+  stats.innerHTML = '';
+  stats.append(
+    h('div', { class: 'stat' },
+      h('span', null, 'r = |OG| (calculé)'),
+      h('b', { style: 'color:' + (d.r > 1e-6 ? 'var(--bad)' : 'var(--ok)') },
+        (d.r * 1000).toFixed(3) + ' mm')),
+    h('div', { class: 'stat' },
+      h('span', null, 'D (calculé)'),
+      h('b', null, (d.D * 1e4).toFixed(2) + ' ×10⁻⁴')),
+    h('div', { class: 'stat' },
+      h('span', null, 'E (calculé)'),
+      h('b', { style: 'color:' + (Math.abs(d.E) > 1e-6 ? 'var(--bad)' : 'var(--ok)') },
+        (d.E * 1e4).toFixed(2) + ' ×10⁻⁴'))
+  );
 
+  const slow = vibSlowFactor();
+  const tRev = 60 / VIB.N;
+  $('#vib-note').innerHTML = 'Vitesse réelle : <b>' + VIB.N + ' tr/min</b> soit '
+    + (VIB.N / 60).toFixed(1) + ' tr/s (1 tour = ' + (tRev * 1000).toFixed(1)
+    + ' ms). Pour rester lisible, l\'animation est <b>ralentie ×'
+    + Math.round(slow) + '</b> (1 tour visuel ≈ ' + (2 * Math.PI / vibOmegaVis()).toFixed(1) + ' s).';
+
+  const msg = $('#vib-msg');
+  const p = vibParams();
   let min = Infinity, max = -Infinity;
   for (let i = 0; i <= 60; i++) {
     const th = 2 * Math.PI * i / 60;
@@ -360,20 +393,24 @@ function renderVibControls() {
     ['XA','YA','XB','YB'].forEach(k => { if (f[k] < min) min = f[k]; if (f[k] > max) max = f[k]; });
   }
   const amp = Math.round(max - min);
+  const staticOk = d.r < 1e-7;
+  const dynOk = Math.abs(d.E) < 1e-7 && Math.abs(d.D) < 1e-7;
 
   if (staticOk && dynOk) {
     msg.className = 'verdict yes';
-    msg.innerHTML = '<b>✓ Solide parfaitement équilibré.</b> Les efforts dans les roulements sont <b>constants</b> au cours du temps. Pas de vibration.';
+    msg.innerHTML = '<b>✓ Cylindre parfaitement équilibré.</b> Les efforts dans les roulements sont <b>constants</b> : aucune vibration.';
   } else if (!staticOk && dynOk) {
     msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (r ≠ 0, D = E = 0). Les efforts Y<sub>A</sub> et Y<sub>B</sub> varient en sinusoïde à ω. Amplitude ~' + amp + ' N.';
+    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (translation, pas d\'inclinaison). G tourne autour de l\'axe : les efforts varient à la fréquence ω. Amplitude ~' + amp + ' N.';
   } else if (staticOk && !dynOk) {
     msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (r = 0, D ou E ≠ 0). Les efforts X<sub>A</sub>, X<sub>B</sub> varient. L\'axe de rotation n\'est pas axe principal d\'inertie. Amplitude ~' + amp + ' N.';
+    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (inclinaison, G sur l\'axe). Les produits d\'inertie D, E ne sont pas nuls : couple tournant, efforts cycliques. Amplitude ~' + amp + ' N.';
   } else {
     msg.className = 'verdict no';
-    msg.innerHTML = '<b>✗ Solide mal équilibré</b> : r, D et E ne sont pas nuls. Les efforts varient de façon cyclique → vibrations. Amplitude ~' + amp + ' N.';
+    msg.innerHTML = '<b>✗ Défauts statique ET dynamique.</b> Les efforts varient à ω. Amplitude ~' + amp + ' N.';
   }
+
+  drawVib();
 }
 
 function drawVib() {
@@ -392,118 +429,144 @@ function drawVibSolid() {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
 
-  const theta = VIB.theta;
   const halfW = W / 2;
-  const cy = H / 2;
-  const scale = 250; // px par mm pour l'exagération visuelle
+  const theta = VIB.theta;
+  const d = vibDerived();
 
-  // === Vue de côté (gauche) ===
-  ctx.fillStyle = '#5a6068';
-  ctx.font = '11px "IBM Plex Sans", sans-serif';
+  // ================= Vue de côté (montage) =================
+  const cx1 = halfW / 2, cy1 = H / 2;
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Vue de côté (selon x₀)', halfW / 2, 16);
+  ctx.fillText('Vue de côté — montage du cylindre', cx1, 16);
 
-  // Arbre
-  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(16, cy); ctx.lineTo(halfW - 16, cy); ctx.stroke();
+  // arbre
+  ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx1 - halfW * 0.44, cy1); ctx.lineTo(cx1 + halfW * 0.44, cy1); ctx.stroke();
 
-  // Roulements
-  drawBearingSymbol(ctx, 42, cy);
-  drawBearingSymbol(ctx, halfW - 42, cy);
+  // roulements A et B
+  drawBearing(ctx, cx1 - halfW * 0.34, cy1);
+  drawBearing(ctx, cx1 + halfW * 0.34, cy1);
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('A', cx1 - halfW * 0.34, cy1 + 42);
+  ctx.fillText('B', cx1 + halfW * 0.34, cy1 + 42);
 
-  // Cylindre
-  const cx = halfW / 2;
-  const cylW = halfW * 0.44, cylH = H * 0.44;
-  ctx.fillStyle = 'rgba(46,109,164,0.12)';
+  // cylindre : translaté verticalement de a (exagéré ×80) et incliné de α
+  const aPix = Math.min(VIB.a * 80, 45);
+  const alRad = VIB.alpha * Math.PI / 180;
+  const cylW = halfW * 0.5, cylH = 46;
+  ctx.save();
+  ctx.translate(cx1, cy1 - aPix);
+  ctx.rotate(alRad);
+  ctx.fillStyle = 'rgba(46,109,164,0.15)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
-  ctx.fillRect(cx - cylW / 2, cy - cylH / 2, cylW, cylH);
-  ctx.strokeRect(cx - cylW / 2, cy - cylH / 2, cylW, cylH);
-
-  // G (oscillation verticale : composante selon y₀ = r·sin θ)
-  const gy = cy - VIB.r * scale * Math.sin(theta);
-  ctx.setLineDash([3, 3]);
-  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, gy); ctx.stroke();
+  ctx.fillRect(-cylW / 2, -cylH / 2, cylW, cylH);
+  ctx.strokeRect(-cylW / 2, -cylH / 2, cylW, cylH);
+  ctx.setLineDash([4, 3]); ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-cylW / 2 - 14, 0); ctx.lineTo(cylW / 2 + 14, 0); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.beginPath(); ctx.arc(cx, gy, 6, 0, 2 * Math.PI);
+  ctx.restore();
+
+  // G (centre du cylindre) et distance à l'axe
+  const gx = cx1, gy = cy1 - aPix;
+  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(gx, gy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(gx, gy, 6, 0, 2 * Math.PI);
   ctx.fillStyle = '#c0281f'; ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left'; ctx.fillText('G', cx + 9, gy + 4);
+  ctx.textAlign = 'left'; ctx.fillText('G', gx + 9, gy + 4);
 
-  // Labels roulements
-  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('A', 42, cy + 46);
-  ctx.fillText('B', halfW - 42, cy + 46);
+  ctx.fillStyle = '#8a929c'; ctx.font = '10px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('axe (AB)', cx1 - halfW * 0.44 - 4, cy1 - 4);
 
-  // Séparateur
+  // séparateur
   ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(halfW, 10); ctx.lineTo(halfW, H - 10); ctx.stroke();
 
-  // === Vue de face (droite) ===
-  const fx = halfW + halfW / 2;
-  const fy = H / 2;
-  const R = Math.min(halfW, H) * 0.32;
+  // ================= Vue de face (rotation) =================
+  const fx = halfW + halfW / 2, fy = H / 2;
+  const R = Math.min(halfW, H) * 0.3;
 
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Vue de face (selon z₀)', fx, 16);
+  ctx.fillText('Vue de face (selon z₀) — rotation', fx, 16);
 
-  // Cercle cylindre
+  // diamètre extérieur (cylindre)
   ctx.beginPath(); ctx.arc(fx, fy, R, 0, 2 * Math.PI);
-  ctx.fillStyle = 'rgba(46,109,164,0.12)'; ctx.fill();
-  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = 'rgba(46,109,164,0.10)';
+  ctx.fill();
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // trajectoire de G (cercle de rayon a)
+  const aVis = Math.min(VIB.a * 200, R * 0.85);
+  if (aVis > 2) {
+    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(fx, fy, aVis, 0, 2 * Math.PI); ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   // Axe (centre)
   ctx.beginPath(); ctx.arc(fx, fy, 4, 0, 2 * Math.PI);
   ctx.fillStyle = '#5a6068'; ctx.fill();
 
-  // G
-  const rVisF = Math.min(VIB.r * scale, R * 0.85);
-  const gx = fx + rVisF * Math.cos(theta);
-  const gyF = fy - rVisF * Math.sin(theta);
-  ctx.setLineDash([4, 3]);
-  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(gx, gyF); ctx.stroke();
+  // G à l'angle θ
+  const gxF = fx + aVis * Math.cos(theta);
+  const gyF = fy - aVis * Math.sin(theta);
+  ctx.setLineDash([3, 2]);
+  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(gxF, gyF); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.beginPath(); ctx.arc(gx, gyF, 7, 0, 2 * Math.PI);
+  ctx.beginPath(); ctx.arc(gxF, gyF, 7, 0, 2 * Math.PI);
   ctx.fillStyle = '#c0281f'; ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left'; ctx.fillText('G', gx + 10, gyF + 4);
+  ctx.textAlign = 'left'; ctx.fillText('G', gxF + 10, gyF + 4);
 
-  // Label θ
+  // marque de l'inclinaison (projetée) : petit trait dans la direction θ
+  if (Math.abs(VIB.alpha) > 0.1) {
+    const alphaVis = Math.min(Math.abs(VIB.alpha) * 4, R * 0.6) * Math.sign(VIB.alpha);
+    ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.lineTo(fx + alphaVis * Math.cos(theta), fy - alphaVis * Math.sin(theta));
+    ctx.stroke();
+    ctx.fillStyle = '#7b4fc2'; ctx.font = '10px "IBM Plex Sans", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('inclinaison', fx + alphaVis * Math.cos(theta) + 4, fy - alphaVis * Math.sin(theta) - 4);
+  }
+
+  // θ
   ctx.fillStyle = '#9a5b00'; ctx.font = '12px "IBM Plex Mono", monospace';
   ctx.textAlign = 'center';
   ctx.fillText('θ = ' + (theta * 180 / Math.PI).toFixed(0) + '°', fx, H - 12);
 
-  // Axes x0, y0
+  // axes x0, y0
   ctx.strokeStyle = '#b9bfc7'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
-  ctx.beginPath(); ctx.moveTo(fx - R - 10, fy); ctx.lineTo(fx + R + 10, fy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(fx, fy - R - 10); ctx.lineTo(fx, fy + R + 10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fx - R - 12, fy); ctx.lineTo(fx + R + 12, fy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fx, fy - R - 12); ctx.lineTo(fx, fy + R + 12); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#8a929c'; ctx.font = '10px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'left'; ctx.fillText('x₀', fx + R + 12, fy + 4);
-  ctx.fillText('y₀', fx + 4, fy - R - 12);
+  ctx.textAlign = 'left'; ctx.fillText('x₀', fx + R + 14, fy + 4);
+  ctx.fillText('y₀', fx + 4, fy - R - 14);
 }
 
-function drawBearingSymbol(ctx, x, y) {
-  // Support triangle
+function drawBearing(ctx, x, y) {
   ctx.fillStyle = '#e6eaee'; ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 1.2;
   ctx.beginPath();
   ctx.moveTo(x - 12, y + 12); ctx.lineTo(x + 12, y + 12); ctx.lineTo(x, y + 32);
   ctx.closePath(); ctx.fill(); ctx.stroke();
-  // Hatching
   ctx.strokeStyle = '#b9bfc7'; ctx.lineWidth = 1;
   for (let i = -8; i <= 8; i += 4) {
     ctx.beginPath(); ctx.moveTo(x + i, y + 12); ctx.lineTo(x + i - 4, y + 18); ctx.stroke();
   }
-  // Bearing rectangle
   ctx.fillStyle = '#d0d5da'; ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 1.5;
   ctx.fillRect(x - 10, y - 10, 20, 20);
   ctx.strokeRect(x - 10, y - 10, 20, 20);
-  // Shaft hole
   ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI);
   ctx.fillStyle = '#5a6068'; ctx.fill();
 }
@@ -519,7 +582,7 @@ function drawVibPlot() {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
 
-  const p = getVibParams();
+  const p = vibParams();
   const N = 120;
   const data = [];
   let min = Infinity, max = -Infinity;
@@ -537,7 +600,6 @@ function drawVibPlot() {
   const sx = t => pad + (t / (2 * Math.PI)) * plotW;
   const sy = v => H - pad - ((v - yMin) / (yMax - yMin)) * plotH;
 
-  // Grille
   ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const x = pad + (plotW * i) / 4;
@@ -546,11 +608,9 @@ function drawVibPlot() {
     const y = sy(v);
     ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
   }
-  // Axes
   ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(pad, sy(0)); ctx.lineTo(W - pad, sy(0)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, H - pad); ctx.stroke();
-  // Labels
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
   for (let i = 0; i <= 4; i++) {
@@ -566,7 +626,6 @@ function drawVibPlot() {
   ctx.textAlign = 'left';
   ctx.fillText('Efforts (N)', pad, pad - 8);
 
-  // Courbes
   const curves = [
     { key: 'XA', color: '#2e6da4' },
     { key: 'YA', color: '#1e7a2e' },
@@ -583,7 +642,7 @@ function drawVibPlot() {
     ctx.stroke();
   });
 
-  // Curseur θ (ligne verticale + points sur les courbes)
+  // curseur θ (ligne verticale + points sur les courbes)
   const curX = sx(VIB.theta);
   ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
   ctx.beginPath(); ctx.moveTo(curX, pad); ctx.lineTo(curX, H - pad); ctx.stroke();
@@ -597,35 +656,31 @@ function drawVibPlot() {
   });
 }
 
-function startVibAnimation() {
+function startVibAnim() {
   if (VIB.raf != null) return;
   VIB.lastT = null;
   VIB.raf = requestAnimationFrame(vibAnim);
 }
-
-function stopVibAnimation() {
+function stopVibAnim() {
   if (VIB.raf != null) { cancelAnimationFrame(VIB.raf); VIB.raf = null; }
   VIB.lastT = null;
 }
-
 function vibAnim(t) {
   if (!VIB.playing) { VIB.raf = null; VIB.lastT = null; return; }
   if (VIB.lastT == null) VIB.lastT = t;
   const dt = Math.min((t - VIB.lastT) / 1000, 0.05);
   VIB.lastT = t;
-  // rotation visuelle ralentie proportionnellement à ω
-  VIB.theta += VIB.omega * 0.0008 * dt;
+  VIB.theta += vibOmegaVis() * dt;
   if (VIB.theta > 2 * Math.PI) VIB.theta -= 2 * Math.PI;
   const canvas = $('#vib-solid');
   if (canvas && canvas.offsetParent !== null) drawVib();
   VIB.raf = requestAnimationFrame(vibAnim);
 }
 
-WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques, rotation et paramètres d\'équilibrage.',
+WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques, translation et inclinaison du cylindre.',
   mount: mountVib,
-  reset: () => { VIB.r = 0.05; VIB.D = 1; VIB.E = 0; VIB.N = 30000; VIB.omega = 3141; VIB.theta = 0; VIB.playing = true; },
-  leave: () => stopVibAnimation() });
-
+  reset: () => { VIB.a = 0.05; VIB.alpha = 0; VIB.N = 30000; VIB.omega = 3141.59; VIB.theta = 0; VIB.playing = true; },
+  leave: () => stopVibAnim() });
 /* ============ ATELIER 3 : CONDITIONS D'ÉQUILIBRAGE ============ */
 const COND = { r: 0.05, D: 1, E: 0 };
 function mountCond(root) {
