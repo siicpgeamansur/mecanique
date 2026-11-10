@@ -269,7 +269,7 @@ const VIB = {
   alpha: 0,
   N: 30000,
   omega: 2 * Math.PI * 30000 / 60,
-  theta: 0,
+  theta: Math.PI / 6,   // ← démarre à 30° pour que les effets soient visibles
   playing: true,
   raf: null,
   lastT: null
@@ -304,6 +304,7 @@ function mountVib(root) {
     + '<li><b>une inclinaison</b> de l\'axe du cylindre par rapport à (AB) : les produits d\'inertie D et E ne sont plus nuls, déséquilibre <b>dynamique</b>.</li>'
     + '</ul>'
     + '<p><b>Remarque de physique.</b> Une translation pure d\'un cylindre parfait ne crée <b>pas</b> de produit d\'inertie (symétrie de révolution). Pour obtenir D ≠ 0 ou E ≠ 0, il faut <b>incliner</b> l\'axe. Les valeurs r, D, E affichées sont calculées à partir de la géométrie (cylindre de 10 kg, R = 5 cm, L = 10 cm).</p>'
+    + '<p class="small"><b>Pourquoi le tilt oscille dans la vue de côté ?</b> L\'axe du cylindre, incliné de α par rapport à (AB), décrit un <b>cône</b> autour de (AB) quand le cylindre tourne. Sa projection dans le plan de la vue (y₀, z₀) fait un angle apparent <b>α·sin θ</b>, qui oscille entre +α et −α à la fréquence ω. À θ = 0 ou π, le tilt apparent est nul (l\'inclinaison est perpendiculaire au plan de la vue) ; à θ = π/2 ou 3π/2, il est maximal.</p>'
     + '<p class="small"><b>Convention.</b> Les valeurs D et E affichées sont les produits d\'inertie du cylindre <b>dans le repère lié au rotor</b> : elles sont <b>constantes</b> (propriétés de la répartition des masses). Si on les exprime dans le repère <b>fixe</b> (x₀, y₀, z₀), les composantes transverses <b>oscillent à la fréquence ω</b> (ou 2ω) : c\'est l\'origine du couple tournant. Les formules des efforts utilisent la convention « amplitudes constantes × sin θ, cos θ », ce qui est strictement équivalent.</p>'
     + '<div class="opts">'
     + '<label class="fld"><span>Translation verticale = <b id="vib-a-out">0.05</b> mm</span><input type="range" id="vib-a" min="0" max="0.2" step="0.005"></label>'
@@ -451,25 +452,23 @@ function drawVibSolid() {
   ctx.fillText('A', cx1 - halfW * 0.32, cy1 + 42);
   ctx.fillText('B', cx1 + halfW * 0.32, cy1 + 42);
 
-  // Cylindre : rectangle décalé de yG et incliné de α
+  // Tilt apparent = α · sin θ (projection du cône dans le plan de la vue)
+  // Signe négatif pour que "tilt vers +y" se voie comme un basculement
+  // anti-horaire dans le canvas (y vers le bas).
+  const apparentTilt = -alRad * Math.sin(theta);
   const cylW = halfW * 0.5, cylH = 44;
   ctx.save();
   ctx.translate(cx1, cy1 - yG);
-  ctx.rotate(alRad);
+  ctx.rotate(apparentTilt);
   ctx.fillStyle = 'rgba(46,109,164,0.15)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
   ctx.fillRect(-cylW / 2, -cylH / 2, cylW, cylH);
   ctx.strokeRect(-cylW / 2, -cylH / 2, cylW, cylH);
+  // Axe du cylindre
   ctx.setLineDash([4, 3]); ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(-cylW / 2 - 12, 0); ctx.lineTo(cylW / 2 + 12, 0); ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
-
-  // Marqueur de rotation (oscille avec θ)
-  const markerY = cy1 - yG - (cylH / 2) * Math.cos(theta);
-  ctx.beginPath(); ctx.arc(cx1, markerY, 4, 0, 2 * Math.PI);
-  ctx.fillStyle = '#9a5b00'; ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
 
   // G
   const gx = cx1, gy = cy1 - yG;
@@ -478,6 +477,14 @@ function drawVibSolid() {
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'left'; ctx.fillText('G', gx + 9, gy + 4);
+
+  // Petite étiquette tilt
+  ctx.fillStyle = '#7b4fc2'; ctx.font = '10px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  if (Math.abs(VIB.alpha) > 0.1) {
+    const tiltDeg = (apparentTilt * 180 / Math.PI);
+    ctx.fillText('tilt apparent = ' + tiltDeg.toFixed(1) + '°', cx1, H - 12);
+  }
 
   // Séparateur
   ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
@@ -504,11 +511,11 @@ function drawVibSolid() {
   const gxF = fx + aVis * Math.cos(theta);
   const gyF = fy - aVis * Math.sin(theta);
 
-  // Axe (fixe)
+  // Axe fixe
   ctx.beginPath(); ctx.arc(fx, fy, 3, 0, 2 * Math.PI);
   ctx.fillStyle = '#5a6068'; ctx.fill();
 
-  // Ligne axe ↔ G
+  // Ligne axe↔G
   ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1; ctx.setLineDash([3, 2]);
   ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(gxF, gyF); ctx.stroke();
   ctx.setLineDash([]);
@@ -520,19 +527,24 @@ function drawVibSolid() {
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  // Repère tournant (ligne intérieure)
-  const mkX = gxF + R * Math.cos(theta);
-  const mkY = gyF - R * Math.sin(theta);
-  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(gxF, gyF); ctx.lineTo(mkX, mkY); ctx.stroke();
-
-  // Inclinaison
+  // Indicateur de tilt : UNE seule flèche, dans le sens de la direction
+  // de l'inclinaison, qui tourne à θ avec le cylindre. Absent si α = 0.
   if (Math.abs(VIB.alpha) > 0.1) {
-    const alphaVis = Math.min(Math.abs(VIB.alpha) * 4, R * 0.6) * Math.sign(VIB.alpha);
-    ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2;
+    const tiltLen = R * 0.7;
+    const ex = gxF + tiltLen * Math.cos(theta);
+    const ey = gyF - tiltLen * Math.sin(theta);
+    ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(gxF, gyF);
-    ctx.lineTo(gxF + alphaVis * Math.sin(theta), gyF - alphaVis * Math.cos(theta));
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    // Pointe de flèche
+    const ang = Math.atan2(-Math.sin(theta), Math.cos(theta));
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - 9 * Math.cos(ang - 0.4), ey - 9 * Math.sin(ang - 0.4));
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - 9 * Math.cos(ang + 0.4), ey - 9 * Math.sin(ang + 0.4));
     ctx.stroke();
   }
 
@@ -548,7 +560,7 @@ function drawVibSolid() {
   ctx.textAlign = 'center';
   ctx.fillText('θ = ' + (theta * 180 / Math.PI).toFixed(0) + '°', fx, H - 12);
 
-  // Axes
+  // Axes x₀, y₀
   ctx.strokeStyle = '#b9bfc7'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
   const span = R + aVis + 12;
   ctx.beginPath(); ctx.moveTo(fx - span, fy); ctx.lineTo(fx + span, fy); ctx.stroke();
@@ -558,7 +570,7 @@ function drawVibSolid() {
   ctx.textAlign = 'left'; ctx.fillText('x₀', fx + span + 2, fy + 4);
   ctx.fillText('y₀', fx + 4, fy - span - 2);
 }
-
+  
 function drawBearing(ctx, x, y) {
   ctx.fillStyle = '#e6eaee'; ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 1.2;
   ctx.beginPath();
@@ -692,7 +704,7 @@ function vibUpdateFast() {
 
 WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques, translation et inclinaison du cylindre.',
   mount: mountVib,
-  reset: () => { VIB.a = 0.05; VIB.alpha = 0; VIB.N = 30000; VIB.omega = 2 * Math.PI * 30000 / 60; VIB.theta = 0; VIB.playing = true; },
+  reset: () => { VIB.a = 0.05; VIB.alpha = 0; VIB.N = 30000; VIB.omega = 2 * Math.PI * 30000 / 60; VIB.theta = Math.PI / 6; VIB.playing = true; },
   leave: () => stopVibAnim() });
 
 /* ============ ATELIER 3 : CONDITIONS D'ÉQUILIBRAGE ============ */
