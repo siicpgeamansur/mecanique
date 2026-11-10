@@ -776,33 +776,48 @@ function renderCond() {
 }
 WORKSHOPS.push({ id: 'cond', title: 'Conditions d\'équilibrage', hint: 'Diagnostic des deux conditions (statique / dynamique).', mount: mountCond,
   reset: () => { COND.r = 0.05; COND.D = 1; COND.E = 0; } });
-
 /* ============ ATELIER 4 : STATIQUE VS DYNAMIQUE ============ */
-const SD = { mode: 'none' };
+const SD = { mode: 'perfect' };
+const SD_MODES = {
+  perfect: { r: 0, D: 0, title: 'Parfaitement équilibré (référence)',
+             desc: 'r = 0 et D = E = 0 : les deux défauts sont absents.' },
+  lin:     { r: 1, D: 0, title: 'Vibrations linéaires',
+             desc: 'G hors de l\'axe, matrice diagonale. Force centrifuge tournante, pas de couple.' },
+  ang:     { r: 0, D: 1, title: 'Vibrations angulaires',
+             desc: 'G sur l\'axe, matrice non diagonale. Couple tournant, pas de force nette.' },
+  both:    { r: 1, D: 1, title: 'Linéaire + angulaire',
+             desc: 'G hors de l\'axe ET matrice non diagonale : les deux effets se cumulent.' }
+};
+
 function mountSD(root) {
   root.innerHTML = '<h2>4. Statique vs dynamique</h2>'
-    + '<p>Les deux équilibrages ne s\'impliquent pas l\'un l\'autre. L\'équilibrage statique seul est <b>sans grand intérêt</b> : il ne garantit pas l\'absence de vibrations en rotation.</p>'
-    + '<p>Cliquez sur un mode pour voir son effet.</p>'
-    + '<div class="toggle-card' + (SD.mode === 'none' ? ' active' : '') + '" data-mode="none">'
-    + '<h4>Aucun équilibrage</h4><p style="font-size:13px;margin:4px 0">Cylindre incliné et G décalé : les deux défauts sont présents.</p></div>'
-    + '<div class="toggle-card' + (SD.mode === 'stat' ? ' active' : '') + '" data-mode="stat">'
-    + '<h4>Équilibrage statique seulement</h4><p style="font-size:13px;margin:4px 0">Cylindre incliné, mais G sur l\'axe : les roulements voient encore des efforts cycliques.</p></div>'
-    + '<div class="toggle-card' + (SD.mode === 'dyn' ? ' active' : '') + '" data-mode="dyn">'
-    + '<h4>Équilibrage dynamique</h4><p style="font-size:13px;margin:4px 0">Cylindre droit et G sur l\'axe : efforts constants, aucune vibration.</p></div>'
-    + '<canvas class="viz" id="sd-canvas" style="height:280px"></canvas>'
+    + '<p>Un solide mal équilibré peut vibrer de <b>deux façons distinctes</b>, selon la nature du défaut :</p>'
+    + '<ul>'
+    + '<li><b>Vibrations linéaires</b> — dues à G hors de l\'axe (r ≠ 0). La force centrifuge <b>M·r·ω²</b> tourne avec le solide : les roulements voient un effort tournant qui translate l\'arbre. C\'est le défaut <b>statique</b>.</li>'
+    + '<li><b>Vibrations angulaires</b> — dues à une matrice d\'inertie non diagonale (D ≠ 0 ou E ≠ 0). Un <b>couple tournant</b> apparaît : les roulements voient des efforts opposés qui font \"danser\" l\'arbre (whirling). C\'est le défaut <b>dynamique</b>.</li>'
+    + '<li><b>Les deux défauts réunis</b> — les deux effets se superposent.</li>'
+    + '</ul>'
+    + '<p>Cliquez sur un cas pour visualiser.</p>'
+    + Object.entries(SD_MODES).map(([id, m]) =>
+        '<div class="toggle-card' + (SD.mode === id ? ' active' : '') + '" data-mode="' + id + '">'
+        + '<h4>' + m.title + '</h4>'
+        + '<p style="font-size:13px;margin:4px 0">' + m.desc + '</p></div>'
+      ).join('')
+    + '<canvas class="viz" id="sd-canvas" style="height:300px"></canvas>'
     + '<div id="sd-msg"></div>';
   document.querySelectorAll('#ws .toggle-card').forEach(el => {
     el.addEventListener('click', () => { SD.mode = el.dataset.mode; mountSD(root); });
   });
   drawSD();
-  const msg = $('#sd-msg'); msg.innerHTML = '';
-  const texts = {
-    none: '<div class="verdict no"><b>✗ Aucun équilibrage.</b> G est décalé et le cylindre est incliné : déséquilibre statique ET dynamique. Les efforts X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> dépendent de θ → vibrations à la fréquence de rotation.</div>',
-    stat: '<div class="verdict warn"><b>⚠ Équilibrage statique seulement.</b> G est sur l\'axe (cylindre ne tourne pas sous la pesanteur), mais le cylindre reste incliné : D et E ne sont pas nuls, les efforts restent cycliques. <b>Insuffisant en pratique.</b></div>',
-    dyn: '<div class="verdict yes"><b>✓ Équilibrage dynamique.</b> Cylindre droit + G sur l\'axe : efforts dans les roulements constants, aucune vibration.</div>'
+  const msgs = {
+    perfect: '<div class="verdict yes"><b>✓ Parfaitement équilibré.</b> G sur l\'axe et matrice diagonale : les efforts dans les roulements sont <b>constants</b>, aucune vibration ni linéaire ni angulaire.</div>',
+    lin: '<div class="verdict warn"><b>⚠ Vibrations LINÉAIRES.</b> G est hors de l\'axe (r ≠ 0) mais la matrice reste diagonale. La force centrifuge <b>M·r·ω²</b> tourne avec le solide : l\'arbre est translaté dans ses roulements à la fréquence ω. <b>L\'équilibrage statique manque.</b></div>',
+    ang: '<div class="verdict warn"><b>⚠ Vibrations ANGULAIRES.</b> G est sur l\'axe (r = 0) mais la matrice n\'est pas diagonale (D ≠ 0 ou E ≠ 0). Un <b>couple tournant</b> apparaît : l\'arbre \"danse\" dans ses roulements sans que G ne se déplace. <b>L\'équilibrage dynamique manque.</b></div>',
+    both: '<div class="verdict no"><b>✗ Combinaison LINÉAIRE + ANGULAIRE.</b> G hors de l\'axe ET matrice non diagonale : force centrifuge et couple tournants se superposent. La vibration résultante combine translation et rotation de l\'arbre.</div>'
   };
-  msg.innerHTML = texts[SD.mode];
+  $('#sd-msg').innerHTML = msgs[SD.mode];
 }
+
 function drawSD() {
   const canvas = $('#sd-canvas'); if (!canvas) return;
   const W = canvas.clientWidth, H = canvas.clientHeight;
@@ -813,85 +828,164 @@ function drawSD() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+
+  const m = SD_MODES[SD.mode];
+  const hasLin = m.r !== 0;
+  const hasAng = m.D !== 0;
   const halfW = W / 2;
+  const cy = H / 2 + 5;
+
+  // ================== Panneau gauche : défaut statique ==================
+  const cx1 = halfW / 2;
   ctx.fillStyle = '#111'; ctx.font = 'bold 13px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Effet statique (G sur l\'axe ?)', halfW / 2, 22);
-  const cx = halfW / 2, cy = H / 2 + 10;
-  const axisY = cy;
+  ctx.fillText('Défaut statique (G sur l\'axe ?)', cx1, 22);
+
+  // Axe
   ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(cx - 70, axisY); ctx.lineTo(cx + 70, axisY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx1 - 75, cy); ctx.lineTo(cx1 + 75, cy); ctx.stroke();
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left'; ctx.fillText('axe', cx + 72, axisY + 4);
-  // Tilt : 'none' et 'stat' ont un cylindre incliné
-  const tilt = (SD.mode === 'none' || SD.mode === 'stat') ? Math.PI / 6 : 0;
-  ctx.save();
-  ctx.translate(cx, cy); ctx.rotate(-tilt);
+  ctx.textAlign = 'left'; ctx.fillText('axe', cx1 + 77, cy + 4);
+
+  // Cylindre (toujours droit dans ce panneau)
   ctx.fillStyle = 'rgba(46,109,164,0.2)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
-  ctx.fillRect(-50, -20, 100, 40); ctx.strokeRect(-50, -20, 100, 40);
-  // G : 'none' → offset ; 'stat' et 'dyn' → centre (sur l'axe)
-  let gOffset = (SD.mode === 'none') ? 15 : 0;
-  ctx.fillStyle = '#c0281f';
-  ctx.beginPath(); ctx.arc(gOffset, 0, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(cx1 - 55, cy - 22, 110, 44);
+  ctx.strokeRect(cx1 - 55, cy - 22, 110, 44);
+
+  // G
+  const gOff = hasLin ? 18 : 0;
+  const gxL = cx1 + gOff, gyL = cy;
+
+  // Force centrifuge (snapshot à 30°) + arc de rotation
+  if (hasLin) {
+    const ang = -Math.PI / 6;
+    const F = 45;
+    const fx2 = gxL + F * Math.cos(ang);
+    const fy2 = gyL + F * Math.sin(ang);
+    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(gxL, gyL); ctx.lineTo(fx2, fy2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(fx2, fy2);
+    ctx.lineTo(fx2 - 9 * Math.cos(ang - 0.4), fy2 - 9 * Math.sin(ang - 0.4));
+    ctx.moveTo(fx2, fy2);
+    ctx.lineTo(fx2 - 9 * Math.cos(ang + 0.4), fy2 - 9 * Math.sin(ang + 0.4));
+    ctx.stroke();
+    ctx.fillStyle = '#c0281f'; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.fillText('M·r·ω²', fx2 + 6, fy2 - 4);
+
+    // Arc tournant autour de l'axe
+    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(cx1, cy, 36, Math.PI * 0.2, Math.PI * 0.55); ctx.stroke();
+    const ar = Math.PI * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(cx1 + 36 * Math.cos(ar), cy + 36 * Math.sin(ar));
+    ctx.lineTo(cx1 + 36 * Math.cos(ar - 0.3) - 6, cy + 36 * Math.sin(ar - 0.3));
+    ctx.stroke();
+  }
+
+  // Point G
+  ctx.beginPath(); ctx.arc(gxL, gyL, 5, 0, 2 * Math.PI);
+  ctx.fillStyle = '#c0281f'; ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 11px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left'; ctx.fillText('G', gOffset + 7, 4);
-  ctx.restore();
-  ctx.fillStyle = (SD.mode === 'none') ? '#c0281f' : '#1e7a2e';
+  ctx.textAlign = 'left'; ctx.fillText('G', gxL + 8, gyL + 4);
+
+  // Message du panneau gauche
   ctx.font = '12px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  if (SD.mode === 'none') {
-    ctx.fillText('G n\'est pas sur l\'axe :', cx, H - 45);
-    ctx.fillText('le solide tourne sous la pesanteur', cx, H - 28);
+  if (hasLin) {
+    ctx.fillStyle = '#c0281f';
+    ctx.fillText('G hors de l\'axe :', cx1, H - 44);
+    ctx.fillText('force centrifuge tournante', cx1, H - 28);
+    ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('→ vibrations LINÉAIRES', cx1, H - 10);
   } else {
-    ctx.fillText('G est sur l\'axe :', cx, H - 45);
-    ctx.fillText('le solide reste en équilibre', cx, H - 28);
+    ctx.fillStyle = '#1e7a2e';
+    ctx.fillText('G sur l\'axe :', cx1, H - 44);
+    ctx.fillText('aucune force centrifuge nette', cx1, H - 28);
+    ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('→ pas de vibration linéaire', cx1, H - 10);
   }
+
+  // Séparateur
+  ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(halfW, 35); ctx.lineTo(halfW, H - 55); ctx.stroke();
+
+  // ================== Panneau droit : défaut dynamique ==================
+  const cx2 = halfW + halfW / 2;
   ctx.fillStyle = '#111'; ctx.font = 'bold 13px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Effet dynamique (efforts cycliques ?)', halfW + halfW / 2, 22);
-  const cx2 = halfW + halfW / 2, cy2 = H / 2 + 10;
-  const bearingL = cx2 - 70, bearingR = cx2 + 70;
-  ctx.fillStyle = '#5a6068'; ctx.fillRect(bearingL - 15, cy2 + 15, 30, 10);
-  ctx.fillRect(bearingR - 15, cy2 + 15, 30, 10);
+  ctx.fillText('Défaut dynamique (matrice diagonale ?)', cx2, 22);
+
+  const bearingL = cx2 - 65, bearingR = cx2 + 65;
+  // Axe
+  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx2 - 75, cy); ctx.lineTo(cx2 + 75, cy); ctx.stroke();
+
+  // Roulements
+  ctx.fillStyle = '#5a6068';
+  ctx.fillRect(bearingL - 12, cy + 12, 24, 10);
+  ctx.fillRect(bearingR - 12, cy + 12, 24, 10);
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('A', bearingL, cy + 36);
+  ctx.fillText('B', bearingR, cy + 36);
+
+  // Cylindre (incliné si défaut dynamique)
   ctx.save();
-  ctx.translate(cx2, cy2);
-  ctx.rotate((SD.mode === 'none' || SD.mode === 'stat') ? -Math.PI / 12 : 0);
+  ctx.translate(cx2, cy);
+  ctx.rotate(hasAng ? -Math.PI / 10 : 0);
   ctx.fillStyle = 'rgba(46,109,164,0.15)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
-  ctx.fillRect(-60, -12, 120, 24); ctx.strokeRect(-60, -12, 120, 24);
+  ctx.fillRect(-55, -15, 110, 30);
+  ctx.strokeRect(-55, -15, 110, 30);
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-65, 0); ctx.lineTo(65, 0); ctx.stroke();
+  ctx.setLineDash([]);
   ctx.restore();
-  const forces = SD.mode === 'dyn'
-    ? [{ x: bearingL, y: cy2 - 25, dx: 0, dy: -15 }, { x: bearingR, y: cy2 - 25, dx: 0, dy: -15 }]
-    : SD.mode === 'stat'
-    ? [{ x: bearingL, y: cy2 - 25, dx: 15, dy: -15 }, { x: bearingR, y: cy2 - 25, dx: 15, dy: -15 }]
-    : [{ x: bearingL, y: cy2 - 25, dx: 20, dy: -20 }, { x: bearingR, y: cy2 - 25, dx: 20, dy: -20 }];
-  forces.forEach(f => {
-    ctx.strokeStyle = SD.mode === 'dyn' ? '#1e7a2e' : '#c0281f';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + f.dx, f.y + f.dy); ctx.stroke();
-    const angle = Math.atan2(f.dy, f.dx);
-    ctx.beginPath();
-    ctx.moveTo(f.x + f.dx, f.y + f.dy);
-    ctx.lineTo(f.x + f.dx - 7 * Math.cos(angle - 0.4), f.y + f.dy - 7 * Math.sin(angle - 0.4));
-    ctx.moveTo(f.x + f.dx, f.y + f.dy);
-    ctx.lineTo(f.x + f.dx - 7 * Math.cos(angle + 0.4), f.y + f.dy - 7 * Math.sin(angle + 0.4));
-    ctx.stroke();
-  });
-  ctx.fillStyle = SD.mode === 'dyn' ? '#1e7a2e' : '#c0281f';
-  ctx.font = '12px "IBM Plex Sans", sans-serif';
+
+  // Couple tournant (snapshot)
+  if (hasAng) {
+    const arrow = (x, y, dy) => {
+      ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + dy); ctx.stroke();
+      const sgn = dy > 0 ? 1 : -1;
+      ctx.beginPath();
+      ctx.moveTo(x, y + dy);
+      ctx.lineTo(x - 6, y + dy - 8 * sgn);
+      ctx.moveTo(x, y + dy);
+      ctx.lineTo(x + 6, y + dy - 8 * sgn);
+      ctx.stroke();
+    };
+    arrow(bearingL, cy - 15, -25);
+    arrow(bearingR, cy + 15, 25);
+    ctx.fillStyle = '#7b4fc2'; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('couple', bearingR + 20, cy - 20);
+    ctx.fillText('tournant', bearingR + 20, cy - 6);
+  }
+
+  // Message du panneau droit
   ctx.textAlign = 'center';
-  if (SD.mode === 'dyn') {
-    ctx.fillText('Efforts constants', cx2, H - 45);
-    ctx.fillText('→ pas de vibration', cx2, H - 28);
+  if (hasAng) {
+    ctx.fillStyle = '#c0281f'; ctx.font = '12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('Matrice non diagonale :', cx2, H - 44);
+    ctx.fillText('couple tournant', cx2, H - 28);
+    ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('→ vibrations ANGULAIRES', cx2, H - 10);
   } else {
-    ctx.fillText('Efforts tournants', cx2, H - 45);
-    ctx.fillText('→ vibrations', cx2, H - 28);
+    ctx.fillStyle = '#1e7a2e'; ctx.font = '12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('Matrice diagonale :', cx2, H - 44);
+    ctx.fillText('aucun couple tournant', cx2, H - 28);
+    ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+    ctx.fillText('→ pas de vibration angulaire', cx2, H - 10);
   }
 }
-WORKSHOPS.push({ id: 'sd', title: 'Statique vs dynamique', hint: 'Comparer les deux équilibrages.', mount: mountSD,
-  reset: () => { SD.mode = 'none'; } });
+
+WORKSHOPS.push({ id: 'sd', title: 'Statique vs dynamique', hint: 'Comparer vibrations linéaires et angulaires.', mount: mountSD,
+  reset: () => { SD.mode = 'perfect'; } });
+  
 
 /* ============ ATELIER 5 : RÉALISATION PRATIQUE ============ */
 const PR = { answered: {} };
@@ -1013,12 +1107,13 @@ const ACT = {
     title: 'Statique vs dynamique', level: 'Niveau 3 · Approfondir', time: '20 min', course: 'equilibrages',
     goal: 'Comprendre pourquoi les deux équilibrages sont distincts.',
     steps: [
-      'Cliquez sur « Aucun équilibrage » : cylindre incliné, G décalé.',
-      'Passez à « Équilibrage statique seulement » : cylindre incliné, G sur l\'axe (bien observer).',
-      'Passez à « Équilibrage dynamique » : cylindre droit, G sur l\'axe.',
-      'Concluez : le statique seul ne suffit pas en pratique.'
+      'Cliquez sur « Parfaitement équilibré » : r = 0 et D = E = 0, aucune vibration.',
+      'Passez à « Vibrations linéaires » : G est hors de l\'axe, une force centrifuge tourne avec le solide.',
+      'Passez à « Vibrations angulaires » : G est sur l\'axe, mais un couple tournant subsiste.',
+      'Passez à « Linéaire + angulaire » : les deux effets se cumulent.',
+      'Concluez : seul l\'équilibrage dynamique (r = 0 ET D = E = 0) supprime les deux types de vibrations.'
     ],
-    defi: { q: 'Un rotor est statiquement équilibré mais a un produit d\'inertie D ≠ 0. Est-il utilisable à grande vitesse ?', a: '<b>Non.</b> Les efforts dans les roulements dépendent de θ, avec une amplitude proportionnelle à D·ω².' },
+    defi: { q: 'Un solide peut-il être statiquement équilibré (G sur l\'axe) et pourtant vibrer ?', a: '<b>Oui.</b> Si la matrice d\'inertie n\'est pas diagonale (D ≠ 0 ou E ≠ 0), un <b>couple tournant</b> subsiste. Ce couple fait « danser » l\'arbre dans ses roulements (phénomène de <i>whirling</i>) sans déplacer G. C\'est une vibration <b>angulaire</b>, distincte de la vibration linéaire due à G hors de l\'axe. Seul l\'équilibrage dynamique (qui annule à la fois r et D/E) supprime les deux.' },
     qcm: [
       { q: 'L\'équilibrage statique correspond à…', o: ['r = 0', 'D = E = 0', 'r = D = E = 0', 'M = 0'], a: 0, w: 'G doit être sur l\'axe.' },
       { q: 'L\'équilibrage dynamique correspond à…', o: ['r = 0 seulement', 'D = E = 0 seulement', 'r = 0 et D = E = 0', 'Une vitesse constante'], a: 2, w: 'Les deux conditions sont nécessaires.' },
