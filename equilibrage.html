@@ -304,57 +304,76 @@ function vibSlowFactor() { return VIB.omega / vibOmegaVis(); }
 function mountVib(root) {
   stopVibAnim();
   root.innerHTML =
-    '<h2>2. Source des vibrations</h2>'
-    + '<p>Le cylindre est monté sur un arbre guidé en rotation par deux roulements A et B (liaison pivot d\'axe (AB)). Deux défauts de montage suffisent à créer des vibrations :</p>'
-    + '<ul>'
-    + '<li><b>une translation verticale</b> du cylindre par rapport à l\'axe : le centre de gravité G quitte l\'axe, ce qui crée un déséquilibre <b>statique</b> (r = |OG|) ;</li>'
-    + '<li><b>une inclinaison</b> de l\'axe du cylindre par rapport à (AB) : les produits d\'inertie D et E ne sont plus nuls, ce qui crée un déséquilibre <b>dynamique</b>.</li>'
-    + '</ul>'
-    + '<p><b>Remarque de physique.</b> Une translation pure d\'un cylindre parfait ne crée <b>pas</b> de produit d\'inertie : par symétrie, le cylindre reste de révolution autour d\'un axe parallèle à (AB). Pour obtenir D ≠ 0 ou E ≠ 0, il faut <b>incliner</b> l\'axe du cylindre (ou avoir un défaut de masse). C\'est pourquoi les deux réglages sont proposés ci-dessous ; les valeurs de r, D et E sont calculées à partir de la géométrie (cylindre de 10 kg, R = 5 cm, L = 10 cm).</p>'
-    + '<div class="opts">'
-    + '<label class="fld"><span>Translation verticale = <b id="vib-a-out">0.05</b> mm</span><input type="range" id="vib-a" min="0" max="0.2" step="0.005"></label>'
-    + '<label class="fld"><span>Inclinaison α = <b id="vib-al-out">0.0</b> °</span><input type="range" id="vib-al" min="-8" max="8" step="0.2"></label>'
-    + '<label class="fld"><span>Vitesse = <b id="vib-w-out">30000</b> tr/min</span><input type="range" id="vib-w" min="1000" max="60000" step="1000"></label>'
-    + '</div>'
-    + '<div class="gstats" id="vib-derived"></div>'
-    + '<div class="small" id="vib-note" style="margin-bottom:8px"></div>'
-    + '<div class="files" style="margin:4px 0 10px">'
-    + '<button class="btn pri" id="vib-play" type="button">Pause</button>'
-    + '<button class="btn" id="vib-zero" type="button">θ = 0</button>'
-    + '</div>'
-    + '<canvas class="viz" id="vib-solid" style="height:300px"></canvas>'
-    + '<canvas class="viz" id="vib-plot" style="height:300px"></canvas>'
-    + '<div class="leg" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0">'
-    + '<span><span style="display:inline-block;width:12px;height:3px;background:#2e6da4;vertical-align:middle;margin-right:4px"></span>X<sub>A</sub></span>'
-    + '<span><span style="display:inline-block;width:12px;height:3px;background:#1e7a2e;vertical-align:middle;margin-right:4px"></span>Y<sub>A</sub></span>'
-    + '<span><span style="display:inline-block;width:12px;height:3px;background:#c0281f;vertical-align:middle;margin-right:4px"></span>X<sub>B</sub></span>'
-    + '<span><span style="display:inline-block;width:12px;height:3px;background:#9a5b00;vertical-align:middle;margin-right:4px"></span>Y<sub>B</sub></span>'
-    + '</div>'
-    + '<div class="verdict" id="vib-msg"></div>';
+  '<h2>2. Source des vibrations</h2>'
+  + '<p>Le cylindre est monté sur un arbre guidé en rotation par deux roulements A et B (liaison pivot d\'axe (AB)). Deux défauts de montage suffisent à créer des vibrations :</p>'
+  + '<ul>'
+  + '<li><b>une translation verticale</b> du cylindre par rapport à l\'axe : G quitte l\'axe, déséquilibre <b>statique</b> (r = |OG|) ;</li>'
+  + '<li><b>une inclinaison</b> de l\'axe du cylindre par rapport à (AB) : les produits d\'inertie D et E ne sont plus nuls, déséquilibre <b>dynamique</b>.</li>'
+  + '</ul>'
+  + '<p><b>Remarque de physique.</b> Une translation pure d\'un cylindre parfait ne crée <b>pas</b> de produit d\'inertie (symétrie de révolution). Pour obtenir D ≠ 0 ou E ≠ 0, il faut <b>incliner</b> l\'axe. Les valeurs r, D, E affichées sont calculées à partir de la géométrie (cylindre de 10 kg, R = 5 cm, L = 10 cm).</p>'
+  + '<p class="small">D et E sont les produits d\'inertie du cylindre <b>dans le repère lié au rotor</b> : ce sont des constantes. C\'est la projection des efforts centrifuges sur les roulements fixes qui fait apparaître les sin θ, cos θ dans les formules des efforts.</p>'
+  + '<div class="opts">'
+  + '<label class="fld"><span>Translation verticale = <b id="vib-a-out">0.05</b> mm</span><input type="range" id="vib-a" min="0" max="0.2" step="0.005"></label>'
+  + '<label class="fld"><span>Inclinaison α = <b id="vib-al-out">0.0</b> °</span><input type="range" id="vib-al" min="-8" max="8" step="0.2"></label>'
+  + '<label class="fld"><span>Vitesse = <b id="vib-w-out">30000</b> tr/min</span><input type="range" id="vib-w" min="1000" max="60000" step="1000"></label>'
+  + '</div>'
+  + '<div class="opts">'
+  + '<label class="fld"><span>θ = <b id="vib-th-out">0</b>°</span><input type="range" id="vib-th" min="0" max="360" step="1"></label>'
+  + '</div>'
+  + '<div class="gstats" id="vib-derived"></div>'
+  + '<div class="small" id="vib-note" style="margin-bottom:8px"></div>'
+  + '<div class="files" style="margin:4px 0 10px">'
+  + '<button class="btn pri" id="vib-play" type="button">Pause</button>'
+  + '<button class="btn" id="vib-zero" type="button">⏸ θ = 0</button>'
+  + '</div>'
+  + '<canvas class="viz" id="vib-solid" style="height:300px"></canvas>'
+  + '<canvas class="viz" id="vib-plot" style="height:300px"></canvas>'
+  + '<div class="leg" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0">'
+  + '<span><span style="display:inline-block;width:12px;height:3px;background:#2e6da4;vertical-align:middle;margin-right:4px"></span>X<sub>A</sub></span>'
+  + '<span><span style="display:inline-block;width:12px;height:3px;background:#1e7a2e;vertical-align:middle;margin-right:4px"></span>Y<sub>A</sub></span>'
+  + '<span><span style="display:inline-block;width:12px;height:3px;background:#c0281f;vertical-align:middle;margin-right:4px"></span>X<sub>B</sub></span>'
+  + '<span><span style="display:inline-block;width:12px;height:3px;background:#9a5b00;vertical-align:middle;margin-right:4px"></span>Y<sub>B</sub></span>'
+  + '</div>'
+  + '<div class="verdict" id="vib-msg"></div>';
 
-  $('#vib-a').value = VIB.a;
-  $('#vib-al').value = VIB.alpha;
-  $('#vib-w').value = VIB.N;
-  $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
+$('#vib-a').value = VIB.a;
+$('#vib-al').value = VIB.alpha;
+$('#vib-w').value = VIB.N;
+$('#vib-th').value = 0;
+$('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
 
-  $('#vib-a').addEventListener('input', e => { VIB.a = +e.target.value; vibUpdate(); });
-  $('#vib-al').addEventListener('input', e => { VIB.alpha = +e.target.value; vibUpdate(); });
-  $('#vib-w').addEventListener('input', e => {
-    VIB.N = +e.target.value;
-    VIB.omega = 2 * Math.PI * VIB.N / 60;
-    vibUpdate();
-  });
-  $('#vib-play').addEventListener('click', () => {
-    VIB.playing = !VIB.playing;
-    $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
-    if (VIB.playing) startVibAnim(); else stopVibAnim();
-  });
-  $('#vib-zero').addEventListener('click', () => { VIB.theta = 0; drawVib(); });
-
+$('#vib-a').addEventListener('input', e => { VIB.a = +e.target.value; vibUpdate(); });
+$('#vib-al').addEventListener('input', e => { VIB.alpha = +e.target.value; vibUpdate(); });
+$('#vib-w').addEventListener('input', e => {
+  VIB.N = +e.target.value;
+  VIB.omega = 2 * Math.PI * VIB.N / 60;
   vibUpdate();
-  if (VIB.playing) startVibAnim();
-}
-
+});
+$('#vib-th').addEventListener('input', e => {
+  VIB.theta = (+e.target.value) * Math.PI / 180;
+  if (VIB.playing) {
+    VIB.playing = false;
+    $('#vib-play').textContent = 'Démarrer';
+    stopVibAnim();
+  }
+  drawVib();
+});
+$('#vib-play').addEventListener('click', () => {
+  VIB.playing = !VIB.playing;
+  $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
+  if (VIB.playing) startVibAnim(); else stopVibAnim();
+  drawVib();
+});
+$('#vib-zero').addEventListener('click', () => {
+  VIB.theta = 0;
+  if (VIB.playing) {
+    VIB.playing = false;
+    $('#vib-play').textContent = 'Démarrer';
+    stopVibAnim();
+  }
+  drawVib();
+});
+  
 function vibUpdate() {
   const d = vibDerived();
   $('#vib-a-out').textContent = VIB.a.toFixed(2);
@@ -414,10 +433,14 @@ function vibUpdate() {
 }
 
 function drawVib() {
+  const deg = (VIB.theta * 180 / Math.PI) % 360;
+  const thInp = $('#vib-th');
+  if (thInp && document.activeElement !== thInp) thInp.value = deg;
+  const thOut = $('#vib-th-out');
+  if (thOut) thOut.textContent = deg.toFixed(0);
   drawVibSolid();
   drawVibPlot();
 }
-
 function drawVibSolid() {
   const canvas = $('#vib-solid'); if (!canvas) return;
   const W = canvas.clientWidth, H = canvas.clientHeight;
