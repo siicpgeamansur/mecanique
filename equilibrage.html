@@ -804,6 +804,9 @@ function mountSD(root) {
         + '<p style="font-size:13px;margin:4px 0">' + m.desc + '</p></div>'
       ).join('')
     + '<canvas class="viz" id="sd-canvas" style="height:300px"></canvas>'
+    + '<p class="small" style="margin-top:6px"><b>Légende.</b> '
+    + '<span style="color:#c0281f;font-weight:600">Flèche rouge</span> : force centrifuge <b>F = M·r·ω²</b> appliquée en G, qui tourne avec le solide (trajectoire circulaire pointillée). '
+    + '<span style="color:#7b4fc2;font-weight:600">Flèches violettes</span> : couple tournant induit par la matrice d\'inertie non diagonale.</p>'
     + '<div id="sd-msg"></div>';
   document.querySelectorAll('#ws .toggle-card').forEach(el => {
     el.addEventListener('click', () => { SD.mode = el.dataset.mode; mountSD(root); });
@@ -841,47 +844,45 @@ function drawSD() {
   ctx.textAlign = 'center';
   ctx.fillText('Défaut statique (G sur l\'axe ?)', cx1, 22);
 
-  // Axe
+  // Axe horizontal (AB)
   ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(cx1 - 75, cy); ctx.lineTo(cx1 + 75, cy); ctx.stroke();
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left'; ctx.fillText('axe', cx1 + 77, cy + 4);
+  ctx.textAlign = 'left'; ctx.fillText('axe (AB)', cx1 + 77, cy + 4);
 
-  // Cylindre (toujours droit dans ce panneau)
-  ctx.fillStyle = 'rgba(46,109,164,0.2)';
+  // Cylindre (rectangle bleu, droit)
+  ctx.fillStyle = 'rgba(46,109,164,0.20)';
   ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
   ctx.fillRect(cx1 - 55, cy - 22, 110, 44);
   ctx.strokeRect(cx1 - 55, cy - 22, 110, 44);
 
-  // G
+  // G — décalé VERTICALEMENT (perpendiculairement à l'axe)
   const gOff = hasLin ? 18 : 0;
-  const gxL = cx1 + gOff, gyL = cy;
+  const gxL = cx1;
+  const gyL = cy - gOff;
 
-  // Force centrifuge (snapshot à 30°) + arc de rotation
   if (hasLin) {
-    const ang = -Math.PI / 6;
-    const F = 45;
-    const fx2 = gxL + F * Math.cos(ang);
-    const fy2 = gyL + F * Math.sin(ang);
+    // Trajectoire circulaire de G autour de l'axe (cercle de rayon gOff)
+    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.arc(cx1, cy, gOff, 0, 2 * Math.PI); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Force centrifuge : radiale, de G vers l'extérieur (vers le haut ici)
+    const F = 48;
+    const fx2 = gxL, fy2 = gyL - F;
     ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(gxL, gyL); ctx.lineTo(fx2, fy2); ctx.stroke();
+    // Pointe de la flèche
     ctx.beginPath();
     ctx.moveTo(fx2, fy2);
-    ctx.lineTo(fx2 - 9 * Math.cos(ang - 0.4), fy2 - 9 * Math.sin(ang - 0.4));
+    ctx.lineTo(fx2 - 8, fy2 + 11);
     ctx.moveTo(fx2, fy2);
-    ctx.lineTo(fx2 - 9 * Math.cos(ang + 0.4), fy2 - 9 * Math.sin(ang + 0.4));
+    ctx.lineTo(fx2 + 8, fy2 + 11);
     ctx.stroke();
-    ctx.fillStyle = '#c0281f'; ctx.font = '11px "IBM Plex Mono", monospace';
-    ctx.textAlign = 'left'; ctx.fillText('M·r·ω²', fx2 + 6, fy2 - 4);
-
-    // Arc tournant autour de l'axe
-    ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.arc(cx1, cy, 36, Math.PI * 0.2, Math.PI * 0.55); ctx.stroke();
-    const ar = Math.PI * 0.55;
-    ctx.beginPath();
-    ctx.moveTo(cx1 + 36 * Math.cos(ar), cy + 36 * Math.sin(ar));
-    ctx.lineTo(cx1 + 36 * Math.cos(ar - 0.3) - 6, cy + 36 * Math.sin(ar - 0.3));
-    ctx.stroke();
+    // Étiquette
+    ctx.fillStyle = '#c0281f'; ctx.font = 'bold 11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('F = M·r·ω²', fx2 + 12, fy2 + 6);
   }
 
   // Point G
@@ -891,12 +892,12 @@ function drawSD() {
   ctx.fillStyle = '#c0281f'; ctx.font = 'bold 11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'left'; ctx.fillText('G', gxL + 8, gyL + 4);
 
-  // Message du panneau gauche
+  // Message panneau gauche
   ctx.font = '12px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
   if (hasLin) {
     ctx.fillStyle = '#c0281f';
-    ctx.fillText('G hors de l\'axe :', cx1, H - 44);
+    ctx.fillText('G au-dessus de l\'axe :', cx1, H - 44);
     ctx.fillText('force centrifuge tournante', cx1, H - 28);
     ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
     ctx.fillText('→ vibrations LINÉAIRES', cx1, H - 10);
@@ -945,7 +946,7 @@ function drawSD() {
   ctx.setLineDash([]);
   ctx.restore();
 
-  // Couple tournant (snapshot)
+  // Couple tournant (flèches opposées)
   if (hasAng) {
     const arrow = (x, y, dy) => {
       ctx.strokeStyle = '#7b4fc2'; ctx.lineWidth = 2.5;
@@ -960,13 +961,13 @@ function drawSD() {
     };
     arrow(bearingL, cy - 15, -25);
     arrow(bearingR, cy + 15, 25);
-    ctx.fillStyle = '#7b4fc2'; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#7b4fc2'; ctx.font = 'bold 11px "IBM Plex Mono", monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('couple', bearingR + 20, cy - 20);
-    ctx.fillText('tournant', bearingR + 20, cy - 6);
+    ctx.fillText('couple', bearingR + 22, cy - 20);
+    ctx.fillText('tournant', bearingR + 22, cy - 6);
   }
 
-  // Message du panneau droit
+  // Message panneau droit
   ctx.textAlign = 'center';
   if (hasAng) {
     ctx.fillStyle = '#c0281f'; ctx.font = '12px "IBM Plex Sans", sans-serif';
