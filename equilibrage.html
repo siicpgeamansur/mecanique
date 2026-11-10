@@ -316,14 +316,11 @@ function mountVib(root) {
     + '<label class="fld"><span>Inclinaison α = <b id="vib-al-out">0.0</b> °</span><input type="range" id="vib-al" min="-8" max="8" step="0.2"></label>'
     + '<label class="fld"><span>Vitesse = <b id="vib-w-out">30000</b> tr/min</span><input type="range" id="vib-w" min="1000" max="60000" step="1000"></label>'
     + '</div>'
-    + '<div class="opts">'
-    + '<label class="fld"><span>θ = <b id="vib-th-out">0</b>°</span><input type="range" id="vib-th" min="0" max="360" step="1"></label>'
-    + '</div>'
     + '<div class="gstats" id="vib-derived"></div>'
     + '<div class="small" id="vib-note" style="margin-bottom:8px"></div>'
     + '<div class="files" style="margin:4px 0 10px">'
     + '<button class="btn pri" id="vib-play" type="button">Pause</button>'
-    + '<button class="btn" id="vib-zero" type="button">⏸ θ = 0</button>'
+    + '<button class="btn" id="vib-zero" type="button">α = 0</button>'
     + '</div>'
     + '<canvas class="viz" id="vib-solid" style="height:300px"></canvas>'
     + '<canvas class="viz" id="vib-plot" style="height:300px"></canvas>'
@@ -338,7 +335,6 @@ function mountVib(root) {
   $('#vib-a').value = VIB.a;
   $('#vib-al').value = VIB.alpha;
   $('#vib-w').value = VIB.N;
-  $('#vib-th').value = 0;
   $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
 
   $('#vib-a').addEventListener('input', e => { VIB.a = +e.target.value; vibUpdate(); });
@@ -348,15 +344,6 @@ function mountVib(root) {
     VIB.omega = 2 * Math.PI * VIB.N / 60;
     vibUpdate();
   });
-  $('#vib-th').addEventListener('input', e => {
-    VIB.theta = (+e.target.value) * Math.PI / 180;
-    if (VIB.playing) {
-      VIB.playing = false;
-      $('#vib-play').textContent = 'Démarrer';
-      stopVibAnim();
-    }
-    drawVib();
-  });
   $('#vib-play').addEventListener('click', () => {
     VIB.playing = !VIB.playing;
     $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
@@ -364,13 +351,9 @@ function mountVib(root) {
     drawVib();
   });
   $('#vib-zero').addEventListener('click', () => {
-    VIB.theta = 0;
-    if (VIB.playing) {
-      VIB.playing = false;
-      $('#vib-play').textContent = 'Démarrer';
-      stopVibAnim();
-    }
-    drawVib();
+    VIB.alpha = 0;
+    $('#vib-al').value = 0;
+    vibUpdate();
   });
 
   vibUpdate();
@@ -436,11 +419,6 @@ function vibUpdate() {
 }
 
 function drawVib() {
-  const deg = (VIB.theta * 180 / Math.PI) % 360;
-  const thInp = $('#vib-th');
-  if (thInp && document.activeElement !== thInp) thInp.value = deg;
-  const thOut = $('#vib-th-out');
-  if (thOut) thOut.textContent = deg.toFixed(0);
   drawVibSolid();
   drawVibPlot();
 }
@@ -1263,7 +1241,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg')
 $('#bHelp').addEventListener('click', () => {
   openDlg('Aide', h('div', { html: '<p>Cinq ateliers interactifs sur l\'équilibrage dynamique des solides en rotation.</p>' +
     '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM corrigé.</li><li>Le bouton <b>Cours</b> propose une synthèse rédigée.</li></ul>' +
-    '<h3>Atelier 2</h3><p>Le curseur <b>θ</b> permet d\'explorer un angle précis (il met l\'animation en pause). Le bouton <b>θ = 0</b> remet l\'angle à zéro et met en pause. La vitesse d\'animation est ralentie pour rester lisible, le facteur est affiché.</p>' +
+    '<h3>Atelier 2</h3><p>Le bouton <b>Pause / Démarrer</b> bloque ou relance la rotation du cylindre autour de (AB). Le bouton <b>α = 0</b> annule l\'inclinaison de l\'axe du cylindre. La vitesse d\'animation est ralentie pour rester lisible, le facteur est affiché sous les curseurs.</p>' +
     '<h3>Notation</h3><p><b>r</b> = décalage radial de G (mm). <b>D</b> et <b>E</b> = produits d\'inertie (×10⁻⁴ kg·m²). X<sub>A</sub>, Y<sub>A</sub>, X<sub>B</sub>, Y<sub>B</sub> = efforts dans les roulements.</p>' }));
 });
 
