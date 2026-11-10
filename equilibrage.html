@@ -269,72 +269,246 @@ WORKSHOPS.push({ id: 'types', title: 'Types de problèmes', hint: 'Classer les �
   reset: () => { TYPES_ST.assign = {}; TYPES_ST.checked = false; } });
 
 /* ============ ATELIER 2 : SOURCE DES VIBRATIONS ============ */
-const VIB = { r: 0.05, D: 1, E: 0 }; // r en mm, D et E en 10^-4
-function mountVib(root) {
-  root.innerHTML = '<h2>2. Source des vibrations</h2>'
-    + '<p>Un solide mal équilibré en rotation à grande vitesse développe des efforts qui <b>tournent avec lui</b> : ils dépendent de θ, donc du temps. Ces efforts excitent la structure à la fréquence de rotation, ce sont les vibrations.</p>'
-    + '<p>Les formules du PFD appliqué au solide S (issu du sujet Centrale-Supélec PSI 2009) font apparaître trois paramètres : <b>r</b> (décalage radial de G), <b>D</b> et <b>E</b> (produits d\'inertie). Faites-les varier et observez les efforts dans les deux roulements.</p>'
-    + '<div class="opts">'
-    + '<label class="fld"><span>r (décalage radial de G) = <b id="vib-r-out">0.05</b> mm</span><input type="range" id="vib-r" min="0" max="0.2" step="0.01"></label>'
-    + '<label class="fld"><span>D = <b id="vib-D-out">1.0</b> ×10⁻⁴ kg·m²</span><input type="range" id="vib-D" min="0" max="2" step="0.1"></label>'
-    + '<label class="fld"><span>E = <b id="vib-E-out">0.0</b> ×10⁻⁴ kg·m²</span><input type="range" id="vib-E" min="0" max="2" step="0.1"></label>'
-    + '</div>'
-    + '<canvas class="viz" id="vib-plot" style="height:320px"></canvas>'
-    + '<div class="leg" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0"><span><span style="display:inline-block;width:12px;height:3px;background:#2e6da4;vertical-align:middle;margin-right:4px"></span>X_A (roulement A, axe x₀)</span><span><span style="display:inline-block;width:12px;height:3px;background:#1e7a2e;vertical-align:middle;margin-right:4px"></span>Y_A (roulement A, axe y₀)</span><span><span style="display:inline-block;width:12px;height:3px;background:#c0281f;vertical-align:middle;margin-right:4px"></span>X_B (roulement B, axe x₀)</span><span><span style="display:inline-block;width:12px;height:3px;background:#9a5b00;vertical-align:middle;margin-right:4px"></span>Y_B (roulement B, axe y₀)</span></div>'
-    + '<canvas class="viz" id="vib-solid" style="height:240px"></canvas>'
-    + '<div class="verdict" id="vib-msg"></div>';
-  ['r', 'D', 'E'].forEach(k => {
-    $('#vib-' + k).value = VIB[k];
-    $('#vib-' + k).addEventListener('input', e => {
-      VIB[k] = +e.target.value;
-      renderVib();
-    });
-  });
-  renderVib();
-}
-function renderVib() {
-  $('#vib-r-out').textContent = VIB.r.toFixed(2);
-  $('#vib-D-out').textContent = VIB.D.toFixed(1);
-  $('#vib-E-out').textContent = VIB.E.toFixed(1);
-  const p = Object.assign({}, PHY, {
+const VIB = {
+  r: 0.05,      // décalage radial de G (mm)
+  D: 1,         // ×10⁻⁴
+  E: 0,         // ×10⁻⁴
+  N: 30000,     // tr/min
+  omega: 3141,  // rad/s
+  theta: 0,
+  playing: true,
+  raf: null,
+  lastT: null
+};
+
+function getVibParams() {
+  return Object.assign({}, PHY, {
     r: VIB.r * 1e-3,
     D: VIB.D * 1e-4,
-    E: VIB.E * 1e-4
+    E: VIB.E * 1e-4,
+    omega: VIB.omega
   });
-  // Calculer tous les efforts sur une période
-  const N = 120;
-  const data = [];
-  let min = Infinity, max = -Infinity;
-  for (let i = 0; i <= N; i++) {
-    const theta = 2 * Math.PI * i / N;
-    const f = computeForces(theta, p);
-    data.push({ theta, ...f });
-    ['XA', 'YA', 'XB', 'YB'].forEach(k => { if (f[k] < min) min = f[k]; if (f[k] > max) max = f[k]; });
-  }
-  drawVibPlot(data, min, max);
-  drawVibSolid(p);
-  // Message diagnostic
-  const msg = $('#vib-msg');
+}
+
+function mountVib(root) {
+  stopVibAnimation();
+  root.innerHTML = '<h2>2. Source des vibrations</h2>'
+    + '<p>Un solide mal équilibré en rotation à grande vitesse développe des efforts qui <b>tournent avec lui</b> : ils dépendent de θ, donc du temps. Ces efforts excitent la structure à la fréquence de rotation, ce sont les vibrations.</p>'
+    + '<p>Le cylindre est monté sur un arbre guidé par deux roulements (liaison pivot). Le décalage de son centre de gravité G crée un déséquilibre statique (r). Les produits d\'inertie D et E caractérisent le déséquilibre dynamique. Lancez l\'animation pour voir les efforts osciller.</p>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>Décalage r = <b id="vib-r-out">0.05</b> mm</span><input type="range" id="vib-r" min="0" max="0.2" step="0.005"></label>'
+    + '<label class="fld"><span>D = <b id="vib-D-out">1.0</b> ×10⁻⁴</span><input type="range" id="vib-D" min="0" max="2" step="0.1"></label>'
+    + '<label class="fld"><span>E = <b id="vib-E-out">0.0</b> ×10⁻⁴</span><input type="range" id="vib-E" min="0" max="2" step="0.1"></label>'
+    + '<label class="fld"><span>Vitesse = <b id="vib-w-out">30000</b> tr/min</span><input type="range" id="vib-w" min="1000" max="60000" step="1000"></label>'
+    + '</div>'
+    + '<div class="files" style="margin:4px 0 10px">'
+    + '<button class="btn pri" id="vib-play" type="button">Pause</button>'
+    + '<button class="btn" id="vib-zero" type="button">θ = 0</button>'
+    + '</div>'
+    + '<canvas class="viz" id="vib-solid" style="height:280px"></canvas>'
+    + '<canvas class="viz" id="vib-plot" style="height:300px"></canvas>'
+    + '<div class="leg" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0">'
+    + '<span><span style="display:inline-block;width:12px;height:3px;background:#2e6da4;vertical-align:middle;margin-right:4px"></span>X<sub>A</sub></span>'
+    + '<span><span style="display:inline-block;width:12px;height:3px;background:#1e7a2e;vertical-align:middle;margin-right:4px"></span>Y<sub>A</sub></span>'
+    + '<span><span style="display:inline-block;width:12px;height:3px;background:#c0281f;vertical-align:middle;margin-right:4px"></span>X<sub>B</sub></span>'
+    + '<span><span style="display:inline-block;width:12px;height:3px;background:#9a5b00;vertical-align:middle;margin-right:4px"></span>Y<sub>B</sub></span>'
+    + '</div>'
+    + '<div class="verdict" id="vib-msg"></div>';
+
+  $('#vib-r').value = VIB.r;
+  $('#vib-D').value = VIB.D;
+  $('#vib-E').value = VIB.E;
+  $('#vib-w').value = VIB.N;
+  $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
+
+  $('#vib-r').addEventListener('input', e => { VIB.r = +e.target.value; renderVibControls(); drawVib(); });
+  $('#vib-D').addEventListener('input', e => { VIB.D = +e.target.value; renderVibControls(); drawVib(); });
+  $('#vib-E').addEventListener('input', e => { VIB.E = +e.target.value; renderVibControls(); drawVib(); });
+  $('#vib-w').addEventListener('input', e => {
+    VIB.N = +e.target.value;
+    VIB.omega = 2 * Math.PI * VIB.N / 60;
+    renderVibControls(); drawVib();
+  });
+  $('#vib-play').addEventListener('click', () => {
+    VIB.playing = !VIB.playing;
+    $('#vib-play').textContent = VIB.playing ? 'Pause' : 'Démarrer';
+    if (VIB.playing) startVibAnimation(); else stopVibAnimation();
+  });
+  $('#vib-zero').addEventListener('click', () => { VIB.theta = 0; drawVib(); });
+
+  renderVibControls();
+  drawVib();
+  if (VIB.playing) startVibAnimation();
+}
+
+function renderVibControls() {
+  const rEl = $('#vib-r-out'); if (!rEl) return;
+  rEl.textContent = VIB.r.toFixed(2);
+  $('#vib-D-out').textContent = VIB.D.toFixed(1);
+  $('#vib-E-out').textContent = VIB.E.toFixed(1);
+  $('#vib-w-out').textContent = VIB.N;
+
+  const msg = $('#vib-msg'); if (!msg) return;
+  const p = getVibParams();
   const staticOk = VIB.r < 0.001;
   const dynOk = VIB.D < 0.001 && VIB.E < 0.001;
+
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i <= 60; i++) {
+    const th = 2 * Math.PI * i / 60;
+    const f = computeForces(th, p);
+    ['XA','YA','XB','YB'].forEach(k => { if (f[k] < min) min = f[k]; if (f[k] > max) max = f[k]; });
+  }
+  const amp = Math.round(max - min);
+
   if (staticOk && dynOk) {
     msg.className = 'verdict yes';
-    msg.innerHTML = '<b>✓ Solide parfaitement équilibré.</b> Les efforts dans les roulements sont <b>constants</b> au cours du temps : X<sub>A</sub> = ' + data[0].XA.toFixed(0) + ' N, X<sub>B</sub> = ' + data[0].XB.toFixed(0) + ' N, Y<sub>A</sub> = Y<sub>B</sub> = 0. Pas de vibration.</b>';
+    msg.innerHTML = '<b>✓ Solide parfaitement équilibré.</b> Les efforts dans les roulements sont <b>constants</b> au cours du temps. Pas de vibration.';
   } else if (!staticOk && dynOk) {
     msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (r ≠ 0, D = E = 0). Les efforts Y<sub>A</sub> et Y<sub>B</sub> varient en sinusoïde à ω : ils tournent avec le solide. Amplitude ~' + Math.round(PHY.M * p.r * p.omega * p.omega) + ' N.';
+    msg.innerHTML = '<b>⚠ Défaut statique seul</b> (r ≠ 0, D = E = 0). Les efforts Y<sub>A</sub> et Y<sub>B</sub> varient en sinusoïde à ω. Amplitude ~' + amp + ' N.';
   } else if (staticOk && !dynOk) {
     msg.className = 'verdict warn';
-    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (r = 0, D ou E ≠ 0). Les efforts X<sub>A</sub>, X<sub>B</sub> varient. L\'axe de rotation n\'est pas axe principal d\'inertie. Amplitude ~' + Math.round(Math.hypot(p.D, p.E) * p.omega * p.omega / p.L) + ' N.';
+    msg.innerHTML = '<b>⚠ Défaut dynamique seul</b> (r = 0, D ou E ≠ 0). Les efforts X<sub>A</sub>, X<sub>B</sub> varient. L\'axe de rotation n\'est pas axe principal d\'inertie. Amplitude ~' + amp + ' N.';
   } else {
     msg.className = 'verdict no';
-    msg.innerHTML = '<b>✗ Solide mal équilibré</b> : r, D et E ne sont pas nuls. Les efforts varient de façon cyclique → vibrations. Il faut corriger la répartition des masses.';
+    msg.innerHTML = '<b>✗ Solide mal équilibré</b> : r, D et E ne sont pas nuls. Les efforts varient de façon cyclique → vibrations. Amplitude ~' + amp + ' N.';
   }
-  // Stats
-  const amp = max - min;
-  // (les stats sont déjà dans le verdict)
 }
-function drawVibPlot(data, min, max) {
+
+function drawVib() {
+  drawVibSolid();
+  drawVibPlot();
+}
+
+function drawVibSolid() {
+  const canvas = $('#vib-solid'); if (!canvas) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
+
+  const theta = VIB.theta;
+  const halfW = W / 2;
+  const cy = H / 2;
+  const scale = 250; // px par mm pour l'exagération visuelle
+
+  // === Vue de côté (gauche) ===
+  ctx.fillStyle = '#5a6068';
+  ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Vue de côté (selon x₀)', halfW / 2, 16);
+
+  // Arbre
+  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(16, cy); ctx.lineTo(halfW - 16, cy); ctx.stroke();
+
+  // Roulements
+  drawBearingSymbol(ctx, 42, cy);
+  drawBearingSymbol(ctx, halfW - 42, cy);
+
+  // Cylindre
+  const cx = halfW / 2;
+  const cylW = halfW * 0.44, cylH = H * 0.44;
+  ctx.fillStyle = 'rgba(46,109,164,0.12)';
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
+  ctx.fillRect(cx - cylW / 2, cy - cylH / 2, cylW, cylH);
+  ctx.strokeRect(cx - cylW / 2, cy - cylH / 2, cylW, cylH);
+
+  // G (oscillation verticale : composante selon y₀ = r·sin θ)
+  const gy = cy - VIB.r * scale * Math.sin(theta);
+  ctx.setLineDash([3, 3]);
+  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, gy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(cx, gy, 6, 0, 2 * Math.PI);
+  ctx.fillStyle = '#c0281f'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left'; ctx.fillText('G', cx + 9, gy + 4);
+
+  // Labels roulements
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('A', 42, cy + 46);
+  ctx.fillText('B', halfW - 42, cy + 46);
+
+  // Séparateur
+  ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(halfW, 10); ctx.lineTo(halfW, H - 10); ctx.stroke();
+
+  // === Vue de face (droite) ===
+  const fx = halfW + halfW / 2;
+  const fy = H / 2;
+  const R = Math.min(halfW, H) * 0.32;
+
+  ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Vue de face (selon z₀)', fx, 16);
+
+  // Cercle cylindre
+  ctx.beginPath(); ctx.arc(fx, fy, R, 0, 2 * Math.PI);
+  ctx.fillStyle = 'rgba(46,109,164,0.12)'; ctx.fill();
+  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Axe (centre)
+  ctx.beginPath(); ctx.arc(fx, fy, 4, 0, 2 * Math.PI);
+  ctx.fillStyle = '#5a6068'; ctx.fill();
+
+  // G
+  const rVisF = Math.min(VIB.r * scale, R * 0.85);
+  const gx = fx + rVisF * Math.cos(theta);
+  const gyF = fy - rVisF * Math.sin(theta);
+  ctx.setLineDash([4, 3]);
+  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(gx, gyF); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(gx, gyF, 7, 0, 2 * Math.PI);
+  ctx.fillStyle = '#c0281f'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
+  ctx.textAlign = 'left'; ctx.fillText('G', gx + 10, gyF + 4);
+
+  // Label θ
+  ctx.fillStyle = '#9a5b00'; ctx.font = '12px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('θ = ' + (theta * 180 / Math.PI).toFixed(0) + '°', fx, H - 12);
+
+  // Axes x0, y0
+  ctx.strokeStyle = '#b9bfc7'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(fx - R - 10, fy); ctx.lineTo(fx + R + 10, fy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fx, fy - R - 10); ctx.lineTo(fx, fy + R + 10); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#8a929c'; ctx.font = '10px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'left'; ctx.fillText('x₀', fx + R + 12, fy + 4);
+  ctx.fillText('y₀', fx + 4, fy - R - 12);
+}
+
+function drawBearingSymbol(ctx, x, y) {
+  // Support triangle
+  ctx.fillStyle = '#e6eaee'; ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x - 12, y + 12); ctx.lineTo(x + 12, y + 12); ctx.lineTo(x, y + 32);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // Hatching
+  ctx.strokeStyle = '#b9bfc7'; ctx.lineWidth = 1;
+  for (let i = -8; i <= 8; i += 4) {
+    ctx.beginPath(); ctx.moveTo(x + i, y + 12); ctx.lineTo(x + i - 4, y + 18); ctx.stroke();
+  }
+  // Bearing rectangle
+  ctx.fillStyle = '#d0d5da'; ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 1.5;
+  ctx.fillRect(x - 10, y - 10, 20, 20);
+  ctx.strokeRect(x - 10, y - 10, 20, 20);
+  // Shaft hole
+  ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI);
+  ctx.fillStyle = '#5a6068'; ctx.fill();
+}
+
+function drawVibPlot() {
   const canvas = $('#vib-plot'); if (!canvas) return;
   const W = canvas.clientWidth, H = canvas.clientHeight;
   if (!W || !H) return;
@@ -344,14 +518,25 @@ function drawVibPlot(data, min, max) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
-  // Marge
+
+  const p = getVibParams();
+  const N = 120;
+  const data = [];
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i <= N; i++) {
+    const th = 2 * Math.PI * i / N;
+    const f = computeForces(th, p);
+    data.push({ theta: th, ...f });
+    ['XA','YA','XB','YB'].forEach(k => { if (f[k] < min) min = f[k]; if (f[k] > max) max = f[k]; });
+  }
+
   const pad = 50;
   const plotW = W - 2 * pad, plotH = H - 2 * pad;
-  // Échelles : x = θ de 0 à 2π, y = efforts
   const range = Math.max(Math.abs(min), Math.abs(max), 100);
   const yMin = -range * 1.1, yMax = range * 1.1;
   const sx = t => pad + (t / (2 * Math.PI)) * plotW;
   const sy = v => H - pad - ((v - yMin) / (yMax - yMin)) * plotH;
+
   // Grille
   ctx.strokeStyle = '#e6eaee'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -369,8 +554,7 @@ function drawVibPlot(data, min, max) {
   ctx.fillStyle = '#5a6068'; ctx.font = '11px "IBM Plex Sans", sans-serif';
   ctx.textAlign = 'center';
   for (let i = 0; i <= 4; i++) {
-    const t = (2 * Math.PI * i / 4) * 180 / Math.PI;
-    ctx.fillText(t.toFixed(0) + '°', pad + (plotW * i) / 4, H - pad + 18);
+    ctx.fillText((2 * Math.PI * i / 4 * 180 / Math.PI).toFixed(0) + '°', pad + (plotW * i) / 4, H - pad + 18);
   }
   ctx.textAlign = 'right';
   for (let i = 0; i <= 4; i++) {
@@ -381,6 +565,7 @@ function drawVibPlot(data, min, max) {
   ctx.fillText('θ', W - pad + 20, sy(0) + 4);
   ctx.textAlign = 'left';
   ctx.fillText('Efforts (N)', pad, pad - 8);
+
   // Courbes
   const curves = [
     { key: 'XA', color: '#2e6da4' },
@@ -397,76 +582,49 @@ function drawVibPlot(data, min, max) {
     });
     ctx.stroke();
   });
-}
-function drawVibSolid(p) {
-  const canvas = $('#vib-solid'); if (!canvas) return;
-  const W = canvas.clientWidth, H = canvas.clientHeight;
-  if (!W || !H) return;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, W, H);
-  // Vue de dessus (regard selon z0) : l'axe de rotation est au centre, G est décalé de r
-  const cx = W / 2, cy = H / 2;
-  // Axe
-  ctx.strokeStyle = '#5a6068'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fillStyle = '#5a6068'; ctx.fill();
-  // Cercle de rayon r (trajectoire de G)
-  const scaleR = 400; // pixels par mm
-  const rPx = Math.max(VIB.r * scaleR, 4);
-  ctx.strokeStyle = '#c0281f'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(cx, cy, rPx, 0, Math.PI * 2); ctx.stroke();
+
+  // Curseur θ (ligne verticale + points sur les courbes)
+  const curX = sx(VIB.theta);
+  ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(curX, pad); ctx.lineTo(curX, H - pad); ctx.stroke();
   ctx.setLineDash([]);
-  // Position de G (à angle 30° pour l'illustration)
-  const theta = Math.PI / 6;
-  const gx = cx + rPx * Math.cos(theta), gy = cy - rPx * Math.sin(theta);
-  // Solide (rectangle tournant)
-  ctx.save();
-  ctx.translate(cx, cy); ctx.rotate(-theta);
-  ctx.fillStyle = 'rgba(46,109,164,0.15)';
-  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
-  ctx.fillRect(-70, -35, 140, 70);
-  ctx.strokeRect(-70, -35, 140, 70);
-  ctx.restore();
-  // Point G
-  ctx.beginPath(); ctx.arc(gx, gy, 6, 0, Math.PI * 2);
-  ctx.fillStyle = '#c0281f'; ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('G', gx + 8, gy - 6);
-  // Ligne axe-G
-  ctx.strokeStyle = '#c0281f'; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
-  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(gx, gy); ctx.stroke();
-  ctx.setLineDash([]);
-  // Label r
-  ctx.fillStyle = '#111'; ctx.font = '11px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('r = ' + VIB.r.toFixed(2) + ' mm', (cx + gx) / 2, (cy + gy) / 2 - 8);
-  // Axe z0 (sortant) - symbolisé par un point entouré
-  ctx.strokeStyle = '#2e6da4'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fillStyle = '#2e6da4'; ctx.fill();
-  // Label axe
-  ctx.fillStyle = '#2e6da4'; ctx.font = '11px "IBM Plex Sans", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('z₀ (axe)', cx + 12, cy - 12);
-  ctx.fillText('Vue de dessus (selon z₀)', cx - 80, H - 15);
-  // Message r
-  if (VIB.r < 0.001) {
-    ctx.fillStyle = '#1e7a2e'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('✓ G est sur l\'axe → équilibrage statique', cx, 25);
-  } else {
-    ctx.fillStyle = '#c0281f'; ctx.font = 'bold 12px "IBM Plex Sans", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('✗ G est décalé de l\'axe → déséquilibre statique', cx, 25);
-  }
+  const fc = computeForces(VIB.theta, p);
+  curves.forEach(c => {
+    const y = sy(fc[c.key]);
+    ctx.beginPath(); ctx.arc(curX, y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = c.color; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  });
 }
-WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques et paramètres d\'équilibrage.', mount: mountVib,
-  reset: () => { VIB.r = 0.05; VIB.D = 1; VIB.E = 0; } });
+
+function startVibAnimation() {
+  if (VIB.raf != null) return;
+  VIB.lastT = null;
+  VIB.raf = requestAnimationFrame(vibAnim);
+}
+
+function stopVibAnimation() {
+  if (VIB.raf != null) { cancelAnimationFrame(VIB.raf); VIB.raf = null; }
+  VIB.lastT = null;
+}
+
+function vibAnim(t) {
+  if (!VIB.playing) { VIB.raf = null; VIB.lastT = null; return; }
+  if (VIB.lastT == null) VIB.lastT = t;
+  const dt = Math.min((t - VIB.lastT) / 1000, 0.05);
+  VIB.lastT = t;
+  // rotation visuelle ralentie proportionnellement à ω
+  VIB.theta += VIB.omega * 0.0008 * dt;
+  if (VIB.theta > 2 * Math.PI) VIB.theta -= 2 * Math.PI;
+  const canvas = $('#vib-solid');
+  if (canvas && canvas.offsetParent !== null) drawVib();
+  VIB.raf = requestAnimationFrame(vibAnim);
+}
+
+WORKSHOPS.push({ id: 'vib', title: 'Source des vibrations', hint: 'Efforts cycliques, rotation et paramètres d\'équilibrage.',
+  mount: mountVib,
+  reset: () => { VIB.r = 0.05; VIB.D = 1; VIB.E = 0; VIB.N = 30000; VIB.omega = 3141; VIB.theta = 0; VIB.playing = true; },
+  leave: () => stopVibAnimation() });
 
 /* ============ ATELIER 3 : CONDITIONS D'ÉQUILIBRAGE ============ */
 const COND = { r: 0.05, D: 1, E: 0 };
@@ -1094,7 +1252,7 @@ let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if (UI.cur === 'vib') renderVib();
+    if (UI.cur === 'vib') drawVib();
     else if (UI.cur === 'sd') drawSD();
   }, 120);
 });
