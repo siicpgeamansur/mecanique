@@ -8,21 +8,17 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 ## Sommaire
 
-- [Géométrie et paramétrage](#géométrie-et-paramétrage)
-- [Liaisons et torseurs](#liaisons-et-torseurs)
-- [Cinématique des mécanismes](#cinématique-des-mécanismes)
-- [Cinétique et inertie](#cinétique-et-inertie)
-- [Énergie cinétique et TEC](#énergie-cinétique-et-tec)
-- [Statique, frottement et dynamique](#statique-frottement-et-dynamique)
-- [Actionneurs et dimensionnement](#actionneurs-et-dimensionnement)
-- [Utilisation en local](#utilisation-en-local)
-- [Contribuer](#contribuer)
+- Géométrie et paramétrage
+- Liaisons et torseurs
+- Cinématique des mécanismes
+- Cinétique et inertie
+- Énergie cinétique et TEC
+- Statique, frottement et dynamique
+- Actionneurs et dimensionnement
+- Utilisation en local
+- Contribuer
 
 ---
-
-| [Equa diff mvt](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Équations différentielles de mouvement. |
-| [Equilibrage](https://siicpgeamansur.github.io/mecanique/equilibrage.html) | Équilibrage d’un solide en rotation. |
-| [Theorie des mécanismes](https://siicpgeamansur.github.io/mecanique/TdM.html) | Théorie des mecanismes. |
 
 ## Géométrie et paramétrage
 
@@ -43,6 +39,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Bras robotisé 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html) | Animation de deux bras en liaison pivot entre eux, l'un étant en liaison pivot avec le bâti. Il est possible de modifier les longueurs des bras et les positions angulaires des pivots pour visualiser la zone inaccessible. |
+| [Théorie des mécanismes](https://siicpgeamansur.github.io/mecanique/TdM.html) | Théorie des mécanismes : degré de mobilité, hyperstatisme et liaison équivalente. |
 
 ## Cinétique et inertie
 
@@ -61,7 +58,9 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html) | Visualiser le phénomène d'arc-boutement. |
+| [Équilibrage d'un solide en rotation](https://siicpgeamansur.github.io/mecanique/equilibrage.html) | Équilibrage d'un solide en rotation. |
 | [Équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html) | Visualiser l'équilibrage dynamique d'un rotor. |
+| [Équations différentielles du mouvement](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Établir et résoudre les équations différentielles du mouvement. |
 
 ## Actionneurs et dimensionnement
 
