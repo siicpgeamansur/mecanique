@@ -26,6 +26,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 |---|---|
 | [Coordonnées d'un point](https://siicpgeamansur.github.io/mecanique/coordonnees.html) | Visualiser les différents systèmes de coordonnées d'un point : cartésiennes, cylindriques et sphériques. |
 | [Figures géométrales](https://siicpgeamansur.github.io/mecanique/figures_geometrales.html) | Visualiser et s'entraîner à manipuler les figures géométrales et leurs projections. |
+| [Loi entrée-sortie](https://siicpgeamansur.github.io/mecanique/loi_entree_sortie.html) | Visualiser et s'entraîner aux lois entrée-sortie. |
 
 ## Liaisons et torseurs
 
