@@ -274,7 +274,7 @@ function toothPath(Z, rTip, rRoot, tipH, rootH) {
 /* train simple en ligne : angle de la roue i+1 à partir de la roue i (engrènement des dents) */
 function nextAngle(zi, ti, zn) { return Math.PI + (Math.PI - zi * ti) / zn; }
 function chainSpeeds(z, w1) { const w = [w1]; for (let i = 1; i < z.length; i++) w.push(-w[i - 1] * z[i - 1] / z[i]); return w; }
-/* train épicycloïdal : solaire S, couronne C, porte-satellites PS ; une inconnue (null) */
+/* train épicycloïdal : planétaire intérieur S, couronne C, porte-satellites PS ; une inconnue (null) */
 function willis(zs, zc, w) {
   const rho = -zs / zc; let S = w.S, C = w.C, P = w.PS;
   if (C == null) C = rho * S + (1 - rho) * P;
@@ -320,7 +320,7 @@ function okAns(v, t, rel, abs) { rel = rel == null ? 0.02 : rel; abs = abs == nu
 
 /* ---------- exercices : engrenages ---------- */
 const ZLOW = [12, 15, 16, 18, 20, 24], ZHIGH = [40, 45, 48, 60, 72, 80], ZANY = [12, 15, 16, 18, 20, 24, 25, 30, 32, 36, 40, 45, 48, 50, 60, 72, 80];
-const PN = { S: 'le solaire S', C: 'la couronne C', PS: 'le porte-satellites PS' };
+const PN = { S: 'le planétaire intérieur S', C: 'la couronne C', PS: 'le porte-satellites PS' };
 const WN = { S: 'ω<sub>S</sub>', C: 'ω<sub>C</sub>', PS: 'ω<sub>PS</sub>' };
 function epiDerivation(zs, zc, fixed) {
   const q = zs + '/' + zc;
@@ -374,7 +374,7 @@ function genGear(flt) {
     const cs = pick(cases);
     ex = {
       kind: 'epi', tag: 'Train épicycloïdal', fig: { type: 'epi', zs, zp, zc, np: 3, fixed: cs.f, inp: cs.i, out: cs.o },
-      text: 'Un train épicycloïdal est formé d’un solaire S (<b>Z<sub>S</sub> = ' + zs + '</b>), de satellites (<b>Z<sub>P</sub> = ' + zp + '</b>), d’une couronne C et d’un porte-satellites PS. <b>' + PN[cs.f].replace(/^l[ea] /, '').replace(/^./, c => c.toUpperCase()) + ' est fixé au bâti</b>, l’entrée est ' + PN[cs.i] + ' et la sortie ' + PN[cs.o] + '. Déterminer Z<sub>C</sub> (même module partout) puis le rapport de réduction k = ω<sub>sortie</sub>/ω<sub>entrée</sub>.',
+      text: 'Un train épicycloïdal est formé d’un planétaire intérieur S (<b>Z<sub>S</sub> = ' + zs + '</b>), de satellites (<b>Z<sub>P</sub> = ' + zp + '</b>), d’une couronne C et d’un porte-satellites PS. <b>' + PN[cs.f].replace(/^l[ea] /, '').replace(/^./, c => c.toUpperCase()) + ' est fixé au bâti</b>, l’entrée est ' + PN[cs.i] + ' et la sortie ' + PN[cs.o] + '. Déterminer Z<sub>C</sub> (même module partout) puis le rapport de réduction k = ω<sub>sortie</sub>/ω<sub>entrée</sub>.',
       fields: [{ id: 'zc', label: 'Z_C', val: zc }, { id: 'k', label: 'k = ω_sortie/ω_entrée', val: cs.k }],
       sol: '<p>Coaxialité : Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> = ' + zs + ' + 2 × ' + zp + ' = <b>' + zc + '</b>.</p><p>' + epiDerivation(zs, zc, cs.f) + '</p><p>Sortie / entrée : k = ' + WN[cs.o] + '/' + WN[cs.i] + ' = <b>' + sg(cs.k, 3) + '</b>.</p>'
     };
@@ -759,7 +759,7 @@ const G2D = { zs: 20, zp: 20, zc: 60, np: 4, m: 2, coax: true, fixed: 'C', inp: 
 const G2 = Object.assign({ thS: 0, thPS: 0, front: null, top: null }, copy(G2D));
 G2.play = !reduced();
 const g2zc = () => G2.coax ? G2.zs + 2 * G2.zp : G2.zc;
-const NAMEP = { S: 'Solaire S', C: 'Couronne C', PS: 'Porte-satellites PS' };
+const NAMEP = { S: 'Planétaire intérieur S', C: 'Couronne C', PS: 'Porte-satellites PS' };
 function g2Speeds() {
   const zs = G2.zs, zc = g2zc();
   if (G2.adv) { const w = { S: G2.aw.S, C: G2.aw.C, PS: G2.aw.PS }; w[G2.calc] = null; const r = willis(zs, zc, w); return { S: r.S, C: r.C, PS: r.PS, inp: null, out: null, k: null }; }
@@ -772,14 +772,14 @@ function g2Speeds() {
 function mountG2(root) {
   root.innerHTML =
     '<h2>Train épicycloïdal</h2>' +
-    '<p>Un train épicycloïdal a ses entrée et sortie sur le même axe : le <b>solaire</b> S (au centre), la <b>couronne</b> C (denture intérieure) et le <b>porte-satellites</b> PS (qui porte les satellites). Choisissez la pièce fixée au bâti, l’entrée, puis comparez les rapports de réduction obtenus.</p>' +
+    '<p>Un train épicycloïdal a ses entrée et sortie sur le même axe : le <b>planétaire intérieur</b> S (au centre), la <b>couronne</b> C (denture intérieure) et le <b>porte-satellites</b> PS (qui porte les satellites). Choisissez la pièce fixée au bâti, l’entrée, puis comparez les rapports de réduction obtenus.</p>' +
     '<div id="g2-norm"><div class="opts"><div class="fld"><span>Pièce fixée au bâti (hachurée)</span><div id="g2-fix"></div></div><div class="fld"><span>Entrée (la sortie est la troisième pièce)</span><div id="g2-in"></div></div></div></div>' +
     '<div class="zgrid" id="g2-z"></div>' +
     '<div class="opts" id="g2-sp"></div>' +
     '<div id="g2-play"></div>' +
     '<div class="two"><div><p class="viewlbl">Vue de face</p><div class="gwrap"><svg class="g" id="g2-f" role="img" aria-label="Vue de face du train épicycloïdal"></svg></div></div>' +
     '<div><p class="viewlbl">Vue de dessus (couronne en coupe, porte-satellites en haricot)</p><div class="gwrap"><svg class="g" id="g2-t" role="img" aria-label="Vue de dessus du train épicycloïdal"></svg></div></div></div>' +
-    '<div class="leg"><span><i class="sw" style="background:var(--g-s)"></i>solaire S</span><span><i class="sw" style="background:var(--g-p)"></i>satellites</span><span><i class="sw" style="background:var(--g-c)"></i>couronne C</span><span><i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS</span><span>hachures : pièce fixée au bâti</span></div>' +
+    '<div class="leg"><span><i class="sw" style="background:var(--g-s)"></i>planétaire intérieur S</span><span><i class="sw" style="background:var(--g-p)"></i>satellites</span><span><i class="sw" style="background:var(--g-c)"></i>couronne C</span><span><i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS</span><span>hachures : pièce fixée au bâti</span></div>' +
     '<div class="verdict" id="g2-msg" aria-live="polite"></div>' +
     '<div id="g2-st"></div>' +
     '<h3>Contraintes de montage</h3><div class="chk" id="g2-chk"></div>' +
@@ -788,12 +788,12 @@ function mountG2(root) {
     '<h3>Et avec un train simple ?</h3><div id="g2-cmp"></div>' +
     '<details class="adv" id="g2-adv"><summary>Aller plus loin : imposer la vitesse de deux pièces</summary><div id="g2-advb"></div></details>';
   const rem = () => { const sc = $('#scroller').scrollTop; const o = $('#g2-adv').open; mountG2($('#ws')); $('#g2-adv').open = o; $('#scroller').scrollTop = sc; };
-  const PIECES = [['C', 'Couronne'], ['S', 'Solaire'], ['PS', 'Porte-satellites']];
+  const PIECES = [['C', 'Couronne'], ['S', 'Planétaire intérieur'], ['PS', 'Porte-satellites']];
   const fixb = $('#g2-fix'); fixb.append(chipsRow(PIECES, G2.fixed, v => { G2.fixed = v; if (G2.inp === v) G2.inp = ['S', 'C', 'PS'].find(x => x !== v); rem(); }, 'Pièce fixe'));
   $('#g2-in').append(chipsRow(PIECES.map(p => [p[0], p[1], p[0] === G2.fixed]), G2.inp, v => { G2.inp = v; rem(); }, 'Entrée'));
   $('#g2-norm').style.opacity = G2.adv ? 0.45 : 1;
   const zb = $('#g2-z');
-  zb.append(rng('Z solaire Z_S', 10, 40, 1, () => G2.zs, v => { G2.zs = v; geo(); }, v => String(v)));
+  zb.append(rng('Z planétaire intérieur Z_S', 10, 40, 1, () => G2.zs, v => { G2.zs = v; geo(); }, v => String(v)));
   zb.append(rng('Z satellites Z_P', 10, 40, 1, () => G2.zp, v => { G2.zp = v; geo(); }, v => String(v)));
   zb.append(rng('Nombre de satellites N', 1, 5, 1, () => G2.np, v => { G2.np = v; geo(); }, v => String(v)));
   zb.append(h('div', { class: 'fld' }, h('span', null, 'Module m (mm)'), chipsRow([[1.5, '1,5'], [2, '2'], [3, '3']], G2.m, v => { G2.m = v; geo(); markChips(); }, 'Module')));
@@ -868,14 +868,14 @@ function mountG2(root) {
     const unk = G2.adv ? G2.calc : sp.out, sym = p => known[p] ? fx(sp[p], 0) : W(p);
     wb.append(h('div', { class: 'formula sm', html: '<b>Valeurs connues :</b> (' + sym('C') + ' − ' + sym('PS') + ')/(' + sym('S') + ' − ' + sym('PS') + ') = ' + fx(-rho, 3) + '<br><b>Inconnue :</b> ' + W(unk) + ' = <b>' + fx(sp[unk], 1) + ' tr/min</b>' + (G2.adv ? '' : '<br><b>Rapport de réduction :</b> k = ' + W(sp.out) + '/' + W(sp.inp) + ' = ' + fx(sp[sp.out], 1) + '/' + fx(sp[sp.inp], 1) + ' = <b>' + sg(sp.k, 3) + '</b>') }));
     if (!G2.adv) {
-      const f = G2.fixed, base = f === 'C' ? 'Couronne fixe (ω<sub>C</sub> = 0) : ω<sub>PS</sub>/ω<sub>S</sub> = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = ' + zs + '/' + (zs + zc) : f === 'S' ? 'Solaire fixe (ω<sub>S</sub> = 0) : ω<sub>C</sub>/ω<sub>PS</sub> = (Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub> = ' + (zs + zc) + '/' + zc : 'Porte-satellites fixe (ω<sub>PS</sub> = 0) : le train est un train simple, ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> = −' + zs + '/' + zc;
+      const f = G2.fixed, base = f === 'C' ? 'Couronne fixe (ω<sub>C</sub> = 0) : ω<sub>PS</sub>/ω<sub>S</sub> = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = ' + zs + '/' + (zs + zc) : f === 'S' ? 'Planétaire intérieur fixe (ω<sub>S</sub> = 0) : ω<sub>C</sub>/ω<sub>PS</sub> = (Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub> = ' + (zs + zc) + '/' + zc : 'Porte-satellites fixe (ω<sub>PS</sub> = 0) : le train est un train simple, ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> = −' + zs + '/' + zc;
       wb.append(h('div', { class: 'formula sm', html: '<b>Cas particulier :</b> ' + base }));
     }
     /* tableau */
     const tb = $('#g2-tab'); tb.innerHTML = '';
     const role = p => G2.adv ? (p === G2.calc ? 'calculée' : Math.abs(sp[p]) < 1e-9 ? 'imposée (fixe)' : 'imposée') : p === G2.fixed ? 'fixe' : p === G2.inp ? 'entrée' : 'sortie';
     tb.append(tableEl(['Pièce', 'Rôle', 'Z', 'D = m·Z (mm)', 'Vitesse (tr/min)', 'Sens'], [
-      ['Solaire S', role('S'), zs, fx(m * zs, 1), fx(sp.S, 1), dirTxt(sp.S)], ['Couronne C', role('C'), zc, fx(m * zc, 1), fx(sp.C, 1), dirTxt(sp.C)],
+      ['Planétaire intérieur S', role('S'), zs, fx(m * zs, 1), fx(sp.S, 1), dirTxt(sp.S)], ['Couronne C', role('C'), zc, fx(m * zc, 1), fx(sp.C, 1), dirTxt(sp.C)],
       ['Porte-satellites PS', role('PS'), '—', '—', fx(sp.PS, 1), dirTxt(sp.PS)], ['Satellites, par rapport au PS', 'tournent sur leur axe', zp, fx(m * zp, 1), fx(sat.rel, 1), dirTxt(sat.rel)], ['Satellites, par rapport au bâti', 'tournent et orbitent', zp, fx(m * zp, 1), fx(sat.abs, 1), dirTxt(sat.abs)]]));
     /* comparaison */
     const cm = $('#g2-cmp'); cm.innerHTML = '';
@@ -1090,7 +1090,7 @@ function mountEx(root, cfg) {
     const npx = [3, 4, 2].find(n => (F.zs + F.zc) % n === 0) || 2;
     const o = buildEpi(svg, { m: 2, zs: F.zs, zp: F.zp, zc: F.zc, np: npx, fixed: F.fixed }, { labels: true }), an = epiAngles(F.zs, F.zp, F.zc, npx, 0, 0);
     o.pose(0, an.C, 0, an.P);
-    fig.append(h('div', { class: 'gwrap', style: 'max-width:380px' }, svg), h('div', { class: 'leg' }, h('span', { html: '<i class="sw" style="background:var(--g-s)"></i>solaire S' }), h('span', { html: '<i class="sw" style="background:var(--g-p)"></i>satellites' }), h('span', { html: '<i class="sw" style="background:var(--g-c)"></i>couronne C' }), h('span', { html: '<i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS' }), h('span', null, 'hachures : pièce fixée au bâti')));
+    fig.append(h('div', { class: 'gwrap', style: 'max-width:380px' }, svg), h('div', { class: 'leg' }, h('span', { html: '<i class="sw" style="background:var(--g-s)"></i>planétaire intérieur S' }), h('span', { html: '<i class="sw" style="background:var(--g-p)"></i>satellites' }), h('span', { html: '<i class="sw" style="background:var(--g-c)"></i>couronne C' }), h('span', { html: '<i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS' }), h('span', null, 'hachures : pièce fixée au bâti')));
   }
   const row = h('div', { class: 'fieldrow' }), ins = {};
   ex.fields.forEach(f => {
@@ -1147,21 +1147,21 @@ const ACT = {
     title: 'Train épicycloïdal', level: 'Intermédiaire', time: '20 min',
     goal: 'Comparer les rapports de réduction selon la pièce fixée, vérifier les contraintes de montage et appliquer la formule de Willis.',
     steps: [
-      'Gardez « couronne fixe », entrée sur le solaire, sortie sur le porte-satellites. Notez k.',
-      'Passez à « solaire fixe » avec l’entrée sur la couronne. Notez le nouveau k, puis essayez l’entrée sur le porte-satellites.',
+      'Gardez « couronne fixe », entrée sur le planétaire intérieur, sortie sur le porte-satellites. Notez k.',
+      'Passez à « planétaire intérieur fixe » avec l’entrée sur la couronne. Notez le nouveau k, puis essayez l’entrée sur le porte-satellites.',
       'Choisissez « porte-satellites fixe » : le train devient un train simple (les satellites tournent sur place). Relevez le sens de la sortie.',
       'Décochez la coaxialité et modifiez Z<sub>C</sub> : observez le montage impossible, puis revenez au réglage coaxial.',
       'Avec Z<sub>S</sub> = 20 et Z<sub>P</sub> = 20, essayez 3 puis 4 satellites : quelle contrainte de montage change ?',
       '(Avancé) Imposez la vitesse de deux pièces et vérifiez la troisième avec la formule de Willis.'
     ],
-    defi: { q: 'Réglez Z<sub>S</sub> = 10 et Z<sub>P</sub> = 40, couronne fixe, entrée sur le solaire. Quel est k ? Quel train simple de deux roues, avec la même petite roue, donnerait le même rapport ?', a: 'Z<sub>C</sub> = 10 + 2 × 40 = 90, k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 10/100 = 1/10. Un train simple demanderait Z<sub>1</sub> = 10 et Z<sub>2</sub> = 100, soit D<sub>1</sub> + D<sub>2</sub> = 110·m contre D<sub>C</sub> = 90·m, avec en plus l’entrée et la sortie alignées.' },
+    defi: { q: 'Réglez Z<sub>S</sub> = 10 et Z<sub>P</sub> = 40, couronne fixe, entrée sur le planétaire intérieur. Quel est k ? Quel train simple de deux roues, avec la même petite roue, donnerait le même rapport ?', a: 'Z<sub>C</sub> = 10 + 2 × 40 = 90, k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 10/100 = 1/10. Un train simple demanderait Z<sub>1</sub> = 10 et Z<sub>2</sub> = 100, soit D<sub>1</sub> + D<sub>2</sub> = 110·m contre D<sub>C</sub> = 90·m, avec en plus l’entrée et la sortie alignées.' },
     course: 'willis',
     qcm: [
       { q: 'Z<sub>S</sub> = 24 et Z<sub>P</sub> = 18. Pour que le train soit montable (coaxialité), Z<sub>C</sub> vaut :', o: ['42', '60', '78', '96'], a: 1, w: 'Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> = 24 + 36 = 60.' },
-      { q: 'Couronne fixe, entrée sur le solaire, sortie sur le porte-satellites, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. Le rapport de réduction vaut :', o: ['0,33', '0,25', '−0,33', '3'], a: 1, w: 'k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 20/80 = 0,25, de même signe que l’entrée.' },
-      { q: 'Quelle est la formule de Willis pour un train solaire – satellite – couronne ?', o: ['(ω<sub>C</sub> − ω<sub>PS</sub>)/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>', 'ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> quelle que soit la pièce fixe', '(ω<sub>C</sub> + ω<sub>PS</sub>)/(ω<sub>S</sub> + ω<sub>PS</sub>) = Z<sub>S</sub>/Z<sub>C</sub>', 'ω<sub>C</sub>·Z<sub>C</sub> = ω<sub>S</sub>·Z<sub>S</sub> + ω<sub>PS</sub>'], a: 0, w: 'Willis exprime le rapport dans le repère du porte-satellites : un seul contact extérieur donne le signe « − ».' },
+      { q: 'Couronne fixe, entrée sur le planétaire intérieur, sortie sur le porte-satellites, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. Le rapport de réduction vaut :', o: ['0,33', '0,25', '−0,33', '3'], a: 1, w: 'k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 20/80 = 0,25, de même signe que l’entrée.' },
+      { q: 'Quelle est la formule de Willis pour un train planétaire intérieur – satellite – couronne ?', o: ['(ω<sub>C</sub> − ω<sub>PS</sub>)/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>', 'ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> quelle que soit la pièce fixe', '(ω<sub>C</sub> + ω<sub>PS</sub>)/(ω<sub>S</sub> + ω<sub>PS</sub>) = Z<sub>S</sub>/Z<sub>C</sub>', 'ω<sub>C</sub>·Z<sub>C</sub> = ω<sub>S</sub>·Z<sub>S</sub> + ω<sub>PS</sub>'], a: 0, w: 'Willis exprime le rapport dans le repère du porte-satellites : un seul contact extérieur donne le signe « − ».' },
       { q: 'Avec Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60, combien de satellites équirépartis peut-on monter ?', o: ['3', '4', '6', '7'], a: 1, w: '(Z<sub>S</sub> + Z<sub>C</sub>)/N = 80/N doit être entier : N = 4 convient (80/4 = 20), pas 3, 6 ni 7.' },
-      { q: 'Quel est l’avantage d’un train épicycloïdal sur un train simple, à encombrement équivalent ?', o: ['Il tourne toujours plus vite', 'Il n’a aucune perte', 'Un rapport de réduction plus grand, avec entrée et sortie coaxiales et le couple réparti sur plusieurs satellites', 'Il ne nécessite aucun module'], a: 2, w: 'La couronne enveloppe le solaire et les satellites : on gagne en compacité, en coaxialité et en répartition de l’effort.' }
+      { q: 'Quel est l’avantage d’un train épicycloïdal sur un train simple, à encombrement équivalent ?', o: ['Il tourne toujours plus vite', 'Il n’a aucune perte', 'Un rapport de réduction plus grand, avec entrée et sortie coaxiales et le couple réparti sur plusieurs satellites', 'Il ne nécessite aucun module'], a: 2, w: 'La couronne enveloppe le planétaire intérieur et les satellites : on gagne en compacité, en coaxialité et en répartition de l’effort.' }
     ]
   },
   g3: {
@@ -1174,13 +1174,13 @@ const ACT = {
       'Trains épicycloïdaux : repérez la pièce fixe, l’entrée et la sortie, puis écrivez Willis.',
       'Cliquez sur « Vérifier », puis sur « Voir la solution » si besoin. Enchaînez avec un nouvel exercice.'
     ],
-    defi: { q: 'Comment reconnaître immédiatement un réducteur d’un multiplicateur à partir du schéma ?', a: 'Un réducteur a |k| &lt; 1 : l’entrée est une petite roue qui entraîne une grande. Pour un épicycloïdal, la sortie sur le porte-satellites avec couronne ou solaire fixe donne toujours un réducteur.' },
+    defi: { q: 'Comment reconnaître immédiatement un réducteur d’un multiplicateur à partir du schéma ?', a: 'Un réducteur a |k| &lt; 1 : l’entrée est une petite roue qui entraîne une grande. Pour un épicycloïdal, la sortie sur le porte-satellites avec couronne ou planétaire intérieur fixe donne toujours un réducteur.' },
     course: 'rapport',
     qcm: [
       { q: 'Train en ligne Z<sub>1</sub> = 20, Z<sub>2</sub> = 50, Z<sub>3</sub> = 40. k = ω<sub>3</sub>/ω<sub>1</sub> vaut :', o: ['−0,5', '+0,5', '+0,4', '−0,4'], a: 1, w: 'Deux contacts extérieurs : k = (+1) × 20/40 = +0,5. La roue 2 n’intervient pas.' },
       { q: 'Deux étages : Z<sub>1</sub> = 20 → Z<sub>2</sub> = 40, puis Z<sub>3</sub> = 20 → Z<sub>4</sub> = 60 (Z<sub>2</sub> et Z<sub>3</sub> solidaires). k vaut :', o: ['+1/6', '−1/6', '+1/3', '−1/3'], a: 0, w: 'n = 2 : k = (Z<sub>1</sub>·Z<sub>3</sub>)/(Z<sub>2</sub>·Z<sub>4</sub>) = 400/2400 = +1/6.' },
       { q: 'Porte-satellites fixe, entrée sur S, sortie sur C, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. k vaut :', o: ['+1/3', '+1/4', '−1/3', '−1/4'], a: 2, w: 'Train simple : k = −Z<sub>S</sub>/Z<sub>C</sub> = −20/60 = −1/3.' },
-      { q: 'Solaire fixe, entrée sur C, sortie sur PS, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. k = ω<sub>PS</sub>/ω<sub>C</sub> vaut :', o: ['0,25', '1,33', '3', '0,75'], a: 3, w: 'Willis avec ω<sub>S</sub> = 0 : ω<sub>PS</sub>/ω<sub>C</sub> = Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 60/80 = 0,75.' }
+      { q: 'Planétaire intérieur fixe, entrée sur C, sortie sur PS, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. k = ω<sub>PS</sub>/ω<sub>C</sub> vaut :', o: ['0,25', '1,33', '3', '0,75'], a: 3, w: 'Willis avec ω<sub>S</sub> = 0 : ω<sub>PS</sub>/ω<sub>C</sub> = Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 60/80 = 0,75.' }
     ]
   },
   g4: {
@@ -1260,14 +1260,14 @@ COURSE.push({ id: 'simple', t: 'Train simple : solides à une ou deux roues', h:
 <div class="retain"><b>À retenir.</b> Roue intermédiaire unique : elle inverse le sens, sans effet sur |k|. Solide à deux roues : les roues tournent à la même vitesse, et c’est ce qui permet de multiplier les rapports de plusieurs étages.</div>` });
 COURSE.push({ id: 'epi', t: 'Train épicycloïdal : constituants', h: `
 <p>Un train épicycloïdal est un train d’engrenages dont certains axes sont mobiles. Il comprend :</p>
-<ul><li>le <b>solaire</b> (ou planétaire) S, au centre, à denture extérieure ;</li><li>la <b>couronne</b> C, à denture intérieure ;</li><li>des <b>satellites</b> qui engrènent à la fois avec S et avec C ;</li><li>le <b>porte-satellites</b> PS, qui porte les axes des satellites.</li></ul>
-<p>Le solaire, la couronne et le porte-satellites tournent autour du <b>même axe</b>. Les satellites tournent sur leur propre axe et se déplacent autour de l’axe central.</p>
+<ul><li>le <b>planétaire intérieur</b> (ou planétaire) S, au centre, à denture extérieure ;</li><li>la <b>couronne</b> C, à denture intérieure ;</li><li>des <b>satellites</b> qui engrènent à la fois avec S et avec C ;</li><li>le <b>porte-satellites</b> PS, qui porte les axes des satellites.</li></ul>
+<p>Le planétaire intérieur, la couronne et le porte-satellites tournent autour du <b>même axe</b>. Les satellites tournent sur leur propre axe et se déplacent autour de l’axe central.</p>
 <p>Ce mécanisme a deux degrés de liberté : pour imposer un seul rapport de réduction, on <b>fixe une pièce au bâti</b> et l’on choisit l’entrée parmi les deux autres, la troisième est la sortie. Sinon, il faut imposer la vitesse de deux pièces (cas du différentiel).</p>
 <div class="retain"><b>À retenir.</b> Trois pièces coaxiales (S, C, PS) : une fixe, une en entrée, une en sortie. Les satellites ne sont jamais ni entrée ni sortie, ce sont des roues intermédiaires.</div>` });
 COURSE.push({ id: 'montage', t: 'Contraintes de montage', h: `
 <p>Pour qu’un train épicycloïdal soit réalisable, plusieurs conditions géométriques doivent être vérifiées.</p>
 <ol>
-<li><b>Coaxialité.</b> Les satellites engrènent à la fois avec le solaire et avec la couronne, donc le rayon de la couronne est la somme du rayon du solaire et du diamètre d’un satellite :
+<li><b>Coaxialité.</b> Les satellites engrènent à la fois avec le planétaire intérieur et avec la couronne, donc le rayon de la couronne est la somme du rayon du planétaire intérieur et du diamètre d’un satellite :
 <div class="formula">R<sub>C</sub> = R<sub>S</sub> + 2·R<sub>P</sub> &nbsp;⇔&nbsp; D<sub>C</sub> = D<sub>S</sub> + 2·D<sub>P</sub> &nbsp;⇔&nbsp; Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub></div></li>
 <li><b>Entraxe et porte-satellites.</b> L’axe d’un satellite est à la distance a = R<sub>S</sub> + R<sub>P</sub> de l’axe central. Dans un schéma cinématique, le porte-satellites se dessine en forme de <b>haricot</b> qui relie l’axe central à l’axe de chaque satellite.</li>
 <li><b>Assemblage.</b> Avec N satellites équirépartis, il faut que (Z<sub>S</sub> + Z<sub>C</sub>)/N soit un entier, sinon le dernier satellite ne peut pas s’engager entre les dents.</li>
@@ -1278,13 +1278,13 @@ COURSE.push({ id: 'montage', t: 'Contraintes de montage', h: `
 COURSE.push({ id: 'willis', t: 'Formule de Willis', h: `
 <p>La formule de Willis relie les vitesses des trois pièces coaxiales, en utilisant le fait que, <b>dans le repère du porte-satellites</b>, le train se comporte comme un train simple.</p>
 <div class="formula">(ω<sub>C/0</sub> − ω<sub>PS/0</sub>) / (ω<sub>S/0</sub> − ω<sub>PS/0</sub>) = (−1)<sup>n</sup> × Z<sub>S</sub>/Z<sub>C</sub> = −Z<sub>S</sub>/Z<sub>C</sub></div>
-<p>Ici n = 1 : un contact extérieur (solaire–satellite). Le satellite est une roue intermédiaire et le contact intérieur (satellite–couronne) ne compte pas dans n. Les vitesses sont mesurées par rapport au bâti (repère 0).</p>
+<p>Ici n = 1 : un contact extérieur (planétaire intérieur–satellite). Le satellite est une roue intermédiaire et le contact intérieur (satellite–couronne) ne compte pas dans n. Les vitesses sont mesurées par rapport au bâti (repère 0).</p>
 <h3>Les cas usuels</h3>
 <table class="ctable"><tr><th>Pièce fixe</th><th>Entrée → sortie</th><th>k</th><th>Z<sub>S</sub> = 20, Z<sub>C</sub> = 60</th></tr>
 <tr><td>Couronne</td><td>S → PS</td><td>Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>1/4</td></tr>
-<tr><td>Solaire</td><td>C → PS</td><td>Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>3/4</td></tr>
+<tr><td>Planétaire intérieur</td><td>C → PS</td><td>Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>3/4</td></tr>
 <tr><td>Porte-satellites</td><td>S → C</td><td>−Z<sub>S</sub>/Z<sub>C</sub></td><td>−1/3</td></tr>
-<tr><td>Solaire</td><td>PS → C</td><td>(Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub></td><td>4/3</td></tr></table>
+<tr><td>Planétaire intérieur</td><td>PS → C</td><td>(Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub></td><td>4/3</td></tr></table>
 <p><b>Exemple.</b> Couronne fixe (ω<sub>C</sub> = 0) : −ω<sub>PS</sub>/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>, d’où ω<sub>PS</sub>·(Z<sub>C</sub> + Z<sub>S</sub>) = Z<sub>S</sub>·ω<sub>S</sub>.</p>
 <div class="retain"><b>À retenir.</b> Écrire Willis, remplacer les deux vitesses connues (dont celle de la pièce fixe, nulle) et résoudre pour la troisième. Les vitesses sont toujours relatives au bâti.</div>` });
 COURSE.push({ id: 'avantage', t: 'Pourquoi un train épicycloïdal ?', h: `
