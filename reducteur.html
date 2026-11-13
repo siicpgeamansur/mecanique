@@ -1,0 +1,1440 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Engrenages</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. Même gabarit que l'Atelier Récursivité. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  --ok-soft:rgba(30,122,46,.15);--warn-soft:rgba(154,91,0,.13);--bad-soft:rgba(192,40,31,.13);
+  --g-s:#cfe3f6;--g-p:#f6e2bf;--g-c:#d3ecd7;--g-ps:#dcd6ee;--g-m:#e4e8ee;
+  --overlay:rgba(10,16,22,.55);--shadow:rgba(0,0,0,.28);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#14181d;--bar:#1d232a;--panel:#191e24;--panel2:#212830;--field:#14181d;--line:#3b4551;
+  --fg:#e8ecf0;--muted:#9ba6b2;--accent:#5b9bd5;--accent-fg:#0b1620;--accent-soft:#203449;--accent-ink:#b3d4f2;--run:#62c673;
+  --node-stroke:#a7b8c9;
+  --ok:#62c673;--warn:#e3a94f;--bad:#f2766d;
+  --ok-soft:rgba(98,198,115,.18);--warn-soft:rgba(227,169,79,.17);--bad-soft:rgba(242,118,109,.17);
+  --g-s:#27425c;--g-p:#5b4420;--g-c:#25492d;--g-ps:#3d3760;--g-m:#2d3640;
+  --overlay:rgba(0,0,0,.65);--shadow:rgba(0,0,0,.6);color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+sub,sup{line-height:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1000px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.zsh{border:1px solid var(--line);border-radius:10px;padding:9px 12px 3px;background:var(--panel2)}.zsh-t{margin-bottom:6px}.zsh .chips{margin-bottom:8px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.opts input[type=number]{width:96px;font-family:var(--font-mono)}
+.zgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:6px 0 10px}
+.zgrid .fld{margin:0 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.two>div{min-width:0}
+.viewlbl{font-size:12.5px;color:var(--muted);margin:8px 0 2px!important}
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--bg)}
+svg.g{display:block;width:100%;height:auto}
+.formula.sm{font-size:13.5px;line-height:1.7}
+.calc{margin:6px 0 10px}.calc .formula{margin:4px 0}
+.chk{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+.chk div{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:13.5px}
+.chk .mk{flex:none;font-weight:700;width:1.2em;text-align:center}
+.chk .okk{background:var(--ok-soft);border-color:var(--ok)}.chk .okk .mk{color:var(--ok)}
+.chk .nok{background:var(--bad-soft);border-color:var(--bad)}.chk .nok .mk{color:var(--bad)}
+.tbl{overflow-x:auto;margin:8px 0}
+table.ctable{border-collapse:collapse;font-size:13px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.ctable td.n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+details.adv{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:12px 0;background:var(--panel)}
+details.adv summary{cursor:pointer;font-weight:600;color:var(--accent-ink)}
+details.adv[open] summary{margin-bottom:8px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--node-stroke);vertical-align:-1px;margin-right:5px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0}
+/* dessins d'engrenages */
+.gear{stroke:var(--node-stroke);stroke-width:1.2;stroke-linejoin:round}
+.gear.s{fill:var(--g-s)}.gear.p{fill:var(--g-p)}.gear.c{fill:var(--g-c)}.gear.m{fill:var(--g-m)}.gear.in{fill:var(--g-s)}.gear.out{fill:var(--g-c)}
+.pitch{fill:none;stroke:var(--muted);stroke-dasharray:4 3;stroke-width:.8;opacity:.75}
+.hub{fill:var(--bg);stroke:var(--node-stroke);stroke-width:1.2}
+.mk{fill:var(--bad)}
+.arm{fill:var(--g-ps);stroke:var(--node-stroke);stroke-width:1.2;opacity:.62}
+.shaft{stroke:var(--node-stroke);stroke-width:1.6}
+.gtxt{font:600 12px var(--font-mono);fill:var(--fg);text-anchor:middle}
+.gtxt.sm{font-size:10.5px;font-weight:500;fill:var(--muted)}
+.gtxt.l{text-anchor:start}
+.dirtxt{font:600 15px var(--font-ui);fill:var(--accent-ink);text-anchor:middle}
+.hatchln{stroke:var(--node-stroke);stroke-width:1.1}
+.fixlbl{font:600 11px var(--font-ui);fill:var(--bad);text-anchor:middle}
+.ground{stroke:var(--node-stroke);stroke-width:1}
+.rect{stroke:var(--node-stroke);stroke-width:1.2}
+.rect.in{fill:var(--g-s)}.rect.out{fill:var(--g-c)}.rect.s{fill:var(--g-s)}.rect.p{fill:var(--g-p)}.rect.c{fill:var(--g-c)}.rect.m{fill:var(--g-m)}
+.bean{stroke:var(--node-stroke);stroke-width:1;fill:none;opacity:.7}
+.plot-ax{stroke:var(--muted);stroke-width:1}
+.plot-grid{stroke:var(--line);stroke-width:.7;stroke-dasharray:3 3}
+.plot-lbl{font:11px var(--font-mono);fill:var(--muted)}
+.plot-ttl{font:600 12px var(--font-ui);fill:var(--fg)}
+.curve{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.curve.fill{fill:var(--accent-soft);stroke:none}
+.cursor{stroke:var(--bad);stroke-width:1.4}
+.cdot{fill:var(--bad)}
+.rail{position:relative;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);margin:8px 0}
+.rail .car{position:absolute;top:4px;width:34px;height:24px;margin-left:-17px;border-radius:5px;background:var(--accent);border:1px solid var(--accent-ink)}
+/* exercices */
+.exs{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel);margin:8px 0}
+.exs p{margin:4px 0}
+.fieldrow{display:flex;gap:10px 16px;flex-wrap:wrap;margin:10px 0}
+.fieldrow .fld{margin:0;min-width:150px;flex:1 1 150px}
+.fieldrow input{font-family:var(--font-mono)}
+.fieldrow input.okk{border-color:var(--ok);background:var(--ok-soft)}
+.fieldrow input.nok{border-color:var(--bad);background:var(--bad-soft)}
+.solbox{border-left:3px solid var(--accent);padding:2px 12px;margin:10px 0;background:var(--panel2);border-radius:0 8px 8px 0}
+.scoreline{font:500 12.5px var(--font-mono);color:var(--muted);margin:2px 0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px var(--shadow);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="9.5" cy="13" r="7" fill="none" stroke="var(--fg)" stroke-width="1.6" stroke-dasharray="3.2 1.6"/><circle cx="18.5" cy="13" r="5.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.6 1.4"/><circle cx="9.5" cy="13" r="1.8" fill="var(--warn)"/></svg><span>Atelier Engrenages <small>SI · CPGE</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bTheme" type="button" aria-pressed="false">Mode sombre</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+function reduced() { try { return window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-engrenages-v1', theme: 'atelier-engrenages-theme' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const ANIM = { fn: null, last: 0 };
+const DEG = 180 / Math.PI;
+const copy = o => JSON.parse(JSON.stringify(o));
+
+/*LOGIC-START*/
+const TAU = 2 * Math.PI;
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function fx(v, d) {
+  if (d == null) d = 2;
+  if (!isFinite(v)) return '∞';
+  const f = Math.pow(10, d); let r = Math.round(v * f) / f; if (Object.is(r, -0)) r = 0;
+  let s = String(r); if (/e/.test(s)) s = r.toFixed(d);
+  return s.replace('.', ',').replace('-', '−');
+}
+const sg = (v, d) => (v > 0 ? '+' : '') + fx(v, d);
+const sb = (a, b) => a + '<sub>' + b + '</sub>';
+/* profil d'une dent (angle 0 au centre de la dent) */
+function toothPath(Z, rTip, rRoot, tipH, rootH) {
+  tipH = tipH || 0.15; rootH = rootH || 0.27;
+  const p = TAU / Z; let d = '';
+  for (let k = 0; k < Z; k++) {
+    const c = k * p;
+    const pts = [[rRoot, c - rootH * p], [rTip, c - tipH * p], [rTip, c + tipH * p], [rRoot, c + rootH * p]];
+    for (let i = 0; i < 4; i++) { const q = pts[i]; d += (k === 0 && i === 0 ? 'M' : 'L') + (q[0] * Math.cos(q[1])).toFixed(2) + ' ' + (q[0] * Math.sin(q[1])).toFixed(2); }
+  }
+  return d + 'Z';
+}
+/* train simple en ligne : angle de la roue i+1 à partir de la roue i (engrènement des dents) */
+function nextAngle(zi, ti, zn) { return Math.PI + (Math.PI - zi * ti) / zn; }
+function chainSpeeds(z, w1) { const w = [w1]; for (let i = 1; i < z.length; i++) w.push(-w[i - 1] * z[i - 1] / z[i]); return w; }
+/* train épicycloïdal : solaire S, couronne C, porte-satellites PS ; une inconnue (null) */
+function willis(zs, zc, w) {
+  const rho = -zs / zc; let S = w.S, C = w.C, P = w.PS;
+  if (C == null) C = rho * S + (1 - rho) * P;
+  else if (S == null) S = (C - (1 - rho) * P) / rho;
+  else if (P == null) P = (C - rho * S) / (1 - rho);
+  return { S, C, PS: P };
+}
+function satSpeeds(zs, zp, S, P) { const rel = -(zs / zp) * (S - P); return { rel, abs: P + rel }; }
+function epiAngles(zs, zp, zc, np, thS, thPS) {
+  const q = zs / zp, P = [];
+  for (let j = 0; j < np; j++) P.push(thPS * (1 + q) - q * thS + (TAU * j / np) * (1 + q) + Math.PI + Math.PI / zp);
+  const C = ((zc + zs) * thPS - zs * thS) / zc + Math.PI * zp / zc;
+  return { P, C };
+}
+function checksEpi(zs, zp, zc, np, m) {
+  const a = m * (zs + zp) / 2;
+  return {
+    coax: zc === zs + 2 * zp, a,
+    asm: (zs + zc) % np === 0, asmVal: (zs + zc) / np,
+    inter: np < 2 || 2 * a * Math.sin(Math.PI / np) > m * (zp + 2), dist: np < 2 ? Infinity : 2 * a * Math.sin(Math.PI / np), tip: m * (zp + 2)
+  };
+}
+/* profil trapézoïdal en vitesse */
+function profile(D, vmax, a, d) {
+  const dMin = vmax * vmax / (2 * a) + vmax * vmax / (2 * d);
+  let vp = vmax, tri = false;
+  if (D < dMin) { tri = true; vp = Math.sqrt(2 * D / (1 / a + 1 / d)); }
+  const ta = vp / a, td = vp / d, tc = tri ? 0 : (D - dMin) / vmax, T = ta + tc + td, xa = vp * ta / 2;
+  const v = t => t <= 0 ? 0 : t < ta ? a * t : t < ta + tc ? vp : t < T ? vp - d * (t - ta - tc) : 0;
+  const acc = t => (t < 0 || t > T) ? 0 : t < ta ? a : t < ta + tc ? 0 : -d;
+  const x = t => { if (t <= 0) return 0; if (t < ta) return a * t * t / 2; if (t < ta + tc) return xa + vp * (t - ta); if (t < T) { const u = t - ta - tc; return xa + vp * tc + vp * u - d * u * u / 2; } return D; };
+  return { D, vmax, a, d, ta, tc, td, T, vp, tri, v, acc, x };
+}
+function inverseProfile(D, T, ta, td) { const vmax = D / (T - (ta + td) / 2); return profile(D, vmax, vmax / ta, vmax / td); }
+/* réponses numériques */
+function parseAns(s) {
+  s = String(s).trim().replace(/\s/g, '').replace(/[−–]/g, '-').replace(/,/g, '.');
+  if (/^[-+]?(\d+\.?\d*|\.\d+)\/[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) { const q = s.split('/'); return +q[0] / +q[1]; }
+  if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return +s;
+  return NaN;
+}
+function okAns(v, t, rel, abs) { rel = rel == null ? 0.02 : rel; abs = abs == null ? 0.005 : abs; return isFinite(v) && Math.abs(v - t) <= Math.max(abs, Math.abs(t) * rel); }
+
+/* ---------- exercices : engrenages ---------- */
+const ZLOW = [12, 15, 16, 18, 20, 24], ZHIGH = [40, 45, 48, 60, 72, 80], ZANY = [12, 15, 16, 18, 20, 24, 25, 30, 32, 36, 40, 45, 48, 50, 60, 72, 80];
+const PN = { S: 'le solaire S', C: 'la couronne C', PS: 'le porte-satellites PS' };
+const WN = { S: 'ω<sub>S</sub>', C: 'ω<sub>C</sub>', PS: 'ω<sub>PS</sub>' };
+function epiDerivation(zs, zc, fixed) {
+  const q = zs + '/' + zc;
+  if (fixed === 'C') return 'Willis avec ω<sub>C</sub> = 0 : (0 − ω<sub>PS</sub>)/(ω<sub>S</sub> − ω<sub>PS</sub>) = −' + q + ' ⇒ ω<sub>PS</sub>·(1 + ' + q + ') = (' + q + ')·ω<sub>S</sub> ⇒ ω<sub>PS</sub>/ω<sub>S</sub> = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = ' + zs + '/' + (zs + zc) + '.';
+  if (fixed === 'S') return 'Willis avec ω<sub>S</sub> = 0 : (ω<sub>C</sub> − ω<sub>PS</sub>)/(0 − ω<sub>PS</sub>) = −' + q + ' ⇒ ω<sub>C</sub> = ω<sub>PS</sub>·(1 + ' + q + ') ⇒ ω<sub>C</sub>/ω<sub>PS</sub> = (Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub> = ' + (zs + zc) + '/' + zc + '.';
+  return 'Porte-satellites fixe (ω<sub>PS</sub> = 0) : le train est un train simple, Willis donne ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> = −' + q + ' (un contact extérieur S–satellite, un contact intérieur satellite–C).';
+}
+function genGear(flt) {
+  const kinds = flt === 'simple' ? ['s2', 's3', 's4'] : flt === 'compose' ? ['c2'] : flt === 'epi' ? ['e'] : ['s2', 's3', 's4', 'c2', 'e', 'e'];
+  const kind = pick(kinds); let ex;
+  if (kind === 's2') {
+    const m = pick([1, 1.5, 2, 2.5, 3]), z1 = pick([16, 18, 20, 24, 25, 30]), z2 = pick(ZHIGH), d1 = m * z1, d2 = m * z2;
+    ex = {
+      kind, tag: 'Train simple', fig: { type: 'lines', shafts: 2, wheels: [{ sh: 0, lev: 0, z: z1, lab: 'Z1' }, { sh: 1, lev: 0, z: z2, lab: 'Z2' }], links: [[0, 1]], inSh: 0, outSh: 1 },
+      text: 'Deux roues de module <b>m = ' + fx(m, 1) + ' mm</b> engrènent. Leurs diamètres primitifs sont <b>D<sub>1</sub> = ' + fx(d1, 1) + ' mm</b> (entrée) et <b>D<sub>2</sub> = ' + fx(d2, 1) + ' mm</b> (sortie). Déterminer les nombres de dents, l’entraxe et le rapport de réduction k = ω<sub>2</sub>/ω<sub>1</sub>.',
+      fields: [{ id: 'z1', label: 'Z₁', val: z1 }, { id: 'z2', label: 'Z₂', val: z2 }, { id: 'a', label: 'Entraxe a (mm)', val: (d1 + d2) / 2 }, { id: 'k', label: 'k = ω₂/ω₁', val: -z1 / z2 }],
+      sol: '<p>D = m·Z donc Z<sub>1</sub> = D<sub>1</sub>/m = ' + fx(d1, 1) + '/' + fx(m, 1) + ' = <b>' + z1 + '</b> et Z<sub>2</sub> = ' + fx(d2, 1) + '/' + fx(m, 1) + ' = <b>' + z2 + '</b>.</p><p>Entraxe : a = (D<sub>1</sub> + D<sub>2</sub>)/2 = <b>' + fx((d1 + d2) / 2, 2) + ' mm</b>.</p><p>Un seul contact extérieur (n = 1) : k = (−1)<sup>1</sup> × Z<sub>1</sub>/Z<sub>2</sub> = −' + z1 + '/' + z2 + ' = <b>' + fx(-z1 / z2, 3) + '</b>.</p>'
+    };
+  } else if (kind === 's3') {
+    let z1 = pick(ZANY), z2 = pick(ZANY), z3 = pick(ZANY); while (z3 === z1) z3 = pick(ZANY);
+    const k = z1 / z3;
+    ex = {
+      kind, tag: 'Train simple', fig: { type: 'lines', shafts: 3, wheels: [{ sh: 0, lev: 0, z: z1, lab: 'Z1' }, { sh: 1, lev: 0, z: z2, lab: 'Z2' }, { sh: 2, lev: 0, z: z3, lab: 'Z3' }], links: [[0, 1], [1, 2]], inSh: 0, outSh: 2 },
+      text: 'Train simple de trois roues en ligne, la roue 1 est l’entrée et la roue 3 la sortie. <b>Z<sub>1</sub> = ' + z1 + ', Z<sub>2</sub> = ' + z2 + ', Z<sub>3</sub> = ' + z3 + '</b>. Déterminer le rapport de réduction k = ω<sub>3</sub>/ω<sub>1</sub> (avec son signe).',
+      fields: [{ id: 'k', label: 'k = ω₃/ω₁', val: k }],
+      sol: '<p>Deux contacts extérieurs (1–2 et 2–3), donc n = 2.</p><p>k = (−1)<sup>2</sup> × (Z<sub>1</sub>·Z<sub>2</sub>)/(Z<sub>2</sub>·Z<sub>3</sub>) = Z<sub>1</sub>/Z<sub>3</sub> = ' + z1 + '/' + z3 + ' = <b>' + sg(k, 3) + '</b>.</p><p>La roue 2 est une roue intermédiaire (parasite) : elle n’influence pas la valeur de k, seulement son signe.</p>'
+    };
+  } else if (kind === 's4') {
+    const zs = []; for (let i = 0; i < 4; i++) zs.push(pick(ZANY)); if (zs[0] === zs[3]) zs[3] = zs[3] === 80 ? 60 : 80;
+    const k = -zs[0] / zs[3];
+    ex = {
+      kind, tag: 'Train simple', fig: { type: 'lines', shafts: 4, wheels: zs.map((z, i) => ({ sh: i, lev: 0, z, lab: 'Z' + (i + 1) })), links: [[0, 1], [1, 2], [2, 3]], inSh: 0, outSh: 3 },
+      text: 'Train simple de quatre roues en ligne (1 → 2 → 3 → 4). <b>Z<sub>1</sub> = ' + zs[0] + ', Z<sub>2</sub> = ' + zs[1] + ', Z<sub>3</sub> = ' + zs[2] + ', Z<sub>4</sub> = ' + zs[3] + '</b>. Déterminer k = ω<sub>4</sub>/ω<sub>1</sub>.',
+      fields: [{ id: 'k', label: 'k = ω₄/ω₁', val: k }],
+      sol: '<p>Trois contacts extérieurs : n = 3.</p><p>k = (−1)<sup>3</sup> × (Z<sub>1</sub>·Z<sub>2</sub>·Z<sub>3</sub>)/(Z<sub>2</sub>·Z<sub>3</sub>·Z<sub>4</sub>) = −Z<sub>1</sub>/Z<sub>4</sub> = −' + zs[0] + '/' + zs[3] + ' = <b>' + fx(k, 3) + '</b>.</p><p>Les roues 2 et 3 sont intermédiaires : seul le signe change.</p>'
+    };
+  } else if (kind === 'c2') {
+    const z1 = pick(ZLOW), z2 = pick(ZHIGH), z3 = pick(ZLOW), z4 = pick(ZHIGH), k = (z1 * z3) / (z2 * z4);
+    ex = {
+      kind, tag: 'Train composé', fig: { type: 'lines', shafts: 3, wheels: [{ sh: 0, lev: 0, z: z1, lab: 'Z1' }, { sh: 1, lev: 0, z: z2, lab: 'Z2' }, { sh: 1, lev: 1, z: z3, lab: 'Z3' }, { sh: 2, lev: 1, z: z4, lab: 'Z4' }], links: [[0, 1], [2, 3]], inSh: 0, outSh: 2 },
+      text: 'Réducteur à deux étages : la roue 1 (entrée) engrène avec la roue 2 ; les roues 2 et 3 sont <b>solidaires du même arbre</b> ; la roue 3 engrène avec la roue 4 (sortie). <b>Z<sub>1</sub> = ' + z1 + ', Z<sub>2</sub> = ' + z2 + ', Z<sub>3</sub> = ' + z3 + ', Z<sub>4</sub> = ' + z4 + '</b>. Déterminer k = ω<sub>4</sub>/ω<sub>1</sub>.',
+      fields: [{ id: 'k', label: 'k = ω₄/ω₁', val: k }],
+      sol: '<p>Deux contacts extérieurs (1–2 et 3–4), donc n = 2. Les roues 2 et 3 tournent à la même vitesse.</p><p>k = (−1)<sup>2</sup> × (Z<sub>1</sub>·Z<sub>3</sub>)/(Z<sub>2</sub>·Z<sub>4</sub>) = (' + z1 + ' × ' + z3 + ')/(' + z2 + ' × ' + z4 + ') = <b>' + sg(k, 4) + '</b>.</p><p>Chaque étage divise la vitesse : les rapports de chaque étage se multiplient.</p>'
+    };
+  } else {
+    const zs = pick([12, 16, 18, 20, 24, 30]), zp = pick([12, 15, 18, 20, 24, 30]), zc = zs + 2 * zp;
+    const cases = [
+      { f: 'C', i: 'S', o: 'PS', k: zs / (zs + zc) }, { f: 'S', i: 'C', o: 'PS', k: zc / (zs + zc) }, { f: 'PS', i: 'S', o: 'C', k: -zs / zc },
+      { f: 'S', i: 'PS', o: 'C', k: (zs + zc) / zc }, { f: 'C', i: 'PS', o: 'S', k: (zs + zc) / zs }, { f: 'PS', i: 'C', o: 'S', k: -zc / zs }
+    ];
+    const cs = pick(cases);
+    ex = {
+      kind: 'epi', tag: 'Train épicycloïdal', fig: { type: 'epi', zs, zp, zc, np: 3, fixed: cs.f, inp: cs.i, out: cs.o },
+      text: 'Un train épicycloïdal est formé d’un solaire S (<b>Z<sub>S</sub> = ' + zs + '</b>), de satellites (<b>Z<sub>P</sub> = ' + zp + '</b>), d’une couronne C et d’un porte-satellites PS. <b>' + PN[cs.f].replace(/^l[ea] /, '').replace(/^./, c => c.toUpperCase()) + ' est fixé au bâti</b>, l’entrée est ' + PN[cs.i] + ' et la sortie ' + PN[cs.o] + '. Déterminer Z<sub>C</sub> (même module partout) puis le rapport de réduction k = ω<sub>sortie</sub>/ω<sub>entrée</sub>.',
+      fields: [{ id: 'zc', label: 'Z_C', val: zc }, { id: 'k', label: 'k = ω_sortie/ω_entrée', val: cs.k }],
+      sol: '<p>Coaxialité : Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> = ' + zs + ' + 2 × ' + zp + ' = <b>' + zc + '</b>.</p><p>' + epiDerivation(zs, zc, cs.f) + '</p><p>Sortie / entrée : k = ' + WN[cs.o] + '/' + WN[cs.i] + ' = <b>' + sg(cs.k, 3) + '</b>.</p>'
+    };
+  }
+  if (kind !== 's2') {
+    const k = ex.fields[ex.fields.length - 1].val, ce = pick([2, 4, 5, 10, 20, 50]);
+    ex.text += ' On suppose le rendement égal à 1 et un couple d’entrée <b>C<sub>e</sub> = ' + ce + ' N·m</b> : en déduire le couple de sortie.';
+    ex.fields.push({ id: 'c', label: 'Couple de sortie C_s (N·m)', val: ce / Math.abs(k) });
+    ex.sol += '<p>Sans pertes, C<sub>s</sub>·ω<sub>s</sub> = C<sub>e</sub>·ω<sub>e</sub> donc C<sub>s</sub> = C<sub>e</sub>/|k| = ' + ce + '/' + fx(Math.abs(k), 3) + ' = <b>' + fx(ce / Math.abs(k), 2) + ' N·m</b>' + (Math.abs(k) < 1 ? ' (réducteur : couple multiplié, vitesse divisée).' : ' (multiplicateur : couple divisé, vitesse multipliée).') + '</p>';
+  }
+  return ex;
+}
+
+/* ---------- exercices : profil trapézoïdal ---------- */
+function genTrap(flt) {
+  const kinds = flt === 'time' ? ['a', 'b', 'd'] : flt === 'acc' ? ['c', 'e', 'f'] : ['a', 'b', 'c', 'd', 'e', 'f'];
+  const kind = pick(kinds);
+  const rot = Math.random() < 0.4;
+  const U = rot ? { d: 'rad', v: 'rad/s', a: 'rad/s²' } : { d: 'm', v: 'm/s', a: 'm/s²' };
+  const who = rot ? 'Un axe motorisé doit tourner de' : 'Un chariot doit parcourir';
+  const r3 = v => Math.round(v * 1000) / 1000;
+  let ex;
+  if (kind === 'a') {
+    const a = pick([1, 2, 2.5, 5]), vm = pick([0.5, 1, 1.5, 2]), tc = pick([0.5, 1, 1.5, 2, 2.5, 3]);
+    const ta = vm / a, D = r3(vm * vm / a + vm * tc), T = 2 * ta + tc;
+    ex = {
+      tag: 'Calcul de temps', text: who + ' <b>D = ' + fx(D, 3) + ' ' + U.d + '</b> avec un profil de vitesse trapézoïdal. L’accélération et la décélération sont égales : <b>a = ' + fx(a, 2) + ' ' + U.a + '</b>. La vitesse maximale est <b>V<sub>max</sub> = ' + fx(vm, 2) + ' ' + U.v + '</b>. Déterminer le temps d’accélération, le temps à vitesse constante et la durée totale.',
+      fields: [{ id: 'ta', label: 't_a (s)', val: ta }, { id: 'tc', label: 't_c (s)', val: tc }, { id: 'T', label: 'T (s)', val: T }],
+      sol: '<p>t<sub>a</sub> = V<sub>max</sub>/a = ' + fx(vm, 2) + '/' + fx(a, 2) + ' = <b>' + fx(ta, 3) + ' s</b> (idem pour la décélération).</p><p>Distance parcourue en phases d’accélération + décélération : V<sub>max</sub>²/a = ' + fx(vm * vm / a, 3) + ' ' + U.d + ' &lt; D, la vitesse maximale est bien atteinte.</p><p>t<sub>c</sub> = (D − V<sub>max</sub>²/a)/V<sub>max</sub> = (' + fx(D, 3) + ' − ' + fx(vm * vm / a, 3) + ')/' + fx(vm, 2) + ' = <b>' + fx(tc, 3) + ' s</b>.</p><p>T = 2·t<sub>a</sub> + t<sub>c</sub> = <b>' + fx(T, 3) + ' s</b> (ou T = D/V<sub>max</sub> + V<sub>max</sub>/a).</p>'
+    };
+  } else if (kind === 'b') {
+    const a = pick([1, 2, 4, 5]), ta = pick([0.5, 1, 1.5, 2]), vp = a * ta, vm = 2 * vp, D = r3(vp * ta);
+    ex = {
+      tag: 'Calcul de temps', text: who + ' <b>D = ' + fx(D, 3) + ' ' + U.d + '</b>. Accélération et décélération égales : <b>a = ' + fx(a, 2) + ' ' + U.a + '</b>, vitesse maximale autorisée <b>V<sub>max</sub> = ' + fx(vm, 2) + ' ' + U.v + '</b>. Vérifier si V<sub>max</sub> est atteinte. Donner la vitesse atteinte au maximum V<sub>pic</sub> et la durée totale T.',
+      fields: [{ id: 'vp', label: 'V_pic (' + U.v + ')', val: vp }, { id: 'T', label: 'T (s)', val: 2 * ta }],
+      sol: '<p>Test : V<sub>max</sub>²/a = ' + fx(vm * vm / a, 3) + ' ' + U.d + ' &gt; D = ' + fx(D, 3) + ' ' + U.d + '. La distance est trop courte pour atteindre V<sub>max</sub> : le profil est <b>triangulaire</b> (pas de phase à vitesse constante).</p><p>D = V<sub>pic</sub>²/a ⇒ V<sub>pic</sub> = √(a·D) = √(' + fx(a, 2) + ' × ' + fx(D, 3) + ') = <b>' + fx(vp, 3) + ' ' + U.v + '</b>.</p><p>T = 2·V<sub>pic</sub>/a = 2·√(D/a) = <b>' + fx(2 * ta, 3) + ' s</b>.</p>'
+    };
+  } else if (kind === 'c') {
+    const vm = pick([0.5, 1, 1.5, 2, 3]), ta = pick([0.25, 0.5, 1]), tc = pick([1, 1.5, 2, 3]), T = 2 * ta + tc, D = r3(vm * (T - ta)), a = vm / ta;
+    ex = {
+      tag: 'Calcul de a et V_max', text: who + ' <b>D = ' + fx(D, 3) + ' ' + U.d + '</b> en <b>T = ' + fx(T, 2) + ' s</b>, avec un profil trapézoïdal dont les temps d’accélération et de décélération sont égaux : <b>t<sub>a</sub> = t<sub>d</sub> = ' + fx(ta, 2) + ' s</b>. Déterminer la vitesse maximale et l’accélération.',
+      fields: [{ id: 'vm', label: 'V_max (' + U.v + ')', val: vm }, { id: 'a', label: 'a (' + U.a + ')', val: a }],
+      sol: '<p>La distance est l’aire du trapèze : D = V<sub>max</sub>·(T − t<sub>a</sub>) (bases T et T − 2·t<sub>a</sub>, hauteur V<sub>max</sub>).</p><p>V<sub>max</sub> = D/(T − t<sub>a</sub>) = ' + fx(D, 3) + '/(' + fx(T, 2) + ' − ' + fx(ta, 2) + ') = <b>' + fx(vm, 3) + ' ' + U.v + '</b>.</p><p>a = V<sub>max</sub>/t<sub>a</sub> = ' + fx(vm, 3) + '/' + fx(ta, 2) + ' = <b>' + fx(a, 3) + ' ' + U.a + '</b>.</p>'
+    };
+  } else if (kind === 'd') {
+    const vm = pick([0.5, 1, 1.5, 2]), ta = pick([0.5, 1]), td = pick([1, 1.5, 2]), tc = pick([1, 2, 3]), D = r3(vm * (ta / 2 + tc + td / 2)), T = ta + tc + td;
+    ex = {
+      tag: 'Calcul de temps', text: who + ' <b>D = ' + fx(D, 3) + ' ' + U.d + '</b>. Profil trapézoïdal de vitesse maximale <b>V<sub>max</sub> = ' + fx(vm, 2) + ' ' + U.v + '</b>, avec un temps d’accélération <b>t<sub>a</sub> = ' + fx(ta, 2) + ' s</b> et un temps de décélération différent <b>t<sub>d</sub> = ' + fx(td, 2) + ' s</b>. Déterminer le temps à vitesse constante t<sub>c</sub> et la durée totale T.',
+      fields: [{ id: 'tc', label: 't_c (s)', val: tc }, { id: 'T', label: 'T (s)', val: T }],
+      sol: '<p>D = aire du trapèze = V<sub>max</sub>·(t<sub>a</sub>/2 + t<sub>c</sub> + t<sub>d</sub>/2).</p><p>t<sub>c</sub> = D/V<sub>max</sub> − (t<sub>a</sub> + t<sub>d</sub>)/2 = ' + fx(D, 3) + '/' + fx(vm, 2) + ' − (' + fx(ta, 2) + ' + ' + fx(td, 2) + ')/2 = <b>' + fx(tc, 3) + ' s</b>.</p><p>T = t<sub>a</sub> + t<sub>c</sub> + t<sub>d</sub> = <b>' + fx(T, 3) + ' s</b>.</p>'
+    };
+  } else if (kind === 'e') {
+    const vm = pick([0.5, 1, 1.5, 2]), T = pick([3, 6, 9]), D = r3(2 / 3 * vm * T), a = vm / (T / 3);
+    ex = {
+      tag: 'Calcul de a et V_max', text: who + ' <b>D = ' + fx(D, 3) + ' ' + U.d + '</b> en <b>T = ' + fx(T, 2) + ' s</b>. Le profil est trapézoïdal « en trois tiers » : accélération, vitesse constante et décélération durent chacune T/3. Déterminer la vitesse maximale et l’accélération.',
+      fields: [{ id: 'vm', label: 'V_max (' + U.v + ')', val: vm }, { id: 'a', label: 'a (' + U.a + ')', val: a }],
+      sol: '<p>t<sub>a</sub> = T/3 = ' + fx(T / 3, 2) + ' s. D = V<sub>max</sub>·(T − t<sub>a</sub>) = V<sub>max</sub>·2T/3.</p><p>V<sub>max</sub> = 3D/(2T) = <b>' + fx(vm, 3) + ' ' + U.v + '</b>.</p><p>a = V<sub>max</sub>/t<sub>a</sub> = 3·V<sub>max</sub>/T = <b>' + fx(a, 3) + ' ' + U.a + '</b>.</p>'
+    };
+  } else {
+    const a = pick([2, 2.5, 5]), vm = pick([1, 1.5, 2]), ta = vm / a, tc = pick([1, 1.5, 2, 3]), T = 2 * ta + tc, D = r3(vm * (T - ta));
+    ex = {
+      tag: 'Calcul de a et V_max (niveau 3)', text: who + ' <b>D = ' + fx(D, 3) + ' ' + U.d + '</b> en <b>T = ' + fx(T, 3) + ' s</b>. L’accélération et la décélération sont égales à <b>a = ' + fx(a, 2) + ' ' + U.a + '</b>, le profil est trapézoïdal. Déterminer la vitesse maximale V<sub>max</sub> (on prendra la solution pour laquelle t<sub>c</sub> ≥ 0).',
+      fields: [{ id: 'vm', label: 'V_max (' + U.v + ')', val: vm }],
+      sol: '<p>Avec t<sub>a</sub> = V<sub>max</sub>/a : D = V<sub>max</sub>·(T − V<sub>max</sub>/a), soit V<sub>max</sub>²/a − T·V<sub>max</sub> + D = 0.</p><p>V<sub>max</sub> = (a/2)·(T ± √(T² − 4D/a)). On garde le signe « − » pour que t<sub>c</sub> = T − 2·V<sub>max</sub>/a ≥ 0.</p><p>V<sub>max</sub> = ' + fx(a / 2, 2) + ' × (' + fx(T, 3) + ' − √(' + fx(T * T - 4 * D / a, 4) + ')) = <b>' + fx(vm, 3) + ' ' + U.v + '</b>.</p>'
+    };
+  }
+  ex.kind = kind; ex.fig = { type: 'trap' };
+  return ex;
+}
+
+/*LOGIC-END*/
+
+/* ---------- aides d'interface ---------- */
+const subz = s => String(s).replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+function svgTxt(parent, attrs, str) {
+  const t = el('text', attrs, parent), parts = String(str).split(/_([A-Za-z0-9]+)/);
+  parts.forEach((p, i) => {
+    if (i % 2 === 0) { if (p) { const sp = el('tspan', {}, t); sp.textContent = p; if (i > 0) sp.setAttribute('dy', '-3'); } }
+    else { const sp = el('tspan', { dy: '3', 'font-size': '0.78em' }, t); sp.textContent = p; }
+  });
+  return t;
+}
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', { html: k[0] }), h('b', { html: k[1] })))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', disabled: it[2] === true, html: subz(it[1]), onclick: () => cb(it[0]) })));
+}
+function setMsg(sel, html, kind) { const m = $(sel); if (!m) return; m.innerHTML = html; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+function rng(label, min, max, step, get, set, fmtFn) {
+  const out = h('b', null, fmtFn(get()));
+  const inp = h('input', { type: 'range', min, max, step, 'aria-label': label });
+  inp.value = get();
+  inp.addEventListener('input', () => { set(+inp.value); out.textContent = fmtFn(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', { html: subz(label) + ' = ' }, out), inp);
+}
+function hatchDefs(svg, id) {
+  const d = el('defs', {}, svg), p = el('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, d);
+  el('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'hatchln' }, p);
+}
+let SVGN = 0;
+const dirSym = w => w > 1e-9 ? '↻' : w < -1e-9 ? '↺' : '•';
+const dirTxt = w => w > 1e-9 ? '↻ horaire' : w < -1e-9 ? '↺ antihoraire' : 'à l’arrêt';
+const W = x => WN[x];
+function tableEl(head, rows) {
+  return h('div', { class: 'tbl' }, h('table', { class: 'ctable' }, h('thead', null, h('tr', null, head.map(c => h('th', { html: c })))), h('tbody', null, rows.map(r => h('tr', null, r.map((c, i) => h('td', { class: i >= 2 ? 'n' : '', html: String(c) })))))));
+}
+function playRow(S, onPlay) {
+  const b = h('button', { class: 'btn', type: 'button', onclick: () => { S.play = !S.play; b.textContent = S.play ? 'Pause' : 'Lecture'; } }, S.play ? 'Pause' : 'Lecture');
+  return h('div', { class: 'opts' }, h('div', { class: 'fld' }, h('span', null, 'Animation'), b), rng('Vitesse de l’animation', 0.2, 3, 0.1, () => S.spd, v => { S.spd = v; }, v => '× ' + fx(v, 1)));
+}
+
+/* ================= Atelier 1 : train simple (solides à une ou deux roues) ================= */
+const G1D = { n: 3, two: [false, true, false, false, false], zi: [0, 36, 36, 30, 40], zo: [18, 18, 24, 30, 20], m: 2, w: 1000, dir: 1, c: 2, play: true, spd: 1 };
+const G1 = Object.assign({ th: 0, L: null, rot: [], dots: [] }, copy(G1D));
+G1.play = !reduced();
+/* roues effectives : zin[i] engrène avec le solide précédent, zout[i] avec le suivant */
+function g1Wheels() {
+  const n = G1.n, zin = [], zout = [];
+  for (let i = 0; i < n; i++) {
+    if (i === 0) { zin.push(null); zout.push(G1.zo[0]); }
+    else if (i === n - 1) { zin.push(G1.zi[i]); zout.push(null); }
+    else if (G1.two[i]) { zin.push(G1.zi[i]); zout.push(G1.zo[i]); }
+    else { zin.push(G1.zi[i]); zout.push(G1.zi[i]); }
+  }
+  return { n, zin, zout };
+}
+function g1Layout(Wd, Ht, padT) {
+  const { n, zin, zout } = g1Wheels(), m = G1.m, rin = zin.map(v => v == null ? 0 : m * v / 2), rout = zout.map(v => v == null ? 0 : m * v / 2), cx = [0];
+  for (let i = 1; i < n; i++) cx.push(cx[i - 1] + rout[i - 1] + rin[i]);
+  const ra = rin.map((v, i) => Math.max(v, rout[i]) + m), minx = -ra[0], maxx = cx[n - 1] + ra[n - 1], hmax = 2 * Math.max(...ra), padX = 24;
+  const sc = Math.min((Wd - 2 * padX) / (maxx - minx), (Ht - padT - 14) / hmax);
+  const x0 = padX + ((Wd - 2 * padX) - (maxx - minx) * sc) / 2 - minx * sc;
+  return { n, m, zin, zout, rin, rout, cx, sc, X: i => x0 + cx[i] * sc, Y: padT + (Ht - padT - 14) / 2 };
+}
+function g1Lab(i, n, two, out) { return 'Z<sub>' + (i + 1) + '</sub>' + (two && out ? '′' : ''); }
+function mountG1(root) {
+  root.innerHTML =
+    '<h2>Train d’engrenages simple</h2>' +
+    '<p>Un train simple est une suite de <b>solides</b> (arbres) en série : chaque solide engrène avec le suivant. Un solide intermédiaire porte <b>une seule roue</b> (roue intermédiaire, ou « parasite ») ou <b>deux roues solidaires</b> de tailles différentes : c’est ce qui permet d’obtenir un vrai rapport de réduction. Réglez le nombre de solides, le nombre de roues de chacun et leurs nombres de dents.</p>' +
+    '<div class="chips" id="g1-pre" aria-label="Exemples"></div>' +
+    '<div class="opts" id="g1-top"></div>' +
+    '<div class="zgrid" id="g1-z"></div>' +
+    '<div class="opts" id="g1-in"></div>' +
+    '<div id="g1-play"></div>' +
+    '<p class="viewlbl">Vue de face (on regarde dans l’axe des arbres ; deux roues d’un même solide sont l’une devant l’autre)</p><div class="gwrap"><svg class="g" id="g1-f" role="img" aria-label="Vue de face du train d’engrenages"></svg></div>' +
+    '<p class="viewlbl">Vue de dessus (les roues sont vues de profil, une roue par plan de contact ; le point rouge montre la rotation)</p><div class="gwrap"><svg class="g" id="g1-t" role="img" aria-label="Vue de dessus du train d’engrenages"></svg></div>' +
+    '<div class="verdict" id="g1-msg" aria-live="polite"></div>' +
+    '<div id="g1-st"></div>' +
+    '<h3>Calcul du rapport de réduction</h3><div class="calc" id="g1-calc"></div>' +
+    '<h3>Solide par solide</h3><div id="g1-tab"></div>';
+  const rem = () => { const sc = $('#scroller').scrollTop; mountG1($('#ws')); $('#scroller').scrollTop = sc; };
+  const pre = $('#g1-pre');
+  [['2 solides, réducteur', { n: 2, z: [[0, 20], [60, 0]], two: [] }],
+   ['3 solides, roue intermédiaire', { n: 3, z: [[0, 20], [30, 30], [60, 0]], two: [] }],
+   ['3 solides, double roue', { n: 3, z: [[0, 18], [36, 18], [36, 0]], two: [1] }],
+   ['4 solides, deux doubles roues', { n: 4, z: [[0, 16], [48, 16], [48, 18], [54, 0]], two: [1, 2] }],
+   ['Multiplicateur', { n: 2, z: [[0, 60], [20, 0]], two: [] }]].forEach(p => {
+    pre.append(h('button', { type: 'button', class: 'chip', onclick: () => {
+      G1.n = p[1].n; p[1].z.forEach((v, i) => { if (v[0]) G1.zi[i] = v[0]; if (v[1]) G1.zo[i] = v[1]; if (v[0] && !v[1]) G1.zo[i] = v[0]; });
+      for (let i = 0; i < 5; i++) G1.two[i] = p[1].two.includes(i);
+      for (let i = 1; i < p[1].n - 1; i++) if (!G1.two[i]) G1.zo[i] = G1.zi[i];
+      rem();
+    } }, p[0]));
+  });
+  const top = $('#g1-top');
+  top.append(rng('Nombre de solides N (N − 1 contacts)', 2, 5, 1, () => G1.n, v => { G1.n = v; buildZ(); redraw(); }, v => String(v)));
+  top.append(h('div', { class: 'fld' }, h('span', null, 'Module m (mm)'), chipsRow([[1, '1'], [1.5, '1,5'], [2, '2'], [3, '3']], G1.m, v => { G1.m = v; rem(); }, 'Module')));
+  const inb = $('#g1-in');
+  inb.append(rng('Vitesse d’entrée ω_1 (tr/min)', 0, 3000, 50, () => G1.w, v => { G1.w = v; info(); }, v => String(v)));
+  inb.append(h('div', { class: 'fld' }, h('span', null, 'Sens de l’entrée'), chipsRow([[1, '↻ horaire'], [-1, '↺ antihoraire']], G1.dir, v => { G1.dir = v; rem(); }, 'Sens')));
+  inb.append(rng('Couple d’entrée C_1 (N·m)', 0.5, 20, 0.5, () => G1.c, v => { G1.c = v; info(); }, v => fx(v, 1)));
+  $('#g1-play').append(playRow(G1));
+  function buildZ() {
+    const zb = $('#g1-z'); zb.innerHTML = ''; const n = G1.n;
+    for (let i = 0; i < n; i++) {
+      const role = i === 0 ? 'entrée' : i === n - 1 ? 'sortie' : 'intermédiaire', mid = i > 0 && i < n - 1, box = h('div', { class: 'zsh' });
+      box.append(h('div', { class: 'zsh-t', html: '<b>Solide ' + (i + 1) + '</b> <span class="small">(' + role + ')</span>' }));
+      if (mid) box.append(chipsRow([[false, '1 roue'], [true, '2 roues']], G1.two[i], v => { G1.two[i] = v; if (!v) G1.zo[i] = G1.zi[i]; buildZ(); redraw(); }, 'Nombre de roues du solide ' + (i + 1)));
+      if (i === 0) box.append(rng('Z_1', 10, 80, 1, () => G1.zo[0], v => { G1.zo[0] = v; redraw(); }, v => String(v)));
+      else if (i === n - 1) box.append(rng('Z_' + (i + 1), 10, 80, 1, () => G1.zi[i], v => { G1.zi[i] = v; redraw(); }, v => String(v)));
+      else if (!G1.two[i]) box.append(rng('Z_' + (i + 1) + ' (roue unique)', 10, 80, 1, () => G1.zi[i], v => { G1.zi[i] = v; G1.zo[i] = v; redraw(); }, v => String(v)));
+      else {
+        box.append(rng('Z_' + (i + 1) + ' (engrène avec ' + i + ')', 10, 80, 1, () => G1.zi[i], v => { G1.zi[i] = v; redraw(); }, v => String(v)));
+        box.append(rng('Z_' + (i + 1) + '′ (engrène avec ' + (i + 2) + ')', 10, 80, 1, () => G1.zo[i], v => { G1.zo[i] = v; redraw(); }, v => String(v)));
+      }
+      zb.append(box);
+    }
+  }
+  function redraw() { draw(); info(); }
+  function wheelsOf(L, i) {
+    const w = [];
+    if (L.zin[i] != null) w.push({ z: L.zin[i], r: L.rin[i], pl: [i - 1, i - 1] });
+    if (L.zout[i] != null) w.push({ z: L.zout[i], r: L.rout[i], pl: [i, i] });
+    if (L.zin[i] != null && L.zout[i] != null && i > 0 && i < L.n - 1 && !G1.two[i]) return [{ z: L.zin[i], r: L.rin[i], pl: [i - 1, i] }];
+    return w;
+  }
+  function draw() {
+    const L = g1Layout(720, 290, 34); G1.L = L; G1.rot = []; G1.dots = [];
+    const svg = $('#g1-f'); svg.setAttribute('viewBox', '0 0 720 290'); svg.innerHTML = '';
+    G1.dirEl = [];
+    for (let i = 0; i < L.n; i++) {
+      const cls = i === 0 ? 'in' : i === L.n - 1 ? 'out' : 'm', m = L.m, sc = L.sc, ws = wheelsOf(L, i).sort((a, b) => b.z - a.z);
+      const g = el('g', { transform: 'translate(' + L.X(i).toFixed(1) + ',' + L.Y.toFixed(1) + ')' }, svg);
+      let rmax = 0;
+      ws.forEach(wh => {
+        rmax = Math.max(rmax, wh.r);
+        const rot = el('g', {}, g);
+        el('path', { class: 'gear ' + cls, d: toothPath(wh.z, (wh.r + m) * sc, (wh.r - 1.25 * m) * sc), style: ws.length > 1 ? 'opacity:.93' : '' }, rot);
+        el('circle', { class: 'mk', cx: (wh.r * sc * 0.66).toFixed(1), cy: 0, r: 3.2 }, rot);
+        el('circle', { class: 'pitch', r: (wh.r * sc).toFixed(1) }, g);
+        G1.rot.push({ i, g: rot });
+      });
+      el('circle', { class: 'hub', r: 10 }, g);
+      el('text', { class: 'gtxt', y: 4 }, g).textContent = String(i + 1);
+      const d = el('text', { class: 'dirtxt', x: L.X(i).toFixed(1), y: Math.max(16, L.Y - (rmax + m) * sc - 6).toFixed(1) }, svg);
+      G1.dirEl.push(d);
+    }
+    const P = Math.max(1, L.n - 1), pw = 14, y0 = 42, yG = y0 + P * pw + 14, Ht = yG + 14;
+    const tv = $('#g1-t'); tv.setAttribute('viewBox', '0 0 720 ' + Ht); tv.innerHTML = ''; hatchDefs(tv, 'g1-hat');
+    el('rect', { x: 10, y: yG, width: 700, height: 10, class: 'ground', fill: 'url(#g1-hat)' }, tv);
+    for (let i = 0; i < L.n; i++) {
+      const cls = i === 0 ? 'in' : i === L.n - 1 ? 'out' : 'm', x = L.X(i);
+      el('line', { class: 'shaft', x1: x, x2: x, y1: 34, y2: yG }, tv);
+      wheelsOf(L, i).forEach(wh => {
+        const w = wh.r * L.sc, yy = y0 + wh.pl[0] * pw + 1, hh = (wh.pl[1] - wh.pl[0] + 1) * pw - 2;
+        el('rect', { class: 'rect ' + cls, x: (x - w).toFixed(1), y: yy, width: (2 * w).toFixed(1), height: hh }, tv);
+        G1.dots.push({ i, r: wh.r, el: el('circle', { class: 'mk', cx: x, cy: yy + hh / 2, r: 3 }, tv) });
+      });
+      svgTxt(tv, { class: 'gtxt sm l', x: x + 6, y: 32 }, String(i + 1));
+    }
+    el('text', { class: 'gtxt', x: L.X(0), y: 12, fill: 'var(--accent-ink)' }, tv).textContent = 'Entrée';
+    el('text', { class: 'gtxt', x: L.X(L.n - 1), y: 12 }, tv).textContent = 'Sortie';
+    pose();
+  }
+  function pose() {
+    const L = G1.L; if (!L || !G1.dots.length) return;
+    const th = [G1.th];
+    for (let i = 1; i < L.n; i++) th.push(nextAngle(L.zout[i - 1], th[i - 1], L.zin[i]));
+    G1.rot.forEach(r => r.g.setAttribute('transform', 'rotate(' + (th[r.i] * DEG).toFixed(2) + ')'));
+    G1.dots.forEach(d => { d.el.setAttribute('cx', (L.X(d.i) + 0.66 * d.r * L.sc * Math.cos(th[d.i])).toFixed(1)); d.el.setAttribute('opacity', Math.sin(th[d.i]) < 0 ? 1 : 0.28); });
+  }
+  G1.pose = pose;
+  function info() {
+    const L = G1.L, n = L.n, m = G1.m, zin = L.zin, zout = L.zout, nc = n - 1;
+    const w = [G1.w * G1.dir]; for (let i = 1; i < n; i++) w.push(-w[i - 1] * zout[i - 1] / zin[i]);
+    let num = 1, den = 1; for (let i = 0; i < nc; i++) { num *= zout[i]; den *= zin[i + 1]; }
+    const k = Math.pow(-1, nc) * num / den, cs = G1.c / Math.abs(k);
+    w.forEach((v, i) => { G1.dirEl[i].textContent = dirSym(v); });
+    const red = Math.abs(k) < 0.9995, mult = Math.abs(k) > 1.0005;
+    const hasDouble = G1.two.slice(1, n - 1).some(Boolean), hasMid = n > 2;
+    let note = '';
+    if (hasMid && !hasDouble && n > 2) note = ' <span class="small">Aucun solide n’a deux roues : les roues intermédiaires ne changent que le sens, k = ' + (nc % 2 ? '−' : '+') + 'Z<sub>1</sub>/Z<sub>' + n + '</sub>.</span>';
+    setMsg('#g1-msg', (red ? '<b>Réducteur.</b> |k| = ' + fx(Math.abs(k), 3) + ' &lt; 1 : la vitesse est divisée par ' + fx(1 / Math.abs(k), 2) + ' et, sans pertes, le couple est multiplié par ' + fx(1 / Math.abs(k), 2) + '.' : mult ? '<b>Multiplicateur.</b> |k| = ' + fx(Math.abs(k), 3) + ' &gt; 1 : la vitesse est multipliée par ' + fx(Math.abs(k), 2) + ' et le couple divisé par ' + fx(Math.abs(k), 2) + '.' : '<b>Rapport 1.</b> La vitesse et le couple ne changent pas, seul le sens peut changer.') + note, red ? 'yes' : mult ? 'warn' : '');
+    const sb = $('#g1-st'); sb.innerHTML = '';
+    sb.append(stats([['Contacts extérieurs n', String(nc)], ['k = ω<sub>' + n + '</sub>/ω<sub>1</sub>', sg(k, 3)], ['Vitesse de sortie ω<sub>' + n + '</sub>', fx(w[n - 1], 0) + ' tr/min'], ['Couple de sortie C<sub>' + n + '</sub> (η = 1)', fx(cs, 2) + ' N·m'], ['Distance entre les axes extrêmes', fx(L.cx[n - 1], 1) + ' mm']]));
+    const lo = i => 'Z<sub>' + (i + 1) + '</sub>' + (i > 0 && G1.two[i] ? '′' : ''), li = i => 'Z<sub>' + (i + 1) + '</sub>';
+    const cb = $('#g1-calc'); cb.innerHTML = '';
+    const pairs = [], prod = [], dn = [], nu = [];
+    for (let i = 0; i < nc; i++) {
+      pairs.push('ω<sub>' + (i + 2) + '</sub>/ω<sub>' + (i + 1) + '</sub> = −' + lo(i) + '/' + li(i + 1) + ' = −' + zout[i] + '/' + zin[i + 1] + ' = ' + fx(-zout[i] / zin[i + 1], 3));
+      prod.push('(' + fx(-zout[i] / zin[i + 1], 3) + ')'); nu.push(lo(i)); dn.push(li(i + 1));
+    }
+    cb.append(h('div', { class: 'formula sm', html: '<b>Chaque contact extérieur</b> inverse le sens (rapport de transmission d’une paire de roues) :<br>' + pairs.join('<br>') }));
+    cb.append(h('div', { class: 'formula sm', html: '<b>Le rapport de réduction du train est le produit</b> des rapports de chaque paire (les roues d’un même solide tournent à la même vitesse) : k = ' + prod.join(' × ') + ' = <b>' + sg(k, 3) + '</b>' }));
+    cb.append(h('div', { class: 'formula sm', html: '<b>Formule générale :</b> k = (−1)<sup>n</sup> × (Z<sub>menantes</sub>)/(Z<sub>menées</sub>) = (−1)<sup>' + nc + '</sup> × (' + nu.join(' × ') + ')/(' + dn.join(' × ') + ') = <b>' + sg(k, 3) + '</b>' + (hasMid && !hasDouble ? '<br><span class="small">Les roues intermédiaires uniques s’éliminent. Pour réduire davantage, il faut des solides à deux roues.</span>' : hasDouble ? '<br><span class="small">Un solide à deux roues (Z′ ≠ Z) ne s’élimine pas : chaque étage multiplie le rapport.</span>' : '') }));
+    const tb = $('#g1-tab'); tb.innerHTML = '';
+    tb.append(tableEl(['Solide', 'Roue(s)', 'Z', 'D = m·Z (mm)', 'Vitesse (tr/min)', 'Sens'], w.map((v, i) => {
+      const role = i === 0 ? 'entrée' : i === n - 1 ? 'sortie' : G1.two[i] ? 'deux roues' : 'roue unique';
+      const zs = [], ds = [];
+      if (i > 0) { zs.push(zin[i]); ds.push(fx(m * zin[i], 1)); }
+      if (i < n - 1 && !(i > 0 && !G1.two[i])) { zs.push(zout[i]); ds.push(fx(m * zout[i], 1)); }
+      return [i + 1, role, zs.join(' / '), ds.join(' / '), fx(v, 0), dirTxt(v)];
+    })));
+    tb.append(h('p', { class: 'small', html: 'Puissance : P = C·ω se conserve sans pertes. À l’entrée C<sub>1</sub>·ω<sub>1</sub> = ' + fx(G1.c * w[0] * Math.PI / 30, 1) + ' W, à la sortie C<sub>' + n + '</sub>·ω<sub>' + n + '</sub> = ' + fx(cs * Math.abs(w[n - 1]) * Math.PI / 30, 1) + ' W.' }));
+  }
+  buildZ(); draw(); info();
+  ANIM.fn = dt => { if (!G1.play) return; G1.th += G1.dir * (Math.PI / 3) * G1.spd * dt; pose(); };
+}
+WORKSHOPS.push({ id: 'g1', title: 'Train simple', hint: 'Choisissez le nombre de solides, une ou deux roues par solide, et leurs dents : observez k, le sens et le couple.', mount: mountG1, reset: () => { Object.assign(G1, copy(G1D), { th: 0 }); G1.play = !reduced(); } });
+
+/* ================= Atelier 2 : train épicycloïdal ================= */
+function buildEpi(svg, P, opt) {
+  opt = opt || {};
+  const m = P.m, zs = P.zs, zp = P.zp, zc = P.zc, np = P.np, rS = m * zs / 2, rP = m * zp / 2, rC = m * zc / 2, a = rS + rP;
+  const Rout = Math.max(rC + 4 * m, a + rP + 3 * m), sc = 172 / Rout;
+  svg.setAttribute('viewBox', '0 0 400 400'); svg.innerHTML = '';
+  const hid = 'hf' + (++SVGN); hatchDefs(svg, hid);
+  const hat = 'url(#' + hid + ')';
+  const root = el('g', { transform: 'translate(200,200)' }, svg);
+  const o = { sc, a, planets: [], np };
+  const R = Rout * sc, f1 = v => v.toFixed(1);
+  o.gC = el('g', {}, root);
+  const dC = 'M' + f1(R) + ' 0A' + f1(R) + ' ' + f1(R) + ' 0 1 1 ' + f1(-R) + ' 0A' + f1(R) + ' ' + f1(R) + ' 0 1 1 ' + f1(R) + ' 0Z' + toothPath(zc, (rC - m) * sc, (rC + 1.25 * m) * sc);
+  el('path', { class: 'gear c', 'fill-rule': 'evenodd', d: dC }, o.gC);
+  if (P.fixed === 'C') el('path', { d: dC, 'fill-rule': 'evenodd', fill: hat, stroke: 'none' }, o.gC);
+  el('circle', { class: 'mk', cx: f1((rC + 2.6 * m) * sc), cy: 0, r: 3.2 }, o.gC);
+  el('circle', { class: 'pitch', r: f1(rC * sc) }, root);
+  o.gS = el('g', {}, root);
+  const dS = toothPath(zs, (rS + m) * sc, (rS - 1.25 * m) * sc);
+  el('path', { class: 'gear s', d: dS }, o.gS);
+  if (P.fixed === 'S') el('path', { d: dS, fill: hat, stroke: 'none' }, o.gS);
+  el('circle', { class: 'mk', cx: f1(rS * sc * 0.62), cy: 0, r: 3 }, o.gS);
+  el('circle', { class: 'pitch', r: f1(rS * sc) }, root);
+  for (let j = 0; j < np; j++) {
+    const gp = el('g', {}, root), rot = el('g', {}, gp);
+    el('path', { class: 'gear p', d: toothPath(zp, (rP + m) * sc, (rP - 1.25 * m) * sc) }, rot);
+    el('circle', { class: 'mk', cx: f1(rP * sc * 0.6), cy: 0, r: 3 }, rot);
+    el('circle', { class: 'pitch', r: f1(rP * sc) }, gp);
+    o.planets.push({ g: gp, rot });
+  }
+  o.gPS = el('g', {}, root);
+  const aw = Math.max(10, Math.min(24, 0.45 * rP * sc));
+  for (let j = 0; j < np; j++) {
+    const ga = el('g', { transform: 'rotate(' + (360 * j / np) + ')' }, o.gPS);
+    el('rect', { class: 'arm', x: f1(-aw / 2), y: f1(-aw / 2), width: f1(a * sc + aw), height: f1(aw), rx: f1(aw / 2) }, ga);
+    if (P.fixed === 'PS') el('rect', { x: f1(-aw / 2), y: f1(-aw / 2), width: f1(a * sc + aw), height: f1(aw), rx: f1(aw / 2), fill: hat, stroke: 'none' }, ga);
+    el('circle', { class: 'hub', cx: f1(a * sc), cy: 0, r: 3.6 }, ga);
+  }
+  el('circle', { class: 'hub', r: 5 }, o.gPS);
+  if (opt.labels) {
+    el('text', { class: 'gtxt', x: 0, y: f1(-(rC + 2.6 * m) * sc + 4) }, root).textContent = 'C';
+    el('text', { class: 'gtxt', x: 0, y: f1(-aw * 0.9 - 2) }, root).textContent = 'S';
+  }
+  const rt = (g, th) => g.setAttribute('transform', 'rotate(' + (th * DEG).toFixed(2) + ')');
+  o.pose = (thS, thC, thPS, Pj) => {
+    rt(o.gS, thS); rt(o.gC, thC); rt(o.gPS, thPS);
+    for (let j = 0; j < np; j++) {
+      const psi = thPS + TAU * j / np;
+      o.planets[j].g.setAttribute('transform', 'translate(' + (a * sc * Math.cos(psi)).toFixed(2) + ',' + (a * sc * Math.sin(psi)).toFixed(2) + ')');
+      rt(o.planets[j].rot, Pj[j]);
+    }
+  };
+  return o;
+}
+function buildEpiTop(svg, P) {
+  const m = P.m, zs = P.zs, zp = P.zp, zc = P.zc, np = P.np, rS = m * zs / 2, rP = m * zp / 2, rC = m * zc / 2, a = rS + rP;
+  const Rout = Math.max(rC + 4 * m, a + rP + 3 * m), sc = 172 / Rout, cx = 200, yG = 62, hG = 22, yB = yG + hG + 5;
+  svg.setAttribute('viewBox', '0 0 400 190'); svg.innerHTML = '';
+  const hid = 'ht' + (++SVGN); hatchDefs(svg, hid); const hat = 'url(#' + hid + ')';
+  el('rect', { x: 14, y: 172, width: 372, height: 10, class: 'ground', fill: hat }, svg);
+  el('line', { class: 'shaft', x1: cx, x2: cx, y1: 22, y2: 172 }, svg);
+  const xin = (rC - m) * sc, xout = Rout * sc, f1 = v => v.toFixed(1);
+  const ringG = el('g', {}, svg), mid = el('g', {}, svg), o = { np };
+  [[cx - xout, 1], [cx + xin, 1]].forEach(q => {
+    el('rect', { class: 'rect c', x: f1(q[0]), y: yG, width: f1(xout - xin), height: hG }, ringG);
+    if (P.fixed === 'C') el('rect', { x: f1(q[0]), y: yG, width: f1(xout - xin), height: hG, fill: hat, stroke: 'none' }, ringG);
+  });
+  o.mC = el('circle', { class: 'mk', cx: 0, cy: yG + hG / 2, r: 3 }, ringG);
+  const sunG = el('g', {}, mid);
+  el('rect', { class: 'rect s', x: f1(cx - (rS + m) * sc), y: yG, width: f1(2 * (rS + m) * sc), height: hG }, sunG);
+  if (P.fixed === 'S') el('rect', { x: f1(cx - (rS + m) * sc), y: yG, width: f1(2 * (rS + m) * sc), height: hG, fill: hat, stroke: 'none' }, sunG);
+  o.mS = el('circle', { class: 'mk', cx: cx, cy: yG + hG / 2, r: 3 }, sunG);
+  o.pl = [];
+  for (let j = 0; j < np; j++) {
+    const g = el('g', {}, mid);
+    const ax = el('line', { class: 'shaft', y1: yG - 14, y2: yB + 12 }, g);
+    const rc = el('rect', { class: 'rect p', y: yG, height: hG, width: f1(2 * (rP + m) * sc) }, g);
+    const mk = el('circle', { class: 'mk', cy: yG + hG / 2, r: 3 }, g);
+    const bn = el('rect', { class: 'rect m', y: yB, height: 12, rx: 6, fill: 'var(--g-ps)' }, ringG);
+    let bh = null; if (P.fixed === 'PS') bh = el('rect', { y: yB, height: 12, rx: 6, fill: hat, stroke: 'none' }, ringG);
+    o.pl.push({ g, ax, rc, mk, bn, bh });
+  }
+  const bc = el('circle', { class: 'hub', cx, cy: yB + 6, r: 6 }, svg);
+  o.pose = (thS, thC, thPS, Pj) => {
+    o.mS.setAttribute('cx', f1(cx + 0.62 * rS * sc * Math.cos(thS))); o.mS.setAttribute('opacity', Math.sin(thS) < 0 ? 1 : 0.28);
+    o.mC.setAttribute('cx', f1(cx + (rC + 2.6 * m) * sc * Math.cos(thC))); o.mC.setAttribute('opacity', Math.sin(thC) < 0 ? 1 : 0.28);
+    const items = [{ g: sunG, d: 0 }];
+    for (let j = 0; j < np; j++) {
+      const psi = thPS + TAU * j / np, x = cx + a * sc * Math.cos(psi), p = o.pl[j];
+      p.ax.setAttribute('x1', f1(x)); p.ax.setAttribute('x2', f1(x));
+      p.rc.setAttribute('x', f1(x - (rP + m) * sc));
+      p.mk.setAttribute('cx', f1(x + 0.6 * rP * sc * Math.cos(Pj[j]))); p.mk.setAttribute('opacity', Math.sin(Pj[j]) < 0 ? 1 : 0.28);
+      const bx = Math.min(cx, x) - 6, bw = Math.abs(x - cx) + 12;
+      p.bn.setAttribute('x', f1(bx)); p.bn.setAttribute('width', f1(bw));
+      if (p.bh) { p.bh.setAttribute('x', f1(bx)); p.bh.setAttribute('width', f1(bw)); }
+      items.push({ g: p.g, d: Math.sin(psi) });
+    }
+    items.sort((u, v) => v.d - u.d).forEach(it => mid.appendChild(it.g));
+  };
+  return o;
+}
+const G2D = { zs: 20, zp: 20, zc: 60, np: 4, m: 2, coax: true, fixed: 'C', inp: 'S', w: 1000, dir: 1, c: 2, adv: false, calc: 'PS', aw: { S: 1000, C: 0, PS: 0 }, play: true, spd: 1 };
+const G2 = Object.assign({ thS: 0, thPS: 0, front: null, top: null }, copy(G2D));
+G2.play = !reduced();
+const g2zc = () => G2.coax ? G2.zs + 2 * G2.zp : G2.zc;
+const NAMEP = { S: 'Solaire S', C: 'Couronne C', PS: 'Porte-satellites PS' };
+function g2Speeds() {
+  const zs = G2.zs, zc = g2zc();
+  if (G2.adv) { const w = { S: G2.aw.S, C: G2.aw.C, PS: G2.aw.PS }; w[G2.calc] = null; const r = willis(zs, zc, w); return { S: r.S, C: r.C, PS: r.PS, inp: null, out: null, k: null }; }
+  const out = ['S', 'C', 'PS'].find(x => x !== G2.fixed && x !== G2.inp);
+  const w = { S: null, C: null, PS: null }; w[G2.fixed] = 0; w[G2.inp] = G2.w * G2.dir;
+  const r = willis(zs, zc, w);
+  const w1 = { S: null, C: null, PS: null }; w1[G2.fixed] = 0; w1[G2.inp] = 1;
+  return { S: r.S, C: r.C, PS: r.PS, inp: G2.inp, out, k: willis(zs, zc, w1)[out] };
+}
+function mountG2(root) {
+  root.innerHTML =
+    '<h2>Train épicycloïdal</h2>' +
+    '<p>Un train épicycloïdal a ses entrée et sortie sur le même axe : le <b>solaire</b> S (au centre), la <b>couronne</b> C (denture intérieure) et le <b>porte-satellites</b> PS (qui porte les satellites). Choisissez la pièce fixée au bâti, l’entrée, puis comparez les rapports de réduction obtenus.</p>' +
+    '<div id="g2-norm"><div class="opts"><div class="fld"><span>Pièce fixée au bâti (hachurée)</span><div id="g2-fix"></div></div><div class="fld"><span>Entrée (la sortie est la troisième pièce)</span><div id="g2-in"></div></div></div></div>' +
+    '<div class="zgrid" id="g2-z"></div>' +
+    '<div class="opts" id="g2-sp"></div>' +
+    '<div id="g2-play"></div>' +
+    '<div class="two"><div><p class="viewlbl">Vue de face</p><div class="gwrap"><svg class="g" id="g2-f" role="img" aria-label="Vue de face du train épicycloïdal"></svg></div></div>' +
+    '<div><p class="viewlbl">Vue de dessus (couronne en coupe, porte-satellites en haricot)</p><div class="gwrap"><svg class="g" id="g2-t" role="img" aria-label="Vue de dessus du train épicycloïdal"></svg></div></div></div>' +
+    '<div class="leg"><span><i class="sw" style="background:var(--g-s)"></i>solaire S</span><span><i class="sw" style="background:var(--g-p)"></i>satellites</span><span><i class="sw" style="background:var(--g-c)"></i>couronne C</span><span><i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS</span><span>hachures : pièce fixée au bâti</span></div>' +
+    '<div class="verdict" id="g2-msg" aria-live="polite"></div>' +
+    '<div id="g2-st"></div>' +
+    '<h3>Contraintes de montage</h3><div class="chk" id="g2-chk"></div>' +
+    '<h3>Formule de Willis</h3><div class="calc" id="g2-calc"></div>' +
+    '<h3>Pièce par pièce</h3><div id="g2-tab"></div>' +
+    '<h3>Et avec un train simple ?</h3><div id="g2-cmp"></div>' +
+    '<details class="adv" id="g2-adv"><summary>Aller plus loin : imposer la vitesse de deux pièces</summary><div id="g2-advb"></div></details>';
+  const rem = () => { const sc = $('#scroller').scrollTop; const o = $('#g2-adv').open; mountG2($('#ws')); $('#g2-adv').open = o; $('#scroller').scrollTop = sc; };
+  const PIECES = [['C', 'Couronne'], ['S', 'Solaire'], ['PS', 'Porte-satellites']];
+  const fixb = $('#g2-fix'); fixb.append(chipsRow(PIECES, G2.fixed, v => { G2.fixed = v; if (G2.inp === v) G2.inp = ['S', 'C', 'PS'].find(x => x !== v); rem(); }, 'Pièce fixe'));
+  $('#g2-in').append(chipsRow(PIECES.map(p => [p[0], p[1], p[0] === G2.fixed]), G2.inp, v => { G2.inp = v; rem(); }, 'Entrée'));
+  $('#g2-norm').style.opacity = G2.adv ? 0.45 : 1;
+  const zb = $('#g2-z');
+  zb.append(rng('Z solaire Z_S', 10, 40, 1, () => G2.zs, v => { G2.zs = v; geo(); }, v => String(v)));
+  zb.append(rng('Z satellites Z_P', 10, 40, 1, () => G2.zp, v => { G2.zp = v; geo(); }, v => String(v)));
+  zb.append(rng('Nombre de satellites N', 1, 5, 1, () => G2.np, v => { G2.np = v; geo(); }, v => String(v)));
+  zb.append(h('div', { class: 'fld' }, h('span', null, 'Module m (mm)'), chipsRow([[1.5, '1,5'], [2, '2'], [3, '3']], G2.m, v => { G2.m = v; geo(); markChips(); }, 'Module')));
+  function markChips() { rem(); }
+  const coax = h('input', { type: 'checkbox', id: 'g2-coax' }); coax.checked = G2.coax;
+  coax.addEventListener('change', () => { G2.coax = coax.checked; if (!G2.coax) G2.zc = G2.zs + 2 * G2.zp; rem(); });
+  zb.append(h('label', { class: 'fld', for: 'g2-coax' }, h('span', null, 'Couronne'), h('span', null, coax, h('span', { html: ' Z<sub>C</sub> imposé par la coaxialité (Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub>)' }))));
+  if (!G2.coax) zb.append(rng('Z couronne Z_C (réglage libre)', 30, 140, 1, () => G2.zc, v => { G2.zc = v; geo(); }, v => String(v)));
+  const sp = $('#g2-sp');
+  sp.append(rng('Vitesse d’entrée (tr/min)', 0, 3000, 50, () => G2.w, v => { G2.w = v; info(); }, v => String(v)));
+  sp.append(h('div', { class: 'fld' }, h('span', null, 'Sens de l’entrée'), chipsRow([[1, '↻ horaire'], [-1, '↺ antihoraire']], G2.dir, v => { G2.dir = v; rem(); }, 'Sens')));
+  sp.append(rng('Couple d’entrée (N·m)', 0.5, 20, 0.5, () => G2.c, v => { G2.c = v; info(); }, v => fx(v, 1)));
+  $('#g2-play').append(playRow(G2));
+  /* mode avancé */
+  const ab = $('#g2-advb');
+  ab.append(h('p', { class: 'small' }, 'Dans ce mode, vous imposez la vitesse de deux pièces (0 = fixe) et la formule de Willis donne la troisième. Les réglages « pièce fixe » et « entrée » ci-dessus sont alors ignorés.'));
+  const en = h('input', { type: 'checkbox', id: 'g2-adv-on' }); en.checked = G2.adv;
+  en.addEventListener('change', () => { G2.adv = en.checked; rem(); });
+  ab.append(h('label', { class: 'fld', for: 'g2-adv-on' }, h('span', null, en, ' Activer le mode avancé')));
+  ab.append(h('div', { class: 'fld' }, h('span', null, 'Pièce dont la vitesse est calculée'), chipsRow(PIECES, G2.calc, v => { G2.calc = v; rem(); }, 'Pièce calculée')));
+  G2.advOut = {};
+  ['S', 'C', 'PS'].forEach(p => {
+    const isCalc = G2.calc === p, out = h('b', null, ''), inp = h('input', { type: 'range', min: -2000, max: 2000, step: 50, 'aria-label': 'Vitesse ' + NAMEP[p], disabled: isCalc || !G2.adv });
+    inp.value = G2.aw[p];
+    inp.addEventListener('input', () => { G2.aw[p] = +inp.value; info(); });
+    G2.advOut[p] = { out, inp };
+    ab.append(h('label', { class: 'fld' }, h('span', { html: NAMEP[p] + ' : ' + W(p) + ' = ' }, out, isCalc ? ' (calculée)' : ''), inp));
+  });
+  /* dessin */
+  function geo() { if (G2.coax) G2.zc = G2.zs + 2 * G2.zp; draw(); info(); }
+  function draw() {
+    const P = { m: G2.m, zs: G2.zs, zp: G2.zp, zc: g2zc(), np: G2.np, fixed: G2.adv ? null : G2.fixed };
+    if (G2.adv) { const s = g2Speeds(); ['S', 'C', 'PS'].forEach(p => { if (Math.abs(s[p]) < 1e-9) P.fixed = P.fixed || p; }); }
+    G2.front = buildEpi($('#g2-f'), P); G2.top = buildEpiTop($('#g2-t'), P); pose();
+  }
+  function pose() {
+    if (!G2.front) return;
+    const zc = g2zc(), an = epiAngles(G2.zs, G2.zp, zc, G2.np, G2.thS, G2.thPS);
+    G2.front.pose(G2.thS, an.C, G2.thPS, an.P); G2.top.pose(G2.thS, an.C, G2.thPS, an.P);
+  }
+  function info() {
+    const zs = G2.zs, zp = G2.zp, zc = g2zc(), m = G2.m, np = G2.np, sp = g2Speeds(), ck = checksEpi(zs, zp, zc, np, m);
+    const okAll = ck.coax && ck.asm && ck.inter;
+    const sat = satSpeeds(zs, zp, sp.S, sp.PS);
+    /* montage */
+    const cb = $('#g2-chk'); cb.innerHTML = '';
+    const item = (ok, html) => h('div', { class: ok ? 'okk' : 'nok' }, h('span', { class: 'mk' }, ok ? '✓' : '✗'), h('span', { html }));
+    cb.append(item(ck.coax, '<b>Coaxialité</b> : R<sub>C</sub> = R<sub>S</sub> + 2·R<sub>P</sub>, soit Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> (D<sub>C</sub> = D<sub>S</sub> + 2·D<sub>P</sub>) : ' + zs + ' + 2 × ' + zp + ' = ' + (zs + 2 * zp) + (ck.coax ? ' = Z<sub>C</sub> ✓' : ', or Z<sub>C</sub> = ' + zc + '. Les satellites ne peuvent pas engrener à la fois avec S et C.')));
+    cb.append(item(true, '<b>Entraxe</b> : a = R<sub>S</sub> + R<sub>P</sub> = (D<sub>S</sub> + D<sub>P</sub>)/2 = ' + fx(m * (zs + zp) / 2, 1) + ' mm. C’est la longueur des bras du porte-satellites, dessiné en forme de <b>haricot</b> entre l’axe central et l’axe de chaque satellite.'));
+    cb.append(item(ck.asm, '<b>Assemblage</b> avec ' + np + ' satellite' + (np > 1 ? 's' : '') + ' équirépartis : (Z<sub>S</sub> + Z<sub>C</sub>)/N = ' + (zs + zc) + '/' + np + ' = ' + fx(ck.asmVal, 2) + (ck.asm ? ' (entier ✓)' : ' : pas entier, un satellite ne peut pas s’engager avec la couronne.')));
+    cb.append(item(ck.inter, '<b>Non-interférence</b> des satellites : distance entre deux axes voisins 2·a·sin(π/N) = ' + (np < 2 ? 'sans objet avec un seul satellite' : fx(ck.dist, 1) + ' mm ' + (ck.inter ? '&gt;' : '&lt;') + ' diamètre de tête m·(Z<sub>P</sub> + 2) = ' + fx(ck.tip, 1) + ' mm') + (ck.inter ? ' ✓' : ' : les satellites se touchent.')));
+    /* message */
+    if (!okAll) setMsg('#g2-msg', '<b>Montage impossible</b> avec ces réglages (voir les contraintes de montage ci-dessous). L’animation reste affichée pour voir où les dents ne s’engagent pas.', 'no');
+    else if (G2.adv) setMsg('#g2-msg', '<b>Mode avancé.</b> Deux vitesses sont imposées, la formule de Willis donne la vitesse de la troisième pièce (' + NAMEP[G2.calc] + ').', '');
+    else {
+      const k = sp.k, ak = Math.abs(k);
+      setMsg('#g2-msg', 'Fixe : ' + NAMEP[G2.fixed] + ' · Entrée : ' + NAMEP[sp.inp] + ' · Sortie : ' + NAMEP[sp.out] + '. ' + (ak < 0.9995 ? '<b>Réducteur</b> : vitesse divisée par ' + fx(1 / ak, 2) + ', couple multiplié par ' + fx(1 / ak, 2) + ' (sans pertes).' : ak > 1.0005 ? '<b>Multiplicateur</b> : vitesse multipliée par ' + fx(ak, 2) + ', couple divisé par ' + fx(ak, 2) + '.' : '<b>Rapport 1.</b>'), ak < 0.9995 ? 'yes' : 'warn');
+    }
+    /* stats */
+    const sb = $('#g2-st'); sb.innerHTML = '';
+    if (!G2.adv) {
+      const k = sp.k, ak = Math.abs(k);
+      sb.append(stats([['Rapport de réduction k = ' + W(sp.out) + '/' + W(sp.inp), sg(k, 3)], ['Vitesse de sortie', fx(sp.out && sp[sp.out], 0) + ' tr/min'], ['Sens de sortie', dirTxt(sp[sp.out])], ['Couple de sortie (η = 1)', fx(G2.c / ak, 2) + ' N·m']]));
+    } else sb.append(stats([[W('S'), fx(sp.S, 0) + ' tr/min'], [W('C'), fx(sp.C, 0) + ' tr/min'], [W('PS'), fx(sp.PS, 0) + ' tr/min']]));
+    /* Willis */
+    const wb = $('#g2-calc'); wb.innerHTML = '';
+    const rho = zs / zc;
+    wb.append(h('div', { class: 'formula sm', html: '<b>Formule de Willis</b> (rapport dans le repère du porte-satellites) :<br>(' + W('C') + ' − ' + W('PS') + ')/(' + W('S') + ' − ' + W('PS') + ') = (−1)<sup>n</sup> × Z<sub>S</sub>/Z<sub>C</sub> = −' + zs + '/' + zc + ' = ' + fx(-rho, 3) + '<br><span class="small">n = 1 contact extérieur (S–satellite) ; le contact intérieur (satellite–C) ne compte pas ; le satellite est intermédiaire.</span>' }));
+    const known = {};
+    if (G2.adv) ['S', 'C', 'PS'].forEach(p => { if (p !== G2.calc) known[p] = true; });
+    else { known[G2.fixed] = true; known[G2.inp] = true; }
+    const unk = G2.adv ? G2.calc : sp.out, sym = p => known[p] ? fx(sp[p], 0) : W(p);
+    wb.append(h('div', { class: 'formula sm', html: '<b>Valeurs connues :</b> (' + sym('C') + ' − ' + sym('PS') + ')/(' + sym('S') + ' − ' + sym('PS') + ') = ' + fx(-rho, 3) + '<br><b>Inconnue :</b> ' + W(unk) + ' = <b>' + fx(sp[unk], 1) + ' tr/min</b>' + (G2.adv ? '' : '<br><b>Rapport de réduction :</b> k = ' + W(sp.out) + '/' + W(sp.inp) + ' = ' + fx(sp[sp.out], 1) + '/' + fx(sp[sp.inp], 1) + ' = <b>' + sg(sp.k, 3) + '</b>') }));
+    if (!G2.adv) {
+      const f = G2.fixed, base = f === 'C' ? 'Couronne fixe (ω<sub>C</sub> = 0) : ω<sub>PS</sub>/ω<sub>S</sub> = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = ' + zs + '/' + (zs + zc) : f === 'S' ? 'Solaire fixe (ω<sub>S</sub> = 0) : ω<sub>C</sub>/ω<sub>PS</sub> = (Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub> = ' + (zs + zc) + '/' + zc : 'Porte-satellites fixe (ω<sub>PS</sub> = 0) : le train est un train simple, ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> = −' + zs + '/' + zc;
+      wb.append(h('div', { class: 'formula sm', html: '<b>Cas particulier :</b> ' + base }));
+    }
+    /* tableau */
+    const tb = $('#g2-tab'); tb.innerHTML = '';
+    const role = p => G2.adv ? (p === G2.calc ? 'calculée' : Math.abs(sp[p]) < 1e-9 ? 'imposée (fixe)' : 'imposée') : p === G2.fixed ? 'fixe' : p === G2.inp ? 'entrée' : 'sortie';
+    tb.append(tableEl(['Pièce', 'Rôle', 'Z', 'D = m·Z (mm)', 'Vitesse (tr/min)', 'Sens'], [
+      ['Solaire S', role('S'), zs, fx(m * zs, 1), fx(sp.S, 1), dirTxt(sp.S)], ['Couronne C', role('C'), zc, fx(m * zc, 1), fx(sp.C, 1), dirTxt(sp.C)],
+      ['Porte-satellites PS', role('PS'), '—', '—', fx(sp.PS, 1), dirTxt(sp.PS)], ['Satellites, par rapport au PS', 'tournent sur leur axe', zp, fx(m * zp, 1), fx(sat.rel, 1), dirTxt(sat.rel)], ['Satellites, par rapport au bâti', 'tournent et orbitent', zp, fx(m * zp, 1), fx(sat.abs, 1), dirTxt(sat.abs)]]));
+    /* comparaison */
+    const cm = $('#g2-cmp'); cm.innerHTML = '';
+    if (!G2.adv && isFinite(sp.k) && Math.abs(sp.k) > 1e-9 && Math.abs(Math.abs(sp.k) - 1) > 0.01) {
+      const R = Math.max(Math.abs(sp.k), 1 / Math.abs(sp.k)), z1 = zs, z2 = Math.round(z1 * R), Ls = m * (z1 + z2), De = m * zc, gain = 1 - De / Ls;
+      cm.append(h('p', { html: 'Pour obtenir le même rapport |k| ≈ ' + fx(Math.abs(sp.k), 3) + ' avec un <b>train simple de deux roues</b> et la même plus petite roue (Z = ' + z1 + '), il faut une roue de ' + z2 + ' dents. Longueur hors-tout D<sub>1</sub> + D<sub>2</sub> = <b>' + fx(Ls, 0) + ' mm</b>, contre un diamètre primitif de couronne D<sub>C</sub> = <b>' + fx(De, 0) + ' mm</b> pour le train épicycloïdal. ' + (gain > 0.05 ? 'Le train épicycloïdal est environ <b>' + fx(gain * 100, 0) + ' % plus compact</b>' : gain < -0.05 ? 'Ici le train simple est plus compact (le rapport choisi ne profite pas du montage épicycloïdal)' : 'Les deux encombrements sont voisins') + ' ; de plus l’entrée et la sortie sont <b>coaxiales</b> et l’effort est réparti sur ' + np + ' satellite' + (np > 1 ? 's' : '') + '.' }));
+    } else cm.append(h('p', { class: 'small' }, 'La comparaison s’affiche quand une pièce est fixée et que le rapport de réduction est différent de 1.'));
+    /* mode avancé : valeurs */
+    ['S', 'C', 'PS'].forEach(p => {
+      const a = G2.advOut[p]; if (!a) return;
+      a.out.textContent = fx(G2.adv && p === G2.calc ? sp[p] : G2.aw[p], 0) + ' tr/min';
+      if (p === G2.calc) a.inp.value = clamp(sp[p], -2000, 2000);
+    });
+  }
+  draw(); info();
+  ANIM.fn = dt => {
+    if (!G2.play) return;
+    const sp = g2Speeds(), f = TAU / 60 * 0.01 * G2.spd;
+    G2.thS += sp.S * f * dt; G2.thPS += sp.PS * f * dt; pose();
+  };
+}
+WORKSHOPS.push({ id: 'g2', title: 'Train épicycloïdal', hint: 'Choisissez la pièce fixe et l’entrée, réglez les dents, vérifiez les contraintes de montage et la formule de Willis.', mount: mountG2, reset: () => { Object.assign(G2, copy(G2D), { thS: 0, thPS: 0 }); G2.play = !reduced(); } });
+
+/* ================= Atelier 4 : commande trapézoïdale ================= */
+const UNITS = { t: { d: 'm', v: 'm/s', a: 'm/s²' }, r: { d: 'rad', v: 'rad/s', a: 'rad/s²' } };
+const G4D = { mode: 'dir', unit: 't', D: 3, vmax: 1, a: 2, sym: true, d: 2, T: 4, ta: 1, td: 1, symT: true, N: 10, play: true, spd: 1 };
+const G4 = Object.assign({ t: 0, prof: null, pl: null }, copy(G4D));
+G4.play = !reduced();
+function g4Compute() {
+  if (G4.mode === 'dir') { G4.prof = profile(G4.D, G4.vmax, G4.a, G4.sym ? G4.a : G4.d); return; }
+  const T = G4.T, ta = Math.min(G4.ta, T * 0.48), td = G4.symT ? ta : Math.min(G4.td, T * 0.98 - ta);
+  G4.prof = inverseProfile(G4.D, T, ta, td); G4.prof.givenTa = ta; G4.prof.givenTd = td;
+}
+function mountG4(root) {
+  root.innerHTML =
+    '<h2>Commande trapézoïdale en vitesse</h2>' +
+    '<p>Pour déplacer un axe sans à-coups, on impose une vitesse en <b>trapèze</b> : on accélère, on garde la vitesse maximale, puis on décélère. L’aire sous la courbe v(t) est la distance parcourue. Choisissez ce que vous connaissez et lisez les temps ou les accélérations.</p>' +
+    '<div class="opts"><div class="fld"><span>Données du problème</span><div id="g4-mode"></div></div><div class="fld"><span>Grandeur</span><div id="g4-unit"></div></div></div>' +
+    '<div class="zgrid" id="g4-ctl"></div>' +
+    '<div id="g4-play"></div>' +
+    '<div class="gwrap"><svg class="g" id="g4-svg" role="img" aria-label="Courbes d’accélération, de vitesse et de position"></svg></div>' +
+    '<div class="rail" aria-hidden="true"><div class="car" id="g4-car"></div></div>' +
+    '<p class="scoreline" id="g4-live"></p>' +
+    '<div class="verdict" id="g4-msg" aria-live="polite"></div>' +
+    '<div id="g4-st"></div>' +
+    '<h3>Calculs</h3><div class="calc" id="g4-calc"></div>' +
+    '<div id="g4-mot"></div>';
+  const rem = () => { const sc = $('#scroller').scrollTop; mountG4($('#ws')); $('#scroller').scrollTop = sc; };
+  $('#g4-mode').append(chipsRow([['dir', 'Accélération et V_max'], ['inv', 'Temps (T, t_a)']], G4.mode, v => { G4.mode = v; G4.t = 0; rem(); }, 'Mode'));
+  $('#g4-unit').append(chipsRow([['t', 'Translation (m)'], ['r', 'Rotation (rad)']], G4.unit, v => { G4.unit = v; rem(); }, 'Unité'));
+  const U = () => UNITS[G4.unit], c = $('#g4-ctl'), f2 = v => fx(v, 2);
+  const upd = () => { g4Compute(); G4.t = 0; draw(); info(); };
+  c.append(rng('Distance D', 0.1, 10, 0.1, () => G4.D, v => { G4.D = v; upd(); }, v => f2(v) + ' ' + U().d));
+  if (G4.mode === 'dir') {
+    c.append(rng('Vitesse max V_max', 0.1, 5, 0.1, () => G4.vmax, v => { G4.vmax = v; upd(); }, v => f2(v) + ' ' + U().v));
+    c.append(rng('Accélération a', 0.2, 20, 0.1, () => G4.a, v => { G4.a = v; upd(); }, v => f2(v) + ' ' + U().a));
+    const sy = h('input', { type: 'checkbox', id: 'g4-sym' }); sy.checked = G4.sym;
+    sy.addEventListener('change', () => { G4.sym = sy.checked; rem(); });
+    c.append(h('label', { class: 'fld', for: 'g4-sym' }, h('span', null, 'Décélération'), h('span', null, sy, ' identique à l’accélération')));
+    if (!G4.sym) c.append(rng('Décélération d', 0.2, 20, 0.1, () => G4.d, v => { G4.d = v; upd(); }, v => f2(v) + ' ' + U().a));
+  } else {
+    c.append(rng('Durée totale T', 0.5, 12, 0.1, () => G4.T, v => { G4.T = v; upd(); }, v => f2(v) + ' s'));
+    c.append(rng('Temps d’accélération t_a', 0.05, 5.5, 0.05, () => G4.ta, v => { G4.ta = v; upd(); }, v => f2(v) + ' s'));
+    const sy = h('input', { type: 'checkbox', id: 'g4-sym' }); sy.checked = G4.symT;
+    sy.addEventListener('change', () => { G4.symT = sy.checked; rem(); });
+    c.append(h('label', { class: 'fld', for: 'g4-sym' }, h('span', null, 'Décélération'), h('span', null, sy, h('span', { html: ' même durée que l’accélération (t<sub>d</sub> = t<sub>a</sub>)' }))));
+    if (!G4.symT) c.append(rng('Temps de décélération t_d', 0.05, 5.5, 0.05, () => G4.td, v => { G4.td = v; upd(); }, v => f2(v) + ' s'));
+  }
+  $('#g4-play').append(playRow(G4));
+  function niceX(svg, P, L, Wd, TT) {
+    const X = t => L + t / TT * Wd, Un = U();
+    const rows = [
+      { k: 'a', y: 24, h: 92, lo: -Math.max(P.a, P.d) * 1.25, hi: Math.max(P.a, P.d) * 1.25, ttl: 'Accélération a(t) en ' + Un.a },
+      { k: 'v', y: 150, h: 100, lo: 0, hi: P.vp * 1.28, ttl: 'Vitesse v(t) en ' + Un.v },
+      { k: 'x', y: 284, h: 76, lo: 0, hi: P.D * 1.15, ttl: 'Position x(t) en ' + Un.d }];
+    const Y = (r, v) => r.y + r.h - (v - r.lo) / (r.hi - r.lo) * r.h;
+    rows.forEach(r => {
+      el('text', { class: 'plot-ttl', x: L, y: r.y - 7 }, svg).textContent = r.ttl;
+      el('line', { class: 'plot-ax', x1: L, x2: L + Wd, y1: Y(r, Math.max(r.lo, 0)), y2: Y(r, Math.max(r.lo, 0)) }, svg);
+      el('line', { class: 'plot-ax', x1: L, x2: L, y1: r.y, y2: r.y + r.h }, svg);
+      const ticks = r.k === 'a' ? [r.lo, 0, r.hi] : [0, r.hi];
+      ticks.forEach(v => { el('text', { class: 'plot-lbl', x: L - 6, y: Y(r, v) + 4, 'text-anchor': 'end' }, svg).textContent = fx(v, 1); if (v !== 0 && r.k === 'a') el('line', { class: 'plot-grid', x1: L, x2: L + Wd, y1: Y(r, v), y2: Y(r, v) }, svg); });
+    });
+    const keys = [P.ta, P.ta + P.tc, P.T];
+    keys.forEach(t => el('line', { class: 'plot-grid', x1: X(t), x2: X(t), y1: 24, y2: 360 }, svg));
+    return { X, Y, rows };
+  }
+  function draw() {
+    const P = G4.prof, svg = $('#g4-svg'), L = 62, Wd = 720 - L - 16, TT = P.T * 1.05;
+    svg.setAttribute('viewBox', '0 0 720 392'); svg.innerHTML = '';
+    const pl = niceX(svg, P, L, Wd, TT), X = pl.X, Y = pl.Y, ra = pl.rows[0], rv = pl.rows[1], rx = pl.rows[2];
+    const pa = [[0, 0], [0, P.a], [P.ta, P.a], [P.ta, 0], [P.ta + P.tc, 0], [P.ta + P.tc, -P.d], [P.T, -P.d], [P.T, 0]];
+    el('path', { class: 'curve', d: pa.map((q, i) => (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(ra, q[1]).toFixed(1)).join('') }, svg);
+    const pv = [[0, 0], [P.ta, P.vp], [P.ta + P.tc, P.vp], [P.T, 0]];
+    const dv = pv.map((q, i) => (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(rv, q[1]).toFixed(1)).join('');
+    el('path', { class: 'curve fill', d: dv + 'Z' }, svg); el('path', { class: 'curve', d: dv }, svg);
+    let dx = ''; for (let i = 0; i <= 160; i++) { const t = P.T * i / 160; dx += (i ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(rx, P.x(t)).toFixed(1); }
+    el('path', { class: 'curve', d: dx }, svg);
+    svgTxt(svg, { class: 'gtxt sm', x: X(P.ta + P.tc / 2), y: Y(rv, P.vp) - 6 }, (P.tri ? 'V_pic = ' : 'V_max = ') + fx(P.vp, 2) + ' ' + UNITS[G4.unit].v);
+    el('text', { class: 'gtxt sm', x: X(P.T), y: Y(rx, P.D) - 6, 'text-anchor': 'end' }, svg).textContent = 'D = ' + fx(P.D, 2) + ' ' + UNITS[G4.unit].d;
+    el('text', { class: 'gtxt sm', x: X(P.ta / 2) + 2, y: Y(ra, P.a) + 15 }, svg).textContent = 'a = ' + fx(P.a, 2);
+    el('text', { class: 'gtxt sm', x: X(P.T - P.td / 2) - 2, y: Y(ra, -P.d) + 14 }, svg).textContent = '−d = ' + fx(-P.d, 2);
+    let lastx = -99;
+    [[0, '0'], [P.ta, 't_a = ' + fx(P.ta, 2)], [P.ta + P.tc, P.tri ? '' : 't_a + t_c = ' + fx(P.ta + P.tc, 2)], [P.T, 'T = ' + fx(P.T, 2) + ' s']].forEach(q => {
+      if (!q[1]) return; const x = X(q[0]); if (x - lastx < 70 && q[0] !== P.T) return; lastx = x;
+      svgTxt(svg, { class: 'plot-lbl', x, y: 382, 'text-anchor': q[0] === 0 ? 'start' : q[0] === P.T ? 'end' : 'middle' }, q[1]);
+    });
+    G4.pl = pl;
+    G4.cur = { line: el('line', { class: 'cursor', y1: 24, y2: 360, x1: L, x2: L }, svg), dots: pl.rows.map(() => el('circle', { class: 'cdot', r: 4, cx: L, cy: 0 }, svg)) };
+    cursor();
+  }
+  function cursor() {
+    const P = G4.prof, pl = G4.pl; if (!pl || !G4.cur) return;
+    const t = Math.min(G4.t, P.T), x = pl.X(t), v = [P.acc(t), P.v(t), P.x(t)];
+    G4.cur.line.setAttribute('x1', x.toFixed(1)); G4.cur.line.setAttribute('x2', x.toFixed(1));
+    G4.cur.dots.forEach((d, i) => { d.setAttribute('cx', x.toFixed(1)); d.setAttribute('cy', pl.Y(pl.rows[i], v[i]).toFixed(1)); });
+    const car = $('#g4-car'); if (car) car.style.left = 'calc(17px + (100% - 34px) * ' + (P.x(t) / P.D).toFixed(4) + ')';
+    const lv = $('#g4-live'); if (lv) lv.textContent = 't = ' + fx(t, 2) + ' s   a = ' + fx(v[0], 2) + ' ' + U().a + '   v = ' + fx(v[1], 2) + ' ' + U().v + '   x = ' + fx(v[2], 2) + ' ' + U().d;
+  }
+  G4.cursor = cursor;
+  function info() {
+    const P = G4.prof, Un = U(), dad = P.vmax * P.vmax / (2 * P.a) + P.vmax * P.vmax / (2 * P.d);
+    const bad = G4.mode === 'inv' && (G4.ta > G4.T * 0.48 || (!G4.symT && G4.td > G4.T * 0.98 - G4.ta));
+    if (P.tri) setMsg('#g4-msg', '<b>Profil triangulaire.</b> La distance est trop courte pour atteindre V<sub>max</sub> = ' + fx(P.vmax, 2) + ' ' + Un.v + ' : la vitesse monte jusqu’à V<sub>pic</sub> = ' + fx(P.vp, 2) + ' ' + Un.v + ' puis redescend, sans phase à vitesse constante.', 'warn');
+    else setMsg('#g4-msg', '<b>Profil trapézoïdal.</b> La vitesse maximale est atteinte et maintenue pendant t<sub>c</sub> = ' + fx(P.tc, 2) + ' s.' + (bad ? ' Les temps demandés ont été limités pour que le profil existe.' : ''), 'yes');
+    const sb = $('#g4-st'); sb.innerHTML = '';
+    sb.append(stats([['Accélération t<sub>a</sub>', fx(P.ta, 3) + ' s'], ['Vitesse constante t<sub>c</sub>', fx(P.tc, 3) + ' s'], ['Décélération t<sub>d</sub>', fx(P.td, 3) + ' s'], ['Durée totale T', fx(P.T, 3) + ' s'], ['V' + (P.tri ? 'pic' : 'max'), fx(P.vp, 3) + ' ' + Un.v], ['a, d', fx(P.a, 2) + ' ; ' + fx(P.d, 2) + ' ' + Un.a]]));
+    const cb = $('#g4-calc'); cb.innerHTML = '';
+    const ln = t => cb.append(h('div', { class: 'formula sm', html: t }));
+    if (G4.mode === 'dir') {
+      ln('<b>Temps d’accélération et de décélération :</b> t<sub>a</sub> = V<sub>max</sub>/a = ' + fx(P.vmax, 2) + '/' + fx(P.a, 2) + ' = ' + fx(P.vmax / P.a, 3) + ' s ; t<sub>d</sub> = V<sub>max</sub>/d = ' + fx(P.vmax, 2) + '/' + fx(P.d, 2) + ' = ' + fx(P.vmax / P.d, 3) + ' s');
+      ln('<b>Distance parcourue pendant ces deux phases</b> (aires des triangles) : D<sub>ad</sub> = V<sub>max</sub>²/(2a) + V<sub>max</sub>²/(2d) = ' + fx(dad, 3) + ' ' + Un.d);
+      if (P.tri) ln('<b>D = ' + fx(P.D, 2) + ' &lt; D<sub>ad</sub></b> : V<sub>max</sub> n’est pas atteinte. Profil triangulaire : D = V<sub>pic</sub>²/2 × (1/a + 1/d) ⇒ V<sub>pic</sub> = ' + fx(P.vp, 3) + ' ' + Un.v + ', T = V<sub>pic</sub>/a + V<sub>pic</sub>/d = <b>' + fx(P.T, 3) + ' s</b>' + (P.a === P.d ? ' (avec a = d : V<sub>pic</sub> = √(a·D), T = 2·√(D/a))' : ''));
+      else ln('<b>Temps à vitesse constante :</b> t<sub>c</sub> = (D − D<sub>ad</sub>)/V<sub>max</sub> = (' + fx(P.D, 2) + ' − ' + fx(dad, 3) + ')/' + fx(P.vmax, 2) + ' = ' + fx(P.tc, 3) + ' s<br><b>Durée totale :</b> T = t<sub>a</sub> + t<sub>c</sub> + t<sub>d</sub> = <b>' + fx(P.T, 3) + ' s</b>' + (P.a === P.d ? ' (avec a = d : T = D/V<sub>max</sub> + V<sub>max</sub>/a)' : ''));
+    } else {
+      const ta = P.givenTa, td = P.givenTd;
+      ln('<b>La distance est l’aire du trapèze :</b> D = V<sub>max</sub> × (T − (t<sub>a</sub> + t<sub>d</sub>)/2)' + (G4.symT ? ' = V<sub>max</sub> × (T − t<sub>a</sub>)' : ''));
+      ln('<b>Vitesse maximale :</b> V<sub>max</sub> = D/(T − (t<sub>a</sub> + t<sub>d</sub>)/2) = ' + fx(P.D, 2) + '/(' + fx(P.T, 2) + ' − (' + fx(ta, 2) + ' + ' + fx(td, 2) + ')/2) = <b>' + fx(P.vmax, 3) + ' ' + Un.v + '</b>');
+      ln('<b>Accélération et décélération :</b> a = V<sub>max</sub>/t<sub>a</sub> = ' + fx(P.a, 3) + ' ' + Un.a + ' ; d = V<sub>max</sub>/t<sub>d</sub> = ' + fx(P.d, 3) + ' ' + Un.a + '<br><b>Temps à vitesse constante :</b> t<sub>c</sub> = T − t<sub>a</sub> − t<sub>d</sub> = ' + fx(P.tc, 3) + ' s');
+    }
+    const mb = $('#g4-mot'); mb.innerHTML = '';
+    if (G4.unit === 'r') {
+      const N = G4.N;
+      mb.append(h('h3', null, 'Et côté moteur ?'), h('p', null, 'L’axe est entraîné par un moteur à travers un réducteur de rapport 1/N. Le moteur tourne N fois plus vite que l’axe et accélère N fois plus fort.'));
+      mb.append(h('div', { class: 'opts' }, rng('Rapport du réducteur 1/N, N', 1, 100, 1, () => G4.N, v => { G4.N = v; info(); }, v => String(v))));
+      mb.append(stats([['Vitesse max moteur', fx(P.vp * N, 1) + ' rad/s = ' + fx(P.vp * N * 30 / Math.PI, 0) + ' tr/min'], ['Accélération moteur', fx(P.a * N, 1) + ' rad/s²'], ['Couple moteur / couple axe', '1/' + N + ' (η = 1)']]));
+    }
+    cursor();
+  }
+  g4Compute(); draw(); info();
+  ANIM.fn = dt => { if (!G4.play) return; G4.t += dt * G4.spd; if (G4.t > G4.prof.T + 0.8) G4.t = 0; cursor(); };
+}
+WORKSHOPS.push({ id: 'g4', title: 'Commande trapézoïdale', hint: 'Réglez distance, vitesse et accélération (ou les temps) et lisez a(t), v(t), x(t) et les durées du profil trapézoïdal.', mount: mountG4, reset: () => { Object.assign(G4, copy(G4D), { t: 0 }); G4.play = !reduced(); } });
+
+/* ================= Exercices (engrenages et trapèze) ================= */
+function schemaSVG(f) {
+  const Wd = 720, pad = 40, th = 18, gap = 10, nl = Math.max(...f.wheels.map(w => w.lev)) + 1, xs = [0];
+  for (let s = 1; s < f.shafts; s++) {
+    const Lk = f.links.find(q => { const a = f.wheels[q[0]], b = f.wheels[q[1]]; return (a.sh === s - 1 && b.sh === s) || (a.sh === s && b.sh === s - 1); });
+    xs.push(xs[s - 1] + (f.wheels[Lk[0]].z + f.wheels[Lk[1]].z) / 2);
+  }
+  let minx = Infinity, maxx = -Infinity;
+  f.wheels.forEach(w => { minx = Math.min(minx, xs[w.sh] - w.z / 2); maxx = Math.max(maxx, xs[w.sh] + w.z / 2); });
+  const sc = Math.min(6, (Wd - 2 * pad) / (maxx - minx)), X = v => pad + (v - minx) * sc + ((Wd - 2 * pad) - (maxx - minx) * sc) / 2;
+  const y0 = 66, yb = y0 + nl * (th + gap) + 4, Ht = yb + 34;
+  const svg = el('svg', { class: 'g', viewBox: '0 0 ' + Wd + ' ' + Ht, role: 'img', 'aria-label': 'Schéma du train d’engrenages' });
+  const hid = 'hs' + (++SVGN); hatchDefs(svg, hid);
+  el('rect', { x: X(minx) - 16, y: yb + 6, width: X(maxx) - X(minx) + 32, height: 10, class: 'ground', fill: 'url(#' + hid + ')' }, svg);
+  for (let s = 0; s < f.shafts; s++) el('line', { class: 'shaft', x1: X(xs[s]), x2: X(xs[s]), y1: 38, y2: yb + 6 }, svg);
+  f.wheels.forEach(w => {
+    const y = y0 + w.lev * (th + gap), cls = w.sh === f.inSh ? 'in' : w.sh === f.outSh ? 'out' : 'm';
+    el('rect', { class: 'rect ' + cls, x: X(xs[w.sh] - w.z / 2).toFixed(1), y, width: (w.z * sc).toFixed(1), height: th }, svg);
+    svgTxt(svg, { class: 'gtxt', x: X(xs[w.sh]), y: y + 13 }, w.lab.replace(/Z(\d)/, 'Z_$1'));
+  });
+  const tIn = el('text', { class: 'gtxt', x: X(xs[f.inSh]), y: 16, fill: 'var(--accent-ink)' }, svg); tIn.textContent = 'Entrée';
+  el('path', { d: 'M' + X(xs[f.inSh]) + ' 22L' + (X(xs[f.inSh]) - 5) + ' 31L' + (X(xs[f.inSh]) + 5) + ' 31Z', fill: 'var(--accent-ink)' }, svg);
+  el('text', { class: 'gtxt', x: X(xs[f.outSh]), y: 16 }, svg).textContent = 'Sortie';
+  el('path', { d: 'M' + X(xs[f.outSh]) + ' 22L' + (X(xs[f.outSh]) - 5) + ' 31L' + (X(xs[f.outSh]) + 5) + ' 31Z', fill: 'var(--ok)' }, svg);
+  return h('div', { class: 'gwrap' }, svg);
+}
+function trapSchema() {
+  const svg = el('svg', { class: 'g', viewBox: '0 0 720 190', role: 'img', 'aria-label': 'Profil trapézoïdal de vitesse' });
+  const x0 = 70, x1 = 150, x2 = 520, x3 = 640, yb = 150, yt = 40;
+  el('line', { class: 'plot-ax', x1: x0, x2: 690, y1: yb, y2: yb }, svg); el('line', { class: 'plot-ax', x1: x0, x2: x0, y1: 16, y2: yb }, svg);
+  el('path', { class: 'curve fill', d: 'M' + x0 + ' ' + yb + 'L' + x1 + ' ' + yt + 'L' + x2 + ' ' + yt + 'L' + x3 + ' ' + yb + 'Z' }, svg);
+  el('path', { class: 'curve', d: 'M' + x0 + ' ' + yb + 'L' + x1 + ' ' + yt + 'L' + x2 + ' ' + yt + 'L' + x3 + ' ' + yb }, svg);
+  [[x1, 't_a'], [x2, 't_a + t_c'], [x3, 'T']].forEach(q => { el('line', { class: 'plot-grid', x1: q[0], x2: q[0], y1: yt, y2: yb }, svg); svgTxt(svg, { class: 'plot-lbl', x: q[0], y: 170, 'text-anchor': 'middle' }, q[1]); });
+  svgTxt(svg, { class: 'plot-lbl', x: x0 - 6, y: yt + 4, 'text-anchor': 'end' }, 'V_max');
+  el('text', { class: 'plot-lbl', x: 690, y: 168, 'text-anchor': 'end' }, svg).textContent = 't';
+  el('text', { class: 'plot-ttl', x: (x1 + x2) / 2, y: 100, 'text-anchor': 'middle' }, svg).textContent = 'aire = distance D';
+  el('text', { class: 'plot-lbl', x: (x0 + x1) / 2, y: 100, 'text-anchor': 'middle' }, svg).textContent = 'pente a';
+  el('text', { class: 'plot-lbl', x: (x2 + x3) / 2 + 6, y: 100, 'text-anchor': 'middle' }, svg).textContent = 'pente −d';
+  el('text', { class: 'plot-ttl', x: x0 + 4, y: 14 }, svg).textContent = 'v(t)';
+  return h('div', { class: 'gwrap' }, svg);
+}
+const EXS = {};
+function mountEx(root, cfg) {
+  const S = EXS[cfg.key] || (EXS[cfg.key] = { flt: 'all', ex: null, checked: false, shown: false, score: { ok: 0, tot: 0 }, counted: false });
+  if (!S.ex) S.ex = cfg.gen(S.flt);
+  const ex = S.ex;
+  root.innerHTML = '';
+  root.append(h('h2', null, cfg.title), h('p', null, cfg.intro));
+  root.append(chipsRow(cfg.filters, S.flt, v => { S.flt = v; S.ex = cfg.gen(v); S.checked = false; S.shown = false; S.counted = false; mountEx($('#ws'), cfg); }, 'Type d’exercice'));
+  root.append(h('p', { class: 'scoreline', id: 'ex-score' }, 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot));
+  const box = h('div', { class: 'exs' }, h('p', { class: 'small' }, ex.tag), h('p', { html: ex.text }));
+  root.append(box);
+  const fig = h('div', { id: 'ex-fig' }); root.append(fig);
+  if (ex.fig.type === 'lines') fig.append(schemaSVG(ex.fig));
+  else if (ex.fig.type === 'trap') fig.append(trapSchema());
+  else {
+    const F = ex.fig, svg = el('svg', { class: 'g', role: 'img', 'aria-label': 'Vue de face du train épicycloïdal' });
+    const npx = [3, 4, 2].find(n => (F.zs + F.zc) % n === 0) || 2;
+    const o = buildEpi(svg, { m: 2, zs: F.zs, zp: F.zp, zc: F.zc, np: npx, fixed: F.fixed }, { labels: true }), an = epiAngles(F.zs, F.zp, F.zc, npx, 0, 0);
+    o.pose(0, an.C, 0, an.P);
+    fig.append(h('div', { class: 'gwrap', style: 'max-width:380px' }, svg), h('div', { class: 'leg' }, h('span', { html: '<i class="sw" style="background:var(--g-s)"></i>solaire S' }), h('span', { html: '<i class="sw" style="background:var(--g-p)"></i>satellites' }), h('span', { html: '<i class="sw" style="background:var(--g-c)"></i>couronne C' }), h('span', { html: '<i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS' }), h('span', null, 'hachures : pièce fixée au bâti')));
+  }
+  const row = h('div', { class: 'fieldrow' }), ins = {};
+  ex.fields.forEach(f => {
+    const inp = h('input', { type: 'text', inputmode: 'decimal', id: 'ex-' + cfg.key + '-' + f.id, autocomplete: 'off', 'aria-label': f.label, placeholder: 'ex. 0,25 ou 1/4' });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    ins[f.id] = inp; row.append(h('label', { class: 'fld' }, h('span', { html: subz(f.label) }), inp));
+  });
+  root.append(row);
+  const res = h('div', { class: 'verdict', id: 'ex-res', hidden: true, 'aria-live': 'polite' }), sol = h('div', { class: 'solbox', id: 'ex-sol', hidden: !S.shown });
+  function check() {
+    const marks = ex.fields.map(f => { const v = parseAns(ins[f.id].value); const ok = okAns(v, f.val, 0.02, 0.01); ins[f.id].className = ok ? 'okk' : 'nok'; return { ok, v, f }; });
+    const all = marks.every(m => m.ok), signErr = marks.some(m => !m.ok && isFinite(m.v) && okAns(Math.abs(m.v), Math.abs(m.f.val), 0.02, 0.01));
+    res.hidden = false; res.className = 'verdict ' + (all ? 'yes' : 'no');
+    res.textContent = all ? 'Correct.' : marks.some(m => !isFinite(m.v)) ? 'Une réponse est vide ou illisible. Écrivez un nombre (virgule ou point) ou une fraction comme 1/4.' : signErr ? 'La valeur absolue est bonne mais le signe est faux. Comptez les contacts extérieurs.' : 'Pas encore. Reprenez le calcul ou affichez la solution.';
+    if (!S.counted) { S.counted = true; S.score.tot++; if (all) S.score.ok++; $('#ex-score').textContent = 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot; }
+    S.checked = true;
+  }
+  sol.innerHTML = '<b>Solution</b>' + ex.sol + '<p class="small">Réponses attendues : ' + ex.fields.map(f => subz(f.label) + ' = ' + fx(f.val, 3)).join(' ; ') + '</p>';
+  root.append(h('div', { class: 'files', style: 'margin:8px 0' },
+    h('button', { class: 'btn pri', type: 'button', onclick: check }, 'Vérifier'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.shown = true; sol.hidden = false; if (!S.counted) { S.counted = true; S.score.tot++; $('#ex-score').textContent = 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot; } } }, 'Voir la solution'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.ex = cfg.gen(S.flt); S.checked = false; S.shown = false; S.counted = false; mountEx($('#ws'), cfg); $('#scroller').scrollTop = 0; } }, 'Nouvel exercice')), res, sol);
+  root.append(h('p', { class: 'small' }, 'Les réponses sont acceptées à ± 2 %. Gardez le signe pour un rapport de réduction.'));
+  ANIM.fn = null;
+}
+WORKSHOPS.push({ id: 'g3', title: 'Exercices engrenages', hint: 'Déterminez le rapport de réduction (avec son signe) de trains simples, composés et épicycloïdaux.', mount: r => mountEx(r, { key: 'g3', title: 'Exercices : rapport de réduction', intro: 'Générés au hasard : recommencez autant de fois que vous voulez. Pensez à compter les contacts extérieurs, à repérer les roues solidaires d’un même arbre et, pour un train épicycloïdal, à écrire la formule de Willis.', filters: [['all', 'Tous'], ['simple', 'Trains simples'], ['compose', 'Trains composés'], ['epi', 'Épicycloïdaux']], gen: genGear }), reset: () => { delete EXS.g3; } });
+WORKSHOPS.push({ id: 'g5', title: 'Exercices trapèze', hint: 'Calculez des temps, des accélérations et des vitesses maximales d’un profil de vitesse trapézoïdal.', mount: r => mountEx(r, { key: 'g5', title: 'Exercices : profil trapézoïdal', intro: 'Dans chaque énoncé, rappelez-vous que la distance est l’aire sous la courbe de vitesse. Vérifiez toujours si la vitesse maximale est atteinte, sinon le profil est triangulaire.', filters: [['all', 'Tous'], ['time', 'Calcul de temps'], ['acc', 'Calcul de a et V_max']], gen: genTrap }), reset: () => { delete EXS.g5; } });
+WORKSHOPS.sort((a, b) => a.id.localeCompare(b.id));
+
+/* ---------- activités (consignes, défi, QCM) ---------- */
+const ACT = {
+  g1: {
+    title: 'Train d’engrenages simple', level: 'Premier contact', time: '10 min',
+    goal: 'Calculer le rapport de réduction d’un train simple, prévoir le sens de rotation et le couple de sortie.',
+    steps: [
+      'Choisissez l’exemple « 2 solides, réducteur » : Z<sub>1</sub> = 20 et Z<sub>2</sub> = 60. Relevez k, le sens des deux roues et le couple de sortie.',
+      'Passez à « 3 solides, roue intermédiaire » (le solide 2 a une seule roue). Modifiez Z<sub>2</sub> : que devient k ? Et le sens du solide 3 ?',
+      'Sur le solide 2, choisissez « 2 roues » : Z<sub>2</sub> et Z<sub>2</sub>′ sont maintenant réglables séparément. Prenez Z<sub>2</sub>′ plus petit que Z<sub>2</sub> et observez k : à quoi sert la deuxième roue ?',
+      'Ajoutez un 4<sup>e</sup> puis un 5<sup>e</sup> solide. Comparez le signe de k pour n = 1, 2, 3, 4 contacts extérieurs, et la valeur de |k| avec une ou deux roues par solide.',
+      'Changez le module m : la valeur de k change-t-elle ? Que deviennent les diamètres D = m·Z et l’entraxe ? Fixez enfin une vitesse et un couple d’entrée et vérifiez que la puissance C·ω se conserve.'
+    ],
+    defi: { q: 'Avec Z compris entre 10 et 80, quel est le plus petit rapport |k| possible avec 2 roues ? Quel prix paie-t-on en encombrement ?', a: 'Z<sub>1</sub> = 10 et Z<sub>2</sub> = 80 donnent |k| = 1/8. Mais la grande roue a un diamètre 8 fois plus grand que la petite : la longueur D<sub>1</sub> + D<sub>2</sub> devient importante. C’est la limite d’un train simple, qu’un train épicycloïdal ou un train à deux étages contourne.' },
+    course: 'rapport',
+    qcm: [
+      { q: 'Un train simple compte 4 roues en ligne (3 contacts extérieurs). Le rapport de réduction k est :', o: ['positif : entrée et sortie tournent dans le même sens', 'négatif : entrée et sortie tournent en sens inverse', 'toujours égal à 1', 'impossible à calculer sans le module'], a: 1, w: 'k = (−1)<sup>3</sup> × Z<sub>1</sub>/Z<sub>4</sub> : chaque contact extérieur inverse le sens, trois inversions donnent un signe négatif.' },
+      { q: 'Quel est le rôle d’une roue intermédiaire (parasite) ?', o: ['Elle divise la vitesse de sortie', 'Elle multiplie le couple', 'Elle ne change que le sens de rotation, pas la valeur de |k|', 'Elle supprime les pertes'], a: 2, w: 'Son nombre de dents s’élimine dans le rapport Z<sub>1</sub>Z<sub>2</sub>/(Z<sub>2</sub>Z<sub>3</sub>). Elle ajoute un contact extérieur, donc inverse le sens.' },
+      { q: 'Un solide intermédiaire porte deux roues solidaires, Z<sub>2</sub> = 60 (engrène avec 1) et Z<sub>2</sub>′ = 20 (engrène avec 3). Que peut-on dire des vitesses de ces deux roues ?', o: ['Elles sont dans le rapport 20/60', 'Elles sont égales, car elles sont sur le même solide', 'Elles sont opposées', 'Elles dépendent du module'], a: 1, w: 'Les deux roues sont liées au même solide : même vitesse angulaire. C’est ce qui permet de multiplier les rapports de deux étages : k = (Z<sub>1</sub>/Z<sub>2</sub>) × (Z<sub>2</sub>′/Z<sub>3</sub>).' },
+      { q: 'Une roue de module m = 2 mm a Z = 25 dents. Son diamètre primitif vaut :', o: ['25 mm', '50 mm', '12,5 mm', '100 mm'], a: 1, w: 'D = m·Z = 2 × 25 = 50 mm.' },
+      { q: 'La roue 1 (Z = 20) tourne à 900 tr/min et engrène avec la roue 2 (Z = 60). La roue 2 tourne à :', o: ['+300 tr/min', '−2 700 tr/min', '−300 tr/min', '+2 700 tr/min'], a: 2, w: 'ω<sub>2</sub> = −(Z<sub>1</sub>/Z<sub>2</sub>)·ω<sub>1</sub> = −(20/60) × 900 = −300 tr/min : plus lente et en sens inverse.' },
+      { q: 'À quoi sert surtout un réducteur ?', o: ['Augmenter la puissance transmise', 'Diminuer le rendement', 'Réduire la vitesse et surtout augmenter le couple', 'Réduire le couple'], a: 2, w: 'La puissance C·ω se conserve (aux pertes près) : si ω est divisé par x, le couple est multiplié par x.' }
+    ]
+  },
+  g2: {
+    title: 'Train épicycloïdal', level: 'Intermédiaire', time: '20 min',
+    goal: 'Comparer les rapports de réduction selon la pièce fixée, vérifier les contraintes de montage et appliquer la formule de Willis.',
+    steps: [
+      'Gardez « couronne fixe », entrée sur le solaire, sortie sur le porte-satellites. Notez k.',
+      'Passez à « solaire fixe » avec l’entrée sur la couronne. Notez le nouveau k, puis essayez l’entrée sur le porte-satellites.',
+      'Choisissez « porte-satellites fixe » : le train devient un train simple (les satellites tournent sur place). Relevez le sens de la sortie.',
+      'Décochez la coaxialité et modifiez Z<sub>C</sub> : observez le montage impossible, puis revenez au réglage coaxial.',
+      'Avec Z<sub>S</sub> = 20 et Z<sub>P</sub> = 20, essayez 3 puis 4 satellites : quelle contrainte de montage change ?',
+      '(Avancé) Imposez la vitesse de deux pièces et vérifiez la troisième avec la formule de Willis.'
+    ],
+    defi: { q: 'Réglez Z<sub>S</sub> = 10 et Z<sub>P</sub> = 40, couronne fixe, entrée sur le solaire. Quel est k ? Quel train simple de deux roues, avec la même petite roue, donnerait le même rapport ?', a: 'Z<sub>C</sub> = 10 + 2 × 40 = 90, k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 10/100 = 1/10. Un train simple demanderait Z<sub>1</sub> = 10 et Z<sub>2</sub> = 100, soit D<sub>1</sub> + D<sub>2</sub> = 110·m contre D<sub>C</sub> = 90·m, avec en plus l’entrée et la sortie alignées.' },
+    course: 'willis',
+    qcm: [
+      { q: 'Z<sub>S</sub> = 24 et Z<sub>P</sub> = 18. Pour que le train soit montable (coaxialité), Z<sub>C</sub> vaut :', o: ['42', '60', '78', '96'], a: 1, w: 'Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> = 24 + 36 = 60.' },
+      { q: 'Couronne fixe, entrée sur le solaire, sortie sur le porte-satellites, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. Le rapport de réduction vaut :', o: ['0,33', '0,25', '−0,33', '3'], a: 1, w: 'k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 20/80 = 0,25, de même signe que l’entrée.' },
+      { q: 'Quelle est la formule de Willis pour un train solaire – satellite – couronne ?', o: ['(ω<sub>C</sub> − ω<sub>PS</sub>)/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>', 'ω<sub>C</sub>/ω<sub>S</sub> = −Z<sub>S</sub>/Z<sub>C</sub> quelle que soit la pièce fixe', '(ω<sub>C</sub> + ω<sub>PS</sub>)/(ω<sub>S</sub> + ω<sub>PS</sub>) = Z<sub>S</sub>/Z<sub>C</sub>', 'ω<sub>C</sub>·Z<sub>C</sub> = ω<sub>S</sub>·Z<sub>S</sub> + ω<sub>PS</sub>'], a: 0, w: 'Willis exprime le rapport dans le repère du porte-satellites : un seul contact extérieur donne le signe « − ».' },
+      { q: 'Avec Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60, combien de satellites équirépartis peut-on monter ?', o: ['3', '4', '6', '7'], a: 1, w: '(Z<sub>S</sub> + Z<sub>C</sub>)/N = 80/N doit être entier : N = 4 convient (80/4 = 20), pas 3, 6 ni 7.' },
+      { q: 'Quel est l’avantage d’un train épicycloïdal sur un train simple, à encombrement équivalent ?', o: ['Il tourne toujours plus vite', 'Il n’a aucune perte', 'Un rapport de réduction plus grand, avec entrée et sortie coaxiales et le couple réparti sur plusieurs satellites', 'Il ne nécessite aucun module'], a: 2, w: 'La couronne enveloppe le solaire et les satellites : on gagne en compacité, en coaxialité et en répartition de l’effort.' }
+    ]
+  },
+  g3: {
+    title: 'Exercices : engrenages', level: 'Entraînement', time: '20 min',
+    goal: 'Déterminer sans hésiter le rapport de réduction d’un train simple, composé ou épicycloïdal.',
+    steps: [
+      'Choisissez un type d’exercice (ou « Tous ») et lisez l’énoncé et le schéma.',
+      'Trains en ligne : comptez les contacts extérieurs n et écrivez k = (−1)<sup>n</sup> × produit des Z menantes / produit des Z menées.',
+      'Trains composés : repérez les roues solidaires d’un même arbre, elles ont la même vitesse.',
+      'Trains épicycloïdaux : repérez la pièce fixe, l’entrée et la sortie, puis écrivez Willis.',
+      'Cliquez sur « Vérifier », puis sur « Voir la solution » si besoin. Enchaînez avec un nouvel exercice.'
+    ],
+    defi: { q: 'Comment reconnaître immédiatement un réducteur d’un multiplicateur à partir du schéma ?', a: 'Un réducteur a |k| &lt; 1 : l’entrée est une petite roue qui entraîne une grande. Pour un épicycloïdal, la sortie sur le porte-satellites avec couronne ou solaire fixe donne toujours un réducteur.' },
+    course: 'rapport',
+    qcm: [
+      { q: 'Train en ligne Z<sub>1</sub> = 20, Z<sub>2</sub> = 50, Z<sub>3</sub> = 40. k = ω<sub>3</sub>/ω<sub>1</sub> vaut :', o: ['−0,5', '+0,5', '+0,4', '−0,4'], a: 1, w: 'Deux contacts extérieurs : k = (+1) × 20/40 = +0,5. La roue 2 n’intervient pas.' },
+      { q: 'Deux étages : Z<sub>1</sub> = 20 → Z<sub>2</sub> = 40, puis Z<sub>3</sub> = 20 → Z<sub>4</sub> = 60 (Z<sub>2</sub> et Z<sub>3</sub> solidaires). k vaut :', o: ['+1/6', '−1/6', '+1/3', '−1/3'], a: 0, w: 'n = 2 : k = (Z<sub>1</sub>·Z<sub>3</sub>)/(Z<sub>2</sub>·Z<sub>4</sub>) = 400/2400 = +1/6.' },
+      { q: 'Porte-satellites fixe, entrée sur S, sortie sur C, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. k vaut :', o: ['+1/3', '+1/4', '−1/3', '−1/4'], a: 2, w: 'Train simple : k = −Z<sub>S</sub>/Z<sub>C</sub> = −20/60 = −1/3.' },
+      { q: 'Solaire fixe, entrée sur C, sortie sur PS, Z<sub>S</sub> = 20 et Z<sub>C</sub> = 60. k = ω<sub>PS</sub>/ω<sub>C</sub> vaut :', o: ['0,25', '1,33', '3', '0,75'], a: 3, w: 'Willis avec ω<sub>S</sub> = 0 : ω<sub>PS</sub>/ω<sub>C</sub> = Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 60/80 = 0,75.' }
+    ]
+  },
+  g4: {
+    title: 'Commande trapézoïdale', level: 'Intermédiaire', time: '15 min',
+    goal: 'Relier a(t), v(t) et x(t), puis calculer les temps d’un profil trapézoïdal ou en déduire a et V<sub>max</sub>.',
+    steps: [
+      'Mode « Accélération et V_max » : D = 3, V<sub>max</sub> = 1, a = 2. Relevez t<sub>a</sub>, t<sub>c</sub>, T et vérifiez les formules.',
+      'Réduisez D à 0,3 : le profil devient triangulaire. Notez V<sub>pic</sub> et T.',
+      'Décochez « décélération identique » et réglez d différent de a : que changent t<sub>d</sub> et T ?',
+      'Passez au mode « Temps » : imposez T = 4 s, t<sub>a</sub> = 1 s et D = 6. Lisez V<sub>max</sub> et a.',
+      'En rotation, ajoutez un réducteur 1/N : comparez la vitesse et l’accélération côté moteur.'
+    ],
+    defi: { q: 'Pour une distance donnée, on veut aller plus vite sans changer V<sub>max</sub>. Quel paramètre augmenter, et jusqu’où ça aide ?', a: 'Augmenter a (et d) raccourcit les phases d’accélération : T = D/V<sub>max</sub> + V<sub>max</sub>/a tend vers D/V<sub>max</sub> quand a devient très grand. On ne peut pas descendre en dessous, et un a trop grand demande un couple moteur plus important.' },
+    course: 'trapeze',
+    qcm: [
+      { q: 'a = 2 m/s², V<sub>max</sub> = 1 m/s, décélération identique. Le temps d’accélération vaut :', o: ['2 s', '0,5 s', '1 s', '0,25 s'], a: 1, w: 't<sub>a</sub> = V<sub>max</sub>/a = 1/2 = 0,5 s.' },
+      { q: 'D = 3 m, V<sub>max</sub> = 1 m/s, a = d = 2 m/s². La durée totale T vaut :', o: ['3 s', '4 s', '3,5 s', '3,25 s'], a: 2, w: 'T = D/V<sub>max</sub> + V<sub>max</sub>/a = 3 + 0,5 = 3,5 s (t<sub>a</sub> = t<sub>d</sub> = 0,5 s, t<sub>c</sub> = 2,5 s).' },
+      { q: 'Avec a = d, le profil est triangulaire quand :', o: ['D &lt; V<sub>max</sub>²/a', 'D &gt; V<sub>max</sub>²/a', 'D = 2·V<sub>max</sub>·T', 'T &lt; V<sub>max</sub>/a'], a: 0, w: 'V<sub>max</sub>²/a est la distance parcourue pendant l’accélération et la décélération. Si D est plus petit, la vitesse max n’est jamais atteinte.' },
+      { q: 'Que représente l’aire sous la courbe de vitesse v(t) ?', o: ['La puissance', 'L’accélération maximale', 'Le temps total', 'La distance parcourue'], a: 3, w: 'x(t) est l’intégrale de v(t) : l’aire du trapèze est la distance D.' }
+    ]
+  },
+  g5: {
+    title: 'Exercices : trapèze', level: 'Entraînement', time: '20 min',
+    goal: 'Savoir choisir la bonne méthode selon les données : temps connus ou accélération connue.',
+    steps: [
+      'Dessinez le profil v(t) et notez les données sur le dessin.',
+      'Écrivez la distance comme une aire : D = V<sub>max</sub>·(T − (t<sub>a</sub> + t<sub>d</sub>)/2).',
+      'Si l’énoncé donne a et V<sub>max</sub>, calculez d’abord t<sub>a</sub> = V<sub>max</sub>/a et testez si V<sub>max</sub> est atteinte.',
+      'Vérifiez vos résultats : T = t<sub>a</sub> + t<sub>c</sub> + t<sub>d</sub> et l’unité de chaque grandeur.'
+    ],
+    defi: { q: 'Quel test faire avant tout calcul quand on donne D, a et V<sub>max</sub> ?', a: 'Calculer D<sub>ad</sub> = V<sub>max</sub>²/(2a) + V<sub>max</sub>²/(2d) et le comparer à D. Si D &lt; D<sub>ad</sub>, le profil est triangulaire et V<sub>max</sub> n’est pas atteinte.' },
+    course: 'trapeze',
+    qcm: [
+      { q: 'D = 6 m, T = 4 s, t<sub>a</sub> = t<sub>d</sub> = 1 s. V<sub>max</sub> et a valent :', o: ['V<sub>max</sub> = 2 m/s ; a = 2 m/s²', 'V<sub>max</sub> = 1,5 m/s ; a = 1,5 m/s²', 'V<sub>max</sub> = 3 m/s ; a = 3 m/s²', 'V<sub>max</sub> = 2 m/s ; a = 1 m/s²'], a: 0, w: 'V<sub>max</sub> = D/(T − t<sub>a</sub>) = 6/3 = 2 m/s puis a = V<sub>max</sub>/t<sub>a</sub> = 2 m/s².' },
+      { q: 'Profil « en trois tiers » (t<sub>a</sub> = t<sub>c</sub> = t<sub>d</sub> = T/3), D = 6 m, T = 6 s. V<sub>max</sub> vaut :', o: ['1 m/s', '1,5 m/s', '2 m/s', '3 m/s'], a: 1, w: 'D = V<sub>max</sub>·2T/3 donc V<sub>max</sub> = 3D/(2T) = 18/12 = 1,5 m/s.' },
+      { q: 'Quand t<sub>a</sub> ≠ t<sub>d</sub>, la distance vaut :', o: ['V<sub>max</sub> × (t<sub>a</sub> + t<sub>c</sub> + t<sub>d</sub>)', 'V<sub>max</sub> × (T − (t<sub>a</sub> + t<sub>d</sub>)/2)', 'V<sub>max</sub> × T/2', 'V<sub>max</sub> × t<sub>c</sub>'], a: 1, w: 'Aire du trapèze de bases T et t<sub>c</sub> : V<sub>max</sub>·(T + t<sub>c</sub>)/2 = V<sub>max</sub>·(T − (t<sub>a</sub> + t<sub>d</sub>)/2).' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'reducteur', t: 'À quoi sert un réducteur ?', h: `
+<p>Un moteur électrique tourne vite (de 1 000 à 6 000 tr/min) mais fournit un couple faible. La plupart des mécanismes ont besoin du contraire : une vitesse plus lente et un couple plus élevé. Le réducteur de vitesse fait cette adaptation.</p>
+<h3>La puissance se conserve</h3>
+<div class="formula">P = C·ω &nbsp;;&nbsp; sans pertes : C<sub>e</sub>·ω<sub>e</sub> = C<sub>s</sub>·ω<sub>s</sub> &nbsp;⇒&nbsp; C<sub>s</sub> = C<sub>e</sub>·ω<sub>e</sub>/ω<sub>s</sub> = C<sub>e</sub>/|k|</div>
+<p>Avec des pertes, on introduit le rendement η : C<sub>s</sub>·ω<sub>s</sub> = η·C<sub>e</sub>·ω<sub>e</sub>. Le couple de sortie est alors un peu plus faible.</p>
+<table class="ctable"><tr><th>Réducteur 1/4</th><th>Entrée</th><th>Sortie (η = 1)</th></tr><tr><td>Vitesse</td><td>1 000 tr/min</td><td>250 tr/min</td></tr><tr><td>Couple</td><td>2 N·m</td><td>8 N·m</td></tr><tr><td>Puissance</td><td>209 W</td><td>209 W</td></tr></table>
+<p>Pour passer des tr/min aux rad/s : ω(rad/s) = 2π·N(tr/min)/60.</p>
+<div class="retain"><b>À retenir.</b> Un réducteur sert à réduire la vitesse de rotation, mais surtout à augmenter le couple. Si la vitesse est divisée par 4, le couple est multiplié par 4 (au rendement près).</div>` });
+COURSE.push({ id: 'module', t: 'Module et diamètre : D = m·Z', h: `
+<p>Une roue dentée est décrite par son nombre de dents <b>Z</b> et son <b>module</b> <b>m</b> (en mm), qui fixe la taille des dents. Le diamètre primitif D est le diamètre du cercle sur lequel deux roues « roulent sans glisser » l’une sur l’autre.</p>
+<div class="formula">D = m·Z &nbsp;&nbsp; (R = D/2 = m·Z/2) &nbsp;&nbsp; ; pas p = π·m</div>
+<ul><li>Deux roues qui engrènent ont <b>le même module</b>.</li><li>L’entraxe de deux roues en contact extérieur : a = (D<sub>1</sub> + D<sub>2</sub>)/2 = m·(Z<sub>1</sub> + Z<sub>2</sub>)/2.</li><li>Au point de contact, la vitesse est la même sur les deux roues : V = ω<sub>1</sub>·R<sub>1</sub> = |ω<sub>2</sub>|·R<sub>2</sub>.</li></ul>
+<table class="ctable"><tr><th>m (mm)</th><th>Z</th><th>D = m·Z (mm)</th></tr><tr><td>2</td><td>25</td><td>50</td></tr><tr><td>2</td><td>75</td><td>150</td></tr><tr><td>3</td><td>40</td><td>120</td></tr></table>
+<div class="retain"><b>À retenir.</b> D = m·Z. Comme ω<sub>1</sub>·R<sub>1</sub> = |ω<sub>2</sub>|·R<sub>2</sub>, le rapport des vitesses est le rapport inverse des rayons, des diamètres ou des nombres de dents.</div>` });
+COURSE.push({ id: 'rapport', t: 'Rapport de réduction d’un train', h: `
+<h3>Une paire de roues</h3>
+<div class="formula">ω<sub>2</sub>/ω<sub>1</sub> = ± R<sub>1</sub>/R<sub>2</sub> = ± D<sub>1</sub>/D<sub>2</sub> = ± Z<sub>1</sub>/Z<sub>2</sub></div>
+<p>Le signe est « − » pour un contact <b>extérieur</b> (les roues tournent en sens inverse) et « + » pour un contact <b>intérieur</b> (couronne). C’est le rapport de transmission de la paire.</p>
+<h3>Un train d’engrenages</h3>
+<p>Le rapport de réduction du train est le produit des rapports de chaque paire :</p>
+<div class="formula">k = ω<sub>sortie</sub>/ω<sub>entrée</sub> = (−1)<sup>n</sup> × ∏ Z<sub>menantes</sub> / ∏ Z<sub>menées</sub></div>
+<p>où <b>n est le nombre de contacts extérieurs</b>. Un contact extérieur inverse le sens de rotation, donc le signe de k dit si l’entrée et la sortie tournent dans le même sens (k &gt; 0) ou en sens inverse (k &lt; 0).</p>
+<ul><li>|k| &lt; 1 : réducteur (vitesse divisée, couple multiplié).</li><li>|k| &gt; 1 : multiplicateur.</li></ul>
+<p><b>Attention à la convention.</b> Selon les ouvrages, le « rapport de réduction » ou le « rapport de transmission » désigne ω<sub>s</sub>/ω<sub>e</sub> (convention de cette page) ou son inverse ω<sub>e</sub>/ω<sub>s</sub>. Regardez toujours la définition donnée dans le sujet.</p>
+<table class="ctable"><tr><th>Train</th><th>n</th><th>k</th></tr><tr><td>Z<sub>1</sub> = 20 → Z<sub>2</sub> = 60</td><td>1</td><td>−20/60 = −1/3</td></tr><tr><td>Z<sub>1</sub> = 20 → Z<sub>2</sub> → Z<sub>3</sub> = 40</td><td>2</td><td>+20/40 = +1/2</td></tr><tr><td>Deux étages 20/40 puis 20/60</td><td>2</td><td>+(20·20)/(40·60) = +1/6</td></tr></table>
+<div class="retain"><b>À retenir.</b> k = (−1)<sup>n</sup> × (produit des Z menantes)/(produit des Z menées), avec n le nombre de contacts extérieurs.</div>` });
+COURSE.push({ id: 'simple', t: 'Train simple : solides à une ou deux roues', h: `
+<p>Un <b>train simple</b> est une suite de solides (arbres) en série ; chaque solide engrène avec le suivant. Un solide intermédiaire peut porter :</p>
+<ul><li><b>une seule roue</b> : elle engrène avec la roue précédente et la suivante, c’est une roue intermédiaire (« parasite ») ;</li><li><b>deux roues solidaires</b> de nombres de dents différents (Z et Z′) : la première engrène avec le solide précédent, la seconde avec le suivant. Les deux roues tournent à la même vitesse.</li></ul>
+<div class="formula">k = (−1)<sup>n</sup> × (produit des Z menantes)/(produit des Z menées)</div>
+<p>Avec des roues uniques, les nombres de dents intermédiaires se simplifient : k = (−1)<sup>N−1</sup> × Z<sub>1</sub>/Z<sub>N</sub>. Elles ne changent que le sens de rotation et servent à éloigner l’entrée de la sortie.</p>
+<p>Avec des solides à <b>deux roues</b>, rien ne se simplifie : chaque étage (paire Z<sub>menante</sub>/Z<sub>menée</sub>) multiplie le rapport. Deux étages de rapport 1/3 donnent 1/9 sans roue de plus de 3 fois le diamètre de la petite.</p>
+<h3>Les limites</h3>
+<ul><li>Avec une seule paire, pour réduire beaucoup il faut une petite roue menante et une très grande roue menée : l’encombrement augmente vite (Z<sub>1</sub> = 10 et Z<sub>2</sub> = 80 donnent seulement |k| = 1/8).</li><li>Les solides à deux roues permettent de réduire par étages, mais ajoutent des arbres, des paliers et de la longueur. Pour aller plus loin à encombrement égal, on utilise un train épicycloïdal.</li></ul>
+<div class="retain"><b>À retenir.</b> Roue intermédiaire unique : elle inverse le sens, sans effet sur |k|. Solide à deux roues : les roues tournent à la même vitesse, et c’est ce qui permet de multiplier les rapports de plusieurs étages.</div>` });
+COURSE.push({ id: 'epi', t: 'Train épicycloïdal : constituants', h: `
+<p>Un train épicycloïdal est un train d’engrenages dont certains axes sont mobiles. Il comprend :</p>
+<ul><li>le <b>solaire</b> (ou planétaire) S, au centre, à denture extérieure ;</li><li>la <b>couronne</b> C, à denture intérieure ;</li><li>des <b>satellites</b> qui engrènent à la fois avec S et avec C ;</li><li>le <b>porte-satellites</b> PS, qui porte les axes des satellites.</li></ul>
+<p>Le solaire, la couronne et le porte-satellites tournent autour du <b>même axe</b>. Les satellites tournent sur leur propre axe et se déplacent autour de l’axe central.</p>
+<p>Ce mécanisme a deux degrés de liberté : pour imposer un seul rapport de réduction, on <b>fixe une pièce au bâti</b> et l’on choisit l’entrée parmi les deux autres, la troisième est la sortie. Sinon, il faut imposer la vitesse de deux pièces (cas du différentiel).</p>
+<div class="retain"><b>À retenir.</b> Trois pièces coaxiales (S, C, PS) : une fixe, une en entrée, une en sortie. Les satellites ne sont jamais ni entrée ni sortie, ce sont des roues intermédiaires.</div>` });
+COURSE.push({ id: 'montage', t: 'Contraintes de montage', h: `
+<p>Pour qu’un train épicycloïdal soit réalisable, plusieurs conditions géométriques doivent être vérifiées.</p>
+<ol>
+<li><b>Coaxialité.</b> Les satellites engrènent à la fois avec le solaire et avec la couronne, donc le rayon de la couronne est la somme du rayon du solaire et du diamètre d’un satellite :
+<div class="formula">R<sub>C</sub> = R<sub>S</sub> + 2·R<sub>P</sub> &nbsp;⇔&nbsp; D<sub>C</sub> = D<sub>S</sub> + 2·D<sub>P</sub> &nbsp;⇔&nbsp; Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub></div></li>
+<li><b>Entraxe et porte-satellites.</b> L’axe d’un satellite est à la distance a = R<sub>S</sub> + R<sub>P</sub> de l’axe central. Dans un schéma cinématique, le porte-satellites se dessine en forme de <b>haricot</b> qui relie l’axe central à l’axe de chaque satellite.</li>
+<li><b>Assemblage.</b> Avec N satellites équirépartis, il faut que (Z<sub>S</sub> + Z<sub>C</sub>)/N soit un entier, sinon le dernier satellite ne peut pas s’engager entre les dents.</li>
+<li><b>Non-interférence.</b> Les satellites voisins ne doivent pas se toucher : 2·a·sin(π/N) &gt; m·(Z<sub>P</sub> + 2) (diamètre de tête d’un satellite).</li>
+</ol>
+<table class="ctable"><tr><th>Z<sub>S</sub></th><th>Z<sub>P</sub></th><th>Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub></th><th>N possibles</th></tr><tr><td>20</td><td>20</td><td>60</td><td>2, 4, 5 (80/N entier)</td></tr><tr><td>24</td><td>18</td><td>60</td><td>2, 3, 4, 6 (84/N entier)</td></tr></table>
+<div class="retain"><b>À retenir.</b> Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> (somme des rayons ou des diamètres), (Z<sub>S</sub> + Z<sub>C</sub>)/N entier, et porte-satellites en haricot de longueur a = R<sub>S</sub> + R<sub>P</sub>.</div>` });
+COURSE.push({ id: 'willis', t: 'Formule de Willis', h: `
+<p>La formule de Willis relie les vitesses des trois pièces coaxiales, en utilisant le fait que, <b>dans le repère du porte-satellites</b>, le train se comporte comme un train simple.</p>
+<div class="formula">(ω<sub>C/0</sub> − ω<sub>PS/0</sub>) / (ω<sub>S/0</sub> − ω<sub>PS/0</sub>) = (−1)<sup>n</sup> × Z<sub>S</sub>/Z<sub>C</sub> = −Z<sub>S</sub>/Z<sub>C</sub></div>
+<p>Ici n = 1 : un contact extérieur (solaire–satellite). Le satellite est une roue intermédiaire et le contact intérieur (satellite–couronne) ne compte pas dans n. Les vitesses sont mesurées par rapport au bâti (repère 0).</p>
+<h3>Les cas usuels</h3>
+<table class="ctable"><tr><th>Pièce fixe</th><th>Entrée → sortie</th><th>k</th><th>Z<sub>S</sub> = 20, Z<sub>C</sub> = 60</th></tr>
+<tr><td>Couronne</td><td>S → PS</td><td>Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>1/4</td></tr>
+<tr><td>Solaire</td><td>C → PS</td><td>Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>3/4</td></tr>
+<tr><td>Porte-satellites</td><td>S → C</td><td>−Z<sub>S</sub>/Z<sub>C</sub></td><td>−1/3</td></tr>
+<tr><td>Solaire</td><td>PS → C</td><td>(Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub></td><td>4/3</td></tr></table>
+<p><b>Exemple.</b> Couronne fixe (ω<sub>C</sub> = 0) : −ω<sub>PS</sub>/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>, d’où ω<sub>PS</sub>·(Z<sub>C</sub> + Z<sub>S</sub>) = Z<sub>S</sub>·ω<sub>S</sub>.</p>
+<div class="retain"><b>À retenir.</b> Écrire Willis, remplacer les deux vitesses connues (dont celle de la pièce fixe, nulle) et résoudre pour la troisième. Les vitesses sont toujours relatives au bâti.</div>` });
+COURSE.push({ id: 'avantage', t: 'Pourquoi un train épicycloïdal ?', h: `
+<p>À encombrement équivalent, un train épicycloïdal permet un <b>meilleur rapport de réduction</b> qu’un train simple à deux roues.</p>
+<table class="ctable"><tr><th>Exemple, m = 2 mm</th><th>Train simple</th><th>Train épicycloïdal</th></tr><tr><td>Rapport |k|</td><td>1/4</td><td>1/4</td></tr><tr><td>Roues</td><td>Z = 20 et Z = 80</td><td>Z<sub>S</sub> = 20, Z<sub>P</sub> = 20, Z<sub>C</sub> = 60</td></tr><tr><td>Encombrement</td><td>D<sub>1</sub> + D<sub>2</sub> = 200 mm</td><td>D<sub>C</sub> = 120 mm</td></tr></table>
+<ul><li><b>Compacité :</b> l’encombrement est plus faible pour un même rapport.</li><li><b>Coaxialité :</b> l’entrée et la sortie sont sur le même axe.</li><li><b>Répartition de l’effort :</b> le couple passe par plusieurs satellites, ce qui permet de transmettre plus de couple avec des dents plus petites.</li><li><b>Plusieurs rapports :</b> selon la pièce fixée, un même mécanisme donne plusieurs rapports.</li></ul>
+<p>Inconvénients : montage plus complexe (contraintes de montage) et fabrication d’une denture intérieure.</p>
+<div class="retain"><b>À retenir.</b> À encombrement équivalent, le train épicycloïdal offre un plus grand rapport de réduction qu’un train simple. Il est aussi compact et coaxial. C’est pourquoi on le trouve dans les motoréducteurs et les boîtes automatiques.</div>` });
+COURSE.push({ id: 'trapeze', t: 'Commande trapézoïdale en vitesse', h: `
+<p>Pour éviter les à-coups (accélération infinie), on impose à un axe un profil de vitesse en trapèze : accélération constante <b>a</b> pendant t<sub>a</sub>, vitesse constante V<sub>max</sub> pendant t<sub>c</sub>, puis décélération constante <b>d</b> pendant t<sub>d</sub>.</p>
+<div class="formula">t<sub>a</sub> = V<sub>max</sub>/a &nbsp;;&nbsp; t<sub>d</sub> = V<sub>max</sub>/d &nbsp;;&nbsp; T = t<sub>a</sub> + t<sub>c</sub> + t<sub>d</sub></div>
+<h3>La distance est l’aire sous v(t)</h3>
+<div class="formula">D = V<sub>max</sub> × (T − (t<sub>a</sub> + t<sub>d</sub>)/2) &nbsp;;&nbsp; si t<sub>a</sub> = t<sub>d</sub> : D = V<sub>max</sub> × (T − t<sub>a</sub>)</div>
+<h3>Calcul des temps (a et V<sub>max</sub> connus)</h3>
+<p>Distance parcourue en accélération et décélération : D<sub>ad</sub> = V<sub>max</sub>²/(2a) + V<sub>max</sub>²/(2d).</p>
+<ul><li>Si D ≥ D<sub>ad</sub> (profil trapézoïdal) : t<sub>c</sub> = (D − D<sub>ad</sub>)/V<sub>max</sub>. Avec a = d : <b>T = D/V<sub>max</sub> + V<sub>max</sub>/a</b>.</li><li>Si D &lt; D<sub>ad</sub> (profil triangulaire) : V<sub>max</sub> n’est pas atteinte. Avec a = d : V<sub>pic</sub> = √(a·D) et T = 2·√(D/a).</li></ul>
+<h3>Calcul de a et V<sub>max</sub> (temps connus)</h3>
+<p>Avec T, t<sub>a</sub> et t<sub>d</sub> donnés : <b>V<sub>max</sub> = D/(T − (t<sub>a</sub> + t<sub>d</sub>)/2)</b>, puis a = V<sub>max</sub>/t<sub>a</sub> et d = V<sub>max</sub>/t<sub>d</sub>. Cas courant « trois tiers » (t<sub>a</sub> = t<sub>c</sub> = t<sub>d</sub> = T/3) : V<sub>max</sub> = 3D/(2T) et a = 9D/(2T²).</p>
+<p>Si on donne a, T et D, on résout V<sub>max</sub>²/a − T·V<sub>max</sub> + D = 0 et l’on garde la racine qui donne t<sub>c</sub> ≥ 0.</p>
+<h3>Unités</h3>
+<table class="ctable"><tr><th>Translation</th><th>Rotation</th></tr><tr><td>m, m/s, m/s²</td><td>rad, rad/s, rad/s² (ω = 2π·N/60)</td></tr></table>
+<div class="retain"><b>À retenir.</b> Distance = aire du trapèze. Toujours vérifier si V<sub>max</sub> est atteinte (D ≥ D<sub>ad</sub>) avant d’écrire t<sub>c</sub>. Souvent a = d, ou t<sub>a</sub> = t<sub>d</sub>.</div>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'g1' };
+const AS = { key: 'g1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'reducteur' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  ANIM.fn = null;
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal', html: '<b>Objectif. </b>' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', { html: (i + 1) + '. ' + q.q }));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : engrenages et commande trapézoïdale'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur les réducteurs (SI, CPGE) : train d’engrenages simple, train épicycloïdal, exercices sur le rapport de réduction, commande trapézoïdale en vitesse et exercices sur le profil trapézoïdal.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans les ateliers 1, 2 et 4, réglez les curseurs : les vues de face et de dessus s’animent et les calculs se mettent à jour. Le bouton Pause arrête l’animation.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> rappelle D = m·Z, le rapport de réduction, les contraintes de montage, la formule de Willis et le profil trapézoïdal.</li><li>Dans les exercices, tapez un nombre (virgule ou point) ou une fraction comme 1/4. Le signe compte.</li></ul>' +
+    '<h3>Convention</h3><p>Le rapport de réduction k vaut ω<sub>sortie</sub>/ω<sub>entrée</sub>. Le sens positif est le sens horaire sur la vue de face.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM et le choix clair ou sombre sont mémorisés dans ce navigateur uniquement.</p>' }));
+});
+/* thème clair (par défaut) ou sombre */
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  const b = $('#bTheme'); b.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre'; b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+}
+applyTheme(lsGet(KEYS.theme, 'light'));
+$('#bTheme').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; applyTheme(t); lsSet(KEYS.theme, t); });
+/* boucle d'animation */
+function loop(ts) {
+  const dt = Math.min(0.05, (ts - ANIM.last) / 1000 || 0); ANIM.last = ts;
+  if (ANIM.fn && !CS.open && !document.hidden) { try { ANIM.fn(dt); } catch (e) { ANIM.fn = null; } }
+  requestAnimationFrame(loop);
+}
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); requestAnimationFrame(loop); })();
+</script>
+
+</body></html>
