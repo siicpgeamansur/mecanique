@@ -1,322 +1,233 @@
-<title>TEC</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TEC · Rotor et roue de vélo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout : barre d'onglets, puis une zone de dessin (canvas) à gauche et un panneau de réglages à droite, style GeoGebra. */
-:root{
-  --bg:#e9f1fb; --panel:#ffffff; --ink:#0b2545; --muted:#4a6285; --line:#b9cde6;
-  --accent:#0b5fd0; --accent-soft:#d6e6fb; --gcol:#00899c; --mcol:#e08a00;
-  --good:#0b8a4a; --bad:#c8362b; --canvas:#f4f8fe; --grid:#cfdcee; --wcol:#8a3fd1; --acol:#178a3b;
-  --font:'Source Sans 3','Segoe UI',system-ui,sans-serif; --mono:'Source Code Pro',ui-monospace,Menlo,monospace;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;--wcol:#c792ff;--acol:#4ade80;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0c0c0c;--panel:#171717;--ink:#f2f2f2;--muted:#a0a0a0;--line:#333333;--accent:#f2f2f2;--accent-soft:#2a2a2a;--gcol:#6ea0ff;--mcol:#ff5c6a;--good:#4ade80;--bad:#ff7b7b;--canvas:#101010;--grid:#262626;--wcol:#c792ff;--acol:#4ade80;color-scheme:dark}
+/* ===== Base et charte (reprise du site Algorithmes de tri) ===== */
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;margin:0;
-  padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:1180px;margin:0 auto}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
-h1{font-size:1.45rem;margin:0;font-weight:700;text-wrap:balance}
-h1 small{display:block;font-size:.85rem;font-weight:400;color:var(--muted)}
-h2{font-size:1.1rem;margin:0 0 8px;font-weight:700}
-.btn{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 14px;cursor:pointer}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  /* couleurs de tracé */
+  --gcol:#1e7a2e;--mcol:#9a5b00;--wcol:#7b4fc2;--acol:#2e8b3a;
+  --canvas:#f8fbff;--grid:#dce5ee;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
 .btn:hover{border-color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-:root[data-theme="dark"] .btn.primary{color:#14151f}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#14151f}}
-.btn:focus-visible,input:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
-.tab{font:inherit;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;padding:8px 14px;color:var(--muted);cursor:pointer}
-.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-.pane[hidden]{display:none!important}
-.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
-@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
-canvas{display:block;width:100%;height:340px;background:var(--canvas);border:1px solid var(--line);border-radius:8px}
-.ctrl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;margin-bottom:8px}
-.ctrl label{font-size:.92rem}
-.ctrl output{font-family:var(--mono);font-size:.85rem;color:var(--accent);text-align:right;min-width:4.5em}
-.ctrl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
-.row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.chk{display:flex;gap:6px;align-items:center;font-size:.92rem;margin:4px 0}
-.chk input{accent-color:var(--accent)}
-.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
-.read div{background:var(--bg);border-radius:8px;padding:6px 10px;min-width:0}
-.read span{display:block;font-size:.75rem;color:var(--muted);letter-spacing:.02em}
-.read b{font-family:var(--mono);font-size:.95rem;font-weight:600;overflow-wrap:anywhere}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px}
-.seg button{font:inherit;border:0;background:var(--panel);color:var(--ink);padding:6px 16px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
-:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#14151f}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#14151f}}
-.steps{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-.steps li{background:var(--bg);border-radius:8px;padding:8px 12px;min-width:0;overflow-x:auto}
-.steps .t{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block}
-.eq{font-family:var(--mono);font-size:.88rem;white-space:nowrap}
-.G{color:var(--gcol);font-weight:600}.M{color:var(--mcol);font-weight:600}
-.verdict{margin-top:10px;padding:8px 12px;border-radius:8px;background:var(--accent-soft);font-size:.95rem}
-.bars{display:grid;gap:6px;margin-top:10px}
-.bar{display:grid;grid-template-columns:3.2em minmax(0,1fr) 5.5em;gap:8px;align-items:center;font-size:.85rem}
-.bar i{display:block;height:10px;border-radius:5px;background:var(--accent);width:0;transition:width .05s}
-.bar .trk{background:var(--bg);border-radius:5px;height:10px;overflow:hidden}
-.bar code{font-family:var(--mono);text-align:right}
-.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
-.plots canvas{height:175px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:16px;padding:3px 12px 3px 8px;font-size:.95rem;cursor:pointer;background:var(--bg)}
-.chip i{width:12px;height:12px;border-radius:50%;display:inline-block}
-.chip b{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary,label):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+/* ===== Activité ===== */
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px;overflow:auto;padding:12px;flex:1;min-height:0}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none;accent-color:var(--accent)}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* ===== Cours ===== */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto;font-family:var(--font-mono);font-size:13.5px}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ===== Éléments d'atelier ===== */
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}
+.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
+.opts input[type=text]{font-family:var(--font-mono);min-width:240px}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--accent);font-family:var(--font-mono);font-weight:500;font-size:12px}
+input[type=range]{padding:0;accent-color:var(--accent)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .chip input{accent-color:var(--accent);margin:0}
-.tplot{height:215px;margin-top:8px}
-.tors{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:10px}
-.tbox{background:var(--bg);border-radius:8px;padding:6px 10px;min-width:0;overflow-x:auto;border-left:4px solid var(--line)}
+.chip i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.chip b{font-family:var(--font-mono);font-size:11.5px;font-weight:500;color:var(--muted)}
+.chip.on b{color:var(--accent-fg);opacity:.8}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:var(--panel);margin:8px 0}
+.stagebox canvas{display:block;width:100%;height:340px;background:var(--canvas);border-radius:8px}
+.stagebox canvas.tplot{height:215px;margin-top:8px}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:13.5px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.tors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.tbox{background:var(--panel2);border-radius:8px;padding:6px 10px;min-width:0;overflow-x:auto;border-left:4px solid var(--line)}
 .gbox{border-left-color:var(--gcol)}.mbox{border-left-color:var(--mcol)}
-.tbox .cap{font-size:.78rem;color:var(--muted)}
+.tbox .cap{font-size:12px;color:var(--muted);margin-bottom:4px}
 .tbox mjx-container{margin:2px 0!important;font-size:92%!important}
-.note{font-size:.9rem;color:var(--muted)}
-.q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:var(--panel)}
-.q p{margin:0 0 8px;font-weight:600}
-.q label{display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer}
-.q input{accent-color:var(--accent);margin-top:5px}
-.fb{margin-top:8px;font-size:.93rem}.fb.ok{color:var(--good)}.fb.ko{color:var(--bad)}
-.score{font-size:1.1rem;font-weight:700}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.huygens-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:10px 0}
+.hmat{background:var(--panel2);border-radius:8px;padding:8px 12px;min-width:0;overflow-x:auto;border-left:3px solid var(--accent)}
+.hmat span{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.hmat pre{margin:0;font:12.5px/1.4 var(--font-mono);white-space:pre}
+.eq{font-family:var(--font-mono);font-size:12.5px}
+.G{color:var(--gcol);font-weight:600}.M{color:var(--mcol);font-weight:600}
+/* ===== Responsive ===== */
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .stagebox canvas{height:260px}
+  .stagebox canvas.tplot{height:180px}
+  .tors{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
 </style>
-
-<div class="wrap">
-<header>
-  <h1>TEC<small>Rotor sur plaques circulaires et roue de vélo : choisir le point où l'on écrit le théorème de l'énergie cinétique</small></h1>
-  <button class="btn" id="themeBtn" type="button">Thème clair / sombre</button>
-</header>
-
-<div class="tabs" role="tablist">
-  <button class="tab" role="tab" id="tab3" aria-selected="true" aria-controls="p3" type="button">Cours</button>
-  <button class="tab" role="tab" id="tab0" aria-selected="false" aria-controls="p0" type="button">2 · Banc d'inertie</button>
-  <button class="tab" role="tab" id="tab1" aria-selected="false" aria-controls="p1" type="button">3 · Roue de vélo</button>
-  <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="p2" type="button">4 · Quiz</button>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+        <circle cx="13" cy="13" r="11" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <circle cx="9" cy="15" r="5" fill="var(--ok)" opacity="0.85"/>
+        <circle cx="9" cy="15" r="1.6" fill="var(--bg)"/>
+      </svg>
+      <span>TEC <small>Rotor et roue de vélo · CPGE</small></span>
+    </div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
 </div>
+<div id="dlg" hidden></div>
 
-<!-- ======== ROTOR ======== -->
-<section class="pane" id="p3" role="tabpanel" aria-labelledby="tab3">
- <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-  <div class="card"><h2>1 · Les torseurs utiles</h2>
-   <p>Un torseur est défini par sa résultante et son moment en un point. On change de point par la relation de Varignon : le moment en Q vaut le moment en P plus QP ∧ résultante.</p>
-   <ol class="steps">
-    <li><span class="t">Cinématique de S/R</span><span class="eq">{V<sub>S/R</sub>} = { Ω<sub>S/R</sub> ; V<sub>P,S/R</sub> }<sub>P</sub> &nbsp; avec &nbsp; V<sub>Q</sub> = V<sub>P</sub> + QP ∧ Ω</span></li>
-    <li><span class="t">Cinétique de S/R</span><span class="eq">{C<sub>S/R</sub>} = { m V<sub>G,S/R</sub> ; σ<sub>P,S/R</sub> }<sub>P</sub> &nbsp; avec &nbsp; σ<sub>P</sub> = σ<sub>G</sub> + PG ∧ m V<sub>G</sub></span><br><span class="note">σ<sub>G</sub> = I<sub>G</sub>(S) Ω : le moment cinétique en G s'obtient avec la matrice d'inertie en G.</span></li>
-    <li><span class="t">Actions mécaniques sur S</span><span class="eq">{T<sub>ext→S</sub>} = { R ; M<sub>P</sub> }<sub>P</sub></span></li>
-   </ol></div>
-
-  <div class="card"><h2>2 · Le comoment</h2>
-   <p>Le comoment de deux torseurs est un scalaire. Il se calcule avec les éléments de réduction écrits au <b>même point</b> P, et sa valeur ne dépend pas de ce point.</p>
-   <div class="verdict"><span class="eq">{A} ⊗ {B} = R<sub>A</sub> · M<sub>P,B</sub> + M<sub>P,A</sub> · R<sub>B</sub></span></div>
-   <ol class="steps" style="margin-top:10px">
-    <li><span class="t">Puissance d'une action mécanique</span><span class="eq">P(ext→S/R) = {T<sub>ext→S</sub>} ⊗ {V<sub>S/R</sub>} = R · V<sub>P,S/R</sub> + M<sub>P</sub> · Ω<sub>S/R</sub></span></li>
-    <li><span class="t">Énergie cinétique</span><span class="eq">E<sub>c</sub>(S/R) = ½ {C<sub>S/R</sub>} ⊗ {V<sub>S/R</sub>} = ½ [ m V<sub>P,S/R</sub> · V<sub>G,S/R</sub> + σ<sub>P,S/R</sub> · Ω<sub>S/R</sub> ]</span></li>
-    <li><span class="t">Liaison parfaite, ou contact sans glissement</span><span class="eq">P = {T}⊗{V} = 0 car la composante de V en jeu (vitesse de glissement) est nulle</span></li>
-   </ol></div>
-
-  <div class="card"><h2>3 · Le théorème de l'énergie cinétique</h2>
-   <p>Dans un référentiel galiléen, pour un ensemble matériel E :</p>
-   <div class="verdict"><span class="eq">dE<sub>c</sub>(E/R<sub>g</sub>)/dt = P(ext→E/R<sub>g</sub>) + P<sub>int</sub>(E)</span></div>
-   <p>Pour un solide unique, P<sub>int</sub> = 0. Les liaisons parfaites ne contribuent pas. On obtient une équation scalaire sans inconnue de liaison, ce qui convient à un système à un degré de liberté.</p>
-   <h2 style="margin-top:14px">Où écrire E<sub>c</sub> ?</h2>
-   <p>Le comoment donne le même nombre en tout point, mais l'expression est plus ou moins longue.</p>
-   <ol class="steps">
-    <li><span class="t">En G (formule de König)</span><span class="eq">E<sub>c</sub> = ½ m V<sub>G</sub>² + ½ Ω · I<sub>G</sub>Ω</span><br><span class="note">Deux termes. Pratique quand I<sub>G</sub> est donnée, comme pour le rotor.</span></li>
-    <li><span class="t">En un point P de vitesse nulle (point fixe ou centre instantané de rotation)</span><span class="eq">V<sub>P</sub> = 0 ⇒ E<sub>c</sub> = ½ Ω · I<sub>P</sub>Ω</span><br><span class="note">Un seul terme. Il suffit de déplacer la matrice d'inertie en P (Huygens). C'est le cas de M pour le rotor et de I pour la roue.</span></li>
-   </ol>
-   <p class="note">Attention : la forme à un terme n'est valable que si V<sub>P</sub> = 0 à l'instant considéré. Un point P quelconque en mouvement garde le terme m V<sub>P</sub>·V<sub>G</sub>.</p></div>
-
-  <div class="card"><h2>4 · Déplacer la matrice d'inertie : Huygens</h2>
-   <p>Si G est le centre de masse de S et si MG = (a, b, c) dans la base choisie :</p>
-   <div class="verdict" style="overflow-x:auto"><span class="eq">I<sub>M</sub>(S) = I<sub>G</sub>(S) + m ·
-     [ b²+c² &nbsp; −ab &nbsp; −ac ; −ab &nbsp; a²+c² &nbsp; −bc ; −ac &nbsp; −bc &nbsp; a²+b² ]</span></div>
-   <p>Sur la diagonale, on retrouve le théorème de Huygens scalaire : I<sub>Δ</sub> = I<sub>Δ<sub>G</sub></sub> + m d², avec d la distance entre les deux axes parallèles. Les termes hors diagonale apparaissent dès que MG n'est pas porté par un axe de la base.</p>
-   <ul class="note" style="padding-left:1.2em">
-    <li>Les deux matrices s'écrivent dans la <b>même base</b>.</li>
-    <li>Un des deux points est obligatoirement G. Pour passer de M à M', on passe par G : on retire m[…] en M, puis on ajoute m[…] en M'.</li>
-    <li>La matrice en M est toujours « plus grande » que celle en G : on ajoute des termes positifs sur la diagonale.</li>
-   </ul>
-   <h2 style="margin-top:14px">Calculateur</h2>
-   <p class="note">Matrice d'inertie en G diagonale (A, B, C), puis vecteur MG. Le préréglage reprend le rotor : MG = r y<sub>i</sub>.</p>
-   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-    <div>
-     <div class="ctrl"><label for="hm">Masse m</label><output id="ohm"></output><input type="range" id="hm" min="0.5" max="10" step="0.1" value="3"></div>
-     <div class="ctrl"><label for="hA">A (axe x)</label><output id="ohA"></output><input type="range" id="hA" min="0" max="0.05" step="0.0005" value="0.0075"></div>
-     <div class="ctrl"><label for="hB">B (axe y)</label><output id="ohB"></output><input type="range" id="hB" min="0" max="0.05" step="0.0005" value="0.0075"></div>
-     <div class="ctrl"><label for="hC">C (axe z)</label><output id="ohC"></output><input type="range" id="hC" min="0" max="0.05" step="0.0005" value="0.015"></div>
-    </div>
-    <div>
-     <div class="ctrl"><label for="hx">a = MG·x</label><output id="ohx"></output><input type="range" id="hx" min="-0.3" max="0.3" step="0.01" value="0"></div>
-     <div class="ctrl"><label for="hy">b = MG·y</label><output id="ohy"></output><input type="range" id="hy" min="-0.3" max="0.3" step="0.01" value="0.1"></div>
-     <div class="ctrl"><label for="hz">c = MG·z</label><output id="ohz"></output><input type="range" id="hz" min="-0.3" max="0.3" step="0.01" value="0"></div>
-     <div class="row"><button class="btn" id="hRotor" type="button">Préréglage rotor</button><button class="btn" id="hDiag" type="button">MG oblique</button></div>
-    </div>
-   </div>
-   <div class="read" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
-    <div><span>I<sub>G</sub>(S), en kg·m²</span><b id="hMG" style="white-space:pre"></b></div>
-    <div><span>I<sub>M</sub>(S) = I<sub>G</sub> + m[…]</span><b id="hMM" style="white-space:pre"></b></div>
-   </div>
-   <p class="note" id="hTxt"></p></div>
-
-  <div class="card"><h2>5 · Méthode en quatre lignes</h2>
-   <ol class="steps">
-    <li><span class="t">Cinématique</span>Exprimer Ω et V<sub>G</sub> avec un seul paramètre (ici θ̇), grâce au roulement sans glissement.</li>
-    <li><span class="t">Choix du point</span>Chercher un point de vitesse nulle. S'il existe, y déplacer la matrice d'inertie.</li>
-    <li><span class="t">Énergie cinétique et puissances</span>Calculer E<sub>c</sub> et ne garder que les puissances qui ne sont pas nulles (poids, moteur, frottement visqueux…).</li>
-    <li><span class="t">TEC</span>Dériver E<sub>c</sub>, égaler à P<sub>ext</sub>, simplifier par θ̇ puis linéariser si besoin.</li>
-   </ol>
-   <p class="note">Les deux onglets suivants appliquent cette méthode au banc d'inertie et à la roue de vélo.</p>
-   <div class="row"><button class="btn primary" id="goR" type="button">Voir le banc d'inertie</button><button class="btn" id="goB" type="button">Voir la roue de vélo</button></div></div>
- </div>
-</section>
-
-<section class="pane" id="p0" role="tabpanel" aria-labelledby="tab0" hidden>
- <div class="grid">
-  <div class="card">
-    <canvas id="cvR" aria-label="Rotor roulant sans glisser dans une plaque circulaire"></canvas>
-    <div class="chips" id="chR" role="group" aria-label="Grandeurs affichées"></div>
-    <canvas id="cvPt" class="tplot" aria-label="Alpha, Omega et V_G en fonction du temps sur une période"></canvas>
-    <div class="tors"><div class="tbox gbox" id="torG"></div><div class="tbox mbox" id="torM"></div></div>
-    <div class="row">
-      <button class="btn primary" id="playR" type="button">Pause</button>
-      <button class="btn" id="resetR" type="button">Relâcher à θ₀</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Réglages</h2>
-    <div class="ctrl"><label for="Rr">Rayon des plaques R</label><output id="oRr"></output><input type="range" id="Rr" min="0.10" max="0.60" step="0.01" value="0.30"></div>
-    <div class="ctrl"><label for="rr">Rayon du rotor r</label><output id="orr"></output><input type="range" id="rr" min="0.02" max="0.25" step="0.005" value="0.10"></div>
-    <div class="ctrl"><label for="mR">Masse m₂</label><output id="omR"></output><input type="range" id="mR" min="0.5" max="10" step="0.1" value="3"></div>
-    <div class="ctrl"><label for="kR">Inertie C₂ = k·m₂r²</label><output id="okR"></output><input type="range" id="kR" min="0.2" max="1.5" step="0.05" value="0.5"></div>
-    <div class="ctrl"><label for="vR">Vitesse de lecture</label><output id="ovR"></output><input type="range" id="vR" min="0.1" max="1" step="0.05" value="0.4"></div>
-    <div class="ctrl"><label for="thR">Angle initial θ₀</label><output id="othR"></output><input type="range" id="thR" min="2" max="80" step="1" value="12"></div>
-    <label class="chk"><input type="checkbox" id="vecR" checked> Montrer Ω et V<sub>G</sub></label>
-    <label class="chk"><input type="checkbox" id="alR" checked> Montrer l'angle α (entre x<sub>i</sub> et x₂)</label>
-    <label class="chk"><input type="checkbox" id="cirR" checked> Montrer le point M (vitesse nulle)</label>
-    <div class="read">
-      <div><span>J<sub>eq</sub></span><b id="rJ"></b></div>
-      <div><span>T petites osc.</span><b id="rT0"></b></div>
-      <div><span>T mesurée</span><b id="rTm"></b></div>
-      <div><span>dE<sub>c</sub>/dt</span><b id="rdE"></b></div>
-      <div><span>P<sub>ext</sub></span><b id="rP"></b></div>
-      <div><span>θ</span><b id="rTh"></b></div>
-      <div><span>α = −(R/r)·θ</span><b id="rAl"></b></div>
-    </div>
-    <p class="note">k = 0,5 pour un disque plein, k = 1 pour un anneau. Avec θ₀ grand, la période mesurée s'écarte de T : la linéarisation n'est plus valable.</p>
-  </div>
- </div>
- <div class="card" style="margin-top:14px">
-   <h2>Écrire le TEC : où se placer ?</h2>
-   <div class="seg" role="group" aria-label="Point de réduction">
-     <button type="button" id="mG" aria-pressed="true">En G</button>
-     <button type="button" id="mM" aria-pressed="false">En M (CIR)</button>
-   </div>
-   <ol class="steps" id="stepsR"></ol>
-   <div class="verdict" id="verdR"></div>
- </div>
-</section>
-
-<!-- ======== VELO ======== -->
-<section class="pane" id="p1" role="tabpanel" aria-labelledby="tab1" hidden>
- <div class="grid">
-  <div class="card">
-    <canvas id="cvB" aria-label="Roue de vélo descendant une pente en roulant sans glisser"></canvas>
-    <div class="chips" id="chB" role="group" aria-label="Grandeurs affichées"></div>
-    <canvas id="cvTB" class="tplot" aria-label="Angle, vitesse angulaire et vitesse de G en fonction du temps"></canvas>
-    <div class="tors"><div class="tbox gbox" id="torBG"></div><div class="tbox mbox" id="torBI"></div></div>
-    <p class="note" id="bAxes" style="margin:6px 0 0"></p>
-    <div class="row">
-      <button class="btn primary" id="playB" type="button">Pause</button>
-      <button class="btn" id="resetB" type="button">Relancer</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Réglages</h2>
-    <div class="ctrl"><label for="bb">Pente β</label><output id="obb"></output><input type="range" id="bb" min="2" max="40" step="1" value="15"></div>
-    <div class="ctrl"><label for="rb">Rayon de la roue r</label><output id="orb"></output><input type="range" id="rb" min="0.20" max="0.40" step="0.01" value="0.34"></div>
-    <div class="ctrl"><label for="mj">Masse jante + pneu</label><output id="omj"></output><input type="range" id="mj" min="0.3" max="2.5" step="0.05" value="0.9"></div>
-    <div class="ctrl"><label for="ms">Masse des rayons</label><output id="oms"></output><input type="range" id="ms" min="0" max="1" step="0.05" value="0.3"></div>
-    <div class="ctrl"><label for="mh">Masse du moyeu (r<sub>h</sub> = 3 cm)</label><output id="omh"></output><input type="range" id="mh" min="0.1" max="1" step="0.05" value="0.3"></div>
-    <div class="ctrl"><label for="vb">Vitesse de lecture</label><output id="ovb"></output><input type="range" id="vb" min="0.25" max="2" step="0.25" value="1"></div>
-    <label class="chk"><input type="checkbox" id="ghB" checked> Comparer à un bloc qui glisse sans frottement</label>
-    <label class="chk"><input type="checkbox" id="fcB" checked> Montrer la force de frottement en I</label>
-    <div class="read">
-      <div><span>C (axe z)</span><b id="bC"></b></div>
-      <div><span>k = C/(m r²)</span><b id="bk"></b></div>
-      <div><span>Accélération a</span><b id="ba"></b></div>
-      <div><span>Frottement f</span><b id="bf"></b></div>
-      <div><span>μ minimal</span><b id="bmu"></b></div>
-      <div><span>Vitesse v</span><b id="bv"></b></div>
-    </div>
-    <p class="note">La roue est lancée sans vitesse initiale sur 3 m de pente. Un vélo réel a une jante lourde : k proche de 1.</p>
-  </div>
- </div>
- <div class="card" style="margin-top:14px">
-   <h2>Écrire le TEC : où se placer ?</h2>
-   <div class="seg" role="group" aria-label="Point de réduction">
-     <button type="button" id="bG" aria-pressed="true">En G</button>
-     <button type="button" id="bM" aria-pressed="false">En I (contact)</button>
-   </div>
-   <ol class="steps" id="stepsB"></ol>
-   <div class="verdict" id="verdB"></div>
- </div>
-</section>
-
-<!-- ======== QUIZ ======== -->
-<section class="pane" id="p2" role="tabpanel" aria-labelledby="tab2" hidden>
-  <div id="quiz"></div>
-  <div class="row"><button class="btn primary" id="qCheck" type="button">Corriger</button><button class="btn" id="qReset" type="button">Recommencer</button></div>
-  <p class="score" id="qScore" aria-live="polite"></p>
-</section>
-</div>
-<script>window.MathJax={options:{enableMenu:false,enableAssistiveMml:false},svg:{fontCache:"none"},startup:{typeset:false}};</script>
+<script>
+window.MathJax={options:{enableMenu:false,enableAssistiveMml:false},svg:{fontCache:"none"},startup:{typeset:false}};
+</script>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
 <script>
 (function(){
-"use strict";
-const $=id=>document.getElementById(id);
-const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const f=(x,d=3)=>{if(!isFinite(x))return "–";const a=Math.abs(x);if(a!==0&&(a<1e-3||a>=1e4))return x.toExponential(2);return x.toFixed(d).replace(".",",")};
-const fmt=(x,d)=>f(x,d);
+'use strict';
 
-/* ---------- thème ---------- */
-$("themeBtn").onclick=()=>{
-  const el=document.documentElement;
-  const dark=el.dataset.theme?el.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
-  el.dataset.theme=dark?"light":"dark";
-};
-
-/* ---------- onglets ---------- */
-const tabs=[0,1,2,3];
-function showTab(i){
-  tabs.forEach(j=>{$("tab"+j).setAttribute("aria-selected",j===i);$("p"+j).hidden=j!==i});
-  if(i===0)drawR();
-  if(i===1&&window.__tec&&window.__tec.drawB)window.__tec.drawB();
-  try{history.replaceState(null,"","#"+["rotor","velo","quiz","cours"][i])}catch(e){}
+/* ================= Helpers ================= */
+const $ = id => document.getElementById(id);
+const g = 9.81;
+const f = (x,d=3)=>{if(!isFinite(x))return "–";const a=Math.abs(x);if(a!==0&&(a<1e-3||a>=1e4))return x.toExponential(2);return x.toFixed(d).replace(".",",")};
+const fmt = (x,d)=>f(x,d);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function h(tag, attrs, ...kids){
+  const el=document.createElement(tag);
+  if(attrs) for(const [k,v] of Object.entries(attrs)){
+    if(v===false||v==null) continue;
+    if(k==='class') el.className=v;
+    else if(k==='html') el.innerHTML=v;
+    else if(k.startsWith('on')) el.addEventListener(k.slice(2),v);
+    else if(v===true) el.setAttribute(k,'');
+    else el.setAttribute(k,v);
+  }
+  for(const k of kids.flat()) if(k!=null&&k!==false) el.append(k.nodeType?k:document.createTextNode(k));
+  return el;
 }
-tabs.forEach(i=>$("tab"+i).onclick=()=>showTab(i));
+function stats(list){ return h('div',{class:'gstats'}, list.map(k=>h('div',{class:'stat'},h('span',null,k[0]),h('b',null,k[1])))); }
+function chipsRow(items,cur,cb,label){
+  return h('div',{class:'chips',role:'group','aria-label':label||''}, items.map(it=>h('button',{type:'button',class:'chip'+(cur===it[0]?' on':''),'aria-pressed':cur===it[0]?'true':'false',onclick:()=>cb(it[0])},it[1])));
+}
+function setMsg(sel,text,kind){ const m=$(sel); if(!m) return; m.textContent=text; m.className='verdict'+(kind?' '+kind:''); }
 
-/* ---------- canvas utilitaires ---------- */
+/* ================= État UI ================= */
+const UI = { cur: 'rotor' };
+const AS = { key: 'rotor', tab: 'steps', open: false, st: {}, arm: null };
+const CS = { open: false, id: 'torseurs' };
+
+/* ================= Canvas utilitaires ================= */
 function setup(cv){
-  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
-  const w=Math.max(100,r.width),h=r.height;
-  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
-  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);
-  c.clearRect(0,0,w,h);return {c,w,h};
+  if(!cv) return null;
+  const dpr=window.devicePixelRatio||1, r=cv.getBoundingClientRect();
+  const w=Math.max(100,r.width), hh=r.height;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(hh*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(hh*dpr)}
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,hh);
+  return {c,w,h:hh};
 }
 function arrow(c,x0,y0,x1,y1,col,lab,lw){
-  lw=lw||2.2;const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy);if(L<3)return;
+  lw=lw||2.2; const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy); if(L<3)return;
   const ux=dx/L,uy=dy/L,hl=Math.min(L*0.6,lw*4.2),hw=lw*2.1;
   c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap="round";
   c.beginPath();c.moveTo(x0,y0);c.lineTo(x1-ux*hl*0.8,y1-uy*hl*0.8);c.stroke();
   c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-hl*ux+hw*uy,y1-hl*uy-hw*ux);c.lineTo(x1-hl*ux-hw*uy,y1-hl*uy+hw*ux);c.closePath();c.fill();
-  if(lab){c.font="600 13px "+css("--font");c.fillText(lab,x1+6,y1-6)}
+  if(lab){c.font="600 13px "+css("--font-ui");c.fillText(lab,x1+6,y1-6)}
 }
 function sub(c,x,y,main,s,col,size){
-  size=size||16;c.fillStyle=col;c.font="700 "+size+"px "+css("--font");c.fillText(main,x,y);
-  const w=c.measureText(main).width;c.font="700 "+Math.round(size*0.68)+"px "+css("--font");c.fillText(s,x+w+1,y+size*0.3);
+  size=size||16; c.fillStyle=col; c.font="700 "+size+"px "+css("--font-ui"); c.fillText(main,x,y);
+  const w=c.measureText(main).width; c.font="700 "+Math.round(size*0.68)+"px "+css("--font-ui"); c.fillText(s,x+w+1,y+size*0.3);
   return x+w+1+c.measureText(s).width;
 }
 function arcArrow(c,cx,cy,rad,a0,da,col){
@@ -327,43 +238,78 @@ function arcArrow(c,cx,cy,rad,a0,da,col){
   c.beginPath();c.moveTo(ex+11*tx,ey+11*ty);c.lineTo(ex+6*nx,ey+6*ny);c.lineTo(ex-6*nx,ey-6*ny);c.closePath();c.fill();
   return [cx+(rad+15)*Math.cos(a1),cy-(rad+15)*Math.sin(a1)];
 }
-function scaleBar(c,w,h,sc){
-  const steps=[.005,.01,.02,.05,.1,.2,.5,1,2,5];let L=steps[0];
-  for(const s of steps)if(s*sc<=w*0.22)L=s;
-  const px=L*sc,x=16,y=h-14;
-  c.strokeStyle=css("--ink");c.fillStyle=css("--ink");c.lineWidth=2;c.lineCap="butt";
-  c.beginPath();c.moveTo(x,y);c.lineTo(x+px,y);c.moveTo(x,y-5);c.lineTo(x,y+5);c.moveTo(x+px,y-5);c.lineTo(x+px,y+5);c.stroke();
-  c.font="600 12px "+css("--font");c.textAlign="center";
-  c.fillText(L>=1?L+" m":String(Math.round(L*1000)/10).replace(".",",")+" cm",x+px/2,y-8);c.textAlign="left";
+function scaleBar(c,w,hh,sc){
+  const steps=[.005,.01,.02,.05,.1,.2,.5,1,2,5]; let L=steps[0];
+  for(const s of steps) if(s*sc<=w*0.22) L=s;
+  const px=L*sc,x=16,y=hh-14;
+  c.strokeStyle=css("--fg"); c.fillStyle=css("--fg"); c.lineWidth=2; c.lineCap="butt";
+  c.beginPath(); c.moveTo(x,y); c.lineTo(x+px,y); c.moveTo(x,y-5); c.lineTo(x,y+5); c.moveTo(x+px,y-5); c.lineTo(x+px,y+5); c.stroke();
+  c.font="600 12px "+css("--font-ui"); c.textAlign="center";
+  c.fillText(L>=1?L+" m":String(Math.round(L*1000)/10).replace(".",",")+" cm",x+px/2,y-8); c.textAlign="left";
 }
 function dot(c,x,y,col,lab,dx=8,dy=-8){
-  c.fillStyle=col;c.beginPath();c.arc(x,y,4.5,0,7);c.fill();
-  if(lab){c.font="600 14px "+css("--font");c.fillText(lab,x+dx,y+dy)}
-}
-function mkBars(id,names){
-  $(id).innerHTML=names.map((n,i)=>`<div class="bar"><span>${n[0]}</span><div class="trk"><i id="${id}${i}" style="background:${n[1]}"></i></div><code id="${id}v${i}"></code></div>`).join("");
-}
-function setBar(id,i,val,max,unit){
-  $(id+i).style.width=Math.max(0,Math.min(100,100*val/max))+"%";
-  $(id+"v"+i).textContent=fmt(val,3)+" "+unit;
+  c.fillStyle=col; c.beginPath(); c.arc(x,y,4.5,0,7); c.fill();
+  if(lab){ c.font="600 14px "+css("--font-ui"); c.fillText(lab,x+dx,y+dy); }
 }
 function bindRange(id,fn,unit,d){
-  const e=$(id),o=$("o"+id);
+  const e=$(id),o=$("o"+id); if(!e) return;
   const up=()=>{o.textContent=fmt(+e.value,d)+(unit?" "+unit:"")};
-  e.addEventListener("input",()=>{up();fn()});up();
+  e.addEventListener("input",()=>{up();fn()}); up();
+}
+function mkChips(id,list){
+  $(id).innerHTML=list.map(x=>`<label class="chip"><input type="checkbox" id="${id}_${x.key}" checked><i style="background:var(${x.col})"></i><span>${x.html}</span><b id="${id}v_${x.key}"></b></label>`).join("");
+}
+function plotTime(cv,Tt,ser,tcur,xlabel){
+  if(!cv) return;
+  const {c,w,h:hh}=setup(cv), pl=50,pr=12,pt0=30,pb=28;
+  const on=ser.filter(s=>s.on), norm=on.length!==1;
+  if(!on.length){c.fillStyle=css("--muted");c.font="14px "+css("--font-ui");c.textAlign="center";c.fillText("Coche au moins une grandeur",w/2,hh/2);c.textAlign="left";return}
+  let lo=0,hi=0;
+  on.forEach(s=>{const k=norm?1/s.max:1;s.v.forEach(y=>{const z=y*k;if(z<lo)lo=z;if(z>hi)hi=z})});
+  const lo0=lo,hi0=hi,pad=0.12*(hi-lo||1); lo-=pad; hi+=pad;
+  const X=t=>pl+t/Tt*(w-pl-pr), Y=y=>pt0+(hi-y)/(hi-lo)*(hh-pt0-pb);
+  c.lineWidth=1;c.strokeStyle=css("--line");c.strokeRect(pl,pt0,w-pl-pr,hh-pt0-pb);
+  c.strokeStyle=css("--muted");c.beginPath();c.moveTo(pl,Y(0));c.lineTo(w-pr,Y(0));c.stroke();
+  c.fillStyle=css("--muted");c.font="11px "+css("--font-mono");
+  c.textAlign="center";[0,0.5,1].forEach(u=>{c.beginPath();c.moveTo(X(u*Tt),hh-pb);c.lineTo(X(u*Tt),hh-pb+4);c.stroke();c.fillText(fmt(u*Tt,2),X(u*Tt),hh-pb+16)});
+  c.fillText(xlabel||"t (s)",X(0.75*Tt),hh-pb+16);
+  const lab=v=>v===0?"0":norm?String(Math.round(v*100)/100).replace("-","−").replace(".",","):fmt(v,Math.abs(v)<10?2:0);
+  [lo0,0,hi0].filter((v,i,a)=>a.indexOf(v)===i).forEach(v=>c.fillText(lab(v),pl-5,Y(v)+4));
+  c.textAlign="left";
+  if(norm){c.fillStyle=css("--muted");c.font="12px "+css("--font-ui");c.fillText("Grandeurs divisées par leur max (valeur réelle dans les pastilles)",8,17)}
+  else{const s=on[0],e=sub(c,8,19,s.name,s.sub||"",css("--fg"),15);c.fillStyle=css("--muted");c.font="12px "+css("--font-ui");c.fillText("("+s.unit+")",e+5,19)}
+  on.forEach(s=>{const k=norm?1/s.max:1,n=s.v.length-1;
+    c.strokeStyle=css(s.col);c.lineWidth=2.6;c.lineJoin="round";c.beginPath();
+    s.v.forEach((y,i)=>{const x=X(i/n*Tt);i?c.lineTo(x,Y(y*k)):c.moveTo(x,Y(y*k))});c.stroke()});
+  c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1;c.beginPath();c.moveTo(X(tcur),pt0);c.lineTo(X(tcur),hh-pb);c.stroke();c.setLineDash([]);
+  on.forEach(s=>{const k=norm?1/s.max:1;
+    c.fillStyle=css(s.col);c.strokeStyle=css("--panel");c.lineWidth=2;c.beginPath();c.arc(X(tcur),Y(s.cur*k),6.5,0,7);c.fill();c.stroke()});
 }
 
-/* =================== ROTOR =================== */
-const g=9.81;
-const S={th:0,w:0,t:0,run:true,cross:[],prev:0,method:"G",tr:[]};
+/* ================= MathJax ================= */
+function typeset(items){
+  const MJ=window.MathJax;
+  const live=items.filter(i=>i.el&&document.body.contains(i.el));
+  if(MJ&&MJ.typesetPromise&&MJ.startup&&MJ.startup.promise){
+    live.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div>\\['+i.tex+'\\]'});
+    const els=live.map(i=>i.el); try{MJ.typesetClear(els)}catch(e){}
+    MJ.startup.promise.then(()=>MJ.typesetPromise(els)).catch(()=>{}); return true;
+  }
+  live.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div><div class="eq">'+i.fb+'</div>'});
+  return false;
+}
+const tx=(x,d)=>fmt(x,d).replace(",","{,}");
+
+/* ================= ROTOR ================= */
+const S={th:0,w:0,t:0,run:true,cross:[],prev:0,method:"G"};
 function P(){return{R:+$("Rr").value,r:+$("rr").value,m:+$("mR").value,k:+$("kR").value,th0:+$("thR").value*Math.PI/180}}
 function rotorQ(){
   const p=P(),C=p.k*p.m*p.r*p.r,d=p.R-p.r;
   const Jg=p.m*d*d+C*Math.pow(1-p.R/p.r,2);
   const IM=C+p.m*p.r*p.r,Jm=IM*Math.pow(d/p.r,2);
-  return {p,C,d,Jg,IM,Jm,T0:2*Math.PI*Math.sqrt(Jm/(p.m*g*d)),A:C/2};
+  return {p,C,d,Jg,IM,Jm,T0:2*Math.PI*Math.sqrt(Jm/(p.m*g*d))};
 }
-function resetR(){const q=rotorQ();S.th=q.p.th0;S.w=0;S.t=0;S.cross=[];S.prev=S.th;S.tr=[];$("rTm").textContent="–"}
+function resetR(){ if(!$("Rr"))return; const q=rotorQ(); S.th=q.p.th0;S.w=0;S.t=0;S.cross=[];S.prev=S.th; const e=$("rTm");if(e)e.textContent="–"; }
 function accR(th,q){return -q.p.m*g*q.d*Math.sin(th)/q.Jm}
 function stepR(dt,q){
   const a=S.th,b=S.w;
@@ -371,43 +317,16 @@ function stepR(dt,q){
   S.th=a+dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);
   S.w=b+dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
   S.t+=dt;
-  if(S.prev<0&&S.th>=0){S.cross.push(S.t);if(S.cross.length>=2){const n=S.cross.length;$("rTm").textContent=fmt(S.cross[n-1]-S.cross[n-2],3)+" s"}}
+  if(S.prev<0&&S.th>=0){S.cross.push(S.t);if(S.cross.length>=2){const n=S.cross.length;const e=$("rTm");if(e)e.textContent=fmt(S.cross[n-1]-S.cross[n-2],3)+" s"}}
   S.prev=S.th;
 }
 function Kell(k){let a=1,b=Math.sqrt(1-k*k);for(let i=0;i<30;i++){const t=(a+b)/2;b=Math.sqrt(a*b);a=t}return Math.PI/(2*a)}
-function mkChips(id,list){
-  $(id).innerHTML=list.map(x=>`<label class="chip"><input type="checkbox" id="${id}_${x.key}" checked><i style="background:var(${x.col})"></i><span>${x.html}</span><b id="${id}v_${x.key}"></b></label>`).join("");
-}
-function plotTime(cv,Tt,ser,tcur,xlabel){
-  const {c,w,h}=setup(cv),pl=50,pr=12,pt0=30,pb=28;
-  const on=ser.filter(s=>s.on),norm=on.length!==1;
-  if(!on.length){c.fillStyle=css("--muted");c.font="14px "+css("--font");c.textAlign="center";c.fillText("Coche au moins une grandeur",w/2,h/2);c.textAlign="left";return}
-  let lo=0,hi=0;
-  on.forEach(s=>{const k=norm?1/s.max:1;s.v.forEach(y=>{const z=y*k;if(z<lo)lo=z;if(z>hi)hi=z})});
-  const lo0=lo,hi0=hi,pad=0.12*(hi-lo||1);lo-=pad;hi+=pad;
-  const X=t=>pl+t/Tt*(w-pl-pr),Y=y=>pt0+(hi-y)/(hi-lo)*(h-pt0-pb);
-  c.lineWidth=1;c.strokeStyle=css("--line");c.strokeRect(pl,pt0,w-pl-pr,h-pt0-pb);
-  c.strokeStyle=css("--muted");c.beginPath();c.moveTo(pl,Y(0));c.lineTo(w-pr,Y(0));c.stroke();
-  c.fillStyle=css("--muted");c.font="11px "+css("--mono");
-  c.textAlign="center";[0,0.5,1].forEach(u=>{c.beginPath();c.moveTo(X(u*Tt),h-pb);c.lineTo(X(u*Tt),h-pb+4);c.stroke();c.fillText(fmt(u*Tt,2),X(u*Tt),h-pb+16)});
-  c.textAlign="center";c.fillText(xlabel||"t (s)",X(0.75*Tt),h-pb+16);
-  const lab=v=>v===0?"0":norm?String(Math.round(v*100)/100).replace("-","−").replace(".",","):fmt(v,Math.abs(v)<10?2:0);
-  [lo0,0,hi0].filter((v,i,a)=>a.indexOf(v)===i).forEach(v=>c.fillText(lab(v),pl-5,Y(v)+4));
-  c.textAlign="left";
-  if(norm){c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("Grandeurs divisées par leur valeur maximale (la valeur réelle est dans les pastilles)",8,17)}
-  else{const s=on[0],e=sub(c,8,19,s.name,s.sub||"",css("--ink"),15);c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("("+s.unit+")",e+5,19)}
-  on.forEach(s=>{const k=norm?1/s.max:1,n=s.v.length-1;
-    c.strokeStyle=css(s.col);c.lineWidth=2.6;c.lineJoin="round";c.beginPath();
-    s.v.forEach((y,i)=>{const x=X(i/n*Tt);i?c.lineTo(x,Y(y*k)):c.moveTo(x,Y(y*k))});c.stroke()});
-  c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1;c.beginPath();c.moveTo(X(tcur),pt0);c.lineTo(X(tcur),h-pb);c.stroke();c.setLineDash([]);
-  on.forEach(s=>{const k=norm?1/s.max:1;
-    c.fillStyle=css(s.col);c.strokeStyle=css("--panel");c.lineWidth=2;c.beginPath();c.arc(X(tcur),Y(s.cur*k),6.5,0,7);c.fill();c.stroke()});
-}
 const SR={T:1,ser:[]};
 function buildR(){
+  if(!$("Rr")) return;
   const q=rotorQ(),p=q.p,ck=1-p.R/p.r,N=240;
   SR.T=q.T0*(2/Math.PI)*Kell(Math.sin(p.th0/2));
-  let th=p.th0,w=0;const dt=SR.T/N,A=[],O=[],V=[];
+  let th=p.th0,w=0; const dt=SR.T/N,A=[],O=[],V=[];
   const acc=x=>-p.m*g*q.d*Math.sin(x)/q.Jm;
   for(let i=0;i<=N;i++){
     A.push(-(p.R/p.r)*th*180/Math.PI);O.push(ck*w);V.push(q.d*w);
@@ -420,16 +339,17 @@ function buildR(){
           {key:"v",v:V,max:mx(V),col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
 }
 function drawPlotR(q,th){
+  if(!$("chR_a")) return;
   const p=q.p,ck=1-p.R/p.r;
   const cur={a:-(p.R/p.r)*th*180/Math.PI,o:ck*S.w,v:q.d*S.w},u={a:" °",o:" rad/s",v:" m/s"};
-  SR.ser.forEach(s=>{s.on=$("chR_"+s.key).checked;s.cur=cur[s.key];$("chRv_"+s.key).textContent=fmt(cur[s.key],s.key==="a"?1:3)+u[s.key]});
+  SR.ser.forEach(s=>{s.on=$("chR_"+s.key).checked;s.cur=cur[s.key];const e=$("chRv_"+s.key);if(e)e.textContent=fmt(cur[s.key],s.key==="a"?1:3)+u[s.key]});
   plotTime($("cvPt"),SR.T,SR.ser,S.t%SR.T);
 }
 function drawR(){
-  if($("p0").hidden)return;
-  const q=rotorQ(),p=q.p,{c,w,h}=setup($("cvR"));
-  const sc=Math.min(w*0.9/(2*p.R),h*0.86/(1.15*p.R));
-  const ox=w/2,oy=h*0.07;
+  if(!$("cvR")) return;
+  const q=rotorQ(),p=q.p,{c,w,h:hh}=setup($("cvR"));
+  const sc=Math.min(w*0.9/(2*p.R),hh*0.86/(1.15*p.R));
+  const ox=w/2,oy=hh*0.07;
   const X=x=>ox+x*sc,Y=y=>oy-y*sc;
   const th=S.th,phi=(1-p.R/p.r)*th,al=phi-th;
   c.strokeStyle=css("--muted");c.lineWidth=5;c.beginPath();c.arc(X(0),Y(0),p.R*sc,0.05,Math.PI-0.05);c.stroke();
@@ -439,13 +359,13 @@ function drawR(){
   c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(mx),Y(my));c.stroke();c.setLineDash([]);
   c.strokeStyle=css("--accent");c.lineWidth=2;
   c.beginPath();c.arc(X(0),Y(0),0.3*p.R*sc,Math.PI/2,Math.PI/2-th,th>0);c.stroke();
-  c.fillStyle=css("--accent");c.font="700 15px "+css("--font");c.fillText("θ",X(0)+(th>=0?8:-20),Y(-0.36*p.R));
+  c.fillStyle=css("--accent");c.font="700 15px "+css("--font-ui");c.fillText("θ",X(0)+(th>=0?8:-20),Y(-0.36*p.R));
   c.fillStyle=css("--accent")+"22";c.strokeStyle=css("--accent");c.lineWidth=2.5;
   c.beginPath();c.arc(X(gx),Y(gy),p.r*sc,0,7);c.fill();c.stroke();
   for(let i=0;i<3;i++){const a=phi+i*2*Math.PI/3;c.lineWidth=i?1.5:3;
     c.beginPath();c.moveTo(X(gx),Y(gy));c.lineTo(X(gx+p.r*Math.cos(a)),Y(gy+p.r*Math.sin(a)));c.stroke()}
   const gX=X(gx),gY=Y(gy),rg=p.r*sc;
-  if($("alR").checked){
+  if($("alR")&&$("alR").checked){
     const col=css("--acol");
     c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1.3;
     c.beginPath();c.moveTo(gX-1.45*rg*Math.cos(th),gY+1.45*rg*Math.sin(th));c.lineTo(gX+1.45*rg*Math.cos(th),gY-1.45*rg*Math.sin(th));c.stroke();c.setLineDash([]);
@@ -454,14 +374,14 @@ function drawR(){
     sub(c,gX+1.45*rg*Math.cos(phi)+4,gY-1.45*rg*Math.sin(phi)-4,"x","2",css("--accent"),14);
     c.strokeStyle=col;c.lineWidth=2.6;c.beginPath();c.arc(gX,gY,0.8*rg,-th,-phi,al>0);c.stroke();
     const mid=th+al/2;
-    if(Math.abs(al)>0.02){c.fillStyle=col;c.font="700 19px "+css("--font");c.fillText("α",gX+1.12*rg*Math.cos(mid)-6,gY-1.12*rg*Math.sin(mid)+6)}
+    if(Math.abs(al)>0.02){c.fillStyle=col;c.font="700 19px "+css("--font-ui");c.fillText("α",gX+1.12*rg*Math.cos(mid)-6,gY-1.12*rg*Math.sin(mid)+6)}
   }
   dot(c,gX,gY,css("--gcol"),"G",-18,20);
-  dot(c,X(0),Y(0),css("--ink"),"C",8,-8);
-  if($("cirR").checked){dot(c,X(mx),Y(my),css("--mcol"),null);
-    c.fillStyle=css("--mcol");c.font="700 14px "+css("--font");c.textAlign="center";
+  dot(c,X(0),Y(0),css("--fg"),"C",8,-8);
+  if($("cirR")&&$("cirR").checked){dot(c,X(mx),Y(my),css("--mcol"),null);
+    c.fillStyle=css("--mcol");c.font="700 14px "+css("--font-ui");c.textAlign="center";
     c.fillText("M = CIR",X(mx)+30*Math.sin(th),Y(my)+30*Math.cos(th)+4);c.textAlign="left"}
-  if($("vecR").checked){
+  if($("vecR")&&$("vecR").checked){
     const wm=Math.sqrt(2*p.m*g*q.d*(1-Math.cos(p.th0))/q.Jm)||1e-9;
     const vmax=q.d*wm,Lmax=Math.min(2.4*rg,0.55*p.R*sc),L=q.d*S.w/vmax*Lmax;
     const ex=gX+Math.cos(th)*L,ey=gY-Math.sin(th)*L;
@@ -470,47 +390,41 @@ function drawR(){
     const ck=1-p.R/p.r,Om=ck*S.w,Omax=Math.abs(ck)*wm,da=Math.max(-1,Math.min(1,Om/Omax))*4.3;
     if(Math.abs(da)>0.15){
       const e=arcArrow(c,gX,gY,0.5*rg,1.2*Math.PI,da,css("--wcol"));
-      c.fillStyle=css("--wcol");c.font="700 21px "+css("--font");c.fillText("Ω",e[0]-8,e[1]+7);
+      c.fillStyle=css("--wcol");c.font="700 21px "+css("--font-ui");c.fillText("Ω",e[0]-8,e[1]+7);
     }
   }
-  scaleBar(c,w,h,sc);
+  scaleBar(c,w,hh,sc);
   const P_ext=-p.m*g*q.d*S.w*Math.sin(th),dEc=q.Jm*S.w*accR(th,q);
-  $("rTh").textContent=fmt(th*180/Math.PI,1)+" °";$("rAl").textContent=fmt(-(p.R/p.r)*th*180/Math.PI,1)+" °";
-  $("rJ").textContent=fmt(q.Jm,4)+" kg·m²";$("rT0").textContent=fmt(q.T0,3)+" s";
-  $("rdE").textContent=fmt(dEc,3)+" W";$("rP").textContent=fmt(P_ext,3)+" W";
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  set("rTh",fmt(th*180/Math.PI,1)+" °");set("rAl",fmt(-(p.R/p.r)*th*180/Math.PI,1)+" °");
+  set("rJ",fmt(q.Jm,4)+" kg·m²");set("rT0",fmt(q.T0,3)+" s");
+  set("rdE",fmt(dEc,3)+" W");set("rP",fmt(P_ext,3)+" W");
   drawPlotR(q,th);
 }
-const tx=(x,d)=>fmt(x,d).replace(",","{,}");
-function typeset(items){
-  const MJ=window.MathJax;
-  if(MJ&&MJ.typesetPromise&&MJ.startup&&MJ.startup.promise){
-    items.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div>\\['+i.tex+'\\]'});
-    const els=items.map(i=>i.el);try{MJ.typesetClear(els)}catch(e){}
-    MJ.startup.promise.then(()=>MJ.typesetPromise(els)).catch(()=>{});return true}
-  items.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div><div class="eq">'+i.fb+'</div>'});return false;
-}
-let tries=0;
+let triesR=0;
 function renderTors(){
+  if(!$("torG")) return;
   const q=rotorQ(),p=q.p,ck=1-p.R/p.r;
   const tg=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{G,2/1}=(R-r)\,\dot\theta\,\vec x_i=${tx(q.d,2)}\,\dot\theta\,\vec x_i\end{array}\right\}_{G}`;
   const tm=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{M,2/1}=\vec 0\end{array}\right\}_{M}`;
   const ok=typeset([
     {el:$("torG"),cap:"Torseur cinématique de 2/1 en G",tex:tg,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>G</sub> = "+fmt(q.d,2)+" θ̇ x<sub>i</sub> }<sub>G</sub>"},
     {el:$("torM"),cap:"Torseur cinématique de 2/1 en M",tex:tm,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>M</sub> = 0 }<sub>M</sub>"}]);
-  if(!ok&&tries++<40)setTimeout(renderTors,500);
+  if(!ok&&triesR++<40)setTimeout(renderTors,500);
 }
 function renderStepsR(){
+  if(!$("stepsR")) return;
   const q=rotorQ(),{p}=q,ck=(1-p.R/p.r);
   const ok=Math.abs(q.Jg-q.Jm)<1e-12*Math.max(1,q.Jg);
-  let h="";
+  let hh="";
   if(S.method==="G"){
-    h=`<li><span class="t">1 · Cinématique en G</span><span class="eq">Ω<sub>2/1</sub> = (1−R/r) θ̇ z = <b>${fmt(ck,3)}</b> θ̇ z &nbsp;;&nbsp; V<sub>G,2/1</sub> = (R−r) θ̇ x<sub>i</sub> = <b>${fmt(q.d,3)}</b> θ̇ x<sub>i</sub></span><br><span class="note">Il faut établir la relation α̇ = −(R/r) θ̇ avec Varignon entre M et G.</span></li>
+    hh=`<li><span class="t">1 · Cinématique en G</span><span class="eq">Ω<sub>2/1</sub> = (1−R/r) θ̇ z = <b>${fmt(ck,3)}</b> θ̇ z &nbsp;;&nbsp; V<sub>G,2/1</sub> = (R−r) θ̇ x<sub>i</sub> = <b>${fmt(q.d,3)}</b> θ̇ x<sub>i</sub></span><br><span class="note">Il faut établir la relation α̇ = −(R/r) θ̇ avec Varignon entre M et G.</span></li>
     <li><span class="t">2 · Comoment en G (matrice d'inertie en G, déjà donnée)</span><span class="eq">E<sub>c</sub> = ½ [ m V<sub>G</sub>² + Ω·I<sub>G</sub>Ω ] = ½ [ m(R−r)² + C₂(1−R/r)² ] θ̇²</span><br>
       <span class="eq"><span class="G">= ½ [ ${fmt(p.m*q.d*q.d,4)} + ${fmt(q.C*ck*ck,4)} ] θ̇² = ½ · ${fmt(q.Jg,4)} θ̇²</span></span></li>
     <li><span class="t">3 · Puissance extérieure</span><span class="eq">P<sub>ext</sub> = −m g (R−r) θ̇ sin θ &nbsp; (contact en M : puissance nulle)</span></li>
     <li><span class="t">4 · TEC</span><span class="eq">J<sub>eq</sub> θ̈ + m g (R−r) sin θ = 0 &nbsp; avec J<sub>eq</sub> = <span class="G">${fmt(q.Jg,4)}</span> kg·m²</span></li>`;
   }else{
-    h=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>M,2/1</sub> = 0</span><br><span class="note">M est le centre instantané de rotation : le mouvement de 2/1 est une rotation pure d'axe (M, z). Seul Ω reste à exprimer : Ω = (R−r)θ̇ / r en norme.</span></li>
+    hh=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>M,2/1</sub> = 0</span><br><span class="note">M est le centre instantané de rotation : le mouvement de 2/1 est une rotation pure d'axe (M, z). Seul Ω reste à exprimer : Ω = (R−r)θ̇ / r en norme.</span></li>
     <li><span class="t">2 · Déplacer la matrice d'inertie en M (Huygens), une seule fois</span>
       <span class="eq">MG = r y<sub>i</sub> &nbsp;⇒&nbsp; I<sub>M</sub>(2) = diag( A₂ + m r² , A₂ , <span class="M">C₂ + m r²</span> )</span><br>
       <span class="eq">C₂ + m r² = ${fmt(q.C,5)} + ${fmt(p.m*p.r*p.r,5)} = <span class="M">${fmt(q.IM,5)}</span> kg·m²</span></li>
@@ -518,56 +432,44 @@ function renderStepsR(){
       <span class="eq"><span class="M">= ½ · ${fmt(q.IM,5)} · ${fmt(Math.pow(q.d/p.r,2),3)} θ̇² = ½ · ${fmt(q.Jm,4)} θ̇²</span></span></li>
     <li><span class="t">4 · Puissance extérieure et TEC</span><span class="eq">P<sub>ext</sub> = −m g (R−r) θ̇ sin θ &nbsp;⇒&nbsp; J<sub>eq</sub> θ̈ + m g (R−r) sin θ = 0</span></li>`;
   }
-  $("stepsR").innerHTML=h;
+  $("stepsR").innerHTML=hh;
   $("verdR").innerHTML=`J<sub>eq</sub> obtenu en G : <b class="G">${fmt(q.Jg,5)}</b> &nbsp;·&nbsp; en M : <b class="M">${fmt(q.Jm,5)}</b> kg·m² ${ok?"→ identiques":"→ écart"}.
    Période : T = 2π √[(R−r)(C₂+m r²)/(m g r²)] = <b>${fmt(q.T0,3)} s</b>.
    ${S.method==="G"?"En G, il faut deux termes de comoment et la cinématique de G.":"En M, un seul terme d'inertie suffit, et la matrice se déplace par Huygens."}`;
 }
 function onRotorParams(){
-  const R=+$("Rr").value;$("rr").max=(R*0.9).toFixed(3);
-  if(+$("rr").value>R*0.9)$("rr").value=R*0.9;
-  $("orr").textContent=fmt(+$("rr").value,3)+" m";
-  resetR();buildR();renderStepsR();renderTors();drawR();
+  if(!$("Rr")) return;
+  const R=+$("Rr").value; $("rr").max=(R*0.9).toFixed(3);
+  if(+$("rr").value>R*0.9) $("rr").value=R*0.9;
+  const e=$("orr"); if(e) e.textContent=fmt(+$("rr").value,3)+" m";
+  resetR(); buildR(); renderStepsR(); renderTors(); drawR();
 }
 
-mkChips("chR",[{key:"a",col:"--acol",html:"α"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
-bindRange("Rr",onRotorParams,"m",2);bindRange("rr",onRotorParams,"m",3);bindRange("mR",onRotorParams,"kg",1);
-bindRange("kR",onRotorParams,"",2);bindRange("thR",onRotorParams,"°",0);
-$("vecR").onchange=$("cirR").onchange=$("alR").onchange=drawR;bindRange("vR",()=>{},"×",2);
-$("playR").onclick=()=>{S.run=!S.run;$("playR").textContent=S.run?"Pause":"Lecture"};
-$("resetR").onclick=()=>{resetR();drawR()};
-$("mG").onclick=()=>{S.method="G";$("mG").setAttribute("aria-pressed","true");$("mM").setAttribute("aria-pressed","false");renderStepsR()};
-$("mM").onclick=()=>{S.method="M";$("mM").setAttribute("aria-pressed","true");$("mG").setAttribute("aria-pressed","false");renderStepsR()};
-window.__tec={typeset,plotTime,mkChips,sub,arcArrow,scaleBar,$,css,fmt,setup,arrow,dot,mkBars,setBar,bindRange,g,drawR,resetR,stepR,rotorQ,S,onRotorParams,showTab};
-})();
-(function(){
-"use strict";
-const T=window.__tec,$=T.$,css=T.css,fmt=T.fmt,g=T.g;
-
-/* =================== ROUE DE VELO =================== */
+/* ================= VÉLO ================= */
 const B={t:0,run:true,method:"G",hold:0,L:3,rh:0.03};
 function bq(){
   const r=+$("bb").value,beta=r*Math.PI/180,rr=+$("rb").value;
   const mj=+$("mj").value,ms=+$("ms").value,mh=+$("mh").value,m=mj+ms+mh;
   const C=mj*rr*rr+ms*rr*rr/3+0.5*mh*B.rh*B.rh;
   const k=C/(m*rr*rr),a=g*Math.sin(beta)/(1+k);
-  return {beta,r:rr,m,C,k,a,f:k*m*a,mu:k*Math.tan(beta)/(1+k),tf:Math.sqrt(2*B.L/a),mj,ms,mh};
+  return {beta,r:rr,m,C,k,a,f:k*m*a,mu:k*Math.tan(beta)/(1+k),tf:Math.sqrt(2*B.L/a)};
 }
 const SB={ser:[],T:1};
 function buildB(){
-  const q=bq(),N=120,P=[],O=[],V=[];
-  for(let i=0;i<=N;i++){const t=q.tf*i/N;P.push(-q.a*t*t/(2*q.r));O.push(-q.a*t/q.r);V.push(q.a*t)}
+  if(!$("bb")) return;
+  const q=bq(),N=120,Pp=[],O=[],V=[];
+  for(let i=0;i<=N;i++){const t=q.tf*i/N;Pp.push(-q.a*t*t/(2*q.r));O.push(-q.a*t/q.r);V.push(q.a*t)}
   SB.T=q.tf;
-  SB.ser=[{key:"p",v:P,max:Math.abs(P[N])||1e-9,col:"--acol",name:"ψ",sub:"",unit:"rad"},
+  SB.ser=[{key:"p",v:Pp,max:Math.abs(Pp[N])||1e-9,col:"--acol",name:"ψ",sub:"",unit:"rad"},
           {key:"o",v:O,max:Math.abs(O[N])||1e-9,col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
           {key:"v",v:V,max:V[N]||1e-9,col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
 }
 function drawB(){
-  if($("p1").hidden)return;
-  const q=bq(),{c,w,h}=T.setup($("cvB"));
+  if(!$("cvB")) return;
+  const q=bq(),{c,w,h:hh}=setup($("cvB"));
   const t=Math.min(B.t,q.tf),s=0.5*q.a*t*t,v=q.a*t;
-  const sc=Math.min((w-90)/(B.L*Math.cos(q.beta)+4.3*q.r),0.62*h/(B.L*Math.sin(q.beta)+2*q.r));
-  const x0=30+1.1*q.r*sc,y0=(h-B.L*Math.sin(q.beta)*sc)/2-q.r*sc*0.1;
+  const sc=Math.min((w-90)/(B.L*Math.cos(q.beta)+4.3*q.r),0.62*hh/(B.L*Math.sin(q.beta)+2*q.r));
+  const x0=30+1.1*q.r*sc,y0=(hh-B.L*Math.sin(q.beta)*sc)/2-q.r*sc*0.1;
   const cb=Math.cos(q.beta),sb=Math.sin(q.beta),Pt=(x,y)=>[x0+x*cb-y*sb,y0+x*sb+y*cb];
   const R=q.r*sc,gx=s*sc,gy=-R,vmax=q.a*q.tf;
   const gcol=css("--gcol"),wcol=css("--wcol");
@@ -576,175 +478,582 @@ function drawB(){
   c.strokeStyle=css("--muted");c.lineWidth=3;c.beginPath();c.moveTo(-0.5*R,0);c.lineTo(B.L*sc+R,0);c.stroke();
   for(let d=0;d<=B.L;d+=0.5){c.lineWidth=1;c.beginPath();c.moveTo(d*sc,0);c.lineTo(d*sc,8);c.stroke()}
   let sbk=0;
-  if($("ghB").checked){sbk=Math.min(0.5*g*Math.sin(q.beta)*t*t,B.L);c.fillStyle=css("--muted");c.fillRect(sbk*sc-7,16,14,10)}
+  if($("ghB")&&$("ghB").checked){sbk=Math.min(0.5*g*Math.sin(q.beta)*t*t,B.L);c.fillStyle=css("--muted");c.fillRect(sbk*sc-7,16,14,10)}
   c.strokeStyle=css("--accent");c.lineWidth=Math.max(3,R*0.09);c.beginPath();c.arc(gx,gy,R,0,7);c.stroke();
   for(let i=0;i<16;i++){const a=s/q.r+i*Math.PI/8;c.strokeStyle=i===0?css("--mcol"):css("--accent");c.lineWidth=i===0?2.5:1;
     c.beginPath();c.moveTo(gx,gy);c.lineTo(gx+R*Math.cos(a),gy+R*Math.sin(a));c.stroke()}
   c.fillStyle=css("--panel");c.strokeStyle=css("--accent");c.lineWidth=2;c.beginPath();c.arc(gx,gy,R*0.1,0,7);c.fill();c.stroke();
-  T.dot(c,gx,gy,gcol,null);T.dot(c,gx,0,css("--mcol"),null);
+  dot(c,gx,gy,gcol,null);dot(c,gx,0,css("--mcol"),null);
   const L=v/vmax*2.2*R;
-  if(L>5)T.arrow(c,gx,gy,gx+L,gy,gcol,null,5);
+  if(L>5)arrow(c,gx,gy,gx+L,gy,gcol,null,5);
   let om=null;
   const da=-(v/vmax)*4.3;
-  if(Math.abs(da)>0.15)om=T.arcArrow(c,gx,gy,0.5*R,Math.PI*0.9,da,wcol);
+  if(Math.abs(da)>0.15)om=arcArrow(c,gx,gy,0.5*R,Math.PI*0.9,da,wcol);
   let fl=0;
-  if($("fcB").checked){fl=Math.min(1.4*R,q.f/(q.m*g)*R*6);if(fl>4)T.arrow(c,gx,-3,gx-fl,-3,css("--bad"),null,3)}
+  if($("fcB")&&$("fcB").checked){fl=Math.min(1.4*R,q.f/(q.m*g)*R*6);if(fl>4)arrow(c,gx,-3,gx-fl,-3,css("--bad"),null,3)}
   c.restore();
-  // étiquettes dans le repère de l'écran
   c.textAlign="left";
-  let p1=Pt(gx,gy);c.fillStyle=gcol;c.font="700 14px "+css("--font");c.fillText("G",p1[0]-18,p1[1]+20);
+  let p1=Pt(gx,gy);c.fillStyle=gcol;c.font="700 14px "+css("--font-ui");c.fillText("G",p1[0]-18,p1[1]+20);
   p1=Pt(gx,0);c.fillStyle=css("--mcol");c.fillText("I (V = 0)",p1[0]-24,p1[1]+30);
-  if(L>5){p1=Pt(gx+L+10,gy);T.sub(c,p1[0],p1[1]-8,"V","G",gcol,20)}
-  if(om){p1=Pt(om[0],om[1]);c.fillStyle=wcol;c.font="700 21px "+css("--font");c.fillText("Ω",p1[0]-8,p1[1]+7)}
-  if(fl>4){p1=Pt(gx-fl-14,-8);c.fillStyle=css("--bad");c.font="700 15px "+css("--font");c.fillText("f",p1[0],p1[1])}
-  if($("ghB").checked){p1=Pt(sbk*sc,16);c.fillStyle=css("--muted");c.font="12px "+css("--font");c.fillText("bloc sans frottement",p1[0]-48,p1[1]+30)}
-  T.scaleBar(c,w,h,sc);
-  // graphe temporel
+  if(L>5){p1=Pt(gx+L+10,gy);sub(c,p1[0],p1[1]-8,"V","G",gcol,20)}
+  if(om){p1=Pt(om[0],om[1]);c.fillStyle=wcol;c.font="700 21px "+css("--font-ui");c.fillText("Ω",p1[0]-8,p1[1]+7)}
+  if(fl>4){p1=Pt(gx-fl-14,-8);c.fillStyle=css("--bad");c.font="700 15px "+css("--font-ui");c.fillText("f",p1[0],p1[1])}
+  if($("ghB")&&$("ghB").checked){p1=Pt(sbk*sc,16);c.fillStyle=css("--muted");c.font="12px "+css("--font-ui");c.fillText("bloc sans frottement",p1[0]-48,p1[1]+30)}
+  scaleBar(c,w,hh,sc);
   const cur={p:-s/q.r,o:-v/q.r,v:v},u={p:" rad",o:" rad/s",v:" m/s"};
-  SB.ser.forEach(e=>{e.on=$("chB_"+e.key).checked;e.cur=cur[e.key];$("chBv_"+e.key).textContent=fmt(cur[e.key],2)+u[e.key]});
-  T.plotTime($("cvTB"),SB.T,SB.ser,t);
-  $("bC").textContent=fmt(q.C,4)+" kg·m²";$("bk").textContent=fmt(q.k,3);
-  $("ba").textContent=fmt(q.a,3)+" m/s²";$("bf").textContent=fmt(q.f,2)+" N";$("bmu").textContent=fmt(q.mu,3);
-  $("bv").textContent=fmt(v,2)+" m/s";
+  SB.ser.forEach(e=>{e.on=$("chB_"+e.key).checked;e.cur=cur[e.key];const el=$("chBv_"+e.key);if(el)el.textContent=fmt(cur[e.key],2)+u[e.key]});
+  plotTime($("cvTB"),SB.T,SB.ser,t);
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  set("bC",fmt(q.C,4)+" kg·m²");set("bk",fmt(q.k,3));
+  set("ba",fmt(q.a,3)+" m/s²");set("bf",fmt(q.f,2)+" N");set("bmu",fmt(q.mu,3));
+  set("bv",fmt(v,2)+" m/s");
 }
-let btries=0;
+let triesB=0;
 function renderTorsB(){
-  const q=bq(),k=1/q.r,tk=T.fmt(k,2).replace(",","{,}");
+  if(!$("torBG")) return;
+  const q=bq(),k=1/q.r,tk=fmt(k,2).replace(",","{,}");
   const tg=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{G,2/0}=\dot s\,\vec x_0\end{array}\right\}_{G}`;
   const ti=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{I,2/0}=\vec 0\end{array}\right\}_{I}`;
-  const cap="x₀ le long de la pente vers le bas, z₀ = x₀ ∧ y₀ sortant de l'écran";
-  const ok=T.typeset([
-    {el:$("torBG"),cap:"Torseur cinématique de 2/0 en G",tex:tg,fb:"{V₂/₀} = { Ω = −"+T.fmt(k,2)+" ṡ z₀ ; V<sub>G</sub> = ṡ x₀ }<sub>G</sub>"},
-    {el:$("torBI"),cap:"Torseur cinématique de 2/0 en I",tex:ti,fb:"{V₂/₀} = { Ω = −"+T.fmt(k,2)+" ṡ z₀ ; V<sub>I</sub> = 0 }<sub>I</sub>"}]);
-  if(!ok&&btries++<40)setTimeout(renderTorsB,500);
-  $("bAxes").textContent=cap;
+  const ok=typeset([
+    {el:$("torBG"),cap:"Torseur cinématique de 2/0 en G",tex:tg,fb:"{V₂/₀} = { Ω = −"+fmt(k,2)+" ṡ z₀ ; V<sub>G</sub> = ṡ x₀ }<sub>G</sub>"},
+    {el:$("torBI"),cap:"Torseur cinématique de 2/0 en I",tex:ti,fb:"{V₂/₀} = { Ω = −"+fmt(k,2)+" ṡ z₀ ; V<sub>I</sub> = 0 }<sub>I</sub>"}]);
+  if(!ok&&triesB++<40)setTimeout(renderTorsB,500);
+  const e=$("bAxes"); if(e) e.textContent="x₀ le long de la pente vers le bas, z₀ = x₀ ∧ y₀ sortant de l'écran";
 }
 function stepsB(){
-  const q=bq(),s=Math.sin(q.beta);
+  if(!$("stepsB")) return;
+  const q=bq();
   const meff=q.m+q.C/(q.r*q.r),IM=q.C+q.m*q.r*q.r;
-  let h;
+  let hh;
   if(B.method==="G"){
-    h=`<li><span class="t">1 · Cinématique en G</span><span class="eq">RSG en I : V<sub>I</sub> = 0 ⇒ V<sub>G</sub> = r Ω &nbsp;;&nbsp; Ω = v / r</span></li>
+    hh=`<li><span class="t">1 · Cinématique en G</span><span class="eq">RSG en I : V<sub>I</sub> = 0 ⇒ V<sub>G</sub> = r Ω &nbsp;;&nbsp; Ω = v / r</span></li>
     <li><span class="t">2 · Comoment en G : deux termes</span><span class="eq">E<sub>c</sub> = ½ m v² + ½ C Ω² = ½ ( m + C/r² ) v²</span><br>
       <span class="eq"><span class="G">= ½ ( ${fmt(q.m,3)} + ${fmt(q.C/(q.r*q.r),3)} ) v² = ½ · ${fmt(meff,3)} v²</span></span></li>
     <li><span class="t">3 · Puissance extérieure</span><span class="eq">P<sub>ext</sub> = m g sin β · v &nbsp; (réaction en I : P = 0, car V<sub>I</sub> = 0)</span></li>
     <li><span class="t">4 · TEC</span><span class="eq">( m + C/r² ) v v̇ = m g sin β v ⇒ a = <span class="G">${fmt(q.a,3)} m/s²</span></span></li>`;
   }else{
-    h=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>I,2/0</sub> = 0 : I est le centre instantané de rotation, rotation pure d'axe (I, z)</span></li>
+    hh=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>I,2/0</sub> = 0 : I est le centre instantané de rotation, rotation pure d'axe (I, z)</span></li>
     <li><span class="t">2 · Matrice d'inertie en I par Huygens (IG = r)</span><span class="eq">I<sub>I</sub>(2) · zz = C + m r² = ${fmt(q.C,4)} + ${fmt(q.m*q.r*q.r,4)} = <span class="M">${fmt(IM,4)}</span> kg·m²</span></li>
     <li><span class="t">3 · Énergie cinétique : un seul terme</span><span class="eq">E<sub>c</sub> = ½ (C + m r²) Ω² = ½ <span class="M">${fmt(IM,4)}</span> (v/r)²</span><br><span class="note">I se déplace sur le sol, mais IG = r reste constant : l'expression vaut à chaque instant, on peut la dériver.</span></li>
     <li><span class="t">4 · TEC</span><span class="eq">(C + m r²) Ω Ω̇ = m g sin β · r Ω ⇒ a = r Ω̇ = <span class="M">${fmt(q.a,3)} m/s²</span></span></li>`;
   }
-  $("stepsB").innerHTML=h;
+  $("stepsB").innerHTML=hh;
   $("verdB").innerHTML=`a = g sin β / (1 + k) avec k = C/(m r²) = <b>${fmt(q.k,3)}</b> : la roue descend ${fmt(1+q.k,2)} fois moins vite qu'un bloc sans frottement. Arrivée en <b>${fmt(q.tf,2)} s</b>.
    Le frottement f = ${fmt(q.f,2)} N est non nul mais ne travaille pas. Il faut μ ≥ ${fmt(q.mu,3)} pour rouler sans glisser.`;
 }
-function resetB(){B.t=0;B.hold=0}
-function onB(){resetB();buildB();stepsB();renderTorsB();drawB()}
-T.mkChips("chB",[{key:"p",col:"--acol",html:"ψ"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
-T.bindRange("bb",onB,"°",0);T.bindRange("rb",onB,"m",2);T.bindRange("mj",onB,"kg",2);T.bindRange("ms",onB,"kg",2);T.bindRange("mh",onB,"kg",2);
-T.bindRange("vb",()=>{},"×",2);
-$("ghB").onchange=$("fcB").onchange=drawB;
-$("playB").onclick=()=>{B.run=!B.run;$("playB").textContent=B.run?"Pause":"Lecture"};
-$("resetB").onclick=resetB;
-$("bG").onclick=()=>{B.method="G";$("bG").setAttribute("aria-pressed","true");$("bM").setAttribute("aria-pressed","false");stepsB()};
-$("bM").onclick=()=>{B.method="I";$("bM").setAttribute("aria-pressed","true");$("bG").setAttribute("aria-pressed","false");stepsB()};
+function resetB(){ B.t=0; B.hold=0; }
+function onB(){ if(!$("bb")) return; resetB(); buildB(); stepsB(); renderTorsB(); drawB(); }
 
-/* =================== QUIZ =================== */
-const Q=[
- {q:"Pour écrire E<sub>c</sub> = ½ Ω·I<sub>M</sub>Ω avec un seul terme, quelle propriété de M utilise-t-on ?",
-  o:["M est le centre de masse du rotor","V<sub>M,2/1</sub> = 0 : le roulement sans glissement fait de M le centre instantané de rotation","M est le point le plus bas de la plaque, donc l'énergie potentielle y est nulle","M est un point fixe de la plaque 1, donc de 2"],a:1,
-  e:"Avec V<sub>M</sub> = 0, le comoment se réduit au seul terme de rotation. M n'est pas fixe : c'est un point géométrique de contact qui se déplace sur la plaque, mais sa vitesse est nulle à l'instant considéré."},
- {q:"Le rotor a pour moment d'inertie C₂ par rapport à (G, z). Que vaut le terme zz de I<sub>M</sub>(2), avec MG = r ?",
-  o:["C₂","C₂ − m r²","C₂ + m r²","C₂ + m (R−r)²"],a:2,
-  e:"Huygens : on ajoute m·d² où d est la distance entre les deux axes parallèles. Ici d = MG = r."},
- {q:"Au contact en M, la force de frottement n'est pas nulle. Pourquoi sa puissance l'est-elle ?",
-  o:["Parce que la force est perpendiculaire à la vitesse","Parce que la vitesse de glissement en M est nulle","Parce que l'action de contact est une action intérieure","Parce que le frottement est négligé"],a:1,
-  e:"La puissance d'une action de contact est le comoment du torseur d'action et du torseur cinématique : elle contient la vitesse de glissement V<sub>M,2/1</sub> = 0. Une force peut être non nulle et ne pas travailler."},
- {q:"On fait tendre C₂ vers 0 (toute la masse au centre). Quelle période retrouve-t-on ?",
-  o:["T = 2π √(r/g)","T = 2π √((R−r)/g), celle d'un pendule simple de longueur R−r","T = 2π √(R/g)","Elle tend vers l'infini"],a:1,
-  e:"Avec C₂ = 0, T = 2π √((R−r)(m r²)/(m g r²)) = 2π √((R−r)/g). Le centre G décrit un cercle de rayon R−r."},
- {q:"Une roue pleine (disque, k = ½) et un cerceau (k = 1) de même masse et de même rayon descendent la même pente. Lequel arrive en premier ?",
-  o:["Le cerceau, car sa masse est à la périphérie","Le disque plein, car a = g sin β / (1+k) est plus grande avec k plus petit","Ils arrivent ensemble, la masse n'intervient pas","Cela dépend du rayon"],a:1,
-  e:"Plus la masse est loin de l'axe, plus il faut d'énergie cinétique de rotation pour une même vitesse : à Ep égale, v est plus petite. a vaut ⅔ g sin β pour le disque et ½ g sin β pour le cerceau."},
- {q:"Quelle puissance fait varier l'énergie cinétique de la roue de vélo qui descend ?",
-  o:["Celle du frottement en I, qui entraîne la rotation","Celle de la réaction normale","Celle du poids seulement","Celles du poids et du frottement"],a:2,
-  e:"Le frottement en I est indispensable pour que la roue tourne, mais sa puissance est nulle (V<sub>I</sub> = 0). La normale aussi. Seul le poids fournit de la puissance."},
- {q:"On veut écrire E<sub>c</sub> = ½ I<sub>A</sub> Ω² en un point A quelconque du solide, en mouvement. Est-ce correct ?",
-  o:["Oui, à condition d'avoir la matrice d'inertie en A","Non, il faut que la vitesse de A soit nulle (ou que A soit sur un axe fixe) ; sinon le comoment compte aussi un terme en V<sub>A</sub>","Oui, car l'énergie cinétique ne dépend pas du point","Non, seul G convient toujours"],a:1,
-  e:"E<sub>c</sub> = ½ {V}⊗{C} s'écrit en n'importe quel point, mais la forme à un terme ½ Ω·I<sub>A</sub>Ω exige V<sub>A</sub> = 0. C'est le cas de M et de I grâce au roulement sans glissement."}
-,
- {q:"On connaît I<sub>G</sub>(S) diagonale et MG = (a, b, 0). Que vaut le terme xy de I<sub>M</sub>(S) ?",
-  o:["0","−m a b","+m a b","m (a² + b²)"],a:1,
-  e:"Le terme hors diagonale de la matrice de Huygens vaut −m·a·b (produit des coordonnées de MG). Il disparaît seulement si MG est porté par un axe de la base."},
- {q:"On connaît I<sub>M</sub>(S) et on veut I<sub>M'</sub>(S). Peut-on appliquer Huygens directement entre M et M' ?",
-  o:["Oui, avec le vecteur MM'","Non : un des deux points doit être le centre de masse G, on passe par G","Oui, mais seulement si M et M' sont sur un même axe","Non, il faut recalculer l'intégrale"],a:1,
-  e:"La formule suppose que G est l'un des deux points. Pour aller de M à M', on retranche d'abord le terme en MG pour revenir en G, puis on ajoute le terme en M'G."}
-];
-let ans=[],done=false;
-function renderQ(){
-  done=false;ans=[];$("qScore").textContent="";
-  $("quiz").innerHTML=Q.map((x,i)=>`<div class="q" id="q${i}"><p>${i+1}. ${x.q}</p>`+x.o.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"><span>${o}</span></label>`).join("")+`<div class="fb" id="fb${i}"></div></div>`).join("");
-}
-$("qCheck").onclick=()=>{
-  let sc=0,rep=0;
-  Q.forEach((x,i)=>{
-    const sel=document.querySelector(`input[name=q${i}]:checked`),fb=$("fb"+i);
-    if(!sel){fb.className="fb";fb.textContent="";return}
-    rep++;const ok=+sel.value===x.a;if(ok)sc++;
-    fb.className="fb "+(ok?"ok":"ko");
-    fb.innerHTML=(ok?"Correct. ":"Pas tout à fait. ")+x.e;
-  });
-  $("qScore").textContent=rep<Q.length?`${sc} bonne(s) réponse(s) sur ${rep} répondues. Il reste ${Q.length-rep} question(s).`:`Score : ${sc} / ${Q.length}`;
-};
-$("qReset").onclick=renderQ;
-renderQ();
-
-/* =================== BOUCLE =================== */
-let last=performance.now();
-function frame(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(!$("p0").hidden){
-    if(T.S.run){const q=T.rotorQ(),n=10,ds=dt*(+$("vR").value);for(let i=0;i<n;i++)T.stepR(ds/n,q)}
-    T.drawR();
-  }else if(!$("p1").hidden){
-    if(B.run){
-      const q=bq();
-      if(B.t<q.tf)B.t+=dt*(+$("vb").value);
-      else{B.hold+=dt;if(B.hold>1.2)resetB()}
-    }
-    drawB();
-  }
-  requestAnimationFrame(frame);
-}
-T.onRotorParams();buildB();stepsB();renderTorsB();
-const hmap={rotor:0,velo:1,quiz:2,cours:3},hh=location.hash.slice(1);
-if(hh in hmap)T.showTab(hmap[hh]);
-window.addEventListener("hashchange",()=>{const k=location.hash.slice(1);if(k in hmap)T.showTab(hmap[k])});
-window.addEventListener("resize",()=>{T.drawR();drawB()});
-T.drawB=drawB;requestAnimationFrame(frame);
-})();
-(function(){
-"use strict";
-const T=window.__tec,$=T.$,f=x=>T.fmt(x,4);
-const bind=(id,u,d)=>T.bindRange(id,upd,u,d);
-function mat(M){return M.map(r=>r.map(v=>(Math.abs(v)<5e-7?"0":f(v)).padStart(8)).join(" ")).join("\n")}
-function upd(){
-  const m=+$("hm").value,A=+$("hA").value,B=+$("hB").value,C=+$("hC").value,a=+$("hx").value,b=+$("hy").value,c=+$("hz").value;
-  const G=[[A,0,0],[0,B,0],[0,0,C]];
+/* ================= HUYGENS ================= */
+function huygensUpd(){
+  if(!$("hMG")) return;
+  const m=+$("hm").value,A=+$("hA").value,Bb=+$("hB").value,C=+$("hC").value,a=+$("hx").value,b=+$("hy").value,c=+$("hz").value;
+  const G=[[A,0,0],[0,Bb,0],[0,0,C]];
   const H=[[b*b+c*c,-a*b,-a*c],[-a*b,a*a+c*c,-b*c],[-a*c,-b*c,a*a+b*b]];
   const M=G.map((r,i)=>r.map((v,j)=>v+m*H[i][j]));
-  $("hMG").textContent=mat(G);$("hMM").textContent=mat(M);
+  const mat=Mx=>Mx.map(r=>r.map(v=>(Math.abs(v)<5e-7?"0":f(v,4)).padStart(8)).join(" ")).join("\n");
+  $("hMG").textContent=mat(G); $("hMM").textContent=mat(M);
   const off=Math.abs(a*b)+Math.abs(a*c)+Math.abs(b*c)>1e-9;
   $("hTxt").textContent=off?"MG n'est pas porté par un axe : des termes hors diagonale apparaissent (−m·a·b, −m·a·c, −m·b·c).":
     "MG est porté par un axe : la matrice reste diagonale. Seuls les deux termes des axes perpendiculaires à MG augmentent de m·d².";
 }
-const ids=[["hm","kg",1],["hA","",4],["hB","",4],["hC","",4],["hx","m",2],["hy","m",2],["hz","m",2]];
-ids.forEach(x=>bind(x[0],x[1],x[2]));
-const set=(o)=>{for(const k in o){$(k).value=o[k];$("o"+k).textContent=T.fmt(+o[k],k==="hm"?1:(k[1]==="x"||k[1]==="y"||k[1]==="z")?2:4)+(k==="hm"?" kg":/h[xyz]/.test(k)?" m":"")}upd()};
-$("hRotor").onclick=()=>set({hm:3,hA:0.0075,hB:0.0075,hC:0.015,hx:0,hy:0.1,hz:0});
-$("hDiag").onclick=()=>set({hx:0.1,hy:0.1,hz:0.05});
-$("goR").onclick=()=>T.showTab(0);$("goB").onclick=()=>T.showTab(1);
-upd();
+function huygensSet(o){
+  for(const k in o){
+    const inp=$(k), out=$("o"+k);
+    if(inp) inp.value=o[k];
+    if(out){
+      const isM = /h[xyz]/.test(k);
+      out.textContent = fmt(+o[k], k==="hm"?1:isM?2:4) + (k==="hm"?" kg":isM?" m":"");
+    }
+  }
+  huygensUpd();
+}
+
+/* ================= MOUNT ROTOR ================= */
+function mountRotor(root){
+  root.innerHTML = `
+    <h2>Banc d'inertie</h2>
+    <p class="small">Un rotor de rayon r roule sans glisser à l'intérieur de deux plaques circulaires de rayon R. Il oscille autour de sa position d'équilibre. Le TEC s'écrit avec le même J<sub>eq</sub>, que l'on se place en G (deux termes) ou en M, centre instantané de rotation (un seul terme).</p>
+
+    <div class="stagebox">
+      <canvas id="cvR" aria-label="Rotor roulant sans glisser dans une plaque circulaire"></canvas>
+      <div class="chips" id="chR" role="group" aria-label="Grandeurs affichées"></div>
+      <div class="files" style="margin-top:8px">
+        <button class="btn pri" id="playR" type="button">Pause</button>
+        <button class="btn" id="resetR" type="button">Relâcher à θ₀</button>
+      </div>
+    </div>
+
+    <div class="stagebox">
+      <canvas id="cvPt" class="tplot" aria-label="α, Ω et V_G en fonction du temps sur une période"></canvas>
+    </div>
+
+    <div class="tors">
+      <div class="tbox gbox" id="torG"></div>
+      <div class="tbox mbox" id="torM"></div>
+    </div>
+
+    <h3>Réglages</h3>
+    <div class="opts">
+      <label class="fld"><span>Rayon des plaques R = <b id="oRr"></b></span><input type="range" id="Rr" min="0.10" max="0.60" step="0.01" value="0.30"></label>
+      <label class="fld"><span>Rayon du rotor r = <b id="orr"></b></span><input type="range" id="rr" min="0.02" max="0.25" step="0.005" value="0.10"></label>
+      <label class="fld"><span>Masse m₂ = <b id="omR"></b></span><input type="range" id="mR" min="0.5" max="10" step="0.1" value="3"></label>
+      <label class="fld"><span>Inertie C₂ = k·m₂r², k = <b id="okR"></b></span><input type="range" id="kR" min="0.2" max="1.5" step="0.05" value="0.5"></label>
+      <label class="fld"><span>Angle initial θ₀ = <b id="othR"></b></span><input type="range" id="thR" min="2" max="80" step="1" value="12"></label>
+      <label class="fld"><span>Vitesse de lecture = <b id="ovR"></b></span><input type="range" id="vR" min="0.1" max="1" step="0.05" value="0.4"></label>
+    </div>
+    <div class="chips" style="margin:4px 0">
+      <label class="chip"><input type="checkbox" id="vecR" checked> Montrer Ω et V<sub>G</sub></label>
+      <label class="chip"><input type="checkbox" id="alR" checked> Angle α</label>
+      <label class="chip"><input type="checkbox" id="cirR" checked> Point M (vitesse nulle)</label>
+    </div>
+
+    <div class="gstats">
+      <div class="stat"><span>J_eq</span><b id="rJ"></b></div>
+      <div class="stat"><span>T petites osc.</span><b id="rT0"></b></div>
+      <div class="stat"><span>T mesurée</span><b id="rTm">–</b></div>
+      <div class="stat"><span>dE<sub>c</sub>/dt</span><b id="rdE"></b></div>
+      <div class="stat"><span>P<sub>ext</sub></span><b id="rP"></b></div>
+      <div class="stat"><span>θ</span><b id="rTh"></b></div>
+      <div class="stat"><span>α = −(R/r)·θ</span><b id="rAl"></b></div>
+    </div>
+
+    <h3>Écrire le TEC : où se placer ?</h3>
+    <div class="seg" role="group" aria-label="Point de réduction">
+      <button type="button" id="mG" aria-pressed="true">En G</button>
+      <button type="button" id="mM" aria-pressed="false">En M (CIR)</button>
+    </div>
+    <ol class="steps" id="stepsR"></ol>
+    <div class="verdict" id="verdR"></div>
+  `;
+  mkChips("chR",[{key:"a",col:"--acol",html:"α"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
+  bindRange("Rr",onRotorParams,"m",2); bindRange("rr",onRotorParams,"m",3); bindRange("mR",onRotorParams,"kg",1);
+  bindRange("kR",onRotorParams,"",2); bindRange("thR",onRotorParams,"°",0); bindRange("vR",()=>{},"×",2);
+  $("vecR").onchange=$("cirR").onchange=$("alR").onchange=drawR;
+  $("playR").onclick=()=>{S.run=!S.run;$("playR").textContent=S.run?"Pause":"Lecture"};
+  $("resetR").onclick=()=>{resetR();drawR()};
+  $("mG").onclick=()=>{S.method="G";$("mG").setAttribute("aria-pressed","true");$("mM").setAttribute("aria-pressed","false");renderStepsR()};
+  $("mM").onclick=()=>{S.method="M";$("mM").setAttribute("aria-pressed","true");$("mG").setAttribute("aria-pressed","false");renderStepsR()};
+  S.run = true; S.method = "G";
+  resetR(); buildR(); renderStepsR(); renderTors(); drawR();
+}
+
+/* ================= MOUNT VÉLO ================= */
+function mountVelo(root){
+  root.innerHTML = `
+    <h2>Roue de vélo</h2>
+    <p class="small">Une roue descend une pente en roulant sans glisser. Le frottement en I est nécessaire pour que la roue tourne, mais sa puissance est nulle. Comparer avec un bloc qui glisserait sans frottement.</p>
+
+    <div class="stagebox">
+      <canvas id="cvB" aria-label="Roue de vélo descendant une pente en roulant sans glisser"></canvas>
+      <div class="chips" id="chB" role="group" aria-label="Grandeurs affichées"></div>
+      <div class="files" style="margin-top:8px">
+        <button class="btn pri" id="playB" type="button">Pause</button>
+        <button class="btn" id="resetB" type="button">Relancer</button>
+      </div>
+    </div>
+
+    <div class="stagebox">
+      <canvas id="cvTB" class="tplot" aria-label="Angle, vitesse angulaire et vitesse de G en fonction du temps"></canvas>
+    </div>
+
+    <div class="tors">
+      <div class="tbox gbox" id="torBG"></div>
+      <div class="tbox mbox" id="torBI"></div>
+    </div>
+    <p class="small" id="bAxes" style="margin:6px 0 0"></p>
+
+    <h3>Réglages</h3>
+    <div class="opts">
+      <label class="fld"><span>Pente β = <b id="obb"></b></span><input type="range" id="bb" min="2" max="40" step="1" value="15"></label>
+      <label class="fld"><span>Rayon r = <b id="orb"></b></span><input type="range" id="rb" min="0.20" max="0.40" step="0.01" value="0.34"></label>
+      <label class="fld"><span>Masse jante + pneu = <b id="omj"></b></span><input type="range" id="mj" min="0.3" max="2.5" step="0.05" value="0.9"></label>
+      <label class="fld"><span>Masse rayons = <b id="oms"></b></span><input type="range" id="ms" min="0" max="1" step="0.05" value="0.3"></label>
+      <label class="fld"><span>Masse moyeu = <b id="omh"></b></span><input type="range" id="mh" min="0.1" max="1" step="0.05" value="0.3"></label>
+      <label class="fld"><span>Vitesse de lecture = <b id="ovb"></b></span><input type="range" id="vb" min="0.25" max="2" step="0.25" value="1"></label>
+    </div>
+    <div class="chips" style="margin:4px 0">
+      <label class="chip"><input type="checkbox" id="ghB" checked> Bloc qui glisse sans frottement</label>
+      <label class="chip"><input type="checkbox" id="fcB" checked> Force de frottement en I</label>
+    </div>
+
+    <div class="gstats">
+      <div class="stat"><span>C (axe z)</span><b id="bC"></b></div>
+      <div class="stat"><span>k = C/(m r²)</span><b id="bk"></b></div>
+      <div class="stat"><span>Accélération a</span><b id="ba"></b></div>
+      <div class="stat"><span>Frottement f</span><b id="bf"></b></div>
+      <div class="stat"><span>μ minimal</span><b id="bmu"></b></div>
+      <div class="stat"><span>Vitesse v</span><b id="bv"></b></div>
+    </div>
+
+    <h3>Écrire le TEC : où se placer ?</h3>
+    <div class="seg" role="group" aria-label="Point de réduction">
+      <button type="button" id="bG" aria-pressed="true">En G</button>
+      <button type="button" id="bM" aria-pressed="false">En I (contact)</button>
+    </div>
+    <ol class="steps" id="stepsB"></ol>
+    <div class="verdict" id="verdB"></div>
+  `;
+  mkChips("chB",[{key:"p",col:"--acol",html:"ψ"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
+  bindRange("bb",onB,"°",0); bindRange("rb",onB,"m",2); bindRange("mj",onB,"kg",2);
+  bindRange("ms",onB,"kg",2); bindRange("mh",onB,"kg",2); bindRange("vb",()=>{},"×",2);
+  $("ghB").onchange=$("fcB").onchange=drawB;
+  $("playB").onclick=()=>{B.run=!B.run;$("playB").textContent=B.run?"Pause":"Lecture"};
+  $("resetB").onclick=resetB;
+  $("bG").onclick=()=>{B.method="G";$("bG").setAttribute("aria-pressed","true");$("bM").setAttribute("aria-pressed","false");stepsB()};
+  $("bM").onclick=()=>{B.method="I";$("bM").setAttribute("aria-pressed","true");$("bG").setAttribute("aria-pressed","false");stepsB()};
+  B.run = true; B.method = "G";
+  resetB(); buildB(); stepsB(); renderTorsB(); drawB();
+}
+
+/* ================= MOUNT HUYGENS ================= */
+function mountHuygens(root){
+  root.innerHTML = `
+    <h2>Torseurs et Huygens</h2>
+    <p class="small">Matrice d'inertie en G diagonale (A, B, C), puis vecteur MG = (a, b, c). La matrice en M est I<sub>G</sub> + m·[…]. Le préréglage reprend le rotor : MG = r y<sub>i</sub>.</p>
+
+    <h3>Réglages</h3>
+    <div class="opts">
+      <label class="fld"><span>Masse m = <b id="ohm"></b></span><input type="range" id="hm" min="0.5" max="10" step="0.1" value="3"></label>
+      <label class="fld"><span>A (axe x) = <b id="ohA"></b></span><input type="range" id="hA" min="0" max="0.05" step="0.0005" value="0.0075"></label>
+      <label class="fld"><span>B (axe y) = <b id="ohB"></b></span><input type="range" id="hB" min="0" max="0.05" step="0.0005" value="0.0075"></label>
+      <label class="fld"><span>C (axe z) = <b id="ohC"></b></span><input type="range" id="hC" min="0" max="0.05" step="0.0005" value="0.015"></label>
+      <label class="fld"><span>a = MG·x = <b id="ohx"></b></span><input type="range" id="hx" min="-0.3" max="0.3" step="0.01" value="0"></label>
+      <label class="fld"><span>b = MG·y = <b id="ohy"></b></span><input type="range" id="hy" min="-0.3" max="0.3" step="0.01" value="0.1"></label>
+      <label class="fld"><span>c = MG·z = <b id="ohz"></b></span><input type="range" id="hz" min="-0.3" max="0.3" step="0.01" value="0"></label>
+    </div>
+    <div class="files" style="margin:8px 0">
+      <button class="btn" id="hRotor" type="button">Préréglage rotor</button>
+      <button class="btn" id="hDiag" type="button">MG oblique</button>
+    </div>
+
+    <div class="huygens-out">
+      <div class="hmat"><span>I<sub>G</sub>(S), en kg·m²</span><pre id="hMG"></pre></div>
+      <div class="hmat"><span>I<sub>M</sub>(S) = I<sub>G</sub> + m[…]</span><pre id="hMM"></pre></div>
+    </div>
+    <p class="small" id="hTxt"></p>
+
+    <h3>Rappel : formule de Huygens</h3>
+    <div class="formula">I<sub>M</sub>(S) = I<sub>G</sub>(S) + m · [ b²+c² &nbsp; −ab &nbsp; −ac ; −ab &nbsp; a²+c² &nbsp; −bc ; −ac &nbsp; −bc &nbsp; a²+b² ]</div>
+    <ul class="small">
+      <li>Les deux matrices s'écrivent dans la <b>même base</b>.</li>
+      <li>Un des deux points est obligatoirement G. Pour passer de M à M', on passe par G.</li>
+      <li>La matrice en M est toujours « plus grande » sur la diagonale : on ajoute des termes positifs.</li>
+    </ul>
+  `;
+  const ids=[["hm","kg",1],["hA","",4],["hB","",4],["hC","",4],["hx","m",2],["hy","m",2],["hz","m",2]];
+  ids.forEach(x=>bindRange(x[0],huygensUpd,x[1],x[2]));
+  $("hRotor").onclick=()=>huygensSet({hm:3,hA:0.0075,hB:0.0075,hC:0.015,hx:0,hy:0.1,hz:0});
+  $("hDiag").onclick=()=>huygensSet({hx:0.1,hy:0.1,hz:0.05});
+  huygensUpd();
+}
+
+/* ================= WORKSHOPS ================= */
+const WORKSHOPS = [
+  { id:'rotor', title:"Banc d'inertie", hint:"Un rotor roule sans glisser dans une plaque. Basculez entre En G et En M pour voir que J_eq est le même, mais que les termes du comoment diffèrent.", mount:mountRotor, reset:()=>{resetR();buildR();renderStepsR();renderTors();}, leave:()=>{S.run=false;} },
+  { id:'velo', title:'Roue de vélo', hint:"Une roue descend une pente en roulant sans glisser. Le frottement en I ne travaille pas, mais il est nécessaire pour tourner.", mount:mountVelo, reset:()=>{resetB();buildB();stepsB();renderTorsB();}, leave:()=>{B.run=false;} },
+  { id:'huygens', title:'Torseurs et Huygens', hint:"Déplacez la matrice d'inertie de G vers M. Les termes diagonaux augmentent, et MG oblique crée des termes non diagonaux.", mount:mountHuygens, reset:()=>{} }
+];
+function wsById(id){ return WORKSHOPS.find(w=>w.id===id)||WORKSHOPS[0]; }
+
+/* ================= ACTIVITÉS ================= */
+const ACT = {
+  rotor: {
+    title:"Banc d'inertie", level:"Niveau 1 · Découvrir", time:"30 min", course:"point",
+    goal:"Choisir le point où écrire le TEC pour minimiser les termes, et vérifier que E<sub>c</sub> ne dépend pas du point.",
+    steps:[
+      "Lancez l'animation et observez le mouvement du rotor et du point M (point de contact).",
+      "Notez J<sub>eq</sub> en G et en M pour différentes valeurs de m et r. Sont-ils égaux ?",
+      "Basculez entre « En G » et « En M » et comparez les étapes de calcul.",
+      "Quand C₂ → 0 (masse au centre), que devient J<sub>eq</sub> ? Comparez avec un pendule simple."
+    ],
+    defi:{ q:"Que vaut la période si toute la masse est concentrée au centre (C₂ = 0) ?",
+      a:"T = 2π√((R−r)/g), comme un pendule simple de longueur R−r. En effet J<sub>eq</sub> = m(R−r)² et T = 2π√(J<sub>eq</sub>/(mg(R−r))) = 2π√((R−r)/g)." },
+    qcm:[
+      {q:"Pour écrire E<sub>c</sub> = ½ Ω·I<sub>M</sub>Ω avec un seul terme, quelle propriété de M utilise-t-on ?",
+       o:["M est le centre de masse du rotor","V<sub>M,2/1</sub> = 0 : le roulement sans glissement fait de M le centre instantané de rotation","M est le point le plus bas de la plaque","M est un point fixe de la plaque"],a:1,
+       w:"Avec V<sub>M</sub> = 0, le comoment se réduit au seul terme de rotation. M n'est pas fixe : c'est un point géométrique de contact qui se déplace sur la plaque, mais sa vitesse est nulle à l'instant considéré."},
+      {q:"Le rotor a pour moment d'inertie C₂ par rapport à (G, z). Que vaut le terme zz de I<sub>M</sub>(2), avec MG = r ?",
+       o:["C₂","C₂ − m r²","C₂ + m r²","C₂ + m (R−r)²"],a:2,
+       w:"Huygens : on ajoute m·d² où d est la distance entre les deux axes parallèles. Ici d = MG = r."},
+      {q:"Au contact en M, la force de frottement n'est pas nulle. Pourquoi sa puissance l'est-elle ?",
+       o:["Parce que la force est perpendiculaire à la vitesse","Parce que la vitesse de glissement en M est nulle","Parce que le frottement est négligé","Parce que c'est une action intérieure"],a:1,
+       w:"La puissance d'une action de contact contient la vitesse de glissement V<sub>M,2/1</sub> = 0. Une force peut être non nulle et ne pas travailler."},
+      {q:"On fait tendre C₂ vers 0 (toute la masse au centre). Quelle période retrouve-t-on ?",
+       o:["T = 2π√(r/g)","T = 2π√((R−r)/g), celle d'un pendule simple de longueur R−r","T = 2π√(R/g)","Elle tend vers l'infini"],a:1,
+       w:"Avec C₂ = 0, T = 2π√((R−r)(m r²)/(m g r²)) = 2π√((R−r)/g). Le centre G décrit un cercle de rayon R−r."}
+    ]
+  },
+  velo: {
+    title:"Roue de vélo", level:"Niveau 2 · Approfondir", time:"30 min", course:"point",
+    goal:"Distinguer les points où le frottement travaille et où il ne travaille pas, et relier le coefficient k à l'accélération.",
+    steps:[
+      "Lancez la descente. Où est le point de contact I ? Sa vitesse est-elle nulle ?",
+      "Montrez la force de frottement f en I. Pourquoi ne travaille-t-elle pas ?",
+      "Comparez avec le bloc qui glisse sans frottement : quel est le facteur sur l'accélération ?",
+      "Faites varier la masse de la jante (k varie). Comment varie l'accélération ?"
+    ],
+    defi:{ q:"Quel est le rapport d'accélération entre un cerceau (k = 1) et un bloc sans frottement sur la même pente ?",
+      a:"a_cerceau = g sin β / (1+1) = ½ g sin β. a_bloc = g sin β. La roue descend deux fois moins vite en accélération." },
+    qcm:[
+      {q:"Une roue pleine (k = ½) et un cerceau (k = 1) de même masse et de même rayon descendent la même pente. Lequel arrive en premier ?",
+       o:["Le cerceau, car sa masse est à la périphérie","Le disque plein, car a = g sin β/(1+k) est plus grande avec k plus petit","Ils arrivent ensemble","Cela dépend du rayon"],a:1,
+       w:"Plus la masse est loin de l'axe, plus il faut d'énergie cinétique de rotation pour une même vitesse : à Ep égale, v est plus petite. a vaut ⅔ g sin β pour le disque et ½ g sin β pour le cerceau."},
+      {q:"Quelle puissance fait varier l'énergie cinétique de la roue qui descend ?",
+       o:["Celle du frottement en I, qui entraîne la rotation","Celle de la réaction normale","Celle du poids seulement","Celles du poids et du frottement"],a:2,
+       w:"Le frottement en I est indispensable pour que la roue tourne, mais sa puissance est nulle (V<sub>I</sub> = 0). La normale aussi. Seul le poids fournit de la puissance."},
+      {q:"On veut écrire E<sub>c</sub> = ½ I<sub>A</sub> Ω² en un point A quelconque du solide, en mouvement. Est-ce correct ?",
+       o:["Oui, à condition d'avoir la matrice d'inertie en A","Non, il faut que V<sub>A</sub> = 0 ; sinon le comoment compte aussi un terme en V<sub>A</sub>","Oui, car l'énergie cinétique ne dépend pas du point","Non, seul G convient toujours"],a:1,
+       w:"E<sub>c</sub> = ½ {V}⊗{C} s'écrit en n'importe quel point, mais la forme à un terme exige V<sub>A</sub> = 0. C'est le cas de M et de I grâce au roulement sans glissement."},
+      {q:"Le frottement en I vaut-il 0 N ?",
+       o:["Oui, sinon la roue ne tourne pas","Non, il est non nul mais ne travaille pas (V<sub>I</sub> = 0)","Oui, car le contact est parfait","Non, il est toujours égal à mg"],a:1,
+       w:"Le frottement statique f = k·m·a est non nul. Il crée le couple qui fait tourner la roue. Mais sa puissance est nulle car le point d'application I a une vitesse nulle."}
+    ]
+  },
+  huygens: {
+    title:"Torseurs et Huygens", level:"Niveau 1 · Outil", time:"20 min", course:"huygens",
+    goal:"Calculer I<sub>M</sub> à partir de I<sub>G</sub>, vérifier que la diagonale augmente et que MG oblique crée des termes non diagonaux.",
+    steps:[
+      "Cliquez « Préréglage rotor ». Vérifiez la matrice I<sub>M</sub>.",
+      "Modifiez la masse m : quels termes de I<sub>M</sub> changent ?",
+      "Cliquez « MG oblique » : que se passe-t-il sur les termes hors diagonale ?",
+      "Pour le rotor, MG = r y<sub>i</sub> : quel terme de la matrice augmente de m r² ?"
+    ],
+    defi:{ q:"Pour le rotor avec I<sub>G</sub> = diag(A, A, C) et MG = (0, r, 0), donner I<sub>M</sub>.",
+      a:"I<sub>M</sub> = diag(A + m r², A, C + m r²). Les termes diagonaux : I<sub>xx</sub> = A + m(r²+0²) = A + m r², I<sub>yy</sub> = A + 0 = A, I<sub>zz</sub> = C + m r². Les termes hors diagonale sont nuls car un des produits est nul." },
+    qcm:[
+      {q:"On connaît I<sub>G</sub>(S) diagonale et MG = (a, b, 0). Que vaut le terme xy de I<sub>M</sub>(S) ?",
+       o:["0","−m a b","+m a b","m (a² + b²)"],a:1,
+       w:"Le terme hors diagonale de la matrice de Huygens vaut −m·a·b (produit des coordonnées de MG). Il disparaît seulement si MG est porté par un axe de la base."},
+      {q:"On connaît I<sub>M</sub>(S) et on veut I<sub>M'</sub>(S). Peut-on appliquer Huygens directement entre M et M' ?",
+       o:["Oui, avec le vecteur MM'","Non : un des deux points doit être le centre de masse G, on passe par G","Oui, mais seulement si M et M' sont sur un même axe","Non, il faut recalculer l'intégrale"],a:1,
+       w:"La formule suppose que G est l'un des deux points. Pour aller de M à M', on retranche d'abord le terme en MG pour revenir en G, puis on ajoute le terme en M'G."},
+      {q:"Que peut-on dire des termes diagonaux de I<sub>M</sub> par rapport à ceux de I<sub>G</sub> ?",
+       o:["Ils sont toujours plus petits","Ils sont égaux ou augmentés d'un terme m·d² ≥ 0","Ils peuvent être négatifs","Ils ne changent jamais"],a:1,
+       w:"Sur la diagonale, on ajoute m fois la somme de deux carrés : c'est toujours positif. Les termes hors diagonale, en revanche, peuvent être négatifs."},
+      {q:"Huygens : MG = 0,5 m vers x. Quels termes diagonaux de I<sub>M</sub> changent et de combien ?",
+       o:["Tous, de m·0,5²","Seuls I<sub>yy</sub> et I<sub>zz</sub> augmentent de m·0,25","Seul I<sub>xx</sub> augmente","Aucun, MG est porté par x"],a:1,
+       w:"Avec MG = (0,5 ; 0 ; 0) : a = 0,5, b = c = 0. La diagonale de la matrice de Huygens vaut (0, 0,25, 0,25). Donc I<sub>xx</sub> est inchangé, I<sub>yy</sub> et I<sub>zz</sub> augmentent de m·0,25."}
+    ]
+  }
+};
+
+/* ================= QCM ================= */
+function actState(){ return AS.st[AS.key] || (AS.st[AS.key] = { a:{}, checked:false, shown:false }); }
+function actScore(a){ const s=actState(); return a.qcm.filter((q,i)=>s.a[i]===q.a).length; }
+
+/* ================= COURS ================= */
+const COURSE = [
+  { id:'torseurs', t:'Torseurs cinématique et cinétique', h:`
+<p>Un <b>torseur</b> est défini par sa résultante et son moment en un point. On change de point par la relation de Varignon : le moment en Q vaut le moment en P plus QP ∧ résultante.</p>
+<h3>Cinématique de S/R</h3>
+<div class="formula">{V<sub>S/R</sub>} = { Ω<sub>S/R</sub> ; V<sub>P,S/R</sub> }<sub>P</sub> &nbsp; avec &nbsp; V<sub>Q</sub> = V<sub>P</sub> + QP ∧ Ω</div>
+<h3>Cinétique de S/R</h3>
+<div class="formula">{C<sub>S/R</sub>} = { m V<sub>G,S/R</sub> ; σ<sub>P,S/R</sub> }<sub>P</sub></div>
+<p>avec σ<sub>P</sub> = σ<sub>G</sub> + PG ∧ m V<sub>G</sub> et σ<sub>G</sub> = I<sub>G</sub>(S) Ω. Le moment cinétique en G s'obtient avec la matrice d'inertie en G.</p>
+<h3>Actions mécaniques sur S</h3>
+<div class="formula">{T<sub>ext→S</sub>} = { R ; M<sub>P</sub> }<sub>P</sub></div>
+<div class="retain"><b>À retenir.</b> Un torseur, c'est une résultante et un moment en un point. Varignon permet de changer de point, mais les deux termes changent ensemble.</div>` },
+
+  { id:'comoment', t:'Comoment et puissance', h:`
+<p>Le <b>comoment</b> de deux torseurs est un scalaire. Il se calcule avec les éléments de réduction écrits au <b>même point</b> P, et sa valeur ne dépend pas de ce point.</p>
+<div class="formula">{A} ⊗ {B} = R<sub>A</sub> · M<sub>P,B</sub> + M<sub>P,A</sub> · R<sub>B</sub></div>
+<h3>Puissance d'une action mécanique</h3>
+<div class="formula">P(ext→S/R) = {T<sub>ext→S</sub>} ⊗ {V<sub>S/R</sub>} = R · V<sub>P,S/R</sub> + M<sub>P</sub> · Ω<sub>S/R</sub></div>
+<h3>Énergie cinétique</h3>
+<div class="formula">E<sub>c</sub>(S/R) = ½ {C<sub>S/R</sub>} ⊗ {V<sub>S/R</sub>} = ½ [ m V<sub>P</sub> · V<sub>G</sub> + σ<sub>P</sub> · Ω ]</div>
+<h3>Liaison parfaite ou contact sans glissement</h3>
+<div class="formula">P = {T} ⊗ {V} = 0 car la composante de V en jeu (vitesse de glissement) est nulle</div>
+<div class="retain"><b>À retenir.</b> Le comoment donne le même nombre en tout point, mais l'expression est plus ou moins longue selon le point.</div>` },
+
+  { id:'tec', t:"Théorème de l'énergie cinétique", h:`
+<p>Dans un référentiel galiléen, pour un ensemble matériel E :</p>
+<div class="formula">dE<sub>c</sub>(E/R<sub>g</sub>)/dt = P(ext→E/R<sub>g</sub>) + P<sub>int</sub>(E)</div>
+<p>Pour un solide unique, P<sub>int</sub> = 0. Les liaisons parfaites ne contribuent pas. On obtient une équation scalaire sans inconnue de liaison, ce qui convient à un système à un degré de liberté.</p>
+<h3>Méthode en quatre lignes</h3>
+<ol>
+<li><b>Cinématique</b> : exprimer Ω et V<sub>G</sub> avec un seul paramètre (ici θ̇), grâce au roulement sans glissement.</li>
+<li><b>Choix du point</b> : chercher un point de vitesse nulle. S'il existe, y déplacer la matrice d'inertie.</li>
+<li><b>Énergie cinétique et puissances</b> : calculer E<sub>c</sub> et ne garder que les puissances qui ne sont pas nulles.</li>
+<li><b>TEC</b> : dériver E<sub>c</sub>, égaler à P<sub>ext</sub>, simplifier par θ̇ puis linéariser si besoin.</li>
+</ol>
+<div class="retain"><b>À retenir.</b> Le TEC fait disparaître les inconnues de liaison. C'est l'outil idéal pour un système à un degré de liberté.</div>` },
+
+  { id:'point', t:'Où écrire E<sub>c</sub> ?', h:`
+<p>Le comoment donne le même nombre en tout point, mais l'expression est plus ou moins longue.</p>
+<h3>En G (formule de König)</h3>
+<div class="formula">E<sub>c</sub> = ½ m V<sub>G</sub>² + ½ Ω · I<sub>G</sub> Ω</div>
+<p>Deux termes. Pratique quand I<sub>G</sub> est donnée, comme pour le rotor.</p>
+<h3>En un point P de vitesse nulle (point fixe ou centre instantané de rotation)</h3>
+<div class="formula">V<sub>P</sub> = 0 ⇒ E<sub>c</sub> = ½ Ω · I<sub>P</sub> Ω</div>
+<p>Un seul terme. Il suffit de déplacer la matrice d'inertie en P (Huygens). C'est le cas de M pour le rotor et de I pour la roue.</p>
+<div class="verdict warn"><b>Attention :</b> la forme à un terme n'est valable que si V<sub>P</sub> = 0 à l'instant considéré. Un point P quelconque en mouvement garde le terme m V<sub>P</sub>·V<sub>G</sub>.</div>
+<div class="retain"><b>À retenir.</b> Chercher un point de vitesse nulle (point fixe ou CIR) permet de diviser par deux le nombre de termes. C'est le réflexe à avoir.</div>` },
+
+  { id:'huygens', t:'Huygens : déplacer la matrice', h:`
+<p>Si G est le centre de masse de S et si MG = (a, b, c) dans la base choisie :</p>
+<div class="formula">I<sub>M</sub>(S) = I<sub>G</sub>(S) + m · [ b²+c² &nbsp; −ab &nbsp; −ac ; −ab &nbsp; a²+c² &nbsp; −bc ; −ac &nbsp; −bc &nbsp; a²+b² ]</div>
+<p>Sur la diagonale, on retrouve le théorème de Huygens scalaire : I<sub>Δ</sub> = I<sub>Δ<sub>G</sub></sub> + m d², avec d la distance entre les deux axes parallèles. Les termes hors diagonale apparaissent dès que MG n'est pas porté par un axe de la base.</p>
+<ul>
+<li>Les deux matrices s'écrivent dans la <b>même base</b>.</li>
+<li>Un des deux points est obligatoirement G. Pour passer de M à M', on passe par G : on retire m[…] en M, puis on ajoute m[…] en M'.</li>
+<li>La matrice en M est toujours « plus grande » sur la diagonale : on ajoute des termes positifs.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Huygens permet de déplacer la matrice d'inertie d'un point à un autre, à condition qu'un des deux points soit le centre de masse G.</div>` },
+
+  { id:'bilan', t:'Méthode récapitulative', h:`
+<table class="ctable"><thead><tr><th>Étape</th><th>Ce qu'on fait</th><th>Ce qu'on cherche</th></tr></thead><tbody>
+<tr><td>1 · Cinématique</td><td>Exprimer Ω et V<sub>G</sub> en fonction d'un seul paramètre</td><td>La relation de roulement sans glissement</td></tr>
+<tr><td>2 · Choix du point</td><td>Repérer un point de vitesse nulle (point fixe ou CIR)</td><td>Réduire le comoment à un seul terme</td></tr>
+<tr><td>3 · Énergie cinétique</td><td>Calculer E<sub>c</sub> = ½ {C} ⊗ {V}</td><td>Le J<sub>eq</sub> du système</td></tr>
+<tr><td>4 · Puissances</td><td>Ne garder que les puissances non nulles</td><td>P<sub>ext</sub> en fonction du paramètre</td></tr>
+<tr><td>5 · TEC</td><td>Dériver E<sub>c</sub> = P<sub>ext</sub>, simplifier par θ̇</td><td>L'équation différentielle du mouvement</td></tr>
+<tr><td>6 · Linéarisation</td><td>Si θ petit, sin θ ≈ θ</td><td>La période des petites oscillations</td></tr>
+</tbody></table>
+<h3>Que choisir comme point ?</h3>
+<ul>
+<li><b>Point fixe</b> (axe de rotation) : c'est le plus simple. La matrice d'inertie y est souvent donnée.</li>
+<li><b>Centre instantané de rotation</b> (roulement sans glissement) : un seul terme aussi, mais il faut déplacer la matrice par Huygens.</li>
+<li><b>Centre de masse G</b> : deux termes (König), mais la matrice y est souvent déjà connue.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Le TEC est une méthode puissante et systématique. Le choix du point où écrire E<sub>c</sub> détermine la longueur du calcul.</div>` },
+
+  { id:'gloss', t:'Vocabulaire', h:`
+<dl class="gloss">
+<dt>Torseur</dt><dd>Objet défini par une résultante et un moment en un point. Change de point par Varignon.</dd>
+<dt>Comoment</dt><dd>Produit scalaire de deux torseurs, calculé au même point. Indépendant du point.</dd>
+<dt>Énergie cinétique</dt><dd>Demi-comoment du torseur cinétique par le torseur cinématique : E<sub>c</sub> = ½ {C} ⊗ {V}.</dd>
+<dt>Théorème de l'énergie cinétique</dt><dd>dE<sub>c</sub>/dt = P(ext) + P(int). Pour un solide unique, P(int) = 0.</dd>
+<dt>Centre instantané de rotation (CIR)</dt><dd>Point du solide dont la vitesse est nulle à l'instant considéré. Le mouvement est alors une rotation pure autour de ce point.</dd>
+<dt>Huygens</dt><dd>Formule pour déplacer la matrice d'inertie de G vers un autre point M : I<sub>M</sub> = I<sub>G</sub> + m·[…] avec MG.</dd>
+<dt>J<sub>eq</sub></dt><dd>Moment d'inertie équivalent du système ramené à un seul degré de liberté.</dd>
+<dt>Formule de König</dt><dd>E<sub>c</sub> = ½ m V<sub>G</sub>² + ½ Ω·I<sub>G</sub>Ω : énergie cinétique décomposée en translation de G + rotation propre.</dd>
+</dl>` }
+];
+function courseSection(id){ return COURSE.find(s=>s.id===id)||COURSE[0]; }
+
+/* ================= SHELL UI ================= */
+function renderSeg(){
+  const seg=$("wsSeg"); if(!seg) return; seg.innerHTML="";
+  WORKSHOPS.forEach((w,i)=>seg.append(h('button',{type:'button',role:'tab','aria-pressed':w.id===UI.cur?'true':'false','aria-selected':w.id===UI.cur?'true':'false',onclick:()=>gotoWs(w.id)}, (i+1)+'. '+w.title)));
+}
+function mountWs(){
+  const w=wsById(UI.cur), root=$("ws");
+  $("hint").textContent=w.hint; root.innerHTML="";
+  w.mount(root);
+  const sc=$("scroller"); if(sc) sc.scrollTop=0;
+}
+function gotoWs(id){
+  const old=wsById(UI.cur); if(old.leave) old.leave();
+  if(CS.open){ CS.open=false; renderCourse(); }
+  UI.cur=id; AS.key=id; AS.tab='steps';
+  renderSeg(); mountWs(); renderAct();
+}
+
+function actSave(){}
+function renderAct(){
+  const box=$("act"), btn=$("bAct");
+  btn.setAttribute('aria-pressed',AS.open?'true':'false'); btn.classList.toggle('pri',AS.open);
+  box.hidden=!AS.open;
+  if(!AS.open){ box.innerHTML=""; return; }
+  box.innerHTML="";
+  const a=ACT[AS.key];
+  const close=h('button',{class:'btn sm',type:'button',onclick:()=>{AS.open=false;renderAct();}},'Fermer');
+  box.append(h('div',{class:'phead'},h('b',null,'Activité'),h('span',{class:'sub'},a.title),close));
+  const nq=a.qcm.length;
+  box.append(h('div',{class:'tabs',role:'tablist'},
+    h('button',{type:'button',role:'tab','aria-selected':AS.tab==='steps'?'true':'false',onclick:()=>{AS.tab='steps';renderAct();}},'Consignes'),
+    h('button',{type:'button',role:'tab','aria-selected':AS.tab==='qcm'?'true':'false',onclick:()=>{AS.tab='qcm';renderAct();}},'Questions ('+nq+')')));
+  const body=h('div',{class:'pbody'});
+  if(AS.tab==='steps'){
+    body.append(h('p',{class:'small'},a.level+' · environ '+a.time), h('div',{class:'goal'},h('b',null,'Objectif. '),h('span',{html:a.goal})));
+    body.append(h('ol',{class:'steps'},a.steps.map(s=>h('li',{html:s}))));
+    body.append(h('div',{class:'defi'},h('b',null,'Défi'),h('p',{html:a.defi.q}),h('details',null,h('summary',null,'Voir la réponse'),h('p',{html:a.defi.a}))));
+    if(a.course) body.append(h('p',null,h('button',{class:'btn',type:'button',onclick:()=>openCourse(a.course)},'Voir le cours : '+courseSection(a.course).t)));
+    body.append(h('p',null,h('button',{class:'btn pri',type:'button',onclick:()=>{AS.tab='qcm';renderAct();}},'Passer aux questions')));
+  } else {
+    const s=actState(), show=s.checked||s.shown;
+    a.qcm.forEach((q,i)=>{
+      const fs=h('fieldset',{class:'q'},h('legend',{html:(i+1)+'. '+q.q}));
+      q.o.forEach((o,j)=>{
+        const good=show&&j===q.a, bad=s.checked&&!s.shown&&s.a[i]===j&&j!==q.a;
+        const inp=h('input',{type:'radio',name:'q'+i,checked:show&&s.shown?j===q.a:s.a[i]===j,disabled:show});
+        inp.addEventListener('change',()=>{s.a[i]=j;renderAct();});
+        fs.append(h('label',{class:'opt'+(good?' good':'')+(bad?' bad':'')},inp,h('span',null,o+(good?'  ✓':''))));
+      });
+      if(show){ const miss=s.a[i]==null&&!s.shown; fs.append(h('p',{class:'why'},(miss?'Sans réponse. ':'')+q.w)); }
+      body.append(fs);
+    });
+    const done=Object.keys(s.a).length;
+    body.append(h('p',{class:'small'},s.shown?'Réponses affichées.':s.checked?'':done+' réponse(s) sur '+nq+'.'));
+    if(s.checked&&!s.shown) body.append(h('p',{class:'score'},'Score : '+actScore(a)+' / '+nq));
+    const row=h('div',{class:'files'});
+    if(!show) row.append(h('button',{class:'btn pri',type:'button',onclick:()=>{s.checked=true;renderAct();}},'Corriger'));
+    row.append(h('button',{class:'btn',type:'button',onclick:()=>{s.shown=true;renderAct();}},'Afficher les réponses'));
+    if(show) row.append(h('button',{class:'btn',type:'button',onclick:()=>{AS.st[AS.key]={a:{},checked:false,shown:false};renderAct();}},'Recommencer'));
+    body.append(row);
+  }
+  box.append(body);
+}
+function actToggle(){ if(CS.open){CS.open=false;renderCourse();} AS.open=!AS.open; renderAct(); }
+$("bAct").addEventListener('click',actToggle);
+
+function renderCourse(){
+  const box=$("course"), btn=$("bCourse"), work=$("work");
+  btn.setAttribute('aria-pressed',CS.open?'true':'false'); btn.classList.toggle('pri',CS.open);
+  box.hidden=!CS.open; work.hidden=CS.open; $("modes").hidden=CS.open;
+  if(!CS.open){ box.innerHTML=""; return; }
+  box.innerHTML="";
+  const cur=courseSection(CS.id), idx=COURSE.indexOf(cur);
+  const go=id=>{CS.id=id;renderCourse();};
+  const nav=h('nav',{class:'ctoc','aria-label':'Sommaire du cours'},COURSE.map((s,i)=>h('button',{type:'button',class:s.id===cur.id?'on':'','aria-current':s.id===cur.id?'true':'false',onclick:()=>go(s.id)},(i+1)+'. '+s.t)));
+  const sel=h('select',{class:'ctoc-sel','aria-label':'Choisir une section',onchange:e=>go(e.target.value)},COURSE.map((s,i)=>h('option',{value:s.id,selected:s.id===cur.id},(i+1)+'. '+s.t)));
+  const art=h('article',{class:'cbody'});
+  art.append(h('p',{class:'ckick'},'Cours · section '+(idx+1)+' sur '+COURSE.length), h('h2',null,cur.t), h('div',{html:cur.h}));
+  art.append(h('div',{class:'cpn'},
+    idx>0?h('button',{class:'btn',type:'button',onclick:()=>go(COURSE[idx-1].id)},'← '+COURSE[idx-1].t):h('span'),
+    idx<COURSE.length-1?h('button',{class:'btn pri',type:'button',onclick:()=>go(COURSE[idx+1].id)},COURSE[idx+1].t+' →'):h('span')));
+  const top=h('div',{class:'ctop'},h('b',null,'Cours : torseurs et TEC'),h('button',{class:'btn pri sm',type:'button',onclick:()=>{CS.open=false;renderCourse();}},'Retour à l’atelier'));
+  box.append(top,sel,h('div',{class:'cwrap'},nav,art));
+}
+function openCourse(id){ if(id) CS.id=id; CS.open=true; renderCourse(); }
+$("bCourse").addEventListener('click',()=>{CS.open=!CS.open;renderCourse();});
+
+function closeDlg(){ $("dlg").hidden=true; $("dlg").innerHTML=""; }
+function openDlg(title,body){
+  const d=$("dlg"); d.innerHTML=""; d.hidden=false;
+  d.append(h('div',{class:'dlgbox',role:'dialog','aria-label':title},h('header',null,h('b',null,title),h('button',{class:'btn sm',type:'button',onclick:closeDlg},'Fermer')),h('div',{class:'dbody'},body)));
+  d.onclick=ev=>{ if(ev.target===d) closeDlg(); };
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$("dlg").hidden) closeDlg(); });
+$("bHelp").addEventListener('click',()=>{
+  openDlg('Aide', h('div',{html:'<p>Trois ateliers sur le théorème de l’énergie cinétique (CPGE) : banc d’inertie (rotor), roue de vélo, et calculateur de Huygens.</p>'+
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Réglez les paramètres, avancez ou laissez tourner la simulation.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille les torseurs, le comoment, le TEC et Huygens.</li></ul>'+
+    '<h3>Vos données</h3><p>Les réponses au QCM ne quittent pas cette page.</p>'}));
+});
+
+/* ================= BOUCLE PRINCIPALE ================= */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(UI.cur==='rotor' && $("cvR")){
+    if(S.run){ const q=rotorQ(), n=10, ds=dt*(+$("vR").value); for(let i=0;i<n;i++) stepR(ds/n,q); }
+    drawR();
+  } else if(UI.cur==='velo' && $("cvB")){
+    if(B.run){ const q=bq(); if(B.t<q.tf) B.t+=dt*(+$("vb").value); else { B.hold+=dt; if(B.hold>1.2) resetB(); } }
+    drawB();
+  }
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize',()=>{ if($("cvR")) drawR(); if($("cvB")) drawB(); });
+
+/* ================= INIT ================= */
+const hmap={rotor:0,velo:1,huygens:2}, hh=location.hash.slice(1);
+if(hh in hmap) UI.cur=hh;
+AS.key=UI.cur;
+renderSeg(); mountWs(); renderAct(); renderCourse();
+requestAnimationFrame(frame);
 })();
 </script>
+</body>
+</html>
