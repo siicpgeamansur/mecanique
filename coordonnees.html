@@ -1,598 +1,1125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coordonnées cartésiennes • cylindriques • sphériques</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coordonnées cartésiennes · cylindriques · sphériques</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  :root {
-    --bg: #ffffff;
-    --card: #f8fafc;
-    --accent: #2563eb;
-    --accent2: #7c3aed;
-    --success: #16a34a;
-    --error: #dc2626;
-    --text: #1e293b;
-    --muted: #64748b;
-    --border: #e2e8f0;
-    --input-bg: #ffffff;
-    --code-bg: #f1f5f9;
-  }
-  [data-theme="dark"] {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --accent: #38bdf8;
-    --accent2: #a78bfa;
-    --success: #4ade80;
-    --error: #f87171;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --border: #334155;
-    --input-bg: #0f172a;
-    --code-bg: #0f172a;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-    min-height: 100vh;
-    padding: 1rem;
-    transition: background 0.25s, color 0.25s;
-  }
-  h1 {
-    text-align: center;
-    font-size: 1.6rem;
-    margin-bottom: 0.3rem;
-    color: var(--accent);
-  }
-  .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.2rem; font-size: 0.95rem; }
-  .container { max-width: 1280px; margin: 0 auto; display: grid; gap: 1.1rem; }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.1rem;
-  }
-  .card h2 { font-size: 1.1rem; margin-bottom: 0.7rem; color: var(--accent); }
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
-  }
-  label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.2rem; }
-  input[type="number"] {
-    width: 100%;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 0.45rem 0.65rem;
-    font-size: 0.95rem;
-  }
-  .coord-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-  }
-  .coord-row {
-    display: grid;
-    grid-template-columns: 28px 1fr;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .coord-row span {
-    font-weight: 700;
-    color: var(--accent);
-    font-size: 1.05rem;
-  }
-  .btn {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 0.55rem 1.1rem;
-    font-size: 0.9rem;
-    cursor: pointer;
-    font-weight: 600;
-  }
-  [data-theme="dark"] .btn {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  }
-  .btn-secondary { background: #64748b; }
-  [data-theme="dark"] .btn-secondary { background: #475569; }
-  .btn-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.8rem; }
-  .checks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 0.6rem;
-  }
-  .checks label {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: var(--text);
-  }
-  #canvas-container {
-    width: 100%;
-    height: 480px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: #0a0a12;
-  }
-  [data-theme="light"] #canvas-container { background: #f1f5f9; }
-  .theme-toggle {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 100;
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 999px;
-    padding: 0.45rem 0.95rem;
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-  [data-theme="dark"] .theme-toggle { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-  .info {
-    font-size: 0.88rem;
-    color: var(--muted);
-    margin-top: 0.5rem;
-  }
-  .formula {
-    font-family: 'Fira Code', Consolas, monospace;
-    font-size: 0.85rem;
-    background: var(--code-bg);
-    padding: 0.6rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    margin-top: 0.5rem;
-  }
-  @media (max-width: 700px) {
-    #canvas-container { height: 360px; }
-    h1 { font-size: 1.35rem; }
-  }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  --ok-soft:rgba(30,122,46,.15);--bad-soft:rgba(192,40,31,.15);--warn-soft:rgba(154,91,0,.13);
+  --gcol:#188038;--mcol:#9a5b00;--wcol:#7b4fc2;--acol:#2e8b3a;--rcol:#c0281f;
+  --canvas:#f8fbff;--grid:#dce5ee;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0c0c0c;--bar:#141414;--panel:#171717;--panel2:#212121;--field:#101010;--line:#333333;
+  --fg:#f2f2f2;--muted:#a0a0a0;--accent:#f2f2f2;--accent-fg:#14151f;--accent-soft:#2a2a2a;--accent-ink:#d0d0d0;--run:#4ade80;
+  --ok:#4ade80;--warn:#ffb74d;--bad:#ff7b7b;--violet:#c792ff;
+  --ok-soft:rgba(74,222,128,.18);--bad-soft:rgba(248,113,113,.2);--warn-soft:rgba(255,183,77,.15);
+  --gcol:#4ade80;--mcol:#ffb74d;--wcol:#c792ff;--acol:#4ade80;--rcol:#ff7b7b;
+  --canvas:#101010;--grid:#262626;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary,label):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1500px;margin:0 auto}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+
+/* grille deux colonnes */
+.ws-two{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.ws-main{min-width:0}
+.ws-side{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;max-height:calc(100vh - 170px);overflow:auto}
+.ws-side h3{margin:0 0 10px;font-size:15px}
+.ws-side .gstats{grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 0}
+.ws-side .stat{padding:5px 8px}
+.ws-side .chips{margin:10px 0 0}
+@media (max-width:1150px){
+  .ws-two{grid-template-columns:1fr}
+  .ws-side{position:static;max-height:none}
+  .ws-side .gstats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+}
+
+/* Activité */
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px;overflow:auto;padding:12px;flex:1;min-height:0}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none;accent-color:var(--accent)}
+.opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+
+/* Cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;overflow-x:auto;font-family:var(--font-mono);font-size:13.5px;line-height:1.7}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+
+/* éléments d'atelier */
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--accent);font-family:var(--font-mono);font-weight:500;font-size:12px}
+input[type=range]{padding:0;accent-color:var(--accent)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip input{accent-color:var(--accent);margin:0}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel);margin:8px 0}
+.stagebox canvas{display:block;width:100%;height:340px;background:var(--canvas);border-radius:8px}
+.gl{width:100%;height:470px;border-radius:8px;overflow:hidden;background:var(--canvas)}
+.gl canvas{display:block;height:auto;border-radius:0}
+@media (max-width:820px){.gl{height:330px}}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:13.5px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.panel h3{margin:0 0 8px;font-size:15px;color:var(--accent-ink)}
+.cgroup{background:var(--panel2);border-radius:8px;padding:8px 10px;margin-bottom:8px}
+.cgroup strong{display:block;font-size:12.5px;color:var(--accent-ink);margin-bottom:5px}
+.crow{display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:center;margin-bottom:4px}
+.crow span{font-weight:600;color:var(--accent);font-size:13px;text-align:center}
+.crow input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-family:var(--font-mono);font-size:12.5px;color:var(--fg)}
+
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .stagebox canvas{height:260px}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
 </style>
+<script>
+try{if(localStorage.getItem('coord-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}
+</script>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
-    <span id="theme-icon">🌙</span>
-    <span id="theme-label">Sombre</span>
-  </button>
-
-  <h1>Coordonnées cartésiennes • cylindriques • sphériques</h1>
-  <p class="subtitle">Visualisation interactive 3D</p>
-
-  <div class="container">
-    <div class="card">
-      <h2>Coordonnées du point</h2>
-      <div class="grid-3">
-        <div class="coord-group">
-          <strong style="color:var(--accent)">Cartésiennes (x, y, z)</strong>
-          <div class="coord-row"><span>x</span><input type="number" id="x" step="0.1" value="3"></div>
-          <div class="coord-row"><span>y</span><input type="number" id="y" step="0.1" value="2"></div>
-          <div class="coord-row"><span>z</span><input type="number" id="z" step="0.1" value="4"></div>
-        </div>
-        <div class="coord-group">
-          <strong style="color:var(--accent)">Cylindriques (ρ, φ, z)</strong>
-          <div class="coord-row"><span>ρ</span><input type="number" id="rho" step="0.1" value="3.61"></div>
-          <div class="coord-row"><span>φ</span><input type="number" id="phi" step="0.01" value="0.59"></div>
-          <div class="coord-row"><span>z</span><input type="number" id="z2" step="0.1" value="4"></div>
-          <div class="info">φ en radians</div>
-        </div>
-        <div class="coord-group">
-          <strong style="color:var(--accent)">Sphériques (r, θ, φ)</strong>
-          <div class="coord-row"><span>r</span><input type="number" id="r" step="0.1" value="5.39"></div>
-          <div class="coord-row"><span>θ</span><input type="number" id="theta" step="0.01" value="0.74"></div>
-          <div class="coord-row"><span>φ</span><input type="number" id="phi2" step="0.01" value="0.59"></div>
-          <div class="info">θ, φ en radians</div>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn" onclick="randomPoint()">Point aléatoire</button>
-        <button class="btn btn-secondary" onclick="resetPoint()">Réinitialiser (3,2,4)</button>
-      </div>
-
-      <div class="checks">
-        <label><input type="checkbox" id="showCart" checked> Guides cartésiens</label>
-        <label><input type="checkbox" id="showCyl" checked> Guides cylindriques</label>
-        <label><input type="checkbox" id="showSph" checked> Guides sphériques</label>
-      </div>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+        <line x1="13" y1="22" x2="22" y2="18" stroke="var(--rcol)" stroke-width="2"/>
+        <line x1="13" y1="22" x2="5" y2="18" stroke="var(--gcol)" stroke-width="2"/>
+        <line x1="13" y1="22" x2="13" y2="4" stroke="var(--wcol)" stroke-width="2"/>
+        <circle cx="17" cy="10" r="2.4" fill="var(--mcol)"/>
+      </svg>
+      <span>Coordonnées <small>cartésiennes · cylindriques · sphériques</small></span>
     </div>
-
-    <div class="card">
-      <h2>Visualisation 3D</h2>
-      <div id="canvas-container"></div>
-      <p class="info" style="margin-top:0.6rem">
-        Souris gauche = rotation • Molette = zoom • Clic droit = déplacement<br>
-        <strong>Axes :</strong> Rouge = x • Vert = y • Bleu = z (vertical)
-      </p>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+      <button class="btn" id="bTheme" type="button">Mode sombre</button>
     </div>
-
-    <div class="card">
-      <h2>Relations de conversion</h2>
-      <div class="grid-3">
-        <div>
-          <strong>Cartésien → Cylindrique</strong>
-          <div class="formula">
-ρ = √(x² + y²)<br>
-φ = atan2(y, x)<br>
-z = z
-          </div>
-        </div>
-        <div>
-          <strong>Cartésien → Sphérique</strong>
-          <div class="formula">
-r = √(x² + y² + z²)<br>
-θ = acos(z / r)<br>
-φ = atan2(y, x)
-          </div>
-        </div>
-        <div>
-          <strong>Sphérique → Cartésien</strong>
-          <div class="formula">
-x = r · sinθ · cosφ<br>
-y = r · sinθ · sinφ<br>
-z = r · cosθ
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-// ========== Thème ==========
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  if (isDark) {
-    html.removeAttribute('data-theme');
-    document.getElementById('theme-icon').textContent = '🌙';
-    document.getElementById('theme-label').textContent = 'Sombre';
-    localStorage.setItem('theme', 'light');
-  } else {
-    html.setAttribute('data-theme', 'dark');
-    document.getElementById('theme-icon').textContent = '☀️';
-    document.getElementById('theme-label').textContent = 'Clair';
-    localStorage.setItem('theme', 'dark');
+(function(){
+'use strict';
+
+/* ================= Helpers ================= */
+const $ = id => document.getElementById(id);
+const f = (x,d=3)=>{if(!isFinite(x))return "–";const a=Math.abs(x);if(a!==0&&(a<1e-3||a>=1e4))return x.toExponential(2);return x.toFixed(d).replace(".",",")};
+const fmt = (x,d)=>f(x,d);
+const deg = x => x*180/Math.PI;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+function h(tag, attrs, ...kids){
+  const el=document.createElement(tag);
+  if(attrs) for(const [k,v] of Object.entries(attrs)){
+    if(v===false||v==null) continue;
+    if(k==='class') el.className=v;
+    else if(k==='html') el.innerHTML=v;
+    else if(k.startsWith('on')) el.addEventListener(k.slice(2),v);
+    else if(v===true) el.setAttribute(k,'');
+    else el.setAttribute(k,v);
   }
-  updateSceneBackground();
+  for(const k of kids.flat()) if(k!=null&&k!==false) el.append(k.nodeType?k:document.createTextNode(k));
+  return el;
 }
-(function() {
-  if (localStorage.getItem('theme') === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.getElementById('theme-icon').textContent = '☀️';
-    document.getElementById('theme-label').textContent = 'Clair';
+function setup(cv){
+  if(!cv) return null;
+  const dpr=window.devicePixelRatio||1, r=cv.getBoundingClientRect();
+  const w=Math.max(100,r.width), hh=r.height;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(hh*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(hh*dpr)}
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,hh);
+  return {c,w,h:hh};
+}
+function arrow(c,x0,y0,x1,y1,col,lab,lw){
+  lw=lw||2; const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy); if(L<3)return;
+  const ux=dx/L,uy=dy/L,hl=Math.min(L*0.6,lw*4.2),hw=lw*2.1;
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap="round";
+  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1-ux*hl*0.8,y1-uy*hl*0.8);c.stroke();
+  c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-hl*ux+hw*uy,y1-hl*uy-hw*ux);c.lineTo(x1-hl*ux-hw*uy,y1-hl*uy+hw*ux);c.closePath();c.fill();
+  if(lab){c.font="600 13px "+css("--font-ui");c.fillText(lab,x1+6,y1-6)}
+}
+function dot(c,x,y,col,lab,dx=8,dy=-8){
+  c.fillStyle=col; c.beginPath(); c.arc(x,y,4.5,0,7); c.fill();
+  if(lab){ c.font="600 14px "+css("--font-ui"); c.fillText(lab,x+dx,y+dy); }
+}
+
+/* ================= Thème ================= */
+let darkTheme = false;
+try{ darkTheme = localStorage.getItem('coord-theme') === 'dark'; }catch(e){}
+function applyTheme(){
+  document.documentElement.dataset.theme = darkTheme ? 'dark' : 'light';
+  const b = $('bTheme');
+  if(b){
+    b.textContent = darkTheme ? 'Mode clair' : 'Mode sombre';
+    b.setAttribute('aria-label', darkTheme ? 'Activer le mode clair' : 'Activer le mode sombre');
   }
-})();
-
-// ========== Mapping math → Three.js ==========
-// Math : x, y, z (z vertical)
-// Three : X = math x, Y = math z (up), Z = math y
-function toThree(x, y, z) {
-  return new THREE.Vector3(x, z, y);
+  if(G3 && G3.scene) G3.scene.background.set(darkTheme ? 0x101010 : 0xf8fbff);
 }
-
-// ========== Three.js ==========
-let scene, camera, renderer, controls;
-let pointMesh;
-let cartGroup, cylGroup, sphGroup;
-let isUpdating = false;
-
-function initThree() {
-  const container = document.getElementById('canvas-container');
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-
-  scene = new THREE.Scene();
-  updateSceneBackground();
-
-  camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
-  camera.position.set(9, 7, 11);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  container.appendChild(renderer.domElement);
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.target.set(0, 2, 0);
-
-  // Lumières
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
-  dir.position.set(6, 12, 8);
-  scene.add(dir);
-
-  // Axes (Rouge=X=math x, Vert=Y=math z, Bleu=Z=math y)
-  const axes = new THREE.AxesHelper(6);
-  scene.add(axes);
-
-  // Grille horizontale (plan math xOy → plan Three XZ)
-  const grid = new THREE.GridHelper(12, 12, 0x666666, 0xaaaaaa);
-  scene.add(grid);
-
-  // Point
-  const geo = new THREE.SphereGeometry(0.2, 24, 24);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x330000 });
-  pointMesh = new THREE.Mesh(geo, mat);
-  scene.add(pointMesh);
-
-  // Groupes de guides
-  cartGroup = new THREE.Group();
-  cylGroup  = new THREE.Group();
-  sphGroup  = new THREE.Group();
-  scene.add(cartGroup);
-  scene.add(cylGroup);
-  scene.add(sphGroup);
-
-  window.addEventListener('resize', onResize);
-  animate();
-  updatePointFromCartesian();
-}
-
-function updateSceneBackground() {
-  if (!scene) return;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  scene.background = new THREE.Color(isDark ? 0x0a0a12 : 0xf1f5f9);
-}
-
-function onResize() {
-  const container = document.getElementById('canvas-container');
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-function clearGroup(g) {
-  while (g.children.length) {
-    const c = g.children[0];
-    g.remove(c);
-    if (c.geometry) c.geometry.dispose();
-    if (c.material) {
-      if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
-      else c.material.dispose();
-    }
-  }
-}
-
-function updateGuides(x, y, z) {
-  clearGroup(cartGroup);
-  clearGroup(cylGroup);
-  clearGroup(sphGroup);
-
-  const showCart = document.getElementById('showCart').checked;
-  const showCyl  = document.getElementById('showCyl').checked;
-  const showSph  = document.getElementById('showSph').checked;
-
-  const rho = Math.sqrt(x*x + y*y);
-  const r   = Math.sqrt(x*x + y*y + z*z);
-  const phi = Math.atan2(y, x);
-
-  // ========== CARTÉSIEN ==========
-  if (showCart) {
-    // Chemin des projections : O → (x,0,0) → (x,y,0) → (x,y,z)
-    const p0 = toThree(0, 0, 0);
-    const p1 = toThree(x, 0, 0);   // le long de x
-    const p2 = toThree(x, y, 0);   // le long de y
-    const p3 = toThree(x, y, z);   // le long de z
-
-    const matX = new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 });
-    const matY = new THREE.LineBasicMaterial({ color: 0x44ff44, linewidth: 2 });
-    const matZ = new THREE.LineBasicMaterial({ color: 0x4488ff, linewidth: 2 });
-
-    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p0, p1]), matX));
-    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), matY));
-    cartGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p2, p3]), matZ));
-
-    // Point projeté sur le plan xOy
-    const proj = new THREE.Mesh(
-      new THREE.SphereGeometry(0.1, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0x888888 })
-    );
-    proj.position.copy(p2);
-    cartGroup.add(proj);
-  }
-
-  // ========== CYLINDRIQUE ==========
-  if (showCyl && rho > 0.05) {
-    // Cylindre vertical (axe = math z)
-    const cylGeo = new THREE.CylinderGeometry(rho, rho, Math.abs(z) + 0.8, 48, 1, true);
-    const cylMat = new THREE.MeshBasicMaterial({
-      color: 0x22cc88, wireframe: true, transparent: true, opacity: 0.4
-    });
-    const cyl = new THREE.Mesh(cylGeo, cylMat);
-    cyl.position.copy(toThree(0, 0, z/2));
-    cylGroup.add(cyl);
-
-    // Segment radial dans le plan xOy
-    const rad = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([toThree(0,0,0), toThree(x,y,0)]),
-      new THREE.LineBasicMaterial({ color: 0x22cc88 })
-    );
-    cylGroup.add(rad);
-
-    // Arc d'angle φ
-    const arcPts = [];
-    const steps = 32;
-    const end = phi;
-    for (let i = 0; i <= steps; i++) {
-      const a = (i / steps) * end;
-      arcPts.push(toThree(rho * Math.cos(a), rho * Math.sin(a), 0));
-    }
-    cylGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(arcPts),
-      new THREE.LineBasicMaterial({ color: 0x22cc88 })
-    ));
-  }
-
-  // ========== SPHÉRIQUE ==========
-  if (showSph && r > 0.05) {
-    // Sphère filaire
-    const sph = new THREE.Mesh(
-      new THREE.SphereGeometry(r, 32, 24),
-      new THREE.MeshBasicMaterial({ color: 0xaa66ff, wireframe: true, transparent: true, opacity: 0.28 })
-    );
-    sphGroup.add(sph);
-
-    // Rayon
-    sphGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([toThree(0,0,0), toThree(x,y,z)]),
-      new THREE.LineBasicMaterial({ color: 0xaa66ff })
-    ));
-
-    // Arc polaire θ (dans le plan vertical contenant le point)
-    if (rho > 0.02) {
-      const theta = Math.acos(Math.max(-1, Math.min(1, z / r)));
-      const arc = [];
-      for (let i = 0; i <= 24; i++) {
-        const t = (i / 24) * theta;
-        arc.push(toThree(
-          r * Math.sin(t) * Math.cos(phi),
-          r * Math.sin(t) * Math.sin(phi),
-          r * Math.cos(t)
-        ));
-      }
-      sphGroup.add(new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(arc),
-        new THREE.LineBasicMaterial({ color: 0xaa66ff })
-      ));
-    }
-  }
-}
-
-// ========== Conversions ==========
-function updatePointFromCartesian() {
-  if (isUpdating) return;
-  isUpdating = true;
-
-  const x = parseFloat(document.getElementById('x').value) || 0;
-  const y = parseFloat(document.getElementById('y').value) || 0;
-  const z = parseFloat(document.getElementById('z').value) || 0;
-
-  const rho = Math.sqrt(x*x + y*y);
-  const phi = Math.atan2(y, x);
-  document.getElementById('rho').value = rho.toFixed(3);
-  document.getElementById('phi').value = phi.toFixed(3);
-  document.getElementById('z2').value = z.toFixed(3);
-
-  const r = Math.sqrt(x*x + y*y + z*z);
-  const theta = r > 1e-8 ? Math.acos(Math.max(-1, Math.min(1, z / r))) : 0;
-  document.getElementById('r').value = r.toFixed(3);
-  document.getElementById('theta').value = theta.toFixed(3);
-  document.getElementById('phi2').value = phi.toFixed(3);
-
-  pointMesh.position.copy(toThree(x, y, z));
-  updateGuides(x, y, z);
-
-  isUpdating = false;
-}
-
-function updatePointFromCylindrical() {
-  if (isUpdating) return;
-  isUpdating = true;
-
-  const rho = parseFloat(document.getElementById('rho').value) || 0;
-  const phi = parseFloat(document.getElementById('phi').value) || 0;
-  const z   = parseFloat(document.getElementById('z2').value) || 0;
-
-  const x = rho * Math.cos(phi);
-  const y = rho * Math.sin(phi);
-
-  document.getElementById('x').value = x.toFixed(3);
-  document.getElementById('y').value = y.toFixed(3);
-  document.getElementById('z').value = z.toFixed(3);
-
-  const r = Math.sqrt(x*x + y*y + z*z);
-  const theta = r > 1e-8 ? Math.acos(Math.max(-1, Math.min(1, z / r))) : 0;
-  document.getElementById('r').value = r.toFixed(3);
-  document.getElementById('theta').value = theta.toFixed(3);
-  document.getElementById('phi2').value = phi.toFixed(3);
-
-  pointMesh.position.copy(toThree(x, y, z));
-  updateGuides(x, y, z);
-
-  isUpdating = false;
-}
-
-function updatePointFromSpherical() {
-  if (isUpdating) return;
-  isUpdating = true;
-
-  const r     = parseFloat(document.getElementById('r').value) || 0;
-  const theta = parseFloat(document.getElementById('theta').value) || 0;
-  const phi   = parseFloat(document.getElementById('phi2').value) || 0;
-
-  const x = r * Math.sin(theta) * Math.cos(phi);
-  const y = r * Math.sin(theta) * Math.sin(phi);
-  const z = r * Math.cos(theta);
-
-  document.getElementById('x').value = x.toFixed(3);
-  document.getElementById('y').value = y.toFixed(3);
-  document.getElementById('z').value = z.toFixed(3);
-
-  const rho = Math.sqrt(x*x + y*y);
-  document.getElementById('rho').value = rho.toFixed(3);
-  document.getElementById('phi').value = phi.toFixed(3);
-  document.getElementById('z2').value = z.toFixed(3);
-
-  pointMesh.position.copy(toThree(x, y, z));
-  updateGuides(x, y, z);
-
-  isUpdating = false;
-}
-
-function randomPoint() {
-  document.getElementById('x').value = (Math.random()*8 - 4).toFixed(2);
-  document.getElementById('y').value = (Math.random()*8 - 4).toFixed(2);
-  document.getElementById('z').value = (Math.random()*6).toFixed(2);
-  updatePointFromCartesian();
-}
-
-function resetPoint() {
-  document.getElementById('x').value = 3;
-  document.getElementById('y').value = 2;
-  document.getElementById('z').value = 4;
-  updatePointFromCartesian();
-}
-
-// Événements
-['x','y','z'].forEach(id => document.getElementById(id).addEventListener('input', updatePointFromCartesian));
-['rho','phi','z2'].forEach(id => document.getElementById(id).addEventListener('input', updatePointFromCylindrical));
-['r','theta','phi2'].forEach(id => document.getElementById(id).addEventListener('input', updatePointFromSpherical));
-['showCart','showCyl','showSph'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {
-    const x = parseFloat(document.getElementById('x').value) || 0;
-    const y = parseFloat(document.getElementById('y').value) || 0;
-    const z = parseFloat(document.getElementById('z').value) || 0;
-    updateGuides(x, y, z);
-  });
+applyTheme();
+$('bTheme').addEventListener('click', ()=>{
+  darkTheme = !darkTheme;
+  try{ localStorage.setItem('coord-theme', darkTheme ? 'dark' : 'light'); }catch(e){}
+  applyTheme();
+  if(UI.cur==='c2d'){ drawTop(); drawSide(); }
 });
 
-initThree();
+/* ================= Point partagé ================= */
+const PT = { x:3, y:2, z:4 };
+function derived(){
+  const {x,y,z}=PT;
+  const rho = Math.hypot(x,y);
+  const r = Math.hypot(x,y,z);
+  const phi = Math.atan2(y,x);
+  const theta = r>1e-9 ? Math.acos(clamp(z/r,-1,1)) : 0;
+  return {x,y,z,rho,r,phi,theta};
+}
+let onChange = ()=>{};
+
+function coordsHTML(){
+  return `
+    <h3>Coordonnées du point</h3>
+    <div class="cgroup">
+      <strong>Cartésiennes (x, y, z)</strong>
+      <div class="crow"><span>x</span><input type="number" id="cx" step="0.1" value="3"></div>
+      <div class="crow"><span>y</span><input type="number" id="cy" step="0.1" value="2"></div>
+      <div class="crow"><span>z</span><input type="number" id="cz" step="0.1" value="4"></div>
+    </div>
+    <div class="cgroup">
+      <strong>Cylindriques (ρ, φ, z)</strong>
+      <div class="crow"><span>ρ</span><input type="number" id="crho" step="0.1" value="3.606"></div>
+      <div class="crow"><span>φ</span><input type="number" id="cphi" step="0.01" value="0.588"></div>
+      <div class="crow"><span>z</span><input type="number" id="cz2" step="0.1" value="4"></div>
+      <div class="small" style="margin-top:2px">φ en radians</div>
+    </div>
+    <div class="cgroup">
+      <strong>Sphériques (r, θ, φ)</strong>
+      <div class="crow"><span>r</span><input type="number" id="cr" step="0.1" value="5.385"></div>
+      <div class="crow"><span>θ</span><input type="number" id="cth" step="0.01" value="0.733"></div>
+      <div class="crow"><span>φ</span><input type="number" id="cphi2" step="0.01" value="0.588"></div>
+      <div class="small" style="margin-top:2px">θ, φ en radians</div>
+    </div>
+  `;
+}
+function checksHTML(){
+  return `
+    <h3 style="margin-top:14px">Vérifications</h3>
+    <div class="gstats">
+      <div class="stat"><span>x² + y²</span><b id="vXY"></b></div>
+      <div class="stat"><span>ρ²</span><b id="vRho2"></b></div>
+      <div class="stat"><span>ρ² + z²</span><b id="vRhoZ"></b></div>
+      <div class="stat"><span>r²</span><b id="vR2"></b></div>
+    </div>
+  `;
+}
+
+function syncInputs(){
+  const d = derived();
+  const act = document.activeElement;
+  const set=(id,v)=>{const e=$(id); if(e && e!==act) e.value = (Math.abs(v)<5e-4?0:v).toFixed(3);};
+  set('cx',d.x); set('cy',d.y); set('cz',d.z);
+  set('crho',d.rho); set('cphi',d.phi); set('cz2',d.z);
+  set('cr',d.r); set('cth',d.theta); set('cphi2',d.phi);
+  const ro=(id,v)=>{const e=$(id); if(e) e.textContent=v;};
+  ro('vXY',   fmt(d.x*d.x+d.y*d.y,4));
+  ro('vRho2', fmt(d.rho*d.rho,4));
+  ro('vRhoZ', fmt(d.rho*d.rho+d.z*d.z,4));
+  ro('vR2',   fmt(d.r*d.r,4));
+}
+function fromCart(){
+  PT.x = parseFloat($('cx').value)||0;
+  PT.y = parseFloat($('cy').value)||0;
+  PT.z = parseFloat($('cz').value)||0;
+  syncInputs(); onChange();
+}
+function fromCyl(){
+  const rho = parseFloat($('crho').value)||0;
+  const phi = parseFloat($('cphi').value)||0;
+  const z   = parseFloat($('cz2').value)||0;
+  PT.x = rho*Math.cos(phi); PT.y = rho*Math.sin(phi); PT.z = z;
+  syncInputs(); onChange();
+}
+function fromSph(){
+  const r = parseFloat($('cr').value)||0;
+  const th= parseFloat($('cth').value)||0;
+  const ph= parseFloat($('cphi2').value)||0;
+  PT.x = r*Math.sin(th)*Math.cos(ph);
+  PT.y = r*Math.sin(th)*Math.sin(ph);
+  PT.z = r*Math.cos(th);
+  syncInputs(); onChange();
+}
+function bindCoords(){
+  const on=(id,fn)=>{const e=$(id); if(e) e.addEventListener('input',fn);};
+  ['cx','cy','cz'].forEach(id=>on(id,fromCart));
+  ['crho','cphi','cz2'].forEach(id=>on(id,fromCyl));
+  ['cr','cth','cphi2'].forEach(id=>on(id,fromSph));
+}
+function setPT(x,y,z){ PT.x=x; PT.y=y; PT.z=z; syncInputs(); onChange(); }
+
+/* ================= Three.js ================= */
+const toThree = (x,y,z)=> new THREE.Vector3(x, z, y);
+let G3 = null;
+
+function makeLabel(text, color){
+  const cv=document.createElement('canvas'); cv.width=128; cv.height=64;
+  const g2=cv.getContext('2d');
+  g2.font='bold 46px system-ui, sans-serif';
+  g2.fillStyle='#'+color.toString(16).padStart(6,'0');
+  g2.textAlign='center'; g2.textBaseline='middle';
+  g2.fillText(text,64,34);
+  const tex=new THREE.CanvasTexture(cv);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  sp.scale.set(1.0,0.5,1);
+  return sp;
+}
+function clearGroup(g){
+  if(!g) return;
+  while(g.children.length){
+    const c=g.children[0]; g.remove(c);
+    if(c.geometry) c.geometry.dispose();
+    if(c.material){ Array.isArray(c.material)?c.material.forEach(m=>m.dispose()):c.material.dispose(); }
+  }
+}
+function line(g, pts, color, dashed){
+  const geo=new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = dashed
+    ? new THREE.LineDashedMaterial({color,dashSize:0.18,gapSize:0.12})
+    : new THREE.LineBasicMaterial({color});
+  const l=new THREE.Line(geo,mat);
+  if(dashed) l.computeLineDistances();
+  g.add(l);
+}
+
+function init3D(){
+  const host=$('gl'); if(!host || !window.THREE) return;
+  const w=host.clientWidth||600, hh=host.clientHeight||460;
+  const scene=new THREE.Scene();
+  scene.background=new THREE.Color(darkTheme?0x101010:0xf8fbff);
+
+  const camera=new THREE.PerspectiveCamera(45,w/hh,0.1,200);
+  camera.position.set(9,7,11);
+
+  const renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(w,hh);
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  host.appendChild(renderer.domElement);
+
+  const controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true; controls.dampingFactor=0.08;
+  controls.target.set(0,2,0);
+
+  scene.add(new THREE.AmbientLight(0xffffff,0.65));
+  const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(6,12,8); scene.add(dl);
+
+  const grid=new THREE.GridHelper(12,12, darkTheme?0x445566:0xa8b6c6, darkTheme?0x263340:0xd6e0ea);
+  scene.add(grid);
+
+  const L=5.5;
+  const mk=(dir,color,name)=>{
+    scene.add(new THREE.ArrowHelper(dir.clone().normalize(), new THREE.Vector3(0,0,0), L, color, 0.55, 0.28));
+    const s=makeLabel(name,color);
+    s.position.copy(dir.clone().normalize().multiplyScalar(L+0.75));
+    scene.add(s);
+  };
+  mk(new THREE.Vector3(1,0,0),0xd93025,'x');
+  mk(new THREE.Vector3(0,0,1),0x188038,'y');
+  mk(new THREE.Vector3(0,1,0),0x1a73e8,'z');
+
+  const point=new THREE.Mesh(
+    new THREE.SphereGeometry(0.18,24,24),
+    new THREE.MeshStandardMaterial({color:0xe8710a,emissive:0x3a1a00})
+  );
+  scene.add(point);
+
+  const cart=new THREE.Group(), cyl=new THREE.Group(), sph=new THREE.Group();
+  scene.add(cart,cyl,sph);
+
+  G3={scene,camera,renderer,controls,point,cart,cyl,sph,raf:0};
+  const loop=()=>{ G3.raf=requestAnimationFrame(loop); G3.controls.update(); G3.renderer.render(G3.scene,G3.camera); };
+  loop();
+}
+function dispose3D(){
+  if(!G3) return;
+  cancelAnimationFrame(G3.raf);
+  G3.renderer.dispose();
+  const el=G3.renderer.domElement;
+  if(el && el.parentNode) el.parentNode.removeChild(el);
+  G3=null;
+}
+function resize3D(){
+  if(!G3) return;
+  const host=$('gl'); if(!host) return;
+  const w=host.clientWidth, hh=host.clientHeight;
+  if(w<10||hh<10) return;
+  G3.camera.aspect=w/hh; G3.camera.updateProjectionMatrix();
+  G3.renderer.setSize(w,hh);
+}
+function update3D(){
+  if(!G3) return;
+  const d=derived();
+  G3.point.position.copy(toThree(d.x,d.y,d.z));
+  [G3.cart,G3.cyl,G3.sph].forEach(clearGroup);
+
+  const showCart = $('gCart') ? $('gCart').checked : true;
+  const showCyl  = $('gCyl')  ? $('gCyl').checked  : true;
+  const showSph  = $('gSph')  ? $('gSph').checked  : true;
+
+  if(showCart){
+    line(G3.cart,[toThree(0,0,0), toThree(d.x,0,0)],0xd93025,true);
+    line(G3.cart,[toThree(d.x,0,0), toThree(d.x,d.y,0)],0x188038,true);
+    line(G3.cart,[toThree(d.x,d.y,0), toThree(d.x,d.y,d.z)],0x1a73e8,true);
+    const proj=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12), new THREE.MeshBasicMaterial({color:0x8a94a3}));
+    proj.position.copy(toThree(d.x,d.y,0));
+    G3.cart.add(proj);
+  }
+
+  if(showCyl && d.rho>0.05){
+    const mesh=new THREE.Mesh(
+      new THREE.CylinderGeometry(d.rho,d.rho,Math.abs(d.z)+0.6,48,1,true),
+      new THREE.MeshBasicMaterial({color:0x22aa77,wireframe:true,transparent:true,opacity:0.22})
+    );
+    mesh.position.copy(toThree(0,0,d.z/2));
+    G3.cyl.add(mesh);
+    line(G3.cyl,[toThree(0,0,0), toThree(d.x,d.y,0)],0x0f9d58,true);
+    const arc=[];
+    for(let i=0;i<=32;i++){ const a=d.phi*i/32; arc.push(toThree(d.rho*Math.cos(a), d.rho*Math.sin(a), 0)); }
+    line(G3.cyl,arc,0x0f9d58);
+  }
+
+  if(showSph && d.r>0.05){
+    const mesh=new THREE.Mesh(
+      new THREE.SphereGeometry(d.r,32,24),
+      new THREE.MeshBasicMaterial({color:0xaa66ff,wireframe:true,transparent:true,opacity:0.15})
+    );
+    G3.sph.add(mesh);
+    line(G3.sph,[toThree(0,0,0), toThree(d.x,d.y,d.z)],0x7c3aed,true);
+    if(d.rho>0.02){
+      const arc=[];
+      for(let i=0;i<=24;i++){
+        const t=d.theta*i/24;
+        arc.push(toThree(d.r*Math.sin(t)*Math.cos(d.phi), d.r*Math.sin(t)*Math.sin(d.phi), d.r*Math.cos(t)));
+      }
+      line(G3.sph,arc,0x7c3aed);
+    }
+  }
+}
+
+/* ================= Atelier 1 : Exploration 3D ================= */
+function mount3D(root){
+  root.innerHTML = `
+    <div class="ws-two">
+      <div class="ws-main">
+        <h2>Exploration 3D</h2>
+        <p class="small">Le même point M est décrit par trois jeux de coordonnées. Les guides montrent la construction géométrique de chacune : projections parallèles aux axes (cartésien), rayon et angle φ (cylindrique), rayon et angle θ (sphérique).</p>
+        <div class="stagebox"><div class="gl" id="gl"></div></div>
+        <p class="small" style="margin:6px 0 0">Souris gauche = rotation · molette = zoom · clic droit = déplacement. Axes : <b style="color:var(--rcol)">x rouge</b>, <b style="color:var(--gcol)">y vert</b>, <b style="color:var(--wcol)">z bleu (vertical)</b>.</p>
+        <h3>Valeurs</h3>
+        <div class="gstats">
+          <div class="stat"><span>ρ</span><b id="vRho"></b></div>
+          <div class="stat"><span>r</span><b id="vR"></b></div>
+          <div class="stat"><span>φ</span><b id="vPhi"></b></div>
+          <div class="stat"><span>θ</span><b id="vTheta"></b></div>
+        </div>
+      </div>
+      <aside class="ws-side" aria-label="Réglages">
+        ${coordsHTML()}
+        <h3 style="margin-top:14px">Affichage</h3>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" id="gCart" checked> Guides cartésiens</label>
+          <label class="chip"><input type="checkbox" id="gCyl" checked> Guides cylindriques</label>
+          <label class="chip"><input type="checkbox" id="gSph" checked> Guides sphériques</label>
+        </div>
+        <div class="files" style="margin-top:10px">
+          <button class="btn" id="bRand" type="button">Point aléatoire</button>
+          <button class="btn" id="bReset" type="button">Réinitialiser</button>
+        </div>
+        ${checksHTML()}
+      </aside>
+    </div>
+  `;
+  bindCoords();
+  init3D();
+  onChange = ()=>{ update3D(); updateReadouts(); };
+  ['gCart','gCyl','gSph'].forEach(id=>{ const e=$(id); if(e) e.addEventListener('change', update3D); });
+  $('bRand').onclick = ()=>{
+    setPT(+(Math.random()*8-4).toFixed(2), +(Math.random()*8-4).toFixed(2), +(Math.random()*6).toFixed(2));
+  };
+  $('bReset').onclick = ()=>setPT(3,2,4);
+  syncInputs(); update3D(); updateReadouts();
+}
+function updateReadouts(){
+  const d=derived();
+  const ro=(id,v)=>{const e=$(id); if(e) e.textContent=v;};
+  ro('vRho', fmt(d.rho,3));
+  ro('vR',   fmt(d.r,3));
+  ro('vPhi', fmt(d.phi,3)+' rad');
+  ro('vTheta', fmt(d.theta,3)+' rad');
+}
+
+/* ================= Atelier 2 : Vues 2D ================= */
+function mount2D(root){
+  root.innerHTML = `
+    <div class="ws-two">
+      <div class="ws-main">
+        <h2>Vues 2D</h2>
+        <p class="small">Deux coupes du même point : vue de dessus dans le plan xOy (on y lit ρ et φ) et vue de côté dans le plan vertical contenant M (on y lit r, θ et z).</p>
+
+        <div class="stagebox">
+          <canvas id="cvTop" style="height:330px" aria-label="Vue de dessus : plan xOy, ρ et φ"></canvas>
+        </div>
+        <p class="small" style="margin:6px 0 16px">Vue de dessus (plan xOy). Le cercle en pointillés est de rayon ρ. L'angle φ se mesure depuis l'axe x vers l'axe y.</p>
+
+        <div class="stagebox">
+          <canvas id="cvSide" style="height:330px" aria-label="Vue de côté : r, θ, z"></canvas>
+        </div>
+        <p class="small" style="margin:6px 0 0">Vue de côté dans le plan vertical contenant M. L'angle θ se mesure depuis l'axe z vers le rayon OM ; z est la hauteur et ρ la distance horizontale.</p>
+
+        <h3>Valeurs</h3>
+        <div class="gstats">
+          <div class="stat"><span>ρ</span><b id="vRho"></b></div>
+          <div class="stat"><span>r</span><b id="vR"></b></div>
+          <div class="stat"><span>φ</span><b id="vPhi"></b></div>
+          <div class="stat"><span>θ</span><b id="vTheta"></b></div>
+        </div>
+      </div>
+      <aside class="ws-side" aria-label="Réglages">
+        ${coordsHTML()}
+        <div class="files" style="margin-top:10px">
+          <button class="btn" id="bReset" type="button">Réinitialiser (3 ; 2 ; 4)</button>
+        </div>
+        ${checksHTML()}
+      </aside>
+    </div>
+  `;
+  bindCoords();
+  onChange = ()=>{ drawTop(); drawSide(); updateReadouts(); };
+  $('bReset').onclick = ()=>setPT(3,2,4);
+  syncInputs(); drawTop(); drawSide(); updateReadouts();
+}
+
+function drawTop(){
+  const cv=$('cvTop'); if(!cv) return;
+  const {c,w,h:hh}=setup(cv);
+  const d=derived();
+  const R=Math.max(1,Math.abs(d.x),Math.abs(d.y),d.rho)*1.25;
+  const sc=Math.min(w,hh)*0.42/R;
+  const ox=w/2, oy=hh/2;
+  const X=v=>ox+v*sc, Y=v=>oy-v*sc;
+
+  // grille
+  const step=R>12?5:1;
+  c.strokeStyle=css('--grid'); c.lineWidth=1;
+  for(let v=-Math.ceil(R/step)*step; v<=R+1e-9; v+=step){
+    c.beginPath(); c.moveTo(X(v),Y(-R)); c.lineTo(X(v),Y(R)); c.stroke();
+    c.beginPath(); c.moveTo(X(-R),Y(v)); c.lineTo(X(R),Y(v)); c.stroke();
+  }
+
+  // axes
+  arrow(c,X(0),Y(0),X(R),Y(0),css('--rcol'),null,2);
+  arrow(c,X(0),Y(0),X(0),Y(R),css('--gcol'),null,2);
+  c.font="700 14px "+css('--font-ui');
+  c.fillStyle=css('--rcol'); c.fillText('x',X(R)+6,Y(0)+4);
+  c.fillStyle=css('--gcol'); c.fillText('y',X(0)+6,Y(R)-4);
+  c.fillStyle=css('--muted'); c.fillText('O',X(0)-16,Y(0)+16);
+
+  // cercle de rayon rho
+  if(d.rho>1e-6){
+    c.setLineDash([5,5]); c.strokeStyle=css('--mcol'); c.lineWidth=1.5;
+    c.beginPath(); c.arc(X(0),Y(0),d.rho*sc,0,2*Math.PI); c.stroke();
+    c.setLineDash([]);
+  }
+
+  // segment OM
+  c.strokeStyle=css('--accent'); c.lineWidth=2.5;
+  c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(d.x),Y(d.y)); c.stroke();
+
+  // arc phi
+  if(d.rho>1e-6){
+    const rad=Math.min(0.34*d.rho,R*0.32)*sc;
+    const a0=Math.min(0,-d.phi), a1=Math.max(0,-d.phi);
+    c.strokeStyle=css('--acol'); c.lineWidth=2.5;
+    c.beginPath(); c.arc(X(0),Y(0),rad,a0,a1,false); c.stroke();
+    const mid=-d.phi/2;
+    c.fillStyle=css('--acol'); c.font="700 16px "+css('--font-ui');
+    c.fillText('φ', X(0)+(rad+14)*Math.cos(mid)-5, Y(0)+(rad+14)*Math.sin(mid)+5);
+  }
+
+  // point M et étiquette
+  dot(c,X(d.x),Y(d.y),css('--mcol'),null);
+  c.fillStyle=css('--mcol'); c.font="600 13px "+css('--font-ui');
+  c.fillText('M (x ; y)', X(d.x)+10, Y(d.y)-10);
+
+  // étiquette rho
+  const mx=X(d.x/2), my=Y(d.y/2);
+  c.fillStyle=css('--accent'); c.font="700 14px "+css('--font-ui');
+  c.fillText('ρ', mx+6, my-6);
+}
+
+function drawSide(){
+  const cv=$('cvSide'); if(!cv) return;
+  const {c,w,h:hh}=setup(cv);
+  const d=derived();
+  const R=Math.max(1, d.rho, Math.abs(d.z))*1.25;
+  const ox=w*0.18, oy=d.z<0 ? hh*0.5 : hh*0.82;
+  const sc=Math.min(w*0.75/R, (d.z<0?hh*0.45:hh*0.72)/R);
+  const X=v=>ox+v*sc, Y=v=>oy-v*sc;
+
+  // grille
+  const step=R>12?5:1;
+  c.strokeStyle=css('--grid'); c.lineWidth=1;
+  for(let v=0; v<=R+1e-9; v+=step){
+    c.beginPath(); c.moveTo(X(v),Y(-R)); c.lineTo(X(v),Y(R)); c.stroke();
+  }
+  for(let v=-Math.ceil(R/step)*step; v<=R+1e-9; v+=step){
+    c.beginPath(); c.moveTo(X(0),Y(v)); c.lineTo(X(R),Y(v)); c.stroke();
+  }
+
+  // axes
+  arrow(c,X(0),Y(0),X(R),Y(0),css('--accent'),null,2);
+  arrow(c,X(0),Y(0),X(0),Y(R),css('--wcol'),null,2);
+  arrow(c,X(0),Y(0),X(0),Y(Math.min(-R,d.z*1.2)),css('--wcol'),null,2);
+  c.font="700 14px "+css('--font-ui');
+  c.fillStyle=css('--accent'); c.fillText('ρ', X(R)+6, Y(0)+4);
+  c.fillStyle=css('--wcol'); c.fillText('z', X(0)+8, Y(R)-2);
+  c.fillStyle=css('--muted'); c.fillText('O', X(0)-16, Y(0)+16);
+
+  // segments en pointillés jusqu'aux axes
+  c.setLineDash([4,4]); c.strokeStyle=css('--muted'); c.lineWidth=1.2;
+  c.beginPath(); c.moveTo(X(d.rho),Y(0)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
+  c.beginPath(); c.moveTo(X(0),Y(d.z)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
+  c.setLineDash([]);
+
+  // rayon OM
+  c.strokeStyle=css('--wcol'); c.lineWidth=2.5;
+  c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
+
+  // arc theta (depuis +z vers le rayon)
+  if(d.r>1e-6){
+    const aEnd=-Math.atan2(d.z,d.rho);
+    const rad=Math.min(0.34*d.r,R*0.32)*sc;
+    c.strokeStyle=css('--acol'); c.lineWidth=2.5;
+    c.beginPath(); c.arc(X(0),Y(0),rad,-Math.PI/2,aEnd,false); c.stroke();
+    const mid=(-Math.PI/2+aEnd)/2;
+    c.fillStyle=css('--acol'); c.font="700 16px "+css('--font-ui');
+    c.fillText('θ', X(0)+(rad+14)*Math.cos(mid)-5, Y(0)+(rad+14)*Math.sin(mid)+5);
+  }
+
+  // point M
+  dot(c,X(d.rho),Y(d.z),css('--mcol'),null);
+  c.fillStyle=css('--mcol'); c.font="600 13px "+css('--font-ui');
+  c.fillText('M', X(d.rho)+10, Y(d.z)-10);
+
+  // étiquette r
+  const mx=X(d.rho/2), my=Y(d.z/2);
+  c.fillStyle=css('--wcol'); c.font="700 14px "+css('--font-ui');
+  c.fillText('r', mx+8, my-6);
+
+  // graduations des axes
+  c.fillStyle=css('--muted'); c.font="11px "+css('--font-mono');
+  c.fillText(fmt(d.rho,2), X(d.rho)-12, Y(0)+16);
+  c.fillText(fmt(d.z,2), X(0)-40, Y(d.z)+4);
+}
+
+/* ================= Atelier 3 : Convertisseur ================= */
+function mountConv(root){
+  root.innerHTML = `
+    <div class="ws-two">
+      <div class="ws-main">
+        <h2>Convertisseur</h2>
+        <p class="small">Les trois jeux de coordonnées sont recalculés en détail à partir du point courant. Saisissez une valeur dans n'importe quel système : les autres se mettent à jour instantanément.</p>
+        <div id="convOut"></div>
+        <div class="files" style="margin-top:12px">
+          <button class="btn" id="pA" type="button">Point (3 ; 2 ; 4)</button>
+          <button class="btn" id="pB" type="button">Sur l'axe z</button>
+          <button class="btn" id="pC" type="button">Dans le plan xOy</button>
+          <button class="btn" id="pD" type="button">Origine</button>
+        </div>
+      </div>
+      <aside class="ws-side" aria-label="Réglages">
+        ${coordsHTML()}
+        ${checksHTML()}
+      </aside>
+    </div>
+  `;
+  bindCoords();
+  onChange = ()=>drawConv();
+  $('pA').onclick = ()=>setPT(3,2,4);
+  $('pB').onclick = ()=>setPT(0,0,4);
+  $('pC').onclick = ()=>setPT(3,2,0);
+  $('pD').onclick = ()=>setPT(0,0,0);
+  syncInputs(); drawConv();
+}
+function drawConv(){
+  const box=$('convOut'); if(!box) return;
+  const d=derived();
+  const rho2=d.x*d.x+d.y*d.y;
+  const r2=d.r*d.r;
+  box.innerHTML = `
+    <div class="panel">
+      <h3>Cartésien → cylindrique</h3>
+      <div class="formula">
+ρ = √(x² + y²) = √((${fmt(d.x,3)})² + (${fmt(d.y,3)})²) = √${fmt(rho2,4)} = <b>${fmt(d.rho,4)}</b><br>
+φ = atan2(y ; x) = atan2(${fmt(d.y,3)} ; ${fmt(d.x,3)}) = <b>${fmt(d.phi,4)}</b> rad = ${fmt(deg(d.phi),2)}°<br>
+z = <b>${fmt(d.z,4)}</b>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Cartésien → sphérique</h3>
+      <div class="formula">
+r = √(x² + y² + z²) = √(ρ² + z²) = √(${fmt(d.rho*d.rho,4)} + ${fmt(d.z*d.z,4)}) = <b>${fmt(d.r,4)}</b><br>
+θ = acos(z / r) = acos(${fmt(d.z,3)} / ${fmt(d.r,3)}) = <b>${fmt(d.theta,4)}</b> rad = ${fmt(deg(d.theta),2)}°<br>
+φ = atan2(y ; x) = <b>${fmt(d.phi,4)}</b> rad = ${fmt(deg(d.phi),2)}°
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Sphérique → cartésien (restitution)</h3>
+      <div class="formula">
+x = r·sinθ·cosφ = ${fmt(d.r,3)} × ${fmt(Math.sin(d.theta),4)} × ${fmt(Math.cos(d.phi),4)} = <b>${fmt(d.x,4)}</b><br>
+y = r·sinθ·sinφ = ${fmt(d.r,3)} × ${fmt(Math.sin(d.theta),4)} × ${fmt(Math.sin(d.phi),4)} = <b>${fmt(d.y,4)}</b><br>
+z = r·cosθ = ${fmt(d.r,3)} × ${fmt(Math.cos(d.theta),4)} = <b>${fmt(d.z,4)}</b>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Vérifications</h3>
+      <div class="formula">
+x² + y² = ${fmt(rho2,6)} &nbsp;=&nbsp; ρ² = ${fmt(d.rho*d.rho,6)}<br>
+ρ² + z² = ${fmt(d.rho*d.rho+d.z*d.z,6)} &nbsp;=&nbsp; r² = ${fmt(r2,6)}
+      </div>
+      <div class="verdict ${Math.abs(d.rho)<1e-6?'warn':(d.r<1e-6?'warn':'yes')}">
+        ${d.r<1e-6
+          ? '<b>Origine :</b> θ et φ sont indéfinis, seul r = 0 a un sens.'
+          : (d.rho<1e-6
+            ? '<b>Sur l’axe z :</b> φ est indéfini (ρ = 0). θ vaut 0 si z > 0, π si z < 0.'
+            : 'Les trois représentations décrivent bien le même point, et les conversions sont inverses l’une de l’autre.')}
+      </div>
+    </div>
+  `;
+}
+
+/* ================= WORKSHOPS ================= */
+const WORKSHOPS = [
+  { id:'c3d', title:'Exploration 3D',
+    hint:"Faites tourner la scène et cochez/décochez les guides pour relier chaque système de coordonnées à sa construction géométrique.",
+    mount:mount3D, leave:dispose3D,
+    reset:()=>{ setPT(3,2,4); if($('gCart')){$('gCart').checked=true;$('gCyl').checked=true;$('gSph').checked=true;} update3D(); } },
+  { id:'c2d', title:'Vues 2D',
+    hint:"Deux coupes planes du même point : le plan xOy (ρ et φ) et le plan vertical contenant M (r, θ, z).",
+    mount:mount2D, reset:()=>setPT(3,2,4) },
+  { id:'ccv', title:'Convertisseur',
+    hint:"Saisissez une coordonnée dans n'importe quel système : les deux autres et le détail des formules se recalculent instantanément.",
+    mount:mountConv, reset:()=>setPT(3,2,4) }
+];
+function wsById(id){ return WORKSHOPS.find(w=>w.id===id)||WORKSHOPS[0]; }
+
+/* ================= ACTIVITÉS ================= */
+const ACT = {
+  c3d: {
+    title:"Exploration 3D", level:"Niveau 1 · Découvrir", time:"25 min", course:"cyl",
+    goal:"Relier chaque coordonnée à un élément géométrique visible sur la scène, et vérifier que les trois systèmes décrivent le même point.",
+    steps:[
+      "Placez le point en (3 ; 2 ; 4). Vérifiez ρ, r, φ et θ dans le panneau de droite.",
+      "Ne laissez que les guides cartésiens : quelles longueurs lit-on le long des axes ?",
+      "Ne laissez que les guides cylindriques : repérez le cylindre de rayon ρ et l'angle φ dans le plan xOy.",
+      "Ne laissez que les guides sphériques : repérez la sphère de rayon r et l'angle θ mesuré depuis l'axe z.",
+      "Déplacez le point sur l'axe z (x = y = 0). Que devient φ ? Et ρ ?"
+    ],
+    defi:{ q:"Un point a pour coordonnées cylindriques ρ = 5, φ = π/2, z = −2. Quelles sont ses coordonnées cartésiennes et sphériques ?",
+      a:"Cartésiennes : x = ρ cos φ = 0, y = ρ sin φ = 5, z = −2. Sphériques : r = √(25+4) = √29 ≈ <b>5,385</b> ; θ = acos(−2/√29) ≈ <b>1,951 rad</b> (111,8°) ; φ = <b>π/2</b>." },
+    qcm:[
+      { q:"Quelle coordonnée cylindrique reste identique à la coordonnée cartésienne ?",
+        o:["ρ","φ","z","aucune"], a:2,
+        w:"La coordonnée cylindrique z est exactement la hauteur cartésienne : les deux systèmes partagent le même axe vertical." },
+      { q:"À quoi correspond ρ dans le plan xOy ?",
+        o:["L'angle depuis l'axe x","La distance à l'origine dans le plan xOy","La distance à l'origine en 3D","La hauteur"], a:1,
+        w:"ρ = √(x²+y²) est la distance du projeté de M sur le plan xOy à l'origine. La distance 3D, elle, s'appelle r." },
+      { q:"Quel est le domaine de θ en coordonnées sphériques (convention usuelle) ?",
+        o:["[0 ; 2π[","[0 ; π]","]−π ; π]","[−π/2 ; π/2]"], a:1,
+        w:"θ est l'angle entre l'axe z et le rayon OM ; il varie de 0 (pôle nord) à π (pôle sud)." },
+      { q:"Sur l'axe z (x = y = 0, z > 0), que valent ρ, φ et θ ?",
+        o:["ρ = 0, φ = 0, θ = 0","ρ = 0, φ indéfini, θ = 0","ρ = z, φ = 0, θ = π/2","ρ = 0, φ = 0, θ = π"], a:1,
+        w:"ρ = 0 et le rayon OM est confondu avec l'axe z : θ = 0. Mais φ n'a plus de sens puisque le projeté est à l'origine." },
+      { q:"Deux points ont le même r et le même θ mais des φ différents de π/2. Comment sont-ils disposés ?",
+        o:["Sur une même verticale","Sur un même cercle horizontal, symétriques par rapport à l'axe z","Sur une même demi-droite","Ils sont confondus"], a:1,
+        w:"À r et θ fixés, le point décrit un cercle de rayon r sin θ dans un plan horizontal. Un écart de π/2 sur φ le fait tourner d'un quart de tour autour de l'axe z." }
+    ]
+  },
+  c2d: {
+    title:"Vues 2D", level:"Niveau 2 · Lire une figure", time:"25 min", course:"sph",
+    goal:"Lire ρ et φ sur une coupe horizontale, r et θ sur une coupe verticale, et comprendre pourquoi ces deux angles ne sont pas dans le même plan.",
+    steps:[
+      "Placez le point en (3 ; 2 ; 4). Sur la vue de dessus, vérifiez que le cercle en pointillés a bien pour rayon ρ.",
+      "Sur la vue de dessus, lisez φ : entre quels axes est-il compté, et dans quel sens ?",
+      "Sur la vue de côté, vérifiez que r est la longueur du segment oblique et que z est la hauteur.",
+      "Mesurez θ sur la vue de côté : est-il compté depuis l'axe z ou depuis l'horizontale ?",
+      "Mettez z = 0 : que devient θ ? Mettez x = y = 0 : que devient φ ?"
+    ],
+    defi:{ q:"Sur la vue de côté, on lit ρ = 4 et z = 3. Donner r et θ, puis expliquer pourquoi θ n'apparaît pas sur la vue de dessus.",
+      a:"r = √(4² + 3²) = <b>5</b> ; θ = atan(ρ/z) = atan(4/3) ≈ <b>0,927 rad</b> (53,1°). θ est un angle dans un plan vertical : il mesure l'inclinaison du rayon par rapport à l'axe z. La vue de dessus écrase totalement cette direction verticale, donc θ n'y est pas visible." },
+    qcm:[
+      { q:"Sur la vue de dessus (plan xOy), quelles coordonnées peut-on lire directement ?",
+        o:["ρ et φ","r et θ","θ et φ","x et θ"], a:0,
+        w:"La vue de dessus ne montre que le projeté de M dans le plan xOy : sa distance à l'origine (ρ) et son angle depuis l'axe x (φ)." },
+      { q:"Sur la vue de côté, l'angle θ est mesuré :",
+        o:["depuis l'axe horizontal ρ","depuis l'axe vertical z","depuis la verticale vers le bas","depuis le rayon OM vers l'horizontale"], a:1,
+        w:"θ est l'angle entre l'axe z et le rayon OM : il se mesure donc depuis la verticale, vers l'horizontale quand θ augmente." },
+      { q:"Que devient la vue de dessus si l'on met z = 0 en gardant x et y ?",
+        o:["Elle ne change pas","Le point disparaît","Le cercle de rayon ρ disparaît","φ devient nul"], a:0,
+        w:"La vue de dessus ne dépend que de x et y, c'est-à-dire de ρ et φ. Changer z ne la modifie pas d'un pixel." },
+      { q:"Deux points de même ρ et même z mais de φ différents sont représentés :",
+        o:["au même endroit sur les deux vues","au même endroit sur la vue de côté, à des endroits différents sur la vue de dessus","à des endroits différents sur les deux vues","nulle part"], a:1,
+        w:"La vue de côté ne dépend que de ρ et z : elle ne distingue pas φ. La vue de dessus, elle, place le point sur le cercle de rayon ρ à l'angle φ." }
+    ]
+  },
+  ccv: {
+    title:"Convertisseur", level:"Niveau 2 · Calculer", time:"20 min", course:"conv",
+    goal:"Appliquer les formules de conversion dans les deux sens et repérer les cas où elles cessent d'être inversibles.",
+    steps:[
+      "Partez de (3 ; 2 ; 4) et lisez les trois blocs de calcul. Retrouvez ρ et r à la main.",
+      "Entrez ρ = 2, φ = 0,5 rad, z = 1 dans le système cylindrique : vérifiez les valeurs cartésiennes obtenues.",
+      "Entrez r = 3, θ = π/3, φ = π/4 dans le système sphérique : retrouvez x, y, z.",
+      "Cliquez sur « Sur l'axe z » : lisez l'avertissement affiché et expliquez-le.",
+      "Cliquez sur « Origine » : quelles coordonnées restent définies ?"
+    ],
+    defi:{ q:"Un point a pour coordonnées sphériques r = 2, θ = π/3, φ = π/2. Donner ses coordonnées cylindriques et cartésiennes.",
+      a:"sin θ = √3/2, cos θ = 1/2. Cartésiennes : x = 2 × (√3/2) × 0 = 0 ; y = 2 × (√3/2) × 1 = √3 ≈ <b>1,732</b> ; z = 2 × 1/2 = <b>1</b>. Cylindriques : ρ = √(x²+y²) = √3 ≈ <b>1,732</b> ; φ = <b>π/2</b> ; z = <b>1</b>." },
+    qcm:[
+      { q:"La conversion cartésien → sphérique utilise θ = acos(z / r). Pourquoi cette formule est-elle inutilisable à l'origine ?",
+        o:["Parce que z = 0","Parce que r = 0 et la division est impossible : θ n'a pas de sens à l'origine","Parce que acos n'est pas définie en 1","Parce que x et y sont nuls"], a:1,
+        w:"À l'origine, r = 0 : aucun rayon, donc aucune direction. θ et φ sont indéfinis ; seul r = 0 a un sens." },
+      { q:"Quelle identité relie les trois systèmes ?",
+        o:["x + y + z = r","x² + y² = ρ² et ρ² + z² = r²","ρ = r sin φ","z = r cos φ"], a:1,
+        w:"Ces deux identités de Pythagore sont la base de toutes les conversions et permettent de vérifier un calcul rapidement." },
+      { q:"φ est calculé par atan2(y, x) et non par atan(y/x). Pourquoi ?",
+        o:["atan2 est plus rapide","atan(y/x) perd le signe et ne distingue pas les quadrants, et échoue si x = 0","atan n'existe pas en programmation","Les deux sont équivalents"], a:1,
+        w:"atan2(y, x) tient compte des signes de y et de x séparément : il donne l'angle dans ]−π ; π] sur tout le plan, et gère le cas x = 0." },
+      { q:"Si l'on double x et y en gardant z, que deviennent ρ, r et φ ?",
+        o:["ρ, r et φ doublent","ρ et r augmentent (r moins que ρ), φ ne change pas","φ double, ρ et r ne changent pas","rien ne change"], a:1,
+        w:"ρ est multiplié par 2. r = √(ρ²+z²) augmente aussi mais moins que ρ, car z ne change pas. φ = atan2(y, x) est inchangé : le point s'éloigne le long du même rayon." }
+    ]
+  }
+};
+function actState(){ return AS.st[AS.key] || (AS.st[AS.key] = { a:{}, checked:false, shown:false }); }
+function actScore(a){ const s=actState(); return a.qcm.filter((q,i)=>s.a[i]===q.a).length; }
+
+/* ================= COURS ================= */
+const COURSE = [
+  { id:'cart', t:'Repère cartésien', h:`
+<p>Le repère cartésien est formé d'une origine O et de trois axes orthonormés (O, x), (O, y), (O, z). Le point M est repéré par ses trois coordonnées (x, y, z), projections orthogonales sur chaque axe.</p>
+<div class="formula">OM = x·e<sub>x</sub> + y·e<sub>y</sub> + z·e<sub>z</sub> &nbsp;&nbsp; r = √(x² + y² + z²)</div>
+<h3>Avantages</h3>
+<ul>
+<li>Les vecteurs de base e<sub>x</sub>, e<sub>y</sub>, e<sub>z</sub> sont <b>constants</b> : ils ne dépendent pas de la position du point.</li>
+<li>Les translations s'écrivent simplement, et le produit scalaire est immédiat.</li>
+</ul>
+<h3>Limites</h3>
+<p>Dès que le problème a une symétrie de révolution (autour d'un axe) ou sphérique (autour d'un point), les formules cartésiennes deviennent lourdes : les surfaces naturelles (cylindre, sphère) y ont des équations compliquées.</p>
+<div class="retain"><b>À retenir.</b> Le repère cartésien est le plus simple à manipuler, mais il ignore les symétries du problème.</div>` },
+
+  { id:'cyl', t:'Coordonnées cylindriques', h:`
+<p>On projette M en M′ sur le plan xOy. Les coordonnées cylindriques (ρ, φ, z) sont :</p>
+<ul>
+<li><b>ρ</b> = distance OM′ = √(x² + y²), avec ρ ≥ 0 ;</li>
+<li><b>φ</b> = angle orienté de l'axe x vers OM′, dans le plan xOy ;</li>
+<li><b>z</b> = la cote, identique à la coordonnée cartésienne.</li>
+</ul>
+<div class="formula">x = ρ cos φ &nbsp;&nbsp; y = ρ sin φ &nbsp;&nbsp; z = z<br>
+ρ = √(x² + y²) &nbsp;&nbsp; φ = atan2(y, x)</div>
+<h3>Surfaces coordonnées</h3>
+<table class="ctable"><thead><tr><th>Équation</th><th>Surface</th></tr></thead><tbody>
+<tr><td>ρ = constante</td><td>Cylindre de révolution d'axe (O, z)</td></tr>
+<tr><td>φ = constante</td><td>Demi-plan contenant l'axe (O, z)</td></tr>
+<tr><td>z = constante</td><td>Plan horizontal</td></tr>
+</tbody></table>
+<h3>Quand les utiliser ?</h3>
+<p>Dès que le problème présente une <b>symétrie de révolution</b> autour d'un axe : tige, cylindre, disque en rotation, champ créé par un fil rectiligne infini.</p>
+<div class="retain"><b>À retenir.</b> Cylindrique = polaire dans un plan + une hauteur z inchangée.</div>` },
+
+  { id:'sph', t:'Coordonnées sphériques', h:`
+<p>Les coordonnées sphériques (r, θ, φ) sont :</p>
+<ul>
+<li><b>r</b> = distance OM, avec r ≥ 0 ;</li>
+<li><b>θ</b> = angle entre l'axe (O, z) et OM, appelé <i>colatitude</i>, avec θ ∈ [0 ; π] ;</li>
+<li><b>φ</b> = angle de l'axe x vers le projeté M′ de M dans le plan xOy, avec φ ∈ ]−π ; π] ou [0 ; 2π[.</li>
+</ul>
+<div class="formula">x = r sin θ cos φ &nbsp;&nbsp; y = r sin θ sin φ &nbsp;&nbsp; z = r cos θ<br>
+r = √(x² + y² + z²) &nbsp;&nbsp; θ = acos(z / r) &nbsp;&nbsp; φ = atan2(y, x)</div>
+<div class="verdict warn"><b>Attention aux conventions.</b> En physique, θ est souvent la colatitude mesurée depuis l'axe z. En mathématiques, on note parfois θ l'angle dans le plan xOy. Vérifiez toujours la convention de votre cours.</div>
+<h3>Surfaces coordonnées</h3>
+<table class="ctable"><thead><tr><th>Équation</th><th>Surface</th></tr></thead><tbody>
+<tr><td>r = constante</td><td>Sphère de centre O</td></tr>
+<tr><td>θ = constante</td><td>Cône de sommet O et d'axe (O, z)</td></tr>
+<tr><td>φ = constante</td><td>Demi-plan contenant l'axe (O, z)</td></tr>
+</tbody></table>
+<h3>Quand les utiliser ?</h3>
+<p>Dès que le problème présente une <b>symétrie sphérique</b> : sphère, atome, champ créé par une charge ponctuelle, gravitation.</p>
+<div class="retain"><b>À retenir.</b> Sphérique = une distance r et deux angles : θ depuis l'axe z, φ dans le plan horizontal.</div>` },
+
+  { id:'conv', t:'Relations de conversion', h:`
+<table class="ctable"><thead><tr><th>Vers</th><th>Cartésien</th><th>Cylindrique</th><th>Sphérique</th></tr></thead><tbody>
+<tr><td><b>Cartésien</b></td><td>—</td><td>ρ = √(x²+y²)<br>φ = atan2(y, x)<br>z = z</td><td>r = √(x²+y²+z²)<br>θ = acos(z/r)<br>φ = atan2(y, x)</td></tr>
+<tr><td><b>Cylindrique</b></td><td>x = ρ cos φ<br>y = ρ sin φ<br>z = z</td><td>—</td><td>r = √(ρ²+z²)<br>θ = acos(z/r)<br>φ = φ</td></tr>
+<tr><td><b>Sphérique</b></td><td>x = r sinθ cosφ<br>y = r sinθ sinφ<br>z = r cosθ</td><td>ρ = r sin θ<br>φ = φ<br>z = r cos θ</td><td>—</td></tr>
+</tbody></table>
+<h3>Les deux identités à connaître</h3>
+<div class="formula">x² + y² = ρ² &nbsp;&nbsp; et &nbsp;&nbsp; ρ² + z² = r²</div>
+<p>Elles se lisent directement sur les figures : théorème de Pythagore dans le plan xOy pour la première, puis dans le plan vertical contenant M pour la seconde.</p>
+<h3>Pourquoi atan2 ?</h3>
+<p>La fonction <code>atan(y/x)</code> ne donne qu'un angle dans ]−π/2 ; π/2[ et échoue si x = 0. La fonction <code>atan2(y, x)</code> utilise les signes des deux arguments et renvoie l'angle correct dans ]−π ; π] sur tout le plan.</p>
+<div class="retain"><b>À retenir.</b> Toute conversion doit être vérifiée avec les identités ρ² = x² + y² et r² = ρ² + z².</div>` },
+
+  { id:'local', t:'Repère local et vecteurs unitaires', h:`
+<p>Contrairement au repère cartésien, les repères cylindrique et sphérique ont des vecteurs unitaires qui <b>dépendent de la position du point</b>.</p>
+<h3>Base cylindrique (e<sub>ρ</sub>, e<sub>φ</sub>, e<sub>z</sub>)</h3>
+<div class="formula">e<sub>ρ</sub> = cos φ e<sub>x</sub> + sin φ e<sub>y</sub><br>
+e<sub>φ</sub> = −sin φ e<sub>x</sub> + cos φ e<sub>y</sub><br>
+e<sub>z</sub> = e<sub>z</sub></div>
+<h3>Base sphérique (e<sub>r</sub>, e<sub>θ</sub>, e<sub>φ</sub>)</h3>
+<div class="formula">e<sub>r</sub> = sin θ cos φ e<sub>x</sub> + sin θ sin φ e<sub>y</sub> + cos θ e<sub>z</sub><br>
+e<sub>θ</sub> = cos θ cos φ e<sub>x</sub> + cos θ sin φ e<sub>y</sub> − sin θ e<sub>z</sub><br>
+e<sub>φ</sub> = −sin φ e<sub>x</sub> + cos φ e<sub>y</sub></div>
+<h3>Conséquence : vitesse et accélération</h3>
+<p>Comme les vecteurs de base tournent avec le point, il faut dériver <b>aussi</b> les vecteurs, ce qui fait apparaître des termes supplémentaires.</p>
+<div class="formula">v = ρ̇ e<sub>ρ</sub> + ρ φ̇ e<sub>φ</sub> + ż e<sub>z</sub> &nbsp;&nbsp;(cylindrique)<br>
+v = ṙ e<sub>r</sub> + r θ̇ e<sub>θ</sub> + r sin θ φ̇ e<sub>φ</sub> &nbsp;&nbsp;(sphérique)</div>
+<p>Le terme <b>r sin θ φ̇</b> est la vitesse due à la rotation autour de l'axe z : c'est le rayon du cercle décrit, r sin θ, multiplié par la vitesse angulaire φ̇. On retrouve <b>ρ φ̇</b> en cylindrique.</p>
+<div class="retain"><b>À retenir.</b> En cylindrique comme en sphérique, la dérivée d'un vecteur de base n'est pas nulle : c'est l'origine des termes en ρ φ̇ et r sin θ φ̇.</div>` },
+
+  { id:'degen', t:'Dégénérescences', h:`
+<p>Les conversions ne sont pas inversibles partout : certains angles perdent leur sens lorsque le point est sur un axe ou à l'origine.</p>
+<table class="ctable"><thead><tr><th>Position du point</th><th>Situation</th></tr></thead><tbody>
+<tr><td>Sur l'axe z, z ≠ 0</td><td>ρ = 0 : <b>φ est indéfini</b>. θ vaut 0 si z > 0, π si z < 0.</td></tr>
+<tr><td>À l'origine</td><td>r = 0 : <b>θ et φ sont indéfinis</b>. Seul r = 0 a un sens.</td></tr>
+<tr><td>Dans le plan xOy, z = 0</td><td>θ = π/2 exactement : le rayon est horizontal.</td></tr>
+<tr><td>Sur l'axe x, y = 0, x > 0</td><td>φ = 0. Sur l'axe x avec x < 0 : φ = π.</td></tr>
+<tr><td>Sur l'axe y, x = 0, y > 0</td><td>φ = π/2. Avec y < 0 : φ = −π/2.</td></tr>
+</tbody></table>
+<h3>Conséquence pratique</h3>
+<p>Un même point admet une infinité de jeux (r, θ, φ) si l'on ne fixe pas les intervalles. Les conventions usuelles :</p>
+<div class="formula">ρ ≥ 0 &nbsp;&nbsp; r ≥ 0 &nbsp;&nbsp; θ ∈ [0 ; π] &nbsp;&nbsp; φ ∈ ]−π ; π]</div>
+<p>Avec ces intervalles, la correspondance est bijective partout <b>sauf</b> sur l'axe z et à l'origine.</p>
+<div class="retain"><b>À retenir.</b> Sur l'axe z, φ est indéfini ; à l'origine, θ et φ le sont. Dans un calcul numérique, ces cas produisent des divisions par zéro ou des angles arbitraires.</div>` },
+
+  { id:'gloss', t:'Vocabulaire', h:`
+<dl class="gloss">
+<dt>Repère orthonormé</dt><dd>Origine et trois axes perpendiculaires munis de vecteurs unitaires.</dd>
+<dt>Coordonnées cartésiennes</dt><dd>Triplet (x, y, z) : projections orthogonales sur les trois axes.</dd>
+<dt>Coordonnées cylindriques</dt><dd>Triplet (ρ, φ, z) : distance à l'axe z, angle autour de cet axe, cote.</dd>
+<dt>Coordonnées sphériques</dt><dd>Triplet (r, θ, φ) : distance à l'origine, colatitude, longitude.</dd>
+<dt>Colatitude</dt><dd>Angle θ mesuré depuis l'axe z vers le rayon OM ; entre 0 et π.</dd>
+<dt>Longitude / azimuth</dt><dd>Angle φ mesuré dans le plan xOy depuis l'axe x.</dd>
+<dt>Surface de coordonnée</dt><dd>Lieu des points où une coordonnée est constante : plan, cylindre, cône ou sphère.</dd>
+<dt>Base locale</dt><dd>Vecteurs unitaires (e<sub>ρ</sub>, e<sub>φ</sub>, e<sub>z</sub>) ou (e<sub>r</sub>, e<sub>θ</sub>, e<sub>φ</sub>) attachés au point ; ils dépendent de sa position.</dd>
+<dt>Dégénérescence</dt><dd>Point où une coordonnée angulaire perd son sens (axe z, origine).</dd>
+<dt>atan2</dt><dd>Fonction à deux arguments donnant l'angle polaire dans ]−π ; π] sur tout le plan.</dd>
+</dl>` }
+];
+function courseSection(id){ return COURSE.find(s=>s.id===id)||COURSE[0]; }
+
+/* ================= SHELL UI ================= */
+const UI = { cur: 'c3d' };
+const AS = { key: 'c3d', tab: 'steps', open: false, st: {}, arm: null };
+const CS = { open: false, id: 'cart' };
+
+function renderSeg(){
+  const seg=$('wsSeg'); if(!seg) return; seg.innerHTML='';
+  WORKSHOPS.forEach((w,i)=>seg.append(h('button',{type:'button',role:'tab','aria-pressed':w.id===UI.cur?'true':'false','aria-selected':w.id===UI.cur?'true':'false',onclick:()=>gotoWs(w.id)},(i+1)+'. '+w.title)));
+}
+function mountWs(){
+  const w=wsById(UI.cur), root=$('ws');
+  $('hint').textContent=w.hint; root.innerHTML='';
+  w.mount(root);
+  const sc=$('scroller'); if(sc) sc.scrollTop=0;
+}
+function gotoWs(id){
+  const old=wsById(UI.cur); if(old.leave) old.leave();
+  if(CS.open){ CS.open=false; renderCourse(); }
+  UI.cur=id; AS.key=id; AS.tab='steps';
+  renderSeg(); mountWs(); renderAct();
+}
+
+function renderAct(){
+  const box=$('act'), btn=$('bAct');
+  btn.setAttribute('aria-pressed',AS.open?'true':'false'); btn.classList.toggle('pri',AS.open);
+  box.hidden=!AS.open;
+  if(!AS.open){ box.innerHTML=''; return; }
+  box.innerHTML='';
+  const a=ACT[AS.key];
+  const close=h('button',{class:'btn sm',type:'button',onclick:()=>{AS.open=false;renderAct();}},'Fermer');
+  box.append(h('div',{class:'phead'},h('b',null,'Activité'),h('span',{class:'sub'},a.title),close));
+  const nq=a.qcm.length;
+  box.append(h('div',{class:'tabs',role:'tablist'},
+    h('button',{type:'button',role:'tab','aria-selected':AS.tab==='steps'?'true':'false',onclick:()=>{AS.tab='steps';renderAct();}},'Consignes'),
+    h('button',{type:'button',role:'tab','aria-selected':AS.tab==='qcm'?'true':'false',onclick:()=>{AS.tab='qcm';renderAct();}},'Questions ('+nq+')')));
+  const body=h('div',{class:'pbody'});
+  if(AS.tab==='steps'){
+    body.append(h('p',{class:'small'},a.level+' · environ '+a.time), h('div',{class:'goal'},h('b',null,'Objectif. '),h('span',{html:a.goal})));
+    body.append(h('ol',{class:'steps'},a.steps.map(s=>h('li',{html:s}))));
+    body.append(h('div',{class:'defi'},h('b',null,'Défi'),h('p',{html:a.defi.q}),h('details',null,h('summary',null,'Voir la réponse'),h('p',{html:a.defi.a}))));
+    if(a.course) body.append(h('p',null,h('button',{class:'btn',type:'button',onclick:()=>openCourse(a.course)},'Voir le cours : '+courseSection(a.course).t)));
+    body.append(h('p',null,h('button',{class:'btn pri',type:'button',onclick:()=>{AS.tab='qcm';renderAct();}},'Passer aux questions')));
+  } else {
+    const s=actState(), show=s.checked||s.shown;
+    a.qcm.forEach((q,i)=>{
+      const fs=h('fieldset',{class:'q'},h('legend',{html:(i+1)+'. '+q.q}));
+      q.o.forEach((o,j)=>{
+        const good=show&&j===q.a, bad=s.checked&&!s.shown&&s.a[i]===j&&j!==q.a;
+        const inp=h('input',{type:'radio',name:'q'+i,checked:show&&s.shown?j===q.a:s.a[i]===j,disabled:show});
+        inp.addEventListener('change',()=>{s.a[i]=j;renderAct();});
+        fs.append(h('label',{class:'opt'+(good?' good':'')+(bad?' bad':'')},inp,h('span',null,o+(good?'  ✓':''))));
+      });
+      if(show){ const miss=s.a[i]==null&&!s.shown; fs.append(h('p',{class:'why'},(miss?'Sans réponse. ':'')+q.w)); }
+      body.append(fs);
+    });
+    const done=Object.keys(s.a).length;
+    body.append(h('p',{class:'small'},s.shown?'Réponses affichées.':s.checked?'':done+' réponse(s) sur '+nq+'.'));
+    if(s.checked&&!s.shown) body.append(h('p',{class:'score'},'Score : '+actScore(a)+' / '+nq));
+    const row=h('div',{class:'files'});
+    if(!show) row.append(h('button',{class:'btn pri',type:'button',onclick:()=>{s.checked=true;renderAct();}},'Corriger'));
+    row.append(h('button',{class:'btn',type:'button',onclick:()=>{s.shown=true;renderAct();}},'Afficher les réponses'));
+    if(show) row.append(h('button',{class:'btn',type:'button',onclick:()=>{AS.st[AS.key]={a:{},checked:false,shown:false};renderAct();}},'Recommencer'));
+    body.append(row);
+  }
+  box.append(body);
+}
+function actToggle(){ if(CS.open){CS.open=false;renderCourse();} AS.open=!AS.open; renderAct(); }
+$('bAct').addEventListener('click',actToggle);
+
+function renderCourse(){
+  const box=$('course'), btn=$('bCourse'), work=$('work');
+  btn.setAttribute('aria-pressed',CS.open?'true':'false'); btn.classList.toggle('pri',CS.open);
+  box.hidden=!CS.open; work.hidden=CS.open; $('modes').hidden=CS.open;
+  if(!CS.open){ box.innerHTML=''; return; }
+  box.innerHTML='';
+  const cur=courseSection(CS.id), idx=COURSE.indexOf(cur);
+  const go=id=>{CS.id=id;renderCourse();};
+  const nav=h('nav',{class:'ctoc','aria-label':'Sommaire du cours'},COURSE.map((s,i)=>h('button',{type:'button',class:s.id===cur.id?'on':'','aria-current':s.id===cur.id?'true':'false',onclick:()=>go(s.id)},(i+1)+'. '+s.t)));
+  const sel=h('select',{class:'ctoc-sel','aria-label':'Choisir une section',onchange:e=>go(e.target.value)},COURSE.map((s,i)=>h('option',{value:s.id,selected:s.id===cur.id},(i+1)+'. '+s.t)));
+  const art=h('article',{class:'cbody'});
+  art.append(h('p',{class:'ckick'},'Cours · section '+(idx+1)+' sur '+COURSE.length), h('h2',null,cur.t), h('div',{html:cur.h}));
+  art.append(h('div',{class:'cpn'},
+    idx>0?h('button',{class:'btn',type:'button',onclick:()=>go(COURSE[idx-1].id)},'← '+COURSE[idx-1].t):h('span'),
+    idx<COURSE.length-1?h('button',{class:'btn pri',type:'button',onclick:()=>go(COURSE[idx+1].id)},COURSE[idx+1].t+' →'):h('span')));
+  const top=h('div',{class:'ctop'},h('b',null,'Cours : systèmes de coordonnées'),h('button',{class:'btn pri sm',type:'button',onclick:()=>{CS.open=false;renderCourse();}},'Retour à l’atelier'));
+  box.append(top,sel,h('div',{class:'cwrap'},nav,art));
+}
+function openCourse(id){ if(id) CS.id=id; CS.open=true; renderCourse(); }
+$('bCourse').addEventListener('click',()=>{CS.open=!CS.open;renderCourse();});
+
+function closeDlg(){ $('dlg').hidden=true; $('dlg').innerHTML=''; }
+function openDlg(title,body){
+  const d=$('dlg'); d.innerHTML=''; d.hidden=false;
+  d.style.cssText='position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px';
+  const boxEl=h('div',{style:'background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column'},
+    h('header',{style:'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)'},h('b',null,title),h('button',{class:'btn sm',type:'button',onclick:closeDlg},'Fermer')),
+    h('div',{style:'padding:14px 16px;overflow:auto;font-size:13.5px'},body));
+  d.append(boxEl);
+  d.onclick=ev=>{ if(ev.target===d) closeDlg(); };
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('dlg').hidden) closeDlg(); });
+$('bHelp').addEventListener('click',()=>{
+  openDlg('Aide', h('div',{html:'<p>Trois ateliers sur les systèmes de coordonnées : exploration 3D, vues 2D (coupes) et convertisseur.</p>'+
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Les coordonnées se saisissent dans le panneau collant à droite (sous le contenu sur mobile). Modifier un système met à jour les deux autres.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM corrigé.</li><li>Le bouton <b>Cours</b> détaille chaque système, les conversions, le repère local et les dégénérescences.</li><li>Le bouton <b>Mode sombre / clair</b> commute le thème (choix mémorisé).</li></ul>'+
+    '<h3>Scène 3D</h3><p>Souris gauche = rotation · molette = zoom · clic droit = déplacement. Axes : x rouge, y vert, z bleu (vertical).</p>'}));
+});
+
+/* ================= RESIZE + INIT ================= */
+window.addEventListener('resize',()=>{ resize3D(); if(UI.cur==='c2d'){ drawTop(); drawSide(); } });
+
+const hmap={c3d:0,c2d:1,ccv:2}, hh=location.hash.slice(1);
+if(hh in hmap) UI.cur=hh;
+AS.key=UI.cur;
+renderSeg(); mountWs(); renderAct(); renderCourse();
+})();
 </script>
 </body>
 </html>
