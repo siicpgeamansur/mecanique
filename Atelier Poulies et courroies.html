@@ -1,0 +1,924 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Atelier Poulies et courroies</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils, onglets d'ateliers, zone de travail, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. */
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--stage:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --node-stroke:#33475b;--belt:#7f97ae;--belt-dash:#e3eaf1;--pulley:#e7edf3;--pulley2:#cfd9e3;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;--amber:#e8a33a;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#14181d;--bar:#1d232b;--panel:#1a2027;--panel2:#222a33;--field:#12161b;--stage:#10151a;--line:#3a4552;
+  --fg:#e8ecf0;--muted:#9aa5b1;--accent:#5aa0dc;--accent-fg:#0b1822;--accent-soft:#1b3550;--accent-ink:#a9d1f3;
+  --node-stroke:#9fb2c6;--belt:#5f7a95;--belt-dash:#2a3541;--pulley:#26303b;--pulley2:#34414f;
+  --ok:#4cb85c;--warn:#e0a03a;--bad:#ef6a5f;--violet:#a98ae0;--amber:#d9962f;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:color-mix(in srgb,var(--ok) 18%,transparent)}.opt.bad{background:color-mix(in srgb,var(--bad) 18%,transparent)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0 0 4px;min-width:150px;flex:1 1 150px;max-width:240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok)}
+.verdict.no{background:color-mix(in srgb,var(--bad) 14%,transparent);border-color:var(--bad)}
+.verdict.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);border-color:var(--warn)}
+.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.dt{border-collapse:collapse;width:100%;font-size:13.5px}
+.dt th,.dt td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{background:var(--panel2);font-weight:600}
+.dt td.m{font-family:var(--font-mono);font-size:12.5px}
+.dt tr:last-child td{border-bottom:0}
+.dt tr.cur td{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:6px;background:var(--stage);margin:8px 0}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid var(--node-stroke)}
+.leg i.a{background:var(--accent)}.leg i.b{background:var(--belt)}.leg i.o{background:var(--amber)}.leg i.v{background:var(--violet)}.leg i.r{background:var(--bad)}.leg i.g{background:var(--ok)}
+.cmpr{display:grid;grid-template-columns:120px 1fr 90px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.cmpr i{display:block;height:12px;background:var(--accent);border-radius:3px;min-width:2px}
+.cmpr em{font-style:normal;font-family:var(--font-mono);text-align:right}
+/* dessins */
+svg.draw{display:block;width:100%;height:auto;max-height:430px}
+svg.plot{display:block;width:100%;height:auto}
+.pl{fill:var(--pulley);stroke:var(--node-stroke);stroke-width:1.5}
+.hub{fill:var(--pulley2);stroke:var(--node-stroke);stroke-width:1.2}
+.spoke{stroke:var(--node-stroke);stroke-width:2;stroke-linecap:round}
+.mark{fill:var(--accent)}
+.beltb{fill:none;stroke:var(--belt);stroke-width:6;stroke-linejoin:round}
+.beltd{fill:none;stroke:var(--belt-dash);stroke-width:6;stroke-linejoin:round}
+.wrap1{fill:none;stroke:var(--accent);stroke-width:9;opacity:.5;stroke-linecap:round}
+.wrap2{fill:none;stroke:var(--amber);stroke-width:9;opacity:.6;stroke-linecap:round}
+.dim{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4;fill:none}
+.dimarr{stroke:var(--muted);stroke-width:1.2;fill:none}
+text.t{font:600 12.5px var(--font-ui);fill:var(--fg)}
+text.ts{font:12px var(--font-mono);fill:var(--muted)}
+text.ax{font:11px var(--font-mono);fill:var(--muted)}
+text.axt{font:12px var(--font-ui);fill:var(--muted)}
+.gl{stroke:var(--line);stroke-opacity:.55;stroke-width:1}
+.axl{stroke:var(--muted);stroke-width:1}
+.s-a{fill:none;stroke:var(--accent);stroke-width:2.4}
+.s-o{fill:none;stroke:var(--amber);stroke-width:2.4}
+.s-b{fill:none;stroke:var(--bad);stroke-width:2.4}
+.s-g{fill:none;stroke:var(--ok);stroke-width:2.4}
+.s-d{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:6 4}
+.s-dv{fill:none;stroke:var(--violet);stroke-width:1.6;stroke-dasharray:6 4}
+.r-rest{fill:color-mix(in srgb,var(--ok) 14%,transparent)}
+.r-glis{fill:color-mix(in srgb,var(--warn) 18%,transparent)}
+.dot-a{fill:var(--accent);stroke:var(--stage);stroke-width:1.5}
+.blk{fill:var(--pulley2);stroke:var(--node-stroke);stroke-width:1.5}
+.load{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.ceil{stroke:var(--node-stroke);stroke-width:2}
+.hatch{stroke:var(--muted);stroke-width:1}
+.strand{stroke:var(--accent);stroke-linecap:round}
+.fT,.fP,.fF,.fR{fill:none;stroke-width:3.2}
+.fT{stroke:var(--accent)}.fTf{fill:var(--accent)}.fP{stroke:var(--bad)}.fPf{fill:var(--bad)}.fF{stroke:var(--ok)}.fFf{fill:var(--ok)}.fR{stroke:var(--violet)}.fRf{fill:var(--violet)}
+.twin{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:8px 0}.twin .stagebox{margin:0;min-width:0}
+.leg i.t{background:var(--accent)}.leg i.p{background:var(--bad)}.leg i.f{background:var(--ok)}.leg i.r{background:var(--violet)}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+  .cmpr{grid-template-columns:90px 1fr 76px}
+  .opts .fld{max-width:none}
+}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+</style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="30" height="26" viewBox="0 0 30 26" aria-hidden="true"><path d="M7 4 H22 M7 22 H22" stroke="var(--belt)" stroke-width="2" fill="none"/><circle cx="7" cy="13" r="9" fill="var(--pulley)" stroke="var(--accent)" stroke-width="2"/><circle cx="22" cy="13" r="9" fill="var(--pulley)" stroke="var(--amber)" stroke-width="2"/><circle cx="7" cy="13" r="2" fill="var(--accent)"/><circle cx="22" cy="13" r="2" fill="var(--amber)"/></svg><span>Atelier Poulies et courroies <small>SII · CPGE PSI*</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+      <button class="btn" id="bTheme" type="button">Mode sombre</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+function reducedMotion() { try { return window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-poulies-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const UI = { cur: 'w1' };
+const AS = { open: false, key: 'w1', tab: 'steps', st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'notions' };
+
+/*LOGIC-START*/
+const f1 = (v, d = 1) => (Number.isFinite(v) ? v : 0).toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const DEG = Math.PI / 180;
+function beltGeom(D1, D2, E, cross) {
+  const R1 = D1 / 2, R2 = D2 / 2, PI = Math.PI;
+  const arc = (cx, R, a0, a1, n) => { const o = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; o.push([cx + R * Math.cos(a), R * Math.sin(a)]); } return o; };
+  if (!cross) {
+    const g = Math.asin((R2 - R1) / E);
+    const arc2 = arc(E, R2, PI / 2 + g, -PI / 2 - g, 56), arc1 = arc(0, R1, -PI / 2 - g, -3 * PI / 2 + g, 56);
+    const a1 = PI - 2 * g, a2 = PI + 2 * g;
+    return { gam: g, a1, a2, arc1, arc2, pts: arc2.concat(arc1), s1: 1, s2: 1, L: 2 * E * Math.cos(g) + (a1 * D1 + a2 * D2) / 2 };
+  }
+  const l = Math.asin((R1 + R2) / E);
+  const arc2 = arc(E, R2, -PI / 2 - l, PI / 2 + l, 56), arc1 = arc(0, R1, -PI / 2 + l, -3 * PI / 2 - l, 56);
+  const a = PI + 2 * l;
+  return { gam: l, a1: a, a2: a, arc1, arc2, pts: arc2.concat(arc1), s1: 1, s2: -1, L: 2 * E * Math.cos(l) + a * (D1 + D2) / 2 };
+}
+function calc1(S) {
+  const Emin = (S.D1 + S.D2) / 2 + (S.cross ? 15 : 10), E = Math.max(S.E, Emin), G = beltGeom(S.D1, S.D2, E, S.cross);
+  const g = S.g / 100, k = (S.cross ? -1 : 1) * (S.D1 / S.D2) * (1 - g), w1 = 2 * Math.PI * S.N / 60, v = w1 * S.D1 / 2000;
+  return { E, clamped: S.E < Emin, G, k, N2: S.N * k, w1, w2: w1 * k, v, a1: G.a1 / DEG, a2: G.a2 / DEG, L: G.L };
+}
+function calc2(S) {
+  const w = 2 * Math.PI * S.N / 60, v = w * S.D1 / 2000, C = S.P * 1000 / w, Fu = S.P * 1000 / v;
+  const fe = S.kind === 'trap' ? S.f / Math.sin(20 * DEG) : S.f, a = S.alpha * DEG, Tc = S.mu * v * v;
+  const T1 = S.T0 + Fu / 2, T2 = S.T0 - Fu / 2, eMax = Math.exp(fe * a), slackOK = T2 > Tc;
+  const ratio = slackOK ? (T1 - Tc) / (T2 - Tc) : Infinity, thg = slackOK ? Math.log(ratio) / fe : Infinity;
+  const Fmax = Math.max(0, 2 * (S.T0 - Tc) * (eMax - 1) / (eMax + 1));
+  const Farbre = Math.sqrt(Math.max(0, T1 * T1 + T2 * T2 - 2 * T1 * T2 * Math.cos(a)));
+  const state = !slackOK || thg > a ? 'no' : thg > 0.8 * a ? 'warn' : 'yes';
+  return { w, v, C, Fu, fe, a, Tc, T1, T2, eMax, slackOK, ratio, thg, Fmax, Pmax: Fmax * v / 1000, Farbre, state };
+}
+function calc3(M, n, eta, v, h) {
+  const g = 9.81, P = M * g, Fid = P / n, Fre = eta >= 0.9999 ? Fid : P * (1 - eta) / (1 - Math.pow(eta, n));
+  const Tk = Array.from({ length: n }, (_, i) => Fre * Math.pow(eta, i));
+  return { P, Fid, Fre, etaG: Fid / Fre, Tk, vb: n * v, lc: n * h, Wm: Fre * n * h, Pm: Fre * n * v };
+}
+function calc4(S) {
+  const k = S.k, Jeq = (S.Jm + S.J1 + k * k * (S.J2 + S.Jc)) * 1e-3, w0 = S.w0 * 2 * Math.PI / 60;
+  const Crp = S.Cr * k / S.eta, stall = Crp >= S.C0, wf = stall ? 0 : w0 * (1 - Crp / S.C0);
+  const tau = Jeq * w0 / S.C0, a0 = (S.C0 - Crp) / Jeq;
+  return { k, Jeq, w0, Crp, stall, wf, tau, a0, t95: tau * Math.log(20), Ec: 0.5 * Jeq * wf * wf, rpm1: wf * 60 / (2 * Math.PI), rpm2: wf * k * 60 / (2 * Math.PI) };
+}
+/*LOGIC-END*/
+
+
+const THEME_KEY = 'atelier-poulies-theme';
+function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); const b = $('#bTheme'); if (b) b.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre'; }
+applyTheme(lsGet(THEME_KEY, 'light') === 'dark' ? 'dark' : 'light');
+$('#bTheme').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; applyTheme(t); lsSet(THEME_KEY, t); });
+function arrow(x1, y1, x2, y2, k) {
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy); if (L < 1) return '';
+  const ux = dx / L, uy = dy / L, hs = Math.min(11, L * 0.7), bx = x2 - ux * hs, by = y2 - uy * hs, w = hs * 0.42, n = v => v.toFixed(1);
+  return '<line class="f' + k + '" x1="' + n(x1) + '" y1="' + n(y1) + '" x2="' + n(bx) + '" y2="' + n(by) + '"/><polygon class="f' + k + 'f" points="' + n(x2) + ',' + n(y2) + ' ' + n(bx - uy * w) + ',' + n(by + ux * w) + ' ' + n(bx + uy * w) + ',' + n(by - ux * w) + '"/>';
+}
+/* ---------- aides de dessin et de formulaire ---------- */
+function niceTicks(a, b, n) {
+  const span = b - a, raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+  const st = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p, t = [];
+  for (let v = Math.ceil(a / st - 1e-9) * st; v <= b + 1e-9; v += st) t.push(+v.toFixed(10));
+  return t;
+}
+let plotId = 0;
+function plot(o) {
+  const W = 640, H = o.h || 250, ml = 54, mr = 16, mt = 14, mb = 44, id = 'cp' + (++plotId);
+  const X = v => ml + (v - o.x[0]) / (o.x[1] - o.x[0]) * (W - ml - mr), Y = v => H - mb - (v - o.y[0]) / (o.y[1] - o.y[0]) * (H - mt - mb);
+  const n1 = v => v.toFixed(1);
+  let s = '<svg class="plot" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + o.label + '"><defs><clipPath id="' + id + '"><rect x="' + ml + '" y="' + mt + '" width="' + (W - ml - mr) + '" height="' + (H - mt - mb) + '"/></clipPath></defs>';
+  (o.areas || []).forEach(a => { s += '<rect class="' + a.cls + '" x="' + n1(X(a.x0)) + '" y="' + mt + '" width="' + n1(Math.max(0, X(a.x1) - X(a.x0))) + '" height="' + (H - mt - mb) + '"/>'; if (a.label) s += '<text class="ts" x="' + n1((X(a.x0) + X(a.x1)) / 2) + '" y="' + (mt + 14) + '" text-anchor="middle">' + a.label + '</text>'; });
+  niceTicks(o.y[0], o.y[1], 5).forEach(v => { s += '<line class="gl" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + n1(Y(v)) + '" y2="' + n1(Y(v)) + '"/><text class="ax" x="' + (ml - 6) + '" y="' + n1(Y(v) + 4) + '" text-anchor="end">' + f1(v, o.yd || 0) + '</text>'; });
+  niceTicks(o.x[0], o.x[1], 6).forEach(v => { s += '<line class="gl" y1="' + mt + '" y2="' + (H - mb) + '" x1="' + n1(X(v)) + '" x2="' + n1(X(v)) + '"/><text class="ax" y="' + (H - mb + 15) + '" x="' + n1(X(v)) + '" text-anchor="middle">' + f1(v, o.xd || 0) + '</text>'; });
+  s += '<line class="axl" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + (H - mb) + '" y2="' + (H - mb) + '"/><line class="axl" x1="' + ml + '" x2="' + ml + '" y1="' + mt + '" y2="' + (H - mb) + '"/>';
+  s += '<g clip-path="url(#' + id + ')">';
+  (o.hl || []).forEach(l => { s += '<line class="' + l.cls + '" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + n1(Y(l.y)) + '" y2="' + n1(Y(l.y)) + '"/>'; });
+  (o.vl || []).forEach(l => { s += '<line class="' + l.cls + '" y1="' + mt + '" y2="' + (H - mb) + '" x1="' + n1(X(l.x)) + '" x2="' + n1(X(l.x)) + '"/>'; });
+  (o.series || []).forEach(se => { s += '<path class="' + se.cls + '" d="M' + se.pts.map(p => n1(X(p[0])) + ',' + n1(Y(p[1]))).join('L') + '"/>'; });
+  s += '</g>';
+  (o.hl || []).forEach(l => { if (l.label) s += '<text class="ts" x="' + (W - mr - 4) + '" y="' + n1(Y(l.y) - 5) + '" text-anchor="end">' + l.label + '</text>'; });
+  (o.pts || []).forEach(p => { s += '<circle class="dot-a" cx="' + n1(X(p.x)) + '" cy="' + n1(Y(p.y)) + '" r="5"/>'; if (p.label) s += '<text class="t" x="' + n1(X(p.x) + (p.dx || 8)) + '" y="' + n1(Y(p.y) + (p.dy || -8)) + '" text-anchor="' + (p.anchor || 'start') + '">' + p.label + '</text>'; });
+  s += '<text class="axt" x="' + ((ml + W - mr) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + o.xl + '</text><text class="axt" transform="translate(14 ' + ((mt + H - mb) / 2) + ') rotate(-90)" text-anchor="middle">' + o.yl + '</text></svg>';
+  return s;
+}
+function stat(l, v) { return '<div class="stat"><span>' + l + '</span><b>' + v + '</b></div>'; }
+function setMsg(el, cls, html) { el.className = 'verdict ' + cls; el.innerHTML = html; }
+function chipsRow(host, opts, cur, cb) {
+  host.innerHTML = '';
+  opts.forEach(o => host.append(h('button', { type: 'button', class: 'chip' + (o.v === cur ? ' on' : ''), 'aria-pressed': o.v === cur ? 'true' : 'false', onclick: () => { cb(o.v); chipsRow(host, opts, o.v, cb); } }, o.t)));
+}
+function sld(id, label, unit, min, max, step) {
+  return '<label class="fld"><span>' + label + ' = <b id="' + id + '-o"></b> ' + unit + '</span><input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '"></label>';
+}
+function wire(id, S, key, d, cb) {
+  const el = $('#' + id), out = $('#' + id + '-o');
+  el.value = S[key]; out.textContent = f1(S[key], d);
+  el.addEventListener('input', () => { S[key] = +el.value; out.textContent = f1(S[key], d); cb(); });
+}
+function syncSlider(id, S, key, d) { $('#' + id).value = S[key]; $('#' + id + '-o').textContent = f1(S[key], d); }
+
+/* ================= Atelier 1 : cinématique et géométrie ================= */
+const D_W1 = { D1: 80, D2: 160, E: 300, N: 1500, g: 0, cross: false };
+const S1 = Object.assign({ play: true }, D_W1);
+const A1 = { raf: 0, last: 0, ang1: 0, ang2: 0, pos: 0, refs: null, cur: null };
+function w1Apply() {
+  const r = A1.refs, c = A1.cur; if (!r || !c) return;
+  r.g1.setAttribute('transform', 'rotate(' + (c.s1 * A1.ang1).toFixed(2) + ' ' + c.cx1 + ' ' + c.cy + ')');
+  r.g2.setAttribute('transform', 'rotate(' + (c.s2 * A1.ang2).toFixed(2) + ' ' + c.cx2 + ' ' + c.cy + ')');
+  r.d.setAttribute('stroke-dashoffset', (-A1.pos).toFixed(1));
+}
+function w1Tick(t) {
+  if (!S1.play || !A1.refs || !document.body.contains(A1.refs.g1)) { A1.raf = 0; return; }
+  const dt = Math.min(0.05, (t - A1.last) / 1000 || 0); A1.last = t;
+  const w1 = (2 * Math.PI * S1.N / 60) / 50, c = A1.cur;
+  A1.ang1 = (A1.ang1 + dt * w1 / DEG) % 360;
+  A1.ang2 = (A1.ang2 + dt * w1 * (S1.D1 / S1.D2) * (1 - S1.g / 100) / DEG) % 360;
+  A1.pos = (A1.pos + dt * w1 * c.R1px) % 140000;
+  w1Apply(); A1.raf = requestAnimationFrame(w1Tick);
+}
+function w1Start() { if (!A1.raf) { A1.last = performance.now(); A1.raf = requestAnimationFrame(w1Tick); } }
+WORKSHOPS.push({
+  id: 'w1', title: 'Cinématique et géométrie',
+  hint: 'Faites varier les diamètres, l’entraxe et le montage. La rotation est ralentie 50 fois pour être visible.',
+  reset() { Object.assign(S1, D_W1); },
+  leave() { if (A1.raf) cancelAnimationFrame(A1.raf); A1.raf = 0; },
+  mount(root) {
+    root.innerHTML = '<h2>Rapport de transmission, angles d’enroulement et longueur de courroie</h2>' +
+      '<p>Deux poulies sur le même plan, une courroie sans épaisseur. Le dessin est à l’échelle : les zones colorées montrent les arcs sur lesquels la courroie est en contact avec chaque poulie.</p>' +
+      '<div class="opts">' + sld('w1-d1', 'Diamètre D₁ (motrice)', 'mm', 40, 200, 5) + sld('w1-d2', 'Diamètre D₂ (réceptrice)', 'mm', 40, 400, 5) + sld('w1-e', 'Entraxe E', 'mm', 100, 700, 5) + sld('w1-n', 'Vitesse N₁', 'tr/min', 100, 3000, 50) + sld('w1-g', 'Glissement g', '%', 0, 5, 0.5) + '</div>' +
+      '<div class="fld"><span>Montage de la courroie</span><div class="chips" id="w1-mount"></div></div>' +
+      '<div class="files" style="margin:8px 0"><button class="btn pri" id="w1-play" type="button"></button><button class="btn" id="w1-reset" type="button">Valeurs de départ</button></div>' +
+      '<div class="stagebox" id="w1-stage"></div>' +
+      '<div class="leg"><span><i class="a"></i>arc d’enroulement sur la poulie 1</span><span><i class="o"></i>arc d’enroulement sur la poulie 2</span><span><i class="b"></i>courroie</span></div>' +
+      '<div class="verdict" id="w1-msg" aria-live="polite"></div><div class="gstats" id="w1-stats"></div>' +
+      '<h3>À retenir sur cet atelier</h3><ul><li>Sans glissement, k = ω₂/ω₁ = ±D₁/D₂ : le signe vaut « − » pour une courroie croisée.</li><li>L’angle d’enroulement le plus faible est sur la petite poulie : c’est lui qui limite l’adhérence.</li><li>L = 2E cos γ + (α₁D₁ + α₂D₂)/2 pour une courroie ouverte, avec sin γ = (D₂ − D₁)/(2E).</li></ul>';
+    wire('w1-d1', S1, 'D1', 0, draw); wire('w1-d2', S1, 'D2', 0, draw); wire('w1-e', S1, 'E', 0, draw); wire('w1-n', S1, 'N', 0, draw); wire('w1-g', S1, 'g', 1, draw);
+    chipsRow($('#w1-mount'), [{ v: false, t: 'Courroie ouverte' }, { v: true, t: 'Courroie croisée' }], S1.cross, v => { S1.cross = v; draw(); });
+    const pb = $('#w1-play');
+    const lab = () => { pb.textContent = S1.play ? 'Pause' : 'Lecture'; };
+    pb.addEventListener('click', () => { S1.play = !S1.play; lab(); if (S1.play) w1Start(); });
+    $('#w1-reset').addEventListener('click', () => { Object.assign(S1, D_W1); ['D1', 'D2', 'E', 'N', 'g'].forEach((k, i) => syncSlider(['w1-d1', 'w1-d2', 'w1-e', 'w1-n', 'w1-g'][i], S1, k, k === 'g' ? 1 : 0)); chipsRow($('#w1-mount'), [{ v: false, t: 'Courroie ouverte' }, { v: true, t: 'Courroie croisée' }], false, v => { S1.cross = v; draw(); }); draw(); });
+    function draw() {
+      const c = calc1(S1), G = c.G, R1 = S1.D1 / 2, R2 = S1.D2 / 2;
+      const s = Math.min(700 / (R1 + c.E + R2), 150 / Math.max(R1, R2)), x1 = 30 + R1 * s, x2 = x1 + c.E * s, y0 = 190;
+      const P = p => (x1 + p[0] * s).toFixed(1) + ',' + (y0 - p[1] * s).toFixed(1);
+      const belt = 'M' + G.pts.map(P).join('L') + 'Z', wr1 = 'M' + G.arc1.map(P).join('L'), wr2 = 'M' + G.arc2.map(P).join('L');
+      const spokes = (cx, R) => [0, 120, 240].map(a => '<line class="spoke" x1="' + cx + '" y1="' + y0 + '" x2="' + (cx + 0.78 * R * s * Math.cos(a * DEG)).toFixed(1) + '" y2="' + (y0 + 0.78 * R * s * Math.sin(a * DEG)).toFixed(1) + '"/>').join('');
+      const pul = (id, cx, R) => '<g id="' + id + '"><circle class="pl" cx="' + cx + '" cy="' + y0 + '" r="' + (R * s).toFixed(1) + '"/>' + spokes(cx, R) + '<circle class="hub" cx="' + cx + '" cy="' + y0 + '" r="' + Math.max(4, Math.min(8, R * s * 0.14)).toFixed(1) + '"/><circle class="mark" cx="' + (cx + 0.78 * R * s).toFixed(1) + '" cy="' + y0 + '" r="4.5"/></g>';
+      const Ex = ((x1 + x2) / 2).toFixed(1), dy = 358;
+      $('#w1-stage').innerHTML = '<svg class="draw" id="w1-svg" viewBox="0 0 760 372" role="img" aria-label="Deux poulies reliées par une courroie ' + (S1.cross ? 'croisée' : 'ouverte') + '">' +
+        pul('w1-p1', x1, R1) + pul('w1-p2', x2, R2) +
+        '<path class="beltb" d="' + belt + '"/><path id="w1-dash" class="beltd" d="' + belt + '" stroke-dasharray="3 11"/>' +
+        '<path class="wrap1" d="' + wr1 + '"/><path class="wrap2" d="' + wr2 + '"/>' +
+        '<text class="t" x="' + x1.toFixed(1) + '" y="' + (y0 - R1 * s - 12).toFixed(1) + '" text-anchor="middle">① D₁ = ' + S1.D1 + ' mm</text>' +
+        '<text class="t" x="' + x2.toFixed(1) + '" y="' + (y0 - R2 * s - 12).toFixed(1) + '" text-anchor="middle">② D₂ = ' + S1.D2 + ' mm</text>' +
+        '<line class="dim" x1="' + x1.toFixed(1) + '" y1="' + y0 + '" x2="' + x1.toFixed(1) + '" y2="' + dy + '"/><line class="dim" x1="' + x2.toFixed(1) + '" y1="' + y0 + '" x2="' + x2.toFixed(1) + '" y2="' + dy + '"/>' +
+        '<line class="dimarr" x1="' + x1.toFixed(1) + '" y1="' + (dy - 4) + '" x2="' + x2.toFixed(1) + '" y2="' + (dy - 4) + '"/><text class="ts" x="' + Ex + '" y="' + (dy - 9) + '" text-anchor="middle">E = ' + f1(c.E, 0) + ' mm</text></svg>';
+      A1.refs = { g1: $('#w1-p1'), g2: $('#w1-p2'), d: $('#w1-dash') };
+      A1.cur = { s1: G.s1, s2: G.s2, cx1: x1.toFixed(1), cx2: x2.toFixed(1), cy: y0, R1px: R1 * s };
+      w1Apply();
+      const msgs = []; let cls = 'yes';
+      if (c.clamped) { msgs.push('Entraxe relevé à ' + f1(c.E, 0) + ' mm : les poulies ne peuvent pas se toucher (E > (D₁ + D₂)/2).'); cls = 'warn'; }
+      const sum = S1.D1 + S1.D2;
+      if (c.E < 0.7 * sum || c.E > 2 * sum) { msgs.push('Entraxe hors de la plage usuelle 0,7(D₁ + D₂) à 2(D₁ + D₂), soit ' + f1(0.7 * sum, 0) + ' à ' + f1(2 * sum, 0) + ' mm.'); cls = 'warn'; }
+      if (Math.min(c.a1, c.a2) < 120) { msgs.push('Angle d’enroulement de ' + f1(Math.min(c.a1, c.a2), 1) + '° sur la petite poulie : en dessous de 120°, l’adhérence devient insuffisante.'); cls = 'warn'; }
+      if (c.v > 30) { msgs.push('Vitesse de courroie de ' + f1(c.v, 1) + ' m/s : au-delà de 30 m/s environ, les effets centrifuges deviennent pénalisants.'); cls = 'warn'; }
+      if (!msgs.length) msgs.push('Montage cohérent : angle d’enroulement mini ' + f1(Math.min(c.a1, c.a2), 1) + '°, entraxe dans la plage usuelle, vitesse de courroie ' + f1(c.v, 1) + ' m/s.');
+      setMsg($('#w1-msg'), cls, msgs.join('<br>'));
+      $('#w1-stats').innerHTML = stat('Rapport k = ω₂/ω₁', f1(c.k, 3)) + stat('Vitesse N₂', f1(c.N2, 0) + ' tr/min') + stat('ω₁ ; ω₂', f1(c.w1, 1) + ' ; ' + f1(Math.abs(c.w2), 1) + ' rad/s') + stat('Vitesse de courroie v', f1(c.v, 2) + ' m/s') +
+        stat('Angle γ', f1(G.gam / DEG, 2) + '°') + stat('Enroulement α₁', f1(c.a1, 1) + '°') + stat('Enroulement α₂', f1(c.a2, 1) + '°') + stat('Longueur L', f1(c.L, 1) + ' mm');
+    }
+    lab(); draw(); if (S1.play && !reducedMotion()) w1Start(); else if (reducedMotion()) { S1.play = false; lab(); }
+  }
+});
+
+/* ================= Atelier 2 : adhérence et tensions ================= */
+const D_W2 = { P: 3, N: 1500, D1: 100, alpha: 160, kind: 'plate', f: 0.3, T0: 700, mu: 0.12 };
+const S2 = Object.assign({}, D_W2);
+/* forces exercées par les deux brins sur la poulie motrice (poulie tournant dans le sens horaire) */
+function w2Forces(c, alphaDeg) {
+  const cx = 150, cy = 150, r = 62, a = alphaDeg * DEG / 2, sa = Math.sin(a), ca = Math.cos(a), n1 = v => v.toFixed(1);
+  const T1 = c.T1, T2 = Math.max(c.T2, 0), Rx = (T1 + T2) * sa, Ry = (T1 - T2) * ca, Fa = Math.hypot(Rx, Ry), sc = 130 / Math.max(T1, Fa, 1);
+  const pu = [cx - r * ca, cy - r * sa], pl = [cx - r * ca, cy + r * sa];
+  const eu = [pu[0] + sa * 175, pu[1] - ca * 175], el = [pl[0] + sa * 175, pl[1] + ca * 175];
+  const tu = [pu[0] + sa * sc * T2, pu[1] - ca * sc * T2], tl = [pl[0] + sa * sc * T1, pl[1] + ca * sc * T1];
+  const tr = [cx + sc * Rx, cy + sc * Ry];
+  const arc = []; for (let i = 0; i <= 40; i++) { const g = Math.PI - a + 2 * a * i / 40; arc.push(n1(cx + r * Math.cos(g)) + ',' + n1(cy - r * Math.sin(g))); }
+  return '<svg class="draw" viewBox="0 0 420 300" role="img" aria-label="Forces des brins sur la poulie motrice">' +
+    '<line class="beltb" x1="' + n1(pu[0]) + '" y1="' + n1(pu[1]) + '" x2="' + n1(eu[0]) + '" y2="' + n1(eu[1]) + '"/><line class="beltb" x1="' + n1(pl[0]) + '" y1="' + n1(pl[1]) + '" x2="' + n1(el[0]) + '" y2="' + n1(el[1]) + '"/>' +
+    '<circle class="pl" cx="' + cx + '" cy="' + cy + '" r="' + r + '"/><path class="wrap1" d="M' + arc.join('L') + '"/><circle class="hub" cx="' + cx + '" cy="' + cy + '" r="7"/>' +
+    arrow(pu[0], pu[1], tu[0], tu[1], 'T') + arrow(pl[0], pl[1], tl[0], tl[1], 'T') + arrow(cx, cy, tr[0], tr[1], 'R') +
+    '<text class="t" x="' + n1(tu[0] - 20) + '" y="' + n1(tu[1] - 16) + '">T₂ = ' + f1(c.T2, 0) + ' N</text><text class="t" x="' + n1(tl[0] - 40) + '" y="' + n1(tl[1] + 34) + '">T₁ = ' + f1(c.T1, 0) + ' N</text>' +
+    '<text class="t" x="' + n1(tr[0] + 8) + '" y="' + n1(tr[1] + 4) + '">F arbre = ' + f1(Fa, 0) + ' N</text>' +
+    '<text class="ts" x="12" y="288">↻ poulie motrice : C = ' + f1(c.C, 1) + ' N·m, F<tspan font-size="9" dy="3">u</tspan><tspan dy="-3"> = T₁ − T₂ = ' + f1(c.Fu, 0) + ' N</tspan></text></svg>';
+}
+WORKSHOPS.push({
+  id: 'w2', title: 'Adhérence et tensions',
+  hint: 'Augmentez la puissance ou diminuez la précontrainte pour amener la courroie au glissement.',
+  reset() { Object.assign(S2, D_W2); },
+  mount(root) {
+    root.innerHTML = '<h2>Tensions de la courroie et limite d’adhérence</h2>' +
+      '<p>Poulie motrice de diamètre D₁, qui tourne dans le sens horaire. Le brin tendu (tension T₁) arrive sur la poulie motrice et le brin mou (tension T₂) en repart. La précontrainte T₀ = (T₁ + T₂)/2 est supposée constante. Le seuil de glissement est donné par la formule d’Euler–Eytelwein avec prise en compte de la tension centrifuge.</p>' +
+      '<div class="opts">' + sld('w2-p', 'Puissance P', 'kW', 0.5, 15, 0.5) + sld('w2-n', 'Vitesse N₁', 'tr/min', 300, 3000, 50) + sld('w2-d', 'Diamètre D₁', 'mm', 50, 300, 5) + sld('w2-a', 'Enroulement α', '°', 90, 180, 1) + sld('w2-f', 'Frottement f', '', 0.1, 0.6, 0.01) + sld('w2-t', 'Précontrainte T₀', 'N', 100, 3000, 50) + sld('w2-m', 'Masse linéique μ', 'kg/m', 0.05, 0.4, 0.01) + '</div>' +
+      '<div class="fld"><span>Type de courroie</span><div class="chips" id="w2-kind"></div></div>' +
+      '<div class="files" style="margin:8px 0"><button class="btn" id="w2-reset" type="button">Valeurs de départ</button></div>' +
+      '<div class="verdict" id="w2-msg" aria-live="polite"></div><div class="gstats" id="w2-stats"></div>' +
+      '<h3>Forces exercées par la courroie sur la poulie motrice</h3><p class="small">Chaque brin tire sur la poulie dans sa propre direction. Les deux forces ne s’annulent pas : leur résultante charge l’arbre et ses paliers, et leur différence T₁ − T₂ produit le couple C = (T₁ − T₂)D₁/2 qui s’oppose au couple moteur.</p>' +
+      '<div class="stagebox" id="w2-forces"></div><div class="leg"><span><i class="t"></i>tension d’un brin (force sur la poulie)</span><span><i class="r"></i>résultante sur l’arbre</span><span><i class="a"></i>arc d’enroulement</span></div>' +
+      '<h3>Tension le long de l’arc d’enroulement</h3><p class="small">La courroie arrive sur la poulie motrice avec la tension T₁. Elle reste égale à T₁ sur l’arc de repos, puis elle décroît sur l’arc de glissement élastique jusqu’à T₂ à la sortie. Si l’arc de glissement atteint α, la courroie glisse globalement.</p>' +
+      '<div class="stagebox" id="w2-plotA"></div>' +
+      '<h3>Rapport de tensions admissible en fonction de l’enroulement</h3><div class="stagebox" id="w2-plotB"></div>';
+    const ids = [['w2-p', 'P', 1], ['w2-n', 'N', 0], ['w2-d', 'D1', 0], ['w2-a', 'alpha', 0], ['w2-f', 'f', 2], ['w2-t', 'T0', 0], ['w2-m', 'mu', 2]];
+    ids.forEach(([id, k, d]) => wire(id, S2, k, d, draw));
+    const kinds = [{ v: 'plate', t: 'Courroie plate' }, { v: 'trap', t: 'Trapézoïdale (β = 40°)' }];
+    chipsRow($('#w2-kind'), kinds, S2.kind, v => { S2.kind = v; draw(); });
+    $('#w2-reset').addEventListener('click', () => { Object.assign(S2, D_W2); ids.forEach(([id, k, d]) => syncSlider(id, S2, k, d)); chipsRow($('#w2-kind'), kinds, S2.kind, v => { S2.kind = v; draw(); }); draw(); });
+    function draw() {
+      const c = calc2(S2), aDeg = S2.alpha;
+      const cls = c.state, thD = c.thg / DEG;
+      if (!c.slackOK) setMsg($('#w2-msg'), 'no', 'Brin mou détendu : T₂ = ' + f1(c.T2, 0) + ' N ≤ T<sub>c</sub> = ' + f1(c.Tc, 1) + ' N. La précontrainte T₀ est trop faible pour la puissance transmise.');
+      else if (cls === 'no') setMsg($('#w2-msg'), 'no', 'Glissement global : il faut T₁/T₂ = ' + f1(c.ratio, 2) + ' mais l’adhérence n’autorise que e<sup>f′α</sup> = ' + f1(c.eMax, 2) + '. Augmentez T₀, α ou f′, ou réduisez la puissance.');
+      else if (cls === 'warn') setMsg($('#w2-msg'), 'warn', 'Proche de la limite : l’arc de glissement occupe ' + f1(100 * c.thg / c.a, 0) + ' % de l’enroulement (' + f1(thD, 0) + '° sur ' + f1(aDeg, 0) + '°). Une surcharge fait glisser la courroie.');
+      else setMsg($('#w2-msg'), 'yes', 'Adhérence suffisante : arc de glissement de ' + f1(thD, 0) + '° sur ' + f1(aDeg, 0) + '°, il reste ' + f1(aDeg - thD, 0) + '° d’arc de repos.');
+      $('#w2-stats').innerHTML = stat('Vitesse de courroie v', f1(c.v, 2) + ' m/s') + stat('Couple moteur C', f1(c.C, 1) + ' N·m') + stat('Effort utile F<sub>u</sub> = T₁ − T₂', f1(c.Fu, 0) + ' N') + stat('Tension centrifuge T<sub>c</sub>', f1(c.Tc, 1) + ' N') +
+        stat('T₁ ; T₂', f1(c.T1, 0) + ' ; ' + f1(c.T2, 0) + ' N') + stat('Frottement f′', f1(c.fe, 3)) + stat('e<sup>f′α</sup> (limite)', f1(c.eMax, 2)) + stat('T₁/T₂ requis', c.slackOK ? f1(c.ratio, 2) : '—') +
+        stat('F<sub>u</sub> maximal', f1(c.Fmax, 0) + ' N') + stat('P maximale', f1(c.Pmax, 2) + ' kW') + stat('Charge sur l’arbre', f1(c.Farbre, 0) + ' N');
+      $('#w2-forces').innerHTML = w2Forces(c, aDeg);
+      const A = $('#w2-plotA');
+      if (!c.slackOK) A.innerHTML = '<p class="small" style="padding:12px">Tracé indisponible : le brin mou n’est plus tendu.</p>';
+      else {
+        const slip = cls === 'no', th = c.a, tg = slip ? th : c.thg, t0 = th - tg, N = 60, lim = [], act = [];
+        const Tl = x => c.Tc + (c.T1 - c.Tc) * Math.exp(-c.fe * x);
+        for (let i = 0; i <= N; i++) { const x = th * i / N; lim.push([x / DEG, Tl(x)]); }
+        act.push([0, c.T1]); act.push([t0 / DEG, c.T1]);
+        for (let i = 1; i <= N; i++) { const x = t0 + tg * i / N; act.push([x / DEG, c.Tc + (c.T1 - c.Tc) * Math.exp(-c.fe * (x - t0))]); }
+        const fin = act[act.length - 1][1];
+        A.innerHTML = plot({ id: 'A', label: 'Tension en fonction de l’angle d’enroulement', x: [0, aDeg], y: [0, c.T1 * 1.15], xl: 'angle d’enroulement θ depuis l’arrivée de la courroie (°)', yl: 'tension T (N)',
+          areas: [{ x0: 0, x1: t0 / DEG, cls: 'r-rest', label: t0 > 0.15 * th ? 'arc de repos' : '' }, { x0: t0 / DEG, x1: aDeg, cls: 'r-glis', label: 'arc de glissement' }],
+          hl: [{ y: c.T1, cls: 's-d', label: 'T₁' }, { y: c.T2, cls: 's-d', label: 'T₂' }],
+          series: [{ cls: 's-dv', pts: lim }, { cls: slip ? 's-b' : 's-a', pts: act }], pts: [{ x: aDeg, y: fin }] });
+      }
+      const pts = []; for (let a = 60; a <= 360; a += 5) pts.push([a, Math.exp(c.fe * a * DEG)]);
+      const yb = Math.min(40, Math.max(6, c.slackOK ? c.ratio * 1.3 : 6, c.eMax * 1.1));
+      $('#w2-plotB').innerHTML = plot({ id: 'B', label: 'Rapport maximal e puissance f′α en fonction de α', x: [60, 360], y: [1, yb], yd: 0, xl: 'angle d’enroulement α (°)', yl: 'rapport T₁/T₂',
+        series: [{ cls: 's-a', pts }], hl: c.slackOK ? [{ y: c.ratio, cls: 's-b', label: 'rapport requis' }] : [], vl: [{ x: aDeg, cls: 's-d' }], pts: [{ x: aDeg, y: c.eMax, label: 'e^(f′α) = ' + f1(c.eMax, 2), dx: 10, dy: 14 }] });
+    }
+    draw();
+  }
+});
+
+/* ================= Atelier 3 : poulies de levage et palans ================= */
+const D_W3 = { M: 100, n: 4, eta: 0.96, v: 0.2, h: 5, lift: 0.4 };
+const S3 = Object.assign({}, D_W3);
+const SUBS = ['', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈'];
+WORKSHOPS.push({
+  id: 'w3', title: 'Poulies et palans',
+  hint: 'Modèle : chaque passage sur une poulie multiplie la tension par le rendement η.',
+  reset() { Object.assign(S3, D_W3); },
+  mount(root) {
+    root.innerHTML = '<h2>Palan à n brins porteurs</h2>' +
+      '<p>Une charge de masse M est levée avec une corde et des poulies. Choisissez une configuration, ou réglez le nombre n de segments de corde qui portent la charge. La corde est tirée avec l’effort F.</p>' +
+      '<div class="goal"><b>Trois idées à retenir.</b><br>① Une poulie fixe change la direction de l’effort, sans le réduire.<br>② Une poulie mobile est portée par deux segments : le support fournit la moitié de l’effort.<br>③ Avec n segments, chacun reprend Mg/n, donc F = Mg/n, mais il faut tirer n fois plus de corde : on gagne en force ce qu’on perd en distance.</div>' +
+      '<p class="small">Pour tenir compte des frottements, chaque poulie qui sépare deux segments multiplie la tension par le rendement η (curseur ci-dessous, η = 1 pour le cas idéal).</p>' +
+      '<div class="opts">' + sld('w3-m', 'Masse M', 'kg', 20, 500, 10) + sld('w3-n', 'Segments porteurs n', '', 1, 8, 1) + sld('w3-e', 'Rendement η d’une poulie', '', 0.85, 1, 0.01) + sld('w3-v', 'Vitesse de la charge', 'm/s', 0.05, 0.5, 0.05) + sld('w3-h', 'Hauteur de levée h', 'm', 1, 10, 0.5) + sld('w3-l', 'Avancement de la levée', '', 0, 1, 0.01) + '</div>' +
+      '<div class="fld"><span>Configuration</span><div class="chips" id="w3-pre"></div></div>' +
+      '<div class="files" style="margin:8px 0"><button class="btn" id="w3-reset" type="button">Valeurs de départ</button></div>' +
+      '<div class="twin"><div class="stagebox" id="w3-stage"></div><div class="stagebox" id="w3-dcl"></div></div>' +
+      '<div class="leg"><span><i class="f"></i>effort de traction F sur la corde</span><span><i class="t"></i>tensions T des brins sur le bloc mobile</span><span><i class="p"></i>poids P = Mg de la charge</span></div>' +
+      '<div class="verdict" id="w3-msg" aria-live="polite"></div><div class="gstats" id="w3-stats"></div>' +
+      '<h3>Tension dans chaque brin</h3><div id="w3-bars"></div>' +
+      '<h3>Pourquoi F = Mg/n pour un palan idéal ?</h3>' +
+      '<div class="defi"><ol class="steps">' +
+      '<li><b>Tension uniforme dans le câble.</b> Le câble est sans masse et inextensible, les poulies sont idéales (sans masse ni frottement). Pour une poulie de rayon R, le théorème du moment dynamique en son axe donne (T<sub>a</sub> − T<sub>b</sub>)R = J θ̈ = 0, donc T<sub>a</sub> = T<sub>b</sub>. Le câble garde la même tension T = F sur toute sa longueur, brins porteurs compris.</li>' +
+      '<li><b>Équilibre de {bloc mobile + charge}.</b> Les n segments porteurs, verticaux, tirent vers le haut avec T chacun ; le poids Mg tire vers le bas. À l’arrêt ou à vitesse constante, la résultante est nulle : nT − Mg = 0, donc F = T = Mg/n.</li>' +
+      '<li><b>Vérification énergétique.</b> Quand la charge monte de dz, chacun des n brins porteurs se raccourcit de dz : l’extrémité tirée avance de n·dz. Le travail de F vaut F·n·dz et celui du poids Mg·dz, d’où nF = Mg. En vitesse : v<sub>brin</sub> = n·v, et la puissance F·n·v = Mg·v est conservée.</li>' +
+      '<li><b>Avec frottement.</b> Chaque poulie multiplie la tension par η : les brins portent F, ηF, …, ηⁿ⁻¹F. L’équilibre devient Mg = F(1 − ηⁿ)/(1 − η), d’où F = Mg(1 − η)/(1 − ηⁿ), supérieur à Mg/n.</li></ol>' +
+      '<p id="w3-just"></p></div>' +
+      '<h3>Effet du nombre de brins (η fixé)</h3><div class="dwrap"><table class="dt" id="w3-tab"></table></div>';
+    const ids = [['w3-m', 'M', 0], ['w3-n', 'n', 0], ['w3-e', 'eta', 2], ['w3-v', 'v', 2], ['w3-h', 'h', 1], ['w3-l', 'lift', 2]];
+    ids.forEach(([id, k, d]) => wire(id, S3, k, d, draw));
+    $('#w3-reset').addEventListener('click', () => { Object.assign(S3, D_W3); ids.forEach(([id, k, d]) => syncSlider(id, S3, k, d)); draw(); });
+    function draw() {
+      const n = S3.n, c = calc3(S3.M, n, S3.eta, S3.v, S3.h), lift = S3.lift * S3.h;
+      chipsRow($('#w3-pre'), [{ v: 1, t: 'Poulie fixe (n = 1)' }, { v: 2, t: 'Poulie mobile (n = 2)' }, { v: 3, t: 'Palan à 3 segments' }, { v: 4, t: 'Palan à 4 segments' }], n, v => { S3.n = v; syncSlider('w3-n', S3, 'n', 0); draw(); });
+      $('#w3-l-o').textContent = f1(lift, 2) + ' m (' + f1(S3.lift * 100, 0) + ' %) ';
+      const xs = Array.from({ length: n }, (_, i) => n === 1 ? 190 : 90 + i * 200 / (n - 1)), yt = 52, yb = 210 - S3.lift * 130, N1 = v => v.toFixed(1);
+      const lbl = (x, y, t) => '<text class="ts" x="' + x + '" y="' + N1(y) + '" style="font-size:11px">' + t + '</text>';
+      let sv = '<svg class="draw" viewBox="0 0 380 410" role="img" aria-label="' + (n === 1 ? 'Poulie fixe' : 'Palan à ' + n + ' segments') + ' avec F et le poids"><g transform="translate(0 30)"><line class="ceil" x1="40" x2="340" y1="22" y2="22"/>';
+      for (let x = 44; x < 340; x += 14) sv += '<line class="hatch" x1="' + x + '" y1="22" x2="' + (x - 8) + '" y2="12"/>';
+      if (n === 1) {
+        const fy = 414 - yb;
+        sv += '<line class="ceil" x1="190" y1="22" x2="190" y2="64"/><circle class="pl" cx="190" cy="64" r="38"/><circle class="hub" cx="190" cy="64" r="5"/>' +
+          '<line class="strand" stroke-width="4.5" x1="152" y1="64" x2="152" y2="' + N1(yb) + '"/><line class="strand" stroke-width="4.5" x1="228" y1="64" x2="228" y2="' + N1(fy) + '"/>' +
+          '<rect class="load" x="107" y="' + N1(yb) + '" width="90" height="46" rx="5"/><text class="t" x="152" y="' + N1(yb + 28) + '" text-anchor="middle">M = ' + S3.M + ' kg</text>' +
+          arrow(228, fy, 228, fy + 40, 'F') + '<text class="t" x="238" y="' + N1(fy + 34) + '">F = ' + f1(c.Fre, 0) + ' N</text>' +
+          arrow(152, yb + 46, 152, yb + 92, 'P') + '<text class="t" x="142" y="' + N1(yb + 78) + '" text-anchor="end">P = Mg = ' + f1(c.P, 0) + ' N</text>' + lbl(4, 60, 'poulie') + lbl(4, 72, 'fixe') + '</g></svg>';
+      } else {
+        sv += '<rect class="blk" x="60" y="30" width="260" height="22" rx="4"/><rect class="blk" x="60" y="' + N1(yb) + '" width="260" height="22" rx="4"/>';
+        for (let i = 0; i < n - 1; i++) { const cx = (xs[i] + xs[i + 1]) / 2, cy = i % 2 === 0 ? yb + 11 : 41, rr = Math.min(10, (xs[i + 1] - xs[i]) / 2 - 1); sv += '<circle class="pl" cx="' + N1(cx) + '" cy="' + N1(cy) + '" r="' + N1(Math.max(3, rr)) + '"/>'; }
+        c.Tk.forEach((T, i) => { sv += '<line class="strand" stroke-width="' + (1.5 + 3 * T / c.Fre).toFixed(2) + '" x1="' + N1(xs[i]) + '" y1="' + (i === 0 ? 14 : yt) + '" x2="' + N1(xs[i]) + '" y2="' + N1(yb + (i % 2 === 0 ? 11 : 0)) + '"/>'; });
+        sv += arrow(xs[0], 8, xs[0], -24, 'F') + '<text class="t" x="' + N1(xs[0] + 9) + '" y="-6">F = ' + f1(c.Fre, 0) + ' N</text>';
+        sv += '<line class="strand" stroke-width="2" x1="190" y1="' + N1(yb + 22) + '" x2="190" y2="' + N1(yb + 50) + '"/><rect class="load" x="145" y="' + N1(yb + 50) + '" width="90" height="46" rx="5"/><text class="t" x="190" y="' + N1(yb + 78) + '" text-anchor="middle">M = ' + S3.M + ' kg</text>';
+        sv += arrow(190, yb + 96, 190, yb + 142, 'P') + '<text class="t" x="180" y="' + N1(yb + 126) + '" text-anchor="end">P = Mg = ' + f1(c.P, 0) + ' N</text>';
+        sv += lbl(4, 38, 'moufle') + lbl(4, 50, 'fixe') + lbl(4, yb + 9, 'moufle') + lbl(4, yb + 21, 'mobile') + '</g></svg>';
+      }
+      $('#w3-stage').innerHTML = sv;
+      const sc = 105 / c.P;
+      let dc = '<svg class="draw" viewBox="0 0 380 340" role="img" aria-label="Isolement du bloc mobile et de la charge : tensions des brins et poids"><text class="t" x="190" y="11" text-anchor="middle">' + (n === 1 ? 'Isolement de la charge' : 'Isolement du bloc mobile et de la charge') + '</text><rect class="blk" x="60" y="140" width="260" height="60" rx="6"/><text class="t" x="190" y="176" text-anchor="middle">M = ' + S3.M + ' kg</text>';
+      c.Tk.forEach((T, i) => { const tip = 140 - sc * T; dc += arrow(xs[i], 140, xs[i], tip, 'T') + '<text class="ts" x="' + N1(xs[i]) + '" y="' + N1(tip - 6) + '" text-anchor="middle">T' + SUBS[i + 1] + '</text>'; });
+      dc += arrow(190, 200, 190, 305, 'P') + '<text class="t" x="200" y="262">P = Mg = ' + f1(c.P, 0) + ' N</text><text class="ts" x="190" y="332" text-anchor="middle">équilibre : ΣT − Mg = 0</text></svg>';
+      $('#w3-dcl').innerHTML = dc;
+      setMsg($('#w3-msg'), 'yes', 'Avec ' + n + ' brins, l’effort passe de ' + f1(c.P, 0) + ' N (levage direct) à <b>' + f1(c.Fre, 0) + ' N</b>, mais il faut tirer ' + n + ' fois plus de câble : ' + f1(c.lc, 1) + ' m pour ' + f1(S3.h, 1) + ' m de levée. Rendement global ' + f1(100 * c.etaG, 1) + ' %.');
+      $('#w3-just').innerHTML = 'Application (η = 1) : ' + n + ' × T = ' + f1(c.P, 0) + ' N, donc T = F = <b>' + f1(c.Fid, 1) + ' N</b>. Avec η = ' + f1(S3.eta, 2) + ', il faut ' + f1(c.Fre, 1) + ' N.';
+      $('#w3-stats').innerHTML = stat('Poids Mg', f1(c.P, 0) + ' N') + stat('Effort idéal Mg/n', f1(c.Fid, 1) + ' N') + stat('Effort réel F', f1(c.Fre, 1) + ' N') + stat('Rendement global', f1(100 * c.etaG, 1) + ' %') +
+        stat('Vitesse du brin tiré', f1(c.vb, 2) + ' m/s') + stat('Câble tiré pour h', f1(c.lc, 1) + ' m') + stat('Travail moteur', f1(c.Wm, 0) + ' J') + stat('Puissance fournie', f1(c.Pm, 0) + ' W');
+      $('#w3-bars').innerHTML = c.Tk.map((T, i) => '<div class="cmpr"><span>Brin ' + (i + 1) + (i === 0 ? ' (tiré)' : '') + '</span><i style="width:' + (100 * T / c.Fre).toFixed(1) + '%"></i><em>' + f1(T, 1) + ' N</em></div>').join('');
+      let rows = '<thead><tr><th>n</th><th>F idéal (N)</th><th>F réel (N)</th><th>Rendement global</th></tr></thead><tbody>';
+      for (let k = 1; k <= 8; k++) { const q = calc3(S3.M, k, S3.eta, S3.v, S3.h); rows += '<tr class="' + (k === n ? 'cur' : '') + '"><td class="m">' + k + '</td><td class="m">' + f1(q.Fid, 1) + '</td><td class="m">' + f1(q.Fre, 1) + '</td><td class="m">' + f1(100 * q.etaG, 1) + ' %</td></tr>'; }
+      $('#w3-tab').innerHTML = rows + '</tbody>';
+    }
+    draw();
+  }
+});
+
+/* ================= Atelier 4 : dynamique et inertie équivalente ================= */
+const D_W4 = { k: 1 / 3, Jm: 1.2, J1: 0.5, J2: 3, Jc: 10, C0: 4, w0: 3000, Cr: 6, eta: 0.95 };
+const S4 = Object.assign({}, D_W4);
+WORKSHOPS.push({
+  id: 'w4', title: 'Dynamique et démarrage',
+  hint: 'Ramenez toutes les inerties sur l’arbre moteur, puis observez le démarrage du moteur à caractéristique linéaire.',
+  reset() { Object.assign(S4, D_W4); },
+  mount(root) {
+    root.innerHTML = '<h2>Inertie équivalente et temps de démarrage</h2>' +
+      '<p>Moteur (inertie J<sub>m</sub>), poulie 1 (J₁), poulie 2 (J₂) et charge (J<sub>c</sub>) sur l’arbre 2, avec k = ω₂/ω₁. Le moteur a une caractéristique linéaire C<sub>m</sub> = C₀(1 − ω₁/ω₀) et la charge un couple résistant constant C<sub>r</sub> sur l’arbre 2.</p>' +
+      '<div class="opts">' + sld('w4-jm', 'Inertie moteur J<sub>m</sub>', '10⁻³ kg·m²', 0.2, 5, 0.1) + sld('w4-j1', 'Inertie poulie 1', '10⁻³ kg·m²', 0.1, 5, 0.1) + sld('w4-j2', 'Inertie poulie 2', '10⁻³ kg·m²', 0.5, 10, 0.5) + sld('w4-jc', 'Inertie charge', '10⁻³ kg·m²', 0, 30, 1) +
+      sld('w4-c0', 'Couple de démarrage C₀', 'N·m', 0.5, 10, 0.5) + sld('w4-w0', 'Vitesse à vide', 'tr/min', 1500, 3000, 100) + sld('w4-cr', 'Couple résistant C<sub>r</sub>', 'N·m', 0, 30, 0.5) + sld('w4-eta', 'Rendement η', '', 0.8, 1, 0.01) + '</div>' +
+      '<div class="fld"><span>Rapport de transmission k = ω₂/ω₁</span><div class="chips" id="w4-k"></div></div>' +
+      '<div class="files" style="margin:8px 0"><button class="btn" id="w4-reset" type="button">Valeurs de départ</button></div>' +
+      '<div class="verdict" id="w4-msg" aria-live="polite"></div><div class="gstats" id="w4-stats"></div>' +
+      '<h3>Montée en vitesse</h3><p class="small">ω₁(t) = ω<sub>f</sub>(1 − e<sup>−t/τ</sup>) avec τ = J<sub>eq</sub>ω₀/C₀. La tangente à l’origine coupe l’asymptote à t = τ.</p><div class="stagebox" id="w4-plotA"></div>' +
+      '<h3>Inertie équivalente en fonction de k</h3><div class="stagebox" id="w4-plotB"></div>';
+    const ids = [['w4-jm', 'Jm', 1], ['w4-j1', 'J1', 1], ['w4-j2', 'J2', 1], ['w4-jc', 'Jc', 0], ['w4-c0', 'C0', 1], ['w4-w0', 'w0', 0], ['w4-cr', 'Cr', 1], ['w4-eta', 'eta', 2]];
+    ids.forEach(([id, k, d]) => wire(id, S4, k, d, draw));
+    const ks = [{ v: 2, t: 'k = 2' }, { v: 1, t: 'k = 1' }, { v: 1 / 2, t: 'k = 1/2' }, { v: 1 / 3, t: 'k = 1/3' }, { v: 1 / 5, t: 'k = 1/5' }];
+    const drawK = () => chipsRow($('#w4-k'), ks, S4.k, v => { S4.k = v; draw(); });
+    drawK();
+    $('#w4-reset').addEventListener('click', () => { Object.assign(S4, D_W4); ids.forEach(([id, k, d]) => syncSlider(id, S4, k, d)); drawK(); draw(); });
+    function draw() {
+      const c = calc4(S4);
+      if (c.stall) setMsg($('#w4-msg'), 'no', 'Le moteur cale : le couple résistant ramené C<sub>r</sub>′ = ' + f1(c.Crp, 2) + ' N·m dépasse C₀ = ' + f1(S4.C0, 1) + ' N·m. Réduisez C<sub>r</sub> ou k, ou prenez un moteur plus puissant.');
+      else setMsg($('#w4-msg'), 'yes', 'Régime établi à ' + f1(c.rpm1, 0) + ' tr/min sur l’arbre moteur, ' + f1(c.rpm2, 0) + ' tr/min sur l’arbre 2. Le moteur atteint 95 % de cette vitesse en ' + f1(c.t95, 2) + ' s.');
+      $('#w4-stats').innerHTML = stat('J<sub>eq</sub> (arbre moteur)', f1(c.Jeq * 1000, 3) + ' ×10⁻³ kg·m²') + stat('C<sub>r</sub>′ = k C<sub>r</sub>/η', f1(c.Crp, 2) + ' N·m') + stat('Constante de temps τ', f1(c.tau, 3) + ' s') + stat('Temps à 95 %', c.stall ? '—' : f1(c.t95, 2) + ' s') +
+        stat('Accélération initiale', f1(c.a0, 0) + ' rad/s²') + stat('Vitesse finale ω₁', f1(c.rpm1, 0) + ' tr/min') + stat('Vitesse finale ω₂', f1(c.rpm2, 0) + ' tr/min') + stat('Énergie cinétique finale', f1(c.Ec, 1) + ' J');
+      const T = Math.max(5 * c.tau, 0.1), pts1 = [], pts2 = [], N = 80;
+      for (let i = 0; i <= N; i++) { const t = T * i / N, w = c.wf * (1 - Math.exp(-t / c.tau)) * 60 / (2 * Math.PI); pts1.push([t, w]); pts2.push([t, w * c.k]); }
+      const r1 = c.rpm1, r2 = c.rpm2, ymax = Math.max(r1, r2, 10) * 1.15;
+      $('#w4-plotA').innerHTML = plot({ id: 'C', label: 'Vitesses de rotation en fonction du temps', x: [0, T], y: [0, ymax], xd: 2, xl: 'temps (s)', yl: 'vitesse (tr/min)',
+        series: [{ cls: 's-a', pts: pts1 }, { cls: 's-o', pts: pts2 }, { cls: 's-d', pts: [[0, 0], [c.tau, r1]] }],
+        hl: [{ y: r1, cls: 's-d', label: 'ω₁ final' }], vl: [{ x: c.tau, cls: 's-dv' }], pts: c.stall ? [] : [{ x: c.tau, y: r1 * (1 - Math.exp(-1)), label: 'τ = ' + f1(c.tau, 2) + ' s', dx: 10, dy: 18 }] });
+      const jp = []; for (let i = 0; i <= 60; i++) { const k = 0.05 + (2.05 - 0.05) * i / 60; jp.push([k, (S4.Jm + S4.J1 + k * k * (S4.J2 + S4.Jc))]); }
+      const jmax = (S4.Jm + S4.J1 + 4.2 * (S4.J2 + S4.Jc)) * 1.05;
+      $('#w4-plotB').innerHTML = plot({ id: 'D', label: 'Inertie équivalente en fonction de k', x: [0, 2.1], y: [0, jmax], xd: 1, yd: 0, xl: 'rapport de transmission k', yl: 'J eq (10⁻³ kg·m²)',
+        series: [{ cls: 's-a', pts: jp }], hl: [{ y: S4.Jm + S4.J1, cls: 's-d', label: 'J_m + J₁' }], pts: [{ x: Math.min(S4.k, 2.05), y: c.Jeq * 1000, label: 'k = ' + f1(S4.k, 2), dx: 10, dy: -4 }] });
+    }
+    draw();
+  }
+});
+
+/* ---------- activités : consignes, défi et QCM ---------- */
+const ACT = {
+  w1: {
+    title: 'Cinématique et géométrie', level: 'Niveau 1 · Découvrir', time: '25 min', course: 'rapport',
+    goal: 'Relier les diamètres au rapport de transmission, repérer l’angle d’enroulement critique et calculer la longueur de courroie.',
+    steps: [
+      'Avec D₁ = 80 mm, D₂ = 160 mm et la courroie ouverte, relevez k, N₂ et la vitesse de courroie v. Vérifiez k = D₁/D₂ et v = ω₁D₁/2 à la main.',
+      'Faites varier D₂. Comment évoluent α₁ et α₂ ? Sur quelle poulie l’angle d’enroulement est-il le plus faible ?',
+      'Passez au montage croisé. Que devient le sens de rotation de la poulie 2 ? Comment varient α₁, α₂ et la longueur L ?',
+      'Revenez au montage ouvert et ajoutez 3 % de glissement. Calculez N₂ à la main puis vérifiez. Le rapport reste-t-il égal à D₁/D₂ ?',
+      'Diminuez l’entraxe jusqu’à voir apparaître un avertissement. Quelle condition sur α₁ est violée ?'
+    ],
+    defi: { q: 'Deux poulies de diamètres 100 mm et 250 mm sont reliées par une courroie ouverte, d’entraxe 400 mm. Calculez la longueur de courroie, puis comparez avec le montage croisé.',
+      a: 'sin γ = (125 − 50)/400 donc γ ≈ 10,81°. α₁ = π − 2γ ≈ 158,4° et α₂ = π + 2γ ≈ 201,6°. L = 2E cos γ + (α₁D₁ + α₂D₂)/2 ≈ 785,8 + 578,1 ≈ <b>1 364 mm</b>. En croisé, sin λ = 175/400 donc λ ≈ 25,9° et L = 2E cos λ + (π + 2λ)(D₁ + D₂)/2 ≈ <b>1 428 mm</b> : la courroie croisée est plus longue.' },
+    qcm: [
+      { q: 'Quel est le rapport de transmission d’une courroie ouverte sans glissement ?', o: ['k = ω₂/ω₁ = D₂/D₁', 'k = ω₂/ω₁ = D₁/D₂', 'k = −D₁/D₂', 'k = D₁·D₂'], a: 1, w: 'La vitesse linéaire de la courroie est la même sur les deux poulies : ω₁D₁/2 = ω₂D₂/2, donc ω₂/ω₁ = D₁/D₂.' },
+      { q: 'Que change le croisement de la courroie ?', o: ['Rien du tout', 'Le sens de rotation de la poulie 2 est inversé et les angles d’enroulement augmentent', 'Le rapport |k| est multiplié par 2', 'La courroie devient plus courte'], a: 1, w: 'Le croisement inverse le sens de rotation, donne α₁ = α₂ = π + 2λ et allonge la courroie.' },
+      { q: 'Pour D₁ < D₂ en courroie ouverte, quelle poulie a le plus petit angle d’enroulement ?', o: ['La grande poulie', 'La petite poulie, α₁ = π − 2γ', 'Les deux ont le même angle', 'Cela dépend de la vitesse'], a: 1, w: 'α₁ = π − 2γ < π < α₂ = π + 2γ. C’est donc la petite poulie qui limite l’adhérence.' },
+      { q: 'Quelle est la vitesse linéaire de la courroie, sans glissement ?', o: ['v = ω₁D₁', 'v = ω₁D₁/2', 'v = ω₂D₁/2', 'v = ω₁(D₁ + D₂)/2'], a: 1, w: 'v = ω₁R₁ = ω₁D₁/2, avec ω₁ en rad/s et D₁ en m. Penser à convertir N en tr/min : ω = 2πN/60.' },
+      { q: 'Pourquoi préfère-t-on une courroie crantée quand le rapport doit être exact ?', o: ['Elle est moins chère', 'Elle ne glisse pas : k = Z₁/Z₂ est constant', 'Elle est plus légère', 'Elle supporte moins de tension'], a: 1, w: 'Le glissement g d’une courroie lisse ou trapézoïdale rend k = (D₁/D₂)(1 − g) variable. La courroie crantée engrène : le rapport des nombres de dents est exact.' }
+    ]
+  },
+  w2: {
+    title: 'Adhérence et tensions', level: 'Niveau 2 · Comprendre', time: '35 min', course: 'euler',
+    goal: 'Relier puissance, effort utile et tensions, puis déterminer la limite de glissement à l’aide de la formule d’Euler–Eytelwein.',
+    steps: [
+      'Avec P = 3 kW à 1 500 tr/min et D₁ = 100 mm, relevez v, F<sub>u</sub> et C. Vérifiez F<sub>u</sub> = P/v et C = P/ω₁.',
+      'Observez le graphe de tension. À quoi correspondent la partie horizontale et la partie courbe ? Où se trouve l’arc de repos ?',
+      'Augmentez P jusqu’à ce que le verdict devienne rouge. Comparez la puissance trouvée à la valeur « P maximale » affichée (environ 4,3 kW au départ).',
+      'Revenez à 3 kW et diminuez la précontrainte T₀. Que devient l’arc de glissement ? Quelle valeur de T₀ fait glisser la courroie ?',
+      'Passez en courroie trapézoïdale : relevez f′. Réglez ensuite T₀ à 350 N et vérifiez si la courroie transmet encore 3 kW.'
+    ],
+    defi: { q: 'Une courroie plate (f = 0,3) s’enroule de π sur la poulie motrice. Elle doit transmettre un effort utile de 500 N, à la limite du glissement et sans tension centrifuge. Calculez T₁, T₂ et la précontrainte T₀.',
+      a: 'À la limite, T₁/T₂ = e<sup>fα</sup> = e<sup>0,3π</sup> ≈ 2,566, et T₁ − T₂ = 500 N. Donc T₂ = 500/(2,566 − 1) ≈ <b>319 N</b>, T₁ ≈ <b>819 N</b> et T₀ = (T₁ + T₂)/2 ≈ <b>569 N</b>.' },
+    qcm: [
+      { q: 'Quelle est la relation d’Euler–Eytelwein à la limite du glissement (sans tension centrifuge) ?', o: ['T₁ − T₂ = fα', 'T₁/T₂ = e<sup>fα</sup> avec α en radians', 'T₁/T₂ = fα', 'T₁·T₂ = e<sup>fα</sup>'], a: 1, w: 'L’équilibre d’un élément de courroie donne dT/T = f dθ, d’où T₁/T₂ = e<sup>fα</sup>, avec α en radians.' },
+      { q: 'Sur la poulie motrice, quel brin est le plus tendu ?', o: ['Le brin qui arrive sur la poulie motrice : la tension y vaut T₁', 'Le brin qui quitte la poulie motrice vers la réceptrice', 'Les deux brins ont la même tension', 'Cela dépend du diamètre'], a: 0, w: 'La poulie motrice exerce sur la courroie une force de frottement dirigée dans le sens du mouvement : la tension de la courroie diminue donc dans ce sens, de T₁ à l’arrivée jusqu’à T₂ au départ. La poulie tire le brin tendu vers elle et rejette le brin mou.' },
+      { q: 'Pourquoi une courroie trapézoïdale transmet-elle plus d’effort qu’une courroie plate ?', o: ['Elle est plus longue', 'L’effet de coin donne un frottement apparent f′ = f/sin(β/2) > f', 'Elle tourne plus vite', 'Elle a une précontrainte nulle'], a: 1, w: 'La gorge de demi-angle β/2 multiplie l’effort normal : f′ = f/sin(β/2). Pour β = 40°, f′ ≈ 2,9 f.' },
+      { q: 'On diminue l’angle d’enroulement α à tension T₀ constante. Que devient l’effort maximal transmissible ?', o: ['Il augmente', 'Il diminue', 'Il ne change pas', 'Il devient nul pour tout α'], a: 1, w: 'F<sub>max</sub> = 2T₀(e<sup>f′α</sup> − 1)/(e<sup>f′α</sup> + 1) croît avec α.' },
+      { q: 'Quel est l’effet de la tension centrifuge T<sub>c</sub> = μv² ?', o: ['Elle augmente la pression sur la poulie', 'Elle diminue la pression de contact et donc la capacité d’adhérence', 'Elle ne dépend pas de la vitesse', 'Elle supprime le glissement'], a: 1, w: 'La courroie est « soulevée » par l’effet centrifuge : on remplace T par T − μv² dans la formule, ce qui pénalise l’adhérence à grande vitesse.' }
+    ]
+  },
+  w3: {
+    title: 'Poulies et palans', level: 'Niveau 2 · Comprendre', time: '30 min', course: 'palans',
+    goal: 'Déterminer l’effort de traction, la vitesse et le rendement d’un palan, avec ou sans frottement.',
+    steps: [
+      'Choisissez « Poulie fixe ». Relevez F : est-il plus petit que le poids ? Qu’apporte alors la poulie ?',
+      'Passez à « Poulie mobile » (η = 1). Combien de segments portent la charge ? Quelle fraction du poids chacun reprend-il ? Qui fournit l’autre moitié ?',
+      'Essayez les palans à 3 et 4 segments. Vérifiez F = Mg/n, puis comparez la longueur de câble tirée à la levée h : que gagne-t-on, que perd-on ?',
+      'Remettez η = 0,96 et n = 4. Comparez F réel et F idéal. Observez les tensions des brins : comment évoluent-elles de proche en proche, et que vaut leur somme ?',
+      'Dans le tableau, comment évolue le rendement global quand n augmente ? Qu’en conclut-on sur le choix de n ?'
+    ],
+    defi: { q: 'Un palan à 3 brins porteurs lève une masse de 150 kg à 0,1 m/s sur 4 m. Calculez l’effort de traction, la vitesse du brin et la longueur de câble tirée pour η = 1, puis l’effort pour η = 0,95.',
+      a: 'Mg = 150 × 9,81 = 1 471,5 N. Pour η = 1 : F = Mg/3 = <b>490,5 N</b>, v<sub>brin</sub> = 3 × 0,1 = <b>0,3 m/s</b>, câble tiré = 3 × 4 = <b>12 m</b>. Pour η = 0,95 : F = Mg(1 − η)/(1 − η³) ≈ <b>516 N</b>.' },
+    qcm: [
+      { q: 'Quel est l’effet d’une poulie fixe idéale ?', o: ['Elle divise l’effort par 2', 'Elle change la direction de l’effort sans le modifier', 'Elle double la vitesse', 'Elle supprime le poids'], a: 1, w: 'Une poulie fixe idéale conserve la tension du câble : seul le sens de l’effort change.' },
+      { q: 'Pour un palan idéal à n brins porteurs, que valent l’effort de traction et la vitesse du brin tiré ?', o: ['F = Mg et v', 'F = Mg/n et nv', 'F = nMg et v/n', 'F = Mg/n et v/n'], a: 1, w: 'On gagne un facteur n sur l’effort mais on tire n fois plus de câble : la puissance Fnv = Mgv est conservée.' },
+      { q: 'Dans le modèle de l’atelier, comment varient les tensions des brins successifs ?', o: ['Elles sont toutes égales', 'Elles forment une suite géométrique de raison η', 'Elles forment une suite arithmétique', 'Elles augmentent de brin en brin'], a: 1, w: 'Chaque passage sur une poulie multiplie la tension par η : F, ηF, η²F, … Leur somme vaut Mg.' },
+      { q: 'À rendement de poulie η < 1 fixé, comment évolue le rendement global quand n augmente ?', o: ['Il augmente', 'Il diminue', 'Il reste constant', 'Il vaut toujours 1'], a: 1, w: 'η<sub>g</sub> = (1 − ηⁿ)/(n(1 − η)) décroît avec n : plus il y a de poulies, plus il y a de pertes.' },
+      { q: 'Comment calcule-t-on la longueur de câble à tirer pour lever la charge de h ?', o: ['h', 'n·h', 'h/n', 'h·η'], a: 1, w: 'Chacun des n brins porteurs doit se raccourcir de h : on tire n·h de câble.' },
+      { q: 'Quelle pièce tient ensemble le réa et l’axe, et porte les crochets de la poulie ?', o: ['La gorge', 'La chape', 'Le moufle', 'La palanquée'], a: 1, w: 'La chape est la monture du réa. La gorge est la rainure du réa, le moufle est un ensemble de plusieurs réas dans une même chape, et la palanquée est la charge soulevée par un palan.' }
+    ]
+  },
+  w4: {
+    title: 'Dynamique et démarrage', level: 'Niveau 3 · Maîtriser', time: '40 min', course: 'dynamique',
+    goal: 'Ramener les inerties et les couples sur l’arbre moteur, puis prévoir le comportement du démarrage.',
+    steps: [
+      'Avec k = 1/3, relevez J<sub>eq</sub>. Retrouvez-le à la main : J<sub>m</sub> + J₁ + k²(J₂ + J<sub>c</sub>).',
+      'Changez k de 1/3 à 1 puis à 2. Comment évolue J<sub>eq</sub> ? Quelle poulie domine à grand k ?',
+      'Relevez C<sub>r</sub>′ puis diminuez le rendement η. Que devient le couple résistant ramené ?',
+      'Augmentez C<sub>r</sub> jusqu’à ce que le moteur cale. Quelle condition porte sur C<sub>r</sub>′ et C₀ ?',
+      'Sur le graphe, vérifiez que la tangente à l’origine coupe l’asymptote en t = τ et que le temps à 95 % vaut environ 3τ.'
+    ],
+    defi: { q: 'Moteur et poulie 1 ont ensemble une inertie de 2×10⁻³ kg·m², la poulie 2 et la charge 8×10⁻³ kg·m², avec k = 1/2. Calculez J<sub>eq</sub>, puis le couple moteur constant pour atteindre 1 000 tr/min en 0,5 s avec un couple résistant ramené de 1 N·m.',
+      a: 'J<sub>eq</sub> = 2×10⁻³ + (1/2)² × 8×10⁻³ = <b>4×10⁻³ kg·m²</b>. ω = 1 000 × 2π/60 ≈ 104,7 rad/s, donc ω̇ = 104,7/0,5 ≈ 209,4 rad/s². Le théorème de l’énergie-puissance donne C<sub>m</sub> = J<sub>eq</sub>ω̇ + C<sub>r</sub>′ ≈ 4×10⁻³ × 209,4 + 1 ≈ <b>1,84 N·m</b>.' },
+    qcm: [
+      { q: 'Quelle est l’inertie équivalente ramenée à l’arbre moteur ?', o: ['J<sub>m</sub> + J₁ + J₂ + J<sub>c</sub>', 'J<sub>m</sub> + J₁ + k²(J₂ + J<sub>c</sub>)', 'J<sub>m</sub> + J₁ + k(J₂ + J<sub>c</sub>)', 'J<sub>m</sub> + J₁ + (J₂ + J<sub>c</sub>)/k'], a: 1, w: 'L’énergie cinétique ½J₂ω₂² = ½J₂k²ω₁² : l’inertie de l’arbre 2 est multipliée par k² pour être vue sur l’arbre 1.' },
+      { q: 'Avec un réducteur k = 1/3, comment le moteur voit-il l’inertie de la charge ?', o: ['Multipliée par 3', 'Divisée par 3', 'Divisée par 9', 'Inchangée'], a: 2, w: 'Le facteur est k² = 1/9 : un réducteur diminue fortement l’inertie vue par le moteur.' },
+      { q: 'Comment s’exprime le couple résistant ramené sur l’arbre moteur, avec un rendement η ?', o: ['C<sub>r</sub>′ = k C<sub>r</sub>', 'C<sub>r</sub>′ = k C<sub>r</sub>/η', 'C<sub>r</sub>′ = C<sub>r</sub>/k', 'C<sub>r</sub>′ = η C<sub>r</sub>/k'], a: 1, w: 'Puissance : C<sub>r</sub>ω₂ = η C<sub>r</sub>′ω₁ donc C<sub>r</sub>′ = k C<sub>r</sub>/η. Les pertes obligent le moteur à fournir plus.' },
+      { q: 'Quelle est l’équation issue du théorème de l’énergie-puissance sur l’ensemble ?', o: ['C<sub>m</sub> = J<sub>eq</sub>ω̇₁', 'J<sub>eq</sub>ω̇₁ = C<sub>m</sub> − C<sub>r</sub>′', 'J<sub>eq</sub>ω₁ = C<sub>m</sub> − C<sub>r</sub>′', 'J<sub>eq</sub> = C<sub>m</sub>ω̇₁'], a: 1, w: 'On exprime la dérivée de l’énergie cinétique : J<sub>eq</sub>ω₁ω̇₁ = (C<sub>m</sub> − C<sub>r</sub>′)ω₁, ce qui donne J<sub>eq</sub>ω̇₁ = C<sub>m</sub> − C<sub>r</sub>′.' },
+      { q: 'Avec C<sub>m</sub> = C₀(1 − ω₁/ω₀) et C<sub>r</sub>′ constant, quelle est la forme de ω₁(t) ?', o: ['Une droite', 'Une exponentielle de constante de temps τ = J<sub>eq</sub>ω₀/C₀', 'Une parabole', 'Une sinusoïde'], a: 1, w: 'On obtient un premier ordre : τω̇₁ + ω₁ = ω<sub>f</sub>. La vitesse atteint 95 % de ω<sub>f</sub> en environ 3τ.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+COURSE.push({ id: 'notions', t: 'Transmission par poulies et courroie', h: `
+<p>Une transmission par <b>poulies et courroie</b> transmet de la puissance mécanique entre deux arbres éloignés, par adhérence ou par obstacle. Elle est silencieuse, amortit les chocs et tolère un désalignement, mais n’est pas toujours rigoureusement synchrone.</p>
+<h3>Familles de courroies</h3>
+<table class="ctable"><thead><tr><th>Type</th><th>Principe</th><th>Rapport exact ?</th><th>Usage</th></tr></thead><tbody>
+<tr><td>Plate</td><td>Adhérence sur une surface lisse</td><td>Non (glissement)</td><td>Grandes vitesses, faible charge</td></tr>
+<tr><td>Trapézoïdale</td><td>Adhérence sur les flancs d’une gorge, effet de coin</td><td>Non</td><td>Machines industrielles, puissances moyennes</td></tr>
+<tr><td>Striée (Poly-V)</td><td>Plusieurs nervures, grande souplesse</td><td>Non</td><td>Automobile (accessoires)</td></tr>
+<tr><td>Crantée (synchrone)</td><td>Engrènement dents-crans</td><td><b>Oui</b></td><td>Distribution, positionnement</td></tr></tbody></table>
+<h3>Grandeurs et conventions</h3>
+<ul><li>Poulie 1 : motrice, diamètre D₁, vitesse ω₁. Poulie 2 : réceptrice, D₂, ω₂.</li><li>Conversion : ω (rad/s) = 2πN/60, avec N en tr/min.</li><li>Vitesse de courroie : v = ω₁D₁/2 (en m/s, D en m).</li><li>Puissance : P = Cω = F<sub>u</sub>v, avec F<sub>u</sub> = T₁ − T₂ l’effort utile.</li></ul>
+<div class="retain"><b>À retenir.</b> Les courroies lisses et trapézoïdales transmettent par adhérence, donc avec un glissement possible. Seule la courroie crantée impose un rapport exact.</div>` });
+
+COURSE.push({ id: 'rapport', t: 'Rapport de transmission et glissement', h: `
+<p>Si la courroie est inextensible et ne glisse pas, sa vitesse linéaire est la même sur les deux poulies.</p>
+<div class="formula">ω₁D₁/2 = ω₂D₂/2 &nbsp;⇒&nbsp; k = ω₂/ω₁ = D₁/D₂ &nbsp;(courroie ouverte) &nbsp;; &nbsp; k = −D₁/D₂ &nbsp;(courroie croisée)</div>
+<p>Pour une courroie crantée, k = ±Z₁/Z₂ avec Z le nombre de dents de chaque poulie.</p>
+<h3>Glissement</h3>
+<p>En pratique, une courroie lisse présente un <b>glissement élastique (fluage)</b> g de l’ordre de 1 à 3 % : la vitesse de la poulie réceptrice est un peu inférieure.</p>
+<div class="formula">k = (D₁/D₂)(1 − g) &nbsp;⇒&nbsp; N₂ = N₁ (D₁/D₂)(1 − g)</div>
+<p>Exemple : D₁ = 90 mm, D₂ = 225 mm, N₁ = 1 440 tr/min. Sans glissement N₂ = 576 tr/min ; avec g = 2 %, N₂ ≈ 564 tr/min.</p>
+<h3>Trains à plusieurs étages</h3>
+<p>Pour deux étages en série, les rapports se multiplient : k = k₁ k₂. Un rapport important se réalise avec plusieurs étages plutôt qu’avec une très grande poulie.</p>
+<div class="retain"><b>À retenir.</b> k = ±D₁/D₂ sans glissement ; avec glissement, on multiplie par (1 − g).</div>` });
+
+COURSE.push({ id: 'geometrie', t: 'Géométrie : angles et longueur', h: `
+<p>On note R₁ = D₁/2 et R₂ = D₂/2, et E l’entraxe. Les angles se déduisent des tangentes communes aux deux poulies.</p>
+<h3>Courroie ouverte (tangentes extérieures)</h3>
+<div class="formula">sin γ = (D₂ − D₁)/(2E)<br>α₁ = π − 2γ &nbsp;; &nbsp; α₂ = π + 2γ<br>L = 2E cos γ + (α₁D₁ + α₂D₂)/2</div>
+<p>L’angle d’enroulement le plus petit est sur la petite poulie : c’est lui qui limite l’adhérence. Valeur usuelle minimale : α₁ ≥ 120°.</p>
+<h3>Courroie croisée (tangentes intérieures)</h3>
+<div class="formula">sin λ = (D₁ + D₂)/(2E)<br>α₁ = α₂ = π + 2λ<br>L = 2E cos λ + (π + 2λ)(D₁ + D₂)/2</div>
+<p>Les deux poulies tournent en sens contraire et les angles d’enroulement sont plus grands : le croisement améliore l’adhérence, mais use la courroie par frottement sur elle-même.</p>
+<h3>Cas particulier</h3>
+<p>Pour D₁ = D₂ = D, γ = 0 et L = 2E + πD : deux segments droits et un tour complet.</p>
+<h3>Entraxe</h3>
+<p>Règle usuelle : 0,7(D₁ + D₂) ≤ E ≤ 2(D₁ + D₂). Trop petit, les angles d’enroulement diminuent ; trop grand, la courroie vibre.</p>
+<div class="retain"><b>À retenir.</b> Courroie ouverte : α₁ = π − 2γ sur la petite poulie. Courroie croisée : α = π + 2λ sur les deux.</div>` });
+
+COURSE.push({ id: 'euler', t: 'Adhérence : formule d’Euler–Eytelwein', h: `
+<p>On isole un élément de courroie d’angle dθ sur la poulie motrice, repéré dans le sens du mouvement de la courroie. Sa tension passe de T à T + dT. Appelons dN l’effort normal de la poulie sur l’élément et T<sub>c</sub> = μv² la tension centrifuge.</p>
+<h3>Équilibre d’un élément</h3>
+<ul><li>Radialement : dN = (T − T<sub>c</sub>) dθ (la tension centrifuge allège le contact).</li><li>Tangentiellement : sur la poulie motrice, la force de frottement exercée par la poulie sur la courroie est dirigée dans le sens du mouvement. Au seuil de glissement, elle vaut f dN, et dT = −f dN : la tension <b>diminue</b> dans le sens du mouvement.</li></ul>
+<div class="formula">dT/(T − T<sub>c</sub>) = −f dθ &nbsp;⇒&nbsp; (T₁ − T<sub>c</sub>)/(T₂ − T<sub>c</sub>) = e<sup>fα</sup></div>
+<p>La courroie arrive donc sur la poulie motrice avec la tension T₁ (brin tendu) et en repart avec T₂ (brin mou). En négligeant T<sub>c</sub> (vitesse faible), on retrouve T₁/T₂ = e<sup>fα</sup>, avec α en radians. Sur la poulie réceptrice, c’est l’inverse : la tension passe de T₂ à T₁.</p>
+<h3>Courroie trapézoïdale</h3>
+<p>L’effet de coin multiplie l’effort normal : on remplace f par <b>f′ = f/sin(β/2)</b>, avec β l’angle de la gorge. Pour β = 40°, f′ ≈ 2,9 f.</p>
+<h3>Arc de repos et arc de glissement</h3>
+<p>Tant que le rapport T₁/T₂ requis est inférieur à e<sup>f′α</sup>, la courroie n’a pas besoin d’utiliser toute l’adhérence disponible. Sur l’<b>arc de repos</b>, à l’arrivée sur la poulie, la courroie adhère et sa tension reste égale à T₁. Elle glisse ensuite sur l’<b>arc de glissement élastique</b> (fluage) θ<sub>g</sub> = ln[(T₁ − T<sub>c</sub>)/(T₂ − T<sub>c</sub>)]/f′, où sa tension décroît de T₁ à T₂. Le glissement global apparaît quand θ<sub>g</sub> atteint α.</p>
+<h3>Précontrainte et effort maximal</h3>
+<p>La précontrainte moyenne T₀ = (T₁ + T₂)/2 est imposée au montage. Avec F<sub>u</sub> = T₁ − T₂, la limite d’adhérence donne :</p>
+<div class="formula">F<sub>max</sub> = 2(T₀ − T<sub>c</sub>)(e<sup>f′α</sup> − 1)/(e<sup>f′α</sup> + 1)</div>
+<div class="retain"><b>À retenir.</b> Au seuil : (T₁ − μv²)/(T₂ − μv²) = e<sup>f′α</sup>. Le brin tendu arrive sur la poulie motrice. L’adhérence augmente avec α, avec f′ et avec la précontrainte, et diminue avec la vitesse.</div>` });
+
+COURSE.push({ id: 'puissance', t: 'Puissance, couples et efforts sur les arbres', h: `
+<p>La puissance transmise par la courroie vaut P = F<sub>u</sub>v. En régime permanent, le couple sur la poulie motrice est C = F<sub>u</sub>D₁/2.</p>
+<div class="formula">F<sub>u</sub> = P/v &nbsp;; &nbsp; C = P/ω₁ &nbsp;; &nbsp; C₂ = k⁻¹C·η (arbre récepteur)</div>
+<h3>Charge sur l’arbre</h3>
+<p>Les deux brins exercent sur la poulie deux forces de modules T₁ et T₂, dont les directions font un angle π − α. La résultante, sollicitant l’arbre et ses paliers, a pour module :</p>
+<div class="formula">F<sub>arbre</sub> = √(T₁² + T₂² − 2T₁T₂ cos α)</div>
+<p>Pour α = π, on trouve T₁ + T₂ = 2T₀. La précontrainte détermine donc l’essentiel de la charge sur les paliers, d’où l’intérêt de ne pas surtendre la courroie.</p>
+<h3>Vérifications de dimensionnement</h3>
+<ul><li>Adhérence : T₁/T₂ requis ≤ e<sup>f′α</sup> sur la petite poulie.</li><li>Brin mou : T₂ doit rester supérieur à T<sub>c</sub>.</li><li>Résistance de la courroie : T₁ inférieure à la tension admissible.</li><li>Vitesse : environ 30 m/s au plus pour les courroies usuelles.</li></ul>
+<div class="retain"><b>À retenir.</b> Puissance, effort utile et vitesse sont liés par P = F<sub>u</sub>v ; la charge sur l’arbre vaut √(T₁² + T₂² − 2T₁T₂ cos α).</div>` });
+
+COURSE.push({ id: 'vocab', t: 'Poulies, moufles et palans : vocabulaire', h: `
+<p>Une poulie seule ne travaille pas : il lui faut une <b>corde</b> et un <b>support</b>. Elle sert à changer la direction de l’effort et, selon le montage, à le diminuer.</p>
+<h3>Anatomie d’une poulie</h3>
+<svg viewBox="0 0 360 220" style="width:100%;max-width:420px;height:auto;display:block;margin:6px 0" role="img" aria-label="Anatomie d’une poulie simple"><path class="blk" d="M110 52 H250 V168 H110 Z" style="fill:none"/><circle class="pl" cx="180" cy="110" r="50"/><circle cx="180" cy="110" r="39" style="fill:none;stroke:var(--node-stroke);stroke-width:1.2"/><circle class="hub" cx="180" cy="110" r="6"/><path d="M180 52 V30 Q180 14 196 14 Q212 14 212 30" style="fill:none;stroke:var(--node-stroke);stroke-width:2.5"/><path d="M180 168 V190 Q180 206 196 206 Q212 206 212 190" style="fill:none;stroke:var(--node-stroke);stroke-width:2.5"/>
+<line class="dimarr" x1="50" y1="156" x2="112" y2="150"/><text class="ts" x="8" y="172">chape</text>
+<line class="dimarr" x1="46" y1="108" x2="174" y2="110"/><text class="ts" x="8" y="104">axe</text>
+<line class="dimarr" x1="214" y1="82" x2="262" y2="58"/><text class="ts" x="264" y="56">réa</text>
+<line class="dimarr" x1="222" y1="112" x2="262" y2="112"/><text class="ts" x="264" y="116">gorge</text>
+<line class="dimarr" x1="208" y1="26" x2="262" y2="26"/><text class="ts" x="264" y="30">crochet</text></svg>
+<ul><li><b>Réa</b> : la roue, qui tourne librement autour de l’<b>axe</b>.</li><li><b>Gorge</b> (rainure) : le creux du pourtour du réa, où passe la corde.</li><li><b>Chape</b> : la monture qui tient ensemble le réa et l’axe, et porte un ou deux crochets.</li><li><b>Moufle</b> : poulie double, triple ou quadruple, c’est-à-dire plusieurs réas coaxiaux dans une même chape.</li></ul>
+<h3>Poulie fixe, poulie mobile, palan</h3>
+<ul><li>Une poulie est <b>fixe</b> quand elle est retenue par un support ; elle est <b>mobile</b> quand elle voyage librement le long de la corde, la charge étant accrochée à sa chape.</li><li>Un <b>palan</b> associe deux moufles (une fixe, une mobile) reliés par une même corde. La charge soulevée s’appelait autrefois la <b>palanquée</b>.</li></ul>
+<table class="ctable"><thead><tr><th>Montage</th><th>Segments porteurs n</th><th>Effort idéal F</th><th>Corde à tirer pour lever de h</th></tr></thead><tbody>
+<tr><td>Poulie fixe</td><td>1</td><td>Mg (seule la direction change)</td><td>h</td></tr>
+<tr><td>Poulie mobile, corde attachée au support</td><td>2</td><td>Mg/2</td><td>2h</td></tr>
+<tr><td>Palan à 3 segments</td><td>3</td><td>Mg/3</td><td>3h</td></tr>
+<tr><td>Palan à 4 segments</td><td>4</td><td>Mg/4</td><td>4h</td></tr></tbody></table>
+<h3>Pourquoi l’effort diminue</h3>
+<p>La corde est la même partout, donc la tension est la même dans chaque segment. Si trois segments portent simultanément un poids X, chacun reprend X/3 : la personne qui tire n’exerce que X/3. En contrepartie, pour hisser le poids d’une distance Y, il faut tirer la corde sur 3Y. Comme pour un plan incliné, on exerce une force moindre sur une plus longue distance : le travail (force × distance) est le même.</p>
+<h3>Les poulies comme leviers</h3>
+<p>Une poulie fixe se comporte comme un levier à bras égaux (R et R) : la tension est la même des deux côtés. Pour une poulie mobile dont un bout de corde est attaché au support, le point de contact côté support est le pivot : en prenant les moments, F × 2R = Mg × R, donc F = Mg/2.</p>
+<h3>Limites du modèle idéal</h3>
+<ul><li>Frottement des réas sur leur axe, surtout si la charge est lourde.</li><li>Étirement de la corde, qui ne transmet pas complètement l’effort.</li><li>Un peu de frottement de la corde sur la poulie est nécessaire pour qu’elle l’entraîne.</li></ul>
+<p>On en tient compte par un rendement η par poulie (section suivante).</p>
+<div class="retain"><b>À retenir.</b> Poulie fixe : direction seulement. Palan à n segments : F = Mg/n et n fois plus de corde à tirer. Vocabulaire : réa, gorge, axe, chape, moufle.</div>` });
+
+COURSE.push({ id: 'palans', t: 'Palans : effort, justification et rendement', h: `
+<p>Une <b>poulie fixe</b> change la direction du câble sans modifier sa tension (cas idéal). Une <b>poulie mobile</b> partage la charge sur deux brins. Un <b>palan</b> (ou mouflage) associe des poulies fixes et mobiles pour répartir la charge sur n brins porteurs.</p>
+<h3>Palan idéal</h3>
+<div class="formula">F = Mg/n &nbsp;; &nbsp; v<sub>brin</sub> = n·v<sub>charge</sub> &nbsp;; &nbsp; longueur tirée = n·h</div>
+<p>On gagne un facteur n sur l’effort mais on perd le même facteur sur la course : la puissance Fnv = Mgv est conservée.</p>
+<h3>Justification</h3>
+<ol><li><b>Tension uniforme.</b> Câble sans masse et inextensible, poulies idéales. Pour une poulie de rayon R, le théorème du moment dynamique en son axe donne (T<sub>a</sub> − T<sub>b</sub>)R = Jθ̈ = 0, donc T<sub>a</sub> = T<sub>b</sub> : tous les brins ont la même tension T = F.</li><li><b>Équilibre de {bloc mobile + charge}.</b> Les n brins porteurs verticaux tirent vers le haut avec T chacun, le poids vers le bas : nT − Mg = 0, donc F = Mg/n.</li><li><b>Énergie.</b> Pour une montée dz de la charge, chaque brin porteur se raccourcit de dz, donc le brin tiré avance de n dz. Travaux : F n dz = Mg dz, d’où F = Mg/n, et v<sub>brin</sub> = n v.</li></ol>
+<h3>Palan avec frottement</h3>
+<p>Modèle retenu : le brin tiré porte la tension F ; chaque poulie qui sépare deux brins consécutifs multiplie la tension par le rendement η. Les tensions des n brins sont F, ηF, η²F, …, ηⁿ⁻¹F. L’équilibre de la charge s’écrit :</p>
+<div class="formula">Mg = F(1 + η + … + ηⁿ⁻¹) = F(1 − ηⁿ)/(1 − η)<br>F = Mg(1 − η)/(1 − ηⁿ) &nbsp;; &nbsp; η<sub>g</sub> = Mg/(nF) = (1 − ηⁿ)/(n(1 − η))</div>
+<p>Le rendement global décroît quand n augmente : on ne multiplie pas indéfiniment les brins.</p>
+<h3>Exemple</h3>
+<p>Pour M = 100 kg, n = 4 et η = 0,96 : F idéal = 245 N, F réel ≈ 260 N, η<sub>g</sub> ≈ 94 %.</p>
+<div class="retain"><b>À retenir.</b> Palan idéal : F = Mg/n, vitesse du brin multipliée par n. Avec frottement : F = Mg(1 − η)/(1 − ηⁿ).</div>` });
+
+COURSE.push({ id: 'dynamique', t: 'Dynamique : inertie équivalente', h: `
+<p>On isole l’ensemble {arbre moteur, poulie 1, courroie, poulie 2, charge}, supposé sans glissement, avec ω₂ = kω₁.</p>
+<h3>Énergie cinétique</h3>
+<div class="formula">E<sub>c</sub> = ½(J<sub>m</sub> + J₁)ω₁² + ½(J₂ + J<sub>c</sub>)ω₂² = ½J<sub>eq</sub>ω₁²<br>J<sub>eq</sub> = J<sub>m</sub> + J₁ + k²(J₂ + J<sub>c</sub>)</div>
+<p>La masse de la courroie peut aussi être ramenée : une masse m en translation à la vitesse v = ω₁R₁ ajoute mR₁² à J<sub>eq</sub>.</p>
+<h3>Couple résistant ramené</h3>
+<p>Avec un rendement η de la transmission, C<sub>r</sub>ω₂ = ηC<sub>r</sub>′ω₁, soit C<sub>r</sub>′ = kC<sub>r</sub>/η.</p>
+<h3>Théorème de l’énergie-puissance</h3>
+<div class="formula">C<sub>m</sub>ω₁ − C<sub>r</sub>ω₂ − P<sub>pertes</sub> = dE<sub>c</sub>/dt &nbsp;⇒&nbsp; J<sub>eq</sub> dω₁/dt = C<sub>m</sub> − C<sub>r</sub>′</div>
+<h3>Démarrage d’un moteur à caractéristique linéaire</h3>
+<p>Avec C<sub>m</sub> = C₀(1 − ω₁/ω₀) et C<sub>r</sub>′ constant :</p>
+<div class="formula">τ dω₁/dt + ω₁ = ω<sub>f</sub> &nbsp;; &nbsp; τ = J<sub>eq</sub>ω₀/C₀ &nbsp;; &nbsp; ω<sub>f</sub> = ω₀(1 − C<sub>r</sub>′/C₀)</div>
+<p>La solution est ω₁(t) = ω<sub>f</sub>(1 − e<sup>−t/τ</sup>). Le temps de réponse à 5 % vaut environ 3τ. Si C<sub>r</sub>′ ≥ C₀, le moteur ne démarre pas.</p>
+<div class="retain"><b>À retenir.</b> J<sub>eq</sub> = J<sub>m</sub> + J₁ + k²(J₂ + J<sub>c</sub>) et J<sub>eq</sub>ω̇₁ = C<sub>m</sub> − C<sub>r</sub>′. Un réducteur de rapport k divise l’inertie de la charge par 1/k².</div>` });
+
+COURSE.push({ id: 'methode', t: 'Méthode, pièges et glossaire', h: `
+<h3>Méthode de résolution</h3>
+<ol><li>Fixer les conventions : poulie motrice (1), réceptrice (2), sens positifs.</li><li>Convertir toutes les unités : mm en m, tr/min en rad/s.</li><li>Cinématique : k, v de courroie, vitesses.</li><li>Statique : F<sub>u</sub> = P/v, T₁ − T₂ = F<sub>u</sub>, T₁ + T₂ = 2T₀, puis condition d’adhérence sur la <b>petite</b> poulie.</li><li>Dynamique : ramener inerties et couples sur un même arbre, appliquer le théorème de l’énergie-puissance.</li><li>Contrôler les ordres de grandeur et les signes.</li></ol>
+<h3>Pièges classiques</h3>
+<ul><li>Utiliser α en degrés dans e<sup>fα</sup> : il faut des radians.</li><li>Vérifier l’adhérence sur la grande poulie au lieu de la petite.</li><li>Oublier f′ = f/sin(β/2) pour une courroie trapézoïdale.</li><li>Ramener les inerties avec k au lieu de k².</li><li>Confondre T₀ (précontrainte moyenne) et T₁ ou T₂.</li><li>Oublier le rendement dans le couple résistant ramené.</li></ul>
+<h3>Glossaire</h3>
+<dl class="gloss"><dt>Brin tendu / mou</dt><dd>Brin de tension T₁ / T₂, avec T₁ &gt; T₂.</dd><dt>Angle d’enroulement</dt><dd>Angle de l’arc de contact entre courroie et poulie.</dd><dt>Fluage</dt><dd>Glissement élastique de la courroie sur l’arc de glissement.</dd><dt>Précontrainte</dt><dd>Tension de montage, notée T₀ en moyenne.</dd><dt>Tension centrifuge</dt><dd>T<sub>c</sub> = μv², due à la vitesse de la courroie.</dd><dt>Mouflage</dt><dd>Montage de poulies fixes et mobiles réduisant l’effort de levage.</dd><dt>Inertie équivalente</dt><dd>Inertie fictive sur un arbre donné qui porte la même énergie cinétique.</dd></dl>
+<div class="retain"><b>À retenir.</b> Toujours vérifier : unités, petite poulie, k² pour les inerties, radians pour les angles.</div>` });
+
+/* ---------- activité, cours, aide ---------- */
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  const old = wsById(UI.cur); if (old.leave) old.leave();
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', { html: (i + 1) + '. ' + q.q }));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : poulies et courroies'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Quatre ateliers sur les transmissions par poulies et courroie (SII, CPGE PSI*) : cinématique et géométrie, adhérence et tensions, poulies et palans, dynamique et démarrage.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut, puis déplacez les curseurs : les résultats et les graphes se mettent à jour.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi avec sa correction et un QCM.</li><li>Le bouton <b>Cours</b> reprend les formules et les méthodes.</li></ul>' +
+    '<h3>Hypothèses</h3><p>Courroie sans épaisseur ni masse sauf la tension centrifuge μv², poulies coplanaires, frottement de Coulomb constant, régime permanent pour les tensions.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+</script>
+
+</body></html>
