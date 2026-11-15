@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Théorie des mécanismes — ITC · CPGE PSI*</title>
+<title>Théorie des mécanismes — SII · CPGE PSI*</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -104,6 +104,7 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 #ws .small{font-size:12.5px}
 .opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
 .opts input[type=range]{width:180px;max-width:100%}
+.opts select{min-width:150px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
 .chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
@@ -112,6 +113,8 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
 .verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
 .verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.verdict h4{margin:0 0 4px;font-size:14px}
+.verdict p{margin:4px 0}
 .task-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
 .task-row:last-child{border-bottom:0}
 .task-row .chips{margin:0}
@@ -131,6 +134,10 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
 .etape{border-left:3px solid var(--accent);padding-left:10px;margin:10px 0}
 .etape h4{margin:0 0 4px;font-size:14px;color:var(--accent-ink)}
 .etape p{margin:2px 0;font-size:13px}
+.liaison-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:8px 0}
+.sollist{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:8px 0;background:var(--panel2)}
+.sollist li{font-size:13px;margin:2px 0}
+.gsvg{width:100%;max-width:520px;height:auto;display:block;margin:8px 0;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 @media (max-width:820px){
   .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
   #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -139,9 +146,50 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
   .opts input[type=range]{width:140px}
 }
 @media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+/* --- vecteurs, schémas cinématiques, graphes --- */
+.vec{position:relative;display:inline-block;font-style:italic;line-height:1}
+.vec::before{content:"\2192";position:absolute;left:.02em;top:-.72em;font-size:.72em;font-style:normal;line-height:1}
+.gsvg .ge{stroke:#5a6068;stroke-width:1.8;fill:none}
+.gsvg .gn{fill:#dcebf8;stroke:#2e6da4;stroke-width:1.8}
+.gsvg .gr{fill:none;stroke:#2e6da4;stroke-width:1.2}
+.gsvg .gt{font:600 13px var(--font-ui);fill:#111;text-anchor:middle}
+.gsvg .gl{font:500 10.5px var(--font-ui);fill:#1b4a76;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.gcap{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.gfig{margin:8px 0 12px}
+.gfig b{font-size:13px}
+.skrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0}
+.skrow .card{padding:8px 10px}
+.skrow .card p{margin:6px 0 0}
+.skthumb{margin-bottom:6px}
+
+/* --- schémas cinématiques de la fiche (bleu = solide 1, rouge = solide 2, vert = point et vecteurs) --- */
+.sk2{width:100%;height:auto;display:block;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:6px}
+.sk2 .t{stroke:#1f5fd1;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sk2 .wf{fill:#fff;stroke:none}
+.sk2 .tt{stroke:#1f5fd1;stroke-width:1.9;fill:none;stroke-linecap:round}
+.sk2 .tk{stroke:#1f5fd1;stroke-width:3.4;fill:none;stroke-linecap:round}
+.sk2 .tw{stroke:#1f5fd1;stroke-width:2.4;fill:#fff;stroke-linejoin:round}
+.sk2 .o{stroke:#d62828;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sk2 .ow{stroke:#d62828;stroke-width:2.4;fill:#fff;stroke-linejoin:round}
+.sk2 .bl{stroke:#17913c;stroke-width:1.6;fill:none;stroke-linecap:round}
+.sk2 .blf,.sk2 .bld{fill:#17913c;stroke:none}
+.sk2 .vh2{stroke:#17913c;stroke-width:1.2;fill:none}
+.sk2 .vt{font:italic 600 13px 'Times New Roman',Georgia,serif;fill:#17913c}
+.sk2 .pt2{font:500 13px var(--font-ui);fill:#17913c}
+.sklegend{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0 10px;align-items:center}
+.sklegend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.skmode{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.skmode .seg button{padding:5px 10px;font-size:12.5px}
+body[data-sk="both"] .skrow{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+body[data-sk="both"] .liaison-pair{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+body[data-sk="both"] #li-grid,body[data-sk="both"] .cards.skcards{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+body[data-sk="2d"] #li-grid,body[data-sk="2d"] .cards.skcards{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.gsvg .gn.gn1{fill:#fff;stroke:#1f5fd1;stroke-width:2.4}
+.gsvg .gn.gn2{fill:#fff;stroke:#d62828;stroke-width:2.4}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fff"/><line x1="0" y1="0" x2="0" y2="6" stroke="#8894a4" stroke-width="1.4"/></pattern></defs></svg>
 <div id="app">
   <header class="band"><div class="inner row">
     <div class="brand">
@@ -160,8 +208,9 @@ pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2)
           <line x1="7" y1="6" x2="7" y2="20"/>
         </g>
       </svg>
-      <span>Théorie des mécanismes <small>ITC · CPGE PSI*</small></span>
+      <span>Théorie des mécanismes <small>SII · CPGE PSI*</small></span>
     </div>
+    <div class="skmode"><span>Schémas</span><div class="seg" id="skSeg" role="group" aria-label="Représentation des schémas"></div></div>
     <div class="files">
       <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
       <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
@@ -194,54 +243,511 @@ function h(tag, attrs, ...kids) {
   return el;
 }
 function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
-const KEYS = { act: 'atelier-theorie-meca-v2' };
+const KEYS = { act: 'atelier-theorie-meca-v3' };
 function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 const WORKSHOPS = [];
 
-/* ============ LIAISONS NORMALISÉES (nomenclature corrigée) ============ */
+/*ENGINE-START*/
+/* ============ MOTEUR DE CALCUL DES LIAISONS ============
+   Torseur cinématique exprimé à l'origine A : (wx, wy, wz, vx, vy, vz).
+   Une liaison est définie par : son type, une DIRECTION (vecteur x, y ou z) et un POINT (A, B, C ou D).
+   Un axe = un point + un vecteur directeur : l'axe (B, z) est la droite passant par B de vecteur directeur z.
+   Les composantes LIBRES sont décrites dans le repère local (axe / normale = z), puis réorientées. */
+const COMPS = ['wx', 'wy', 'wz', 'vx', 'vy', 'vz'];
+const LTYPES = {
+  encastrement: { nom: 'Encastrement', libre: [], kind: null },
+  pivot: { nom: 'Pivot', libre: ['wz'], kind: 'axe' },
+  glissiere: { nom: 'Glissière', libre: ['vz'], kind: 'dir' },
+  pivotglissant: { nom: 'Pivot glissant', libre: ['wz', 'vz'], kind: 'axe' },
+  doigt: { nom: 'Sphérique à doigt', libre: ['wx', 'wy'], kind: 'doigt' },
+  spherique: { nom: 'Sphérique', libre: ['wx', 'wy', 'wz'], kind: 'centre' },
+  appuiplan: { nom: 'Appui plan', libre: ['wz', 'vx', 'vy'], kind: 'normale' },
+  spherecyl: { nom: 'Sphère-cylindre', libre: ['wx', 'wy', 'wz', 'vz'], kind: 'axe' },
+  sphereplan: { nom: 'Sphère-plan', libre: ['wx', 'wy', 'wz', 'vx', 'vy'], kind: 'normale' }
+};
+const SHORT = { encastrement: 'Encastrement', pivot: 'Pivot', glissiere: 'Glissière', pivotglissant: 'Pivot glissant', doigt: 'Sph. à doigt', spherique: 'Sphérique', appuiplan: 'Appui plan', spherecyl: 'Sphère-cylindre', sphereplan: 'Sphère-plan' };
+const ORI = { z: { x: 'x', y: 'y', z: 'z' }, x: { x: 'y', y: 'z', z: 'x' }, y: { x: 'z', y: 'x', z: 'y' } };
+/* points de la géométrie de référence */
+const PTS = { A: [0, 0, 0], B: [0, 0, 1], C: [1, 0, 0], D: [0, 1, 0] };
+const PTDESC = { A: 'A = origine', B: 'B = A + z', C: 'C = A + x', D: 'D = A + y' };
+function VH(c) { return '<span class="vec">' + c + '</span>'; }
+function stripTags(s) { return s.replace(/<[^>]+>/g, ''); }
+function freeVec(type, ori) {
+  return LTYPES[type].libre.map(c => c[0] + ORI[ori][c[1]]).sort((a, b) => COMPS.indexOf(a) - COMPS.indexOf(b));
+}
+function unit(c) { const v = [0, 0, 0, 0, 0, 0]; v[COMPS.indexOf(c)] = 1; return v; }
+/* changement de point de réduction : V(Q) = V(X) + w ^ XQ, avec d = XQ */
+function shift(v, d) {
+  return [v[0], v[1], v[2],
+    v[3] + v[1] * d[2] - v[2] * d[1],
+    v[4] + v[2] * d[0] - v[0] * d[2],
+    v[5] + v[0] * d[1] - v[1] * d[0]];
+}
+function blockRows(type, ori, p) {
+  const free = freeVec(type, ori), rows = [];
+  COMPS.forEach(c => {
+    if (free.includes(c)) return;
+    const r = [0, 0, 0, 0, 0, 0], k = 'xyz'.indexOf(c[1]);
+    if (c[0] === 'w') r[k] = 1;
+    else {
+      r[3 + k] = 1;
+      const px = p[0], py = p[1], pz = p[2];
+      if (k === 0) { r[1] += pz; r[2] += -py; }
+      if (k === 1) { r[0] += -pz; r[2] += px; }
+      if (k === 2) { r[0] += py; r[1] += -px; }
+    }
+    rows.push(r);
+  });
+  return rows;
+}
+function rref(M) {
+  const A = M.map(r => r.slice()), n = 6, piv = []; let r = 0;
+  for (let c = 0; c < n && r < A.length; c++) {
+    let p = -1, best = 1e-9;
+    for (let i = r; i < A.length; i++) if (Math.abs(A[i][c]) > best) { best = Math.abs(A[i][c]); p = i; }
+    if (p < 0) continue;
+    const t = A[r]; A[r] = A[p]; A[p] = t;
+    const d = A[r][c]; for (let j = 0; j < n; j++) A[r][j] /= d;
+    for (let i = 0; i < A.length; i++) if (i !== r) {
+      const f = A[i][c];
+      if (Math.abs(f) > 1e-12) for (let j = 0; j < n; j++) A[i][j] -= f * A[r][j];
+    }
+    piv.push(c); r++;
+  }
+  return { A: A.slice(0, r), piv };
+}
+function rankOf(M) { return M.length ? rref(M).piv.length : 0; }
+function nullspace(M) {
+  const R = rref(M), out = [];
+  [0, 1, 2, 3, 4, 5].filter(c => !R.piv.includes(c)).forEach(f => {
+    const v = [0, 0, 0, 0, 0, 0]; v[f] = 1;
+    R.piv.forEach((pc, i) => { v[pc] = -R.A[i][f]; });
+    out.push(v);
+  });
+  return out;
+}
+function sameSpace(U, V) { const a = rankOf(U); return a === rankOf(V) && rankOf(U.concat(V)) === a; }
+
+/* nom d'une liaison, en HTML : l'axe est donné par un point et un vecteur */
+function axS(p, o) { return '(' + p + ', ' + VH(o) + ')'; }
+function lname(t, o, p) {
+  const T = LTYPES[t]; p = p || 'A';
+  switch (T.kind) {
+    case 'axe': return T.nom + " d'axe " + axS(p, o);
+    case 'dir': return T.nom + ' de direction ' + VH(o);
+    case 'normale': return T.nom + ' de normale ' + axS(p, o);
+    case 'centre': return T.nom + ' de centre ' + p;
+    case 'doigt': return T.nom + ' de centre ' + p + ", d'axe (" + p + ', ' + VH(ORI[o].x) + ') et de normale ' + VH(ORI[o].y);
+    default: return T.nom;
+  }
+}
+function lnameT(t, o, p) { return stripTags(lname(t, o, p)); }
+/* étiquette courte (texte brut) pour les graphes */
+function llab(t, o, p) {
+  const k = LTYPES[t].kind; p = p || 'A';
+  if (k === 'axe' || k === 'normale') return SHORT[t] + ' (' + p + ', ' + o + ')';
+  if (k === 'doigt') return SHORT[t] + ' (' + p + ', ' + ORI[o].x + ')';
+  if (k === 'dir') return SHORT[t] + ' (' + o + ')';
+  if (k === 'centre') return SHORT[t] + ' (' + p + ')';
+  return SHORT[t];
+}
+/* identification d'un espace de mouvements : on cherche la liaison normalisée (type, direction, point) correspondante */
+function identify(basis) {
+  const m = rankOf(basis);
+  if (m === 0) return { type: 'encastrement', ori: 'z', pt: 'A', nom: 'Encastrement', short: 'Encastrement', key: 'encastrement' };
+  for (const pn of Object.keys(PTS)) {
+    const bp = basis.map(v => shift(v, PTS[pn]));
+    for (const t of Object.keys(LTYPES)) {
+      if (LTYPES[t].libre.length !== m) continue;
+      for (const o of ['z', 'x', 'y']) {
+        if (sameSpace(bp, freeVec(t, o).map(unit)))
+          return { type: t, ori: o, pt: pn, nom: lname(t, o, pn), short: llab(t, o, pn), key: t + o };
+      }
+    }
+  }
+  return null;
+}
+function tstr(c) {
+  const w = c.filter(x => x[0] === 'w').map(x => 'ω' + x[1]), v = c.filter(x => x[0] === 'v').map(x => 'V' + x[1]);
+  return '{ ' + (w.join(', ') || '0') + ' ; ' + (v.join(', ') || '0') + ' }';
+}
+function eqTorseur(eq) {
+  if (!eq) return '—';
+  const k = LTYPES[eq.type].kind;
+  return tstr(freeVec(eq.type, eq.ori)) + (k === 'dir' || k === null ? '' : ' en ' + eq.pt);
+}
+/* liaisons en parallèle (une boucle, γ = 1) : l = [{t,o,p}] */
+function parallel(list) {
+  let rows = [], Ic = 0;
+  list.forEach(l => { rows = rows.concat(blockRows(l.t, l.o, PTS[l.p || 'A'])); Ic += LTYPES[l.t].libre.length; });
+  const N = nullspace(rows), m = N.length;
+  return { Ic: Ic, m: m, h: 6 + m - Ic, eq: identify(N), N: N };
+}
+/* liaisons en série : somme des torseurs cinématiques ramenés au même point */
+function seriesEq(list) {
+  let vecs = [], sum = 0;
+  list.forEach(l => {
+    const P = PTS[l.p || 'A'], neg = [-P[0], -P[1], -P[2]];
+    freeVec(l.t, l.o).forEach(c => { vecs.push(shift(unit(c), neg)); });
+    sum += LTYPES[l.t].libre.length;
+  });
+  const ddl = rankOf(vecs);
+  return { sum: sum, ddl: ddl, mi: sum - ddl, eq: identify(vecs), N: vecs };
+}
+/* recherche exhaustive : couples (liaison en p1, liaison en p2) qui donnent le même mouvement relatif Nt avec h = 0 */
+function searchPairs(p1, p2, Nt) {
+  const res = [], types = Object.keys(LTYPES).filter(t => t !== 'encastrement'), oris = ['z', 'x', 'y'];
+  const noDir = t => LTYPES[t].kind === 'centre';
+  for (const t1 of types) for (const o1 of oris) {
+    if (noDir(t1) && o1 !== 'z') continue;
+    for (const t2 of types) for (const o2 of oris) {
+      if (noDir(t2) && o2 !== 'z') continue;
+      const r = parallel([{ t: t1, o: o1, p: p1 }, { t: t2, o: o2, p: p2 }]);
+      if (r.h === 0 && sameSpace(r.N, Nt)) res.push({ t1: t1, o1: o1, p1: p1, t2: t2, o2: o2, p2: p2, Ic: r.Ic });
+    }
+  }
+  return res;
+}
+/*ENGINE-END*/
+
+/* ============ GRAPHES DE LIAISONS (SVG) ============ */
+function graphDraw(g, cap) {
+  let s = '';
+  g.edges.forEach(e => {
+    const A = g.nodes[e.a], B = g.nodes[e.b];
+    const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, bend = e.bend || 0;
+    const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    s += bend
+      ? '<path class="ge" d="M' + A.x + ' ' + A.y + ' Q' + (mx + nx * bend * 2) + ' ' + (my + ny * bend * 2) + ' ' + B.x + ' ' + B.y + '"/>'
+      : '<line class="ge" x1="' + A.x + '" y1="' + A.y + '" x2="' + B.x + '" y2="' + B.y + '"/>';
+    let lx = mx + nx * bend, ly = my + ny * bend, an = 'middle';
+    if (e.lo) { lx += e.lo[0]; ly += e.lo[1]; an = e.an || 'middle'; }
+    else if (bend) { const sg = bend > 0 ? 1 : -1; lx += nx * sg * 8; ly += ny * sg * 8 + 4; }
+    else if (Math.abs(dx) >= Math.abs(dy)) { ly -= 9; }
+    else { lx += 10; ly += 4; an = 'start'; }
+    s += '<text class="gl" x="' + Math.round(lx) + '" y="' + Math.round(ly) + '" text-anchor="' + an + '">' + e.t + '</text>';
+  });
+  g.nodes.forEach(n => {
+    if (n.g) s += '<circle class="gr" cx="' + n.x + '" cy="' + n.y + '" r="19.5"/>';
+    s += '<circle class="gn' + (n.c ? ' ' + n.c : '') + '" cx="' + n.x + '" cy="' + n.y + '" r="15"/><text class="gt" x="' + n.x + '" y="' + (n.y + 4.5) + '">' + n.l + '</text>';
+  });
+  return '<svg class="gsvg" viewBox="0 0 ' + g.w + ' ' + g.h + '" style="max-width:' + Math.round(g.w * 1.5) + 'px" role="img" aria-label="' + (cap || 'Graphe des liaisons') + '">' + s + '</svg>';
+}
+/* chaîne (liaisons en série) : labels = étiquettes des arcs, de 0 à n */
+function graphChain(labels) {
+  const n = labels.length, step = 170, nodes = [], edges = [];
+  for (let i = 0; i <= n; i++) nodes.push({ x: 40 + i * step, y: 46, l: String(i + 1), g: i === 0, c: i === 0 ? 'gn1' : (i === n ? 'gn2' : '') });
+  labels.forEach((t, i) => edges.push({ a: i, b: i + 1, t: t }));
+  return graphDraw({ w: 80 + n * step, h: 92, nodes: nodes, edges: edges }, 'Graphe des liaisons en série : ' + labels.join(', '));
+}
+/* liaisons en parallèle : plusieurs arcs entre les solides 0 et 1 */
+function graphPar(labels) {
+  const k = labels.length, bends = k === 1 ? [0] : k === 2 ? [-34, 34] : [-44, 0, 44];
+  const nodes = [{ x: 44, y: 66, l: '1', g: true, c: 'gn1' }, { x: 266, y: 66, l: '2', c: 'gn2' }];
+  const edges = labels.map((t, i) => ({ a: 0, b: 1, t: t, bend: bends[i] || 0 }));
+  return graphDraw({ w: 310, h: 132, nodes: nodes, edges: edges }, 'Graphe des liaisons en parallèle : ' + labels.join(', '));
+}
+/* graphes d'exemples (cycle de 4 solides, etc.) */
+function ringGraph(l01, l12, l23, l30) {
+  return {
+    w: 380, h: 190,
+    nodes: [{ x: 60, y: 40, l: '0', g: true }, { x: 320, y: 40, l: '1' }, { x: 320, y: 150, l: '2' }, { x: 60, y: 150, l: '3' }],
+    edges: [
+      { a: 0, b: 1, t: l01 },
+      { a: 1, b: 2, t: l12, lo: [-10, 4], an: 'end' },
+      { a: 2, b: 3, t: l23, lo: [0, 18] },
+      { a: 3, b: 0, t: l30, lo: [10, 4], an: 'start' }
+    ]
+  };
+}
+function lineGraph(labels) {   /* chaîne ouverte tracée à plat, pour les exemples */
+  const n = labels.length, step = 150, nodes = [], edges = [];
+  for (let i = 0; i <= n; i++) nodes.push({ x: 40 + i * step, y: 46, l: String(i), g: i === 0 });
+  labels.forEach((t, i) => edges.push({ a: i, b: i + 1, t: t }));
+  return { w: 80 + n * step, h: 92, nodes: nodes, edges: edges };
+}
+
+/* ============ SCHÉMAS CINÉMATIQUES (reprise de la fiche « Tableau des liaisons parfaites ») ============
+   Conventions de la fiche : solide 1 = bleu (référence), solide 2 = rouge (mobile),
+   point et vecteurs en bleu. Trois vues par liaison : spatiale (3D, projection isométrique),
+   plane de profil (axe dans le plan de la figure) et plane de face (vue selon l'axe).
+   Un axe = un point + un vecteur : le point (A ou C) et le vecteur sont dessinés. */
+const SKS = { mode: 'both' };
+try { const v = localStorage.getItem('atelier-theorie-meca-sk'); if (v === '3d' || v === '2d' || v === 'both') SKS.mode = v; } catch (e) { /* stockage indisponible */ }
+const skf = n => Math.round(n * 10) / 10;
+function skPath(cls, pts, close, fill) {
+  return '<path class="' + cls + '"' + (fill ? ' fill="' + fill + '"' : '') + ' d="M' + pts.map(p => skf(p[0]) + ' ' + skf(p[1])).join('L') + (close ? 'Z' : '') + '"/>';
+}
+function skLine(cls, a, b) { return skPath(cls, [a, b], false); }
+function skArrow(a, b) {            /* flèche verte de a vers b */
+  const dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy), ux = dx / n, uy = dy / n, hx = b[0] - ux * 11, hy = b[1] - uy * 11;
+  return skLine('bl', a, [hx, hy]) + '<path class="blf" d="M' + skf(b[0]) + ' ' + skf(b[1]) + 'L' + skf(hx - uy * 4.6) + ' ' + skf(hy + ux * 4.6) + 'L' + skf(hx + uy * 4.6) + ' ' + skf(hy - ux * 4.6) + 'Z"/>';
+}
+function skDot(p) { return '<circle class="bld" cx="' + skf(p[0]) + '" cy="' + skf(p[1]) + '" r="2.7"/>'; }
+function skVL(x, y, t) {            /* lettre de vecteur bleue surmontée d'une flèche */
+  return '<text class="vt" x="' + skf(x) + '" y="' + skf(y) + '" text-anchor="middle">' + t + '</text>'
+    + '<path class="vh2" d="M' + skf(x - 4.2) + ' ' + skf(y - 12) + 'h8.4m-2.6 -2.4l2.6 2.4l-2.6 2.4"/>';
+}
+function skPL(x, y, t) { return '<text class="pt2" x="' + skf(x) + '" y="' + skf(y) + '">' + t + '</text>'; }
+function skIso(ox, oy) { return (x, y, z) => [ox + (x - y) * 0.866, oy + (x + y) * 0.5 - z]; }
+function skCirc(I, x0, r, n) {      /* cercle du plan (y,z) centré sur l'axe x, en x = x0 */
+  const pts = []; for (let i = 0; i < n; i++) { const t = 2 * Math.PI * i / n; pts.push(I(x0, r * Math.cos(t), r * Math.sin(t))); } return pts;
+}
+function skCyl(I, x0, x1, r) {      /* cylindre d'axe x : génératrices, base visible, demi-base arrière */
+  const n = 48, e0 = skCirc(I, x0, r, n), e1 = skCirc(I, x1, r, n);
+  const key = p => -0.5 * p[0] + 0.866 * p[1];
+  let imin = 0, imax = 0; e1.forEach((p, i) => { if (key(p) < key(e1[imin])) imin = i; if (key(p) > key(e1[imax])) imax = i; });
+  const c0 = I(x0, 0, 0), a = p => 0.866 * (p[0] - c0[0]) + 0.5 * (p[1] - c0[1]);
+  let il = 0; e0.forEach((p, i) => { if (a(p) < a(e0[il])) il = i; });
+  const left = [e0[il]], lm = [];
+  for (let d = 1; d < n; d++) { const p = e0[(il + d) % n]; if (a(p) > 0.001) break; left.push(p); }
+  for (let d = 1; d < n; d++) { const p = e0[(il - d + n) % n]; if (a(p) > 0.001) break; lm.unshift(p); }
+  const body = [e0[imin], e1[imin], e1[imax], e0[imax]];
+  const arc = lm.concat(left);
+  return skPath('wf', body, true) + skPath('wf', arc, true) + skPath('o', arc, false) + skLine('o', e0[imin], e1[imin]) + skLine('o', e0[imax], e1[imax]) + skPath('ow', e1, true);
+}
+function skBox(I, x0, x1, w, hz0, hz1, cls, cross) {   /* parallélépipède : faces visibles dessus, devant (+y), bout (+x) */
+  const t = [I(x0, -w, hz1), I(x1, -w, hz1), I(x1, w, hz1), I(x0, w, hz1)];
+  const f = [I(x0, w, hz1), I(x1, w, hz1), I(x1, w, hz0), I(x0, w, hz0)];
+  const e = [I(x1, -w, hz1), I(x1, w, hz1), I(x1, w, hz0), I(x1, -w, hz0)];
+  let s = skPath(cls + 'w', f, true) + skPath(cls + 'w', t, true) + skPath(cls + 'w', e, true);
+  if (cross) s += skLine('t', e[0], e[2]) + skLine('t', e[1], e[3]);
+  return s;
+}
+function skRhombus(I, a, z, cls) { return skPath(cls, [I(-a, -a, z), I(a, -a, z), I(a, a, z), I(-a, a, z)], true); }
+/* petits blocs communs */
+function skVLab(L, x, y) { return skVL(x, y, L.v); }
+function skPtLab(L, x, y) { return L.p ? skPL(x, y, L.p) : ''; }
+/* ---- cellules : { w, f(L) } avec L = { p: point, v: vecteur principal, n: normale, m: second vecteur, ex: point imposé } ---- */
+const SKV = {};
+/* Glissière de direction x */
+SKV.glissiere = {
+  dv: 'x',
+  d3: { w: 150, f: L => {
+    const I = skIso(40, 70), W = 14, H = 11, Ln = 60;
+    return skLine('t', [14, 55], [14, 140]) + skLine('t', [14, 55], I(0, 0, 0))
+      + skBox(I, 0, Ln, W, -H, H, 'o', true)
+      + skLine('o', I(Ln / 2, 0, H), [I(Ln / 2, 0, H)[0], 24])
+      + skArrow(I(Ln, 0, 0), I(Ln + 40, 0, 0)) + skVLab(L, 139, 118);
+  } },
+  side: { w: 150, f: L =>
+    skLine('t', [10, 60], [10, 132]) + skLine('t', [10, 60], [40, 60]) + skLine('t', [96, 60], [116, 60])
+    + '<rect class="ow" x="40" y="42" width="56" height="36"/>' + skLine('o', [68, 42], [68, 12])
+    + skArrow([116, 60], [142, 60]) + skVLab(L, 132, 44) },
+  face: { w: 80, f: L =>
+    '<rect class="ow" x="26" y="46" width="28" height="28"/>' + skLine('t', [26, 46], [54, 74]) + skLine('t', [54, 46], [26, 74])
+    + skLine('o', [40, 46], [40, 12]) + skLine('t', [40, 74], [40, 134]) }
+};
+/* Plane de normale z */
+SKV.appuiplan = {
+  dv: 'z', norm: true,
+  d3: { w: 150, f: L => {
+    const I = skIso(64, 80);
+    return skRhombus(I, 26, -12, 't') + skRhombus(I, 26, 0, 'ow')
+      + skLine('t', I(26, 26, -12), [I(26, 26, -12)[0], 146]) + skLine('o', I(0, 0, 0), I(0, 0, 42))
+      + skArrow([19, 80], [19, 12]) + skVL(34, 24, L.n)
+      + (L.ex ? skDot(I(0, 0, 0)) + skPL(72, 90, L.p) : '');
+  } },
+  side: { w: 150, f: L =>
+    skLine('o', [22, 72], [122, 72]) + skLine('t', [22, 86], [122, 86]) + skLine('o', [72, 72], [72, 30]) + skLine('t', [72, 86], [72, 134])
+    + skArrow([22, 72], [22, 12]) + skVL(36, 22, L.n) }
+};
+/* Pivot d'axe (A, x) */
+function skAxisCyl(L, opt) {
+  const r = opt.r, len = opt.len, I = skIso(36, 56), x0 = 0, x1 = len, D = I(-1.7 * r, 0, 0);
+  let s = skLine('t', D, [D[0], 140]) + skLine('tk', D, I(x0, 0, 0)) + skDot(D);
+  if (opt.collars) s += skLine('t', I(x0, 0, -1.35 * r), I(x0, 0, 1.35 * r));            /* butée gauche (derrière le cylindre) */
+  s += skCyl(I, x0, x1, r);
+  if (opt.collars) s += skLine('t', I(x1 + 0.33 * r, 0, -1.35 * r), I(x1 + 0.33 * r, 0, 1.35 * r)); /* butée droite (devant la base) */
+  if (opt.helix) opt.helix.forEach(xc => {      /* arcs d'hélice sur la face visible, par-dessus le cylindre */
+    const pts = []; for (let i = 0; i <= 16; i++) { const t = (-40 + 170 * i / 16) * Math.PI / 180; pts.push(I(xc * len, r * Math.cos(t), r * Math.sin(t))); }
+    s += skPath('tt', pts, false);
+  });
+  const top = I(len * 0.42, 0, r);
+  s += skLine('o', top, [top[0], 10 - (opt.stem || 0)]);
+  const e1 = I(x1, 0, 0), e2 = I(x1 + 2 * r, 0, 0), e3 = I(x1 + 3.3 * r, 0, 0);
+  s += skLine('tk', e1, e2) + skArrow(e2, e3);
+  return s + skVL(e3[0] + 12, e3[1] + 6, L.v) + skPtLab(L, D[0] + 4, D[1] - 8);
+}
+/* vue de profil : rectangle rouge (solide 2), axe épais (solide 1), flèche fine du vecteur */
+function skAxisSide(L, o) {
+  const cy = 62, x0 = o.x0, w = o.w, h = o.h, x1 = x0 + w, mid = x0 + w / 2;
+  let s = skLine('t', [8, cy], [8, 134]);
+  if (o.collars) s += skLine('t', [x0 - 8, cy - 1.3 * h / 2], [x0 - 8, cy + 1.3 * h / 2]) + skLine('t', [x1 + 8, cy - 1.3 * h / 2], [x1 + 8, cy + 1.3 * h / 2]);
+  s += '<rect class="ow" x="' + x0 + '" y="' + (cy - h / 2) + '" width="' + w + '" height="' + h + '"/>';
+  if (o.helix) {                                 /* l'axe est remplacé par l'hélice à l'intérieur du rectangle */
+    s += skLine('tk', [8, cy], [x0, cy]) + skLine('tk', [x1, cy], [118, cy]);
+    const xs = x0 + 8, xe = x1 - 8, A = 0.8 * h / 2; let d = 'M' + x0 + ' ' + cy + 'H' + xs;
+    for (let i = 1; i <= 50; i++) { const u = i / 50; d += 'L' + skf(xs + (xe - xs) * u) + ' ' + skf(cy - A * Math.sin(2 * Math.PI * 1.75 * u)); }
+    s += '<path class="t" d="' + d + 'L' + xe + ' ' + cy + 'H' + x1 + '"/>';
+  } else s += skLine('tk', [8, cy], [118, cy]);
+  s += skDot([8, cy]) + skLine('o', [mid, cy - h / 2], [mid, 12]) + skArrow([118, cy], [146, cy]) + skVL(134, 46, L.v) + skPtLab(L, 12, 54);
+  return s;
+}
+SKV.pivot = {
+  dv: 'x', dp: 'A',
+  d3: { w: 150, f: L => skAxisCyl(L, { r: 13, len: 50, collars: true }) },
+  side: { w: 150, f: L => skAxisSide(L, { x0: 40, w: 60, h: 36, collars: true }) },
+  face: { w: 80, f: L => '<circle class="ow" cx="40" cy="60" r="16"/>' + skLine('o', [51.5, 48.5], [63, 28]) + skLine('t', [40, 76], [40, 134]) }
+};
+SKV.helicoidale = {
+  dv: 'x', dp: 'A',
+  d3: { w: 150, f: L => skAxisCyl(L, { r: 12.5, len: 46, helix: [0.28, 0.55] }) },
+  side: { w: 150, f: L => skAxisSide(L, { x0: 44, w: 64, h: 32, helix: true }) },
+  face: { w: 80, f: L => '<circle class="ow" cx="40" cy="60" r="14"/><path class="t" d="M40 134V66A7 7 0 1 1 47 61"/>' + skLine('o', [50, 50], [60, 30]) }
+};
+SKV.pivotglissant = {
+  dv: 'x', dp: 'A',
+  d3: { w: 150, f: L => skAxisCyl(L, { r: 16, len: 62, stem: 0 }) },
+  side: { w: 150, f: L => skAxisSide(L, { x0: 38, w: 66, h: 40 }) },
+  face: { w: 80, f: L => '<circle class="ow" cx="40" cy="60" r="16"/>' + skLine('o', [51.5, 48.5], [63, 28]) + skLine('t', [40, 134], [40, 60]) }
+};
+/* Cylindre-plan d'axe (A, x) et de normale z */
+SKV.cylindreplan = {
+  dv: 'x', dp: 'A', norm: true,
+  d3: { w: 150, f: L => {
+    const I = skIso(62, 84), top = I(0, 0, 34), bot = I(24, 0, 0), B = 24;
+    /* coin : prisme à section triangulaire (pointe vers le bas) ; l'arête de contact est la droite (A, x) */
+    const tz = [I(-24, -13, 34), I(24, -13, 34), I(24, 13, 34), I(-24, 13, 34)];
+    const fr = [I(-24, 13, 34), I(24, 13, 34), I(B, 0, 0), I(-B, 0, 0)];
+    const en = [I(24, -13, 34), I(24, 13, 34), I(B, 0, 0)];
+    return skRhombus(I, 32, 0, 't') + skLine('t', I(32, 32, 0), [I(32, 32, 0)[0], 146])
+      + skPath('ow', fr, true) + skPath('ow', tz, true) + skPath('ow', en, true) + skLine('o', top, [top[0], 30])
+      + skArrow([14, 84], [14, 12]) + skVL(28, 22, L.n)
+      + skDot(bot) + skArrow(bot, I(24 + 30, 0, 0)) + skVL(I(24 + 30, 0, 0)[0] + 12, I(24 + 30, 0, 0)[1] + 6, L.v) + skPL(bot[0] + 10, bot[1] - 12, L.p);
+  } },
+  side: { w: 150, f: L =>
+    skArrow([10, 80], [10, 12]) + skVL(24, 22, L.n) + skLine('t', [2, 80], [108, 80]) + skLine('t', [63, 80], [63, 134])
+    + skPath('ow', [[36, 56], [90, 56], [80, 78], [46, 78]], true) + skLine('o', [63, 56], [63, 18])
+    + skDot([108, 80]) + skArrow([108, 80], [142, 80]) + skVL(130, 66, L.v) + skPL(104, 64, L.p) },
+  face: { w: 80, f: L =>
+    skLine('t', [10, 80], [70, 80]) + skLine('t', [40, 80], [40, 134]) + skPath('ow', [[24, 56], [56, 56], [40, 80]], true) + skLine('o', [40, 56], [40, 18]) }
+};
+/* Sphérique à doigt de centre C, d'axe (C, x) et de normale y : une seule vue */
+SKV.doigt = {
+  dv: 'x', dp: 'C',
+  one: { w: 150, f: L =>
+    skLine('t', [75, 100], [75, 138]) + '<path class="t" d="M' + skf(75 + 27 * Math.cos(3.93)) + ' ' + skf(62 + 27 * Math.sin(3.93)) + 'A27 27 0 1 0 ' + skf(75 + 27 * Math.cos(0.17)) + ' ' + skf(62 + 27 * Math.sin(0.17)) + '"/>'
+    + '<circle class="ow" cx="75" cy="62" r="17"/>' + skLine('o', [87, 50], [100, 24]) + skLine('o', [63, 74], [44, 92])
+    + skArrow([75, 62], [28, 98]) + skArrow([75, 62], [122, 98]) + skDot([75, 62])
+    + skVL(24, 112, L.v) + skVL(130, 112, L.m) + skPL(22, 62, L.p) }
+};
+/* Sphérique de centre C */
+SKV.spherique = {
+  dv: 'x', dp: 'C',
+  one: { w: 150, f: L =>
+    skLine('t', [75, 100], [75, 138]) + '<path class="t" d="M' + skf(75 + 27 * Math.cos(3.93)) + ' ' + skf(62 + 27 * Math.sin(3.93)) + 'A27 27 0 1 0 ' + skf(75 + 27 * Math.cos(0.17)) + ' ' + skf(62 + 27 * Math.sin(0.17)) + '"/>'
+    + '<circle class="ow" cx="75" cy="62" r="17"/>' + skLine('o', [87, 50], [100, 24]) + skDot([75, 62]) + skPL(24, 66, L.p) }
+};
+/* Sphère-cylindre de centre C et de direction x */
+SKV.spherecyl = {
+  dv: 'x', dp: 'C',
+  d3: { w: 150, f: L => {
+    const I = skIso(30, 58), R = 17, c = I(26, 0, 0);
+    const low = []; for (let i = 0; i <= 12; i++) { const t = Math.PI + Math.PI * i / 12; low.push(I(52, R * Math.cos(t), R * Math.sin(t))); }
+    const low0 = []; for (let i = 0; i <= 12; i++) { const t = Math.PI + Math.PI * i / 12; low0.push(I(0, R * Math.cos(t), R * Math.sin(t))); }
+    return skLine('t', [c[0], c[1] + 17], [c[0], 142]) + skPath('t', low0, false) + skLine('t', I(0, R, 0), I(52, R, 0)) + skLine('t', I(0, -R, 0), I(52, -R, 0))
+      + skLine('t', I(0, R * 0.707, -R * 0.707), I(52, R * 0.707, -R * 0.707)) + skPath('t', low, false)
+      + '<circle class="ow" cx="' + skf(c[0]) + '" cy="' + skf(c[1]) + '" r="12"/>' + skLine('o', [c[0] + 4, c[1] - 11], [c[0] + 12, c[1] - 44])
+      + skArrow(c, [c[0] + 66, c[1] + 38]) + skDot(c) + skVL(c[0] + 76, c[1] + 46, L.v) + skPL(c[0] - 26, c[1] - 20, L.p);
+  } },
+  side: { w: 150, f: L =>
+    '<rect class="tw" x="30" y="60" width="72" height="16"/>' + skLine('t', [66, 76], [66, 134]) + '<circle class="ow" cx="66" cy="60" r="13"/>'
+    + skLine('o', [75, 51], [100, 26]) + skArrow([66, 60], [130, 60]) + skDot([66, 60]) + skVL(138, 50, L.v) + skPL(34, 44, L.p) },
+  face: { w: 80, f: L =>
+    '<path class="t" d="M20 54A20 20 0 0 0 60 54"/>' + skLine('t', [16, 76], [64, 76]) + skLine('t', [40, 76], [40, 134])
+    + '<circle class="ow" cx="40" cy="54" r="13"/>' + skLine('o', [49, 45], [68, 22]) }
+};
+/* Sphère-plan de centre C et de normale z */
+SKV.sphereplan = {
+  dv: 'z', dp: 'C', norm: true,
+  d3: { w: 150, f: L => {
+    const I = skIso(66, 84), c = I(0, 0, 13);
+    return skRhombus(I, 28, 0, 't') + skLine('t', I(28, 28, 0), [I(28, 28, 0)[0], 144])
+      + '<circle class="ow" cx="' + skf(c[0]) + '" cy="' + skf(c[1]) + '" r="13"/>' + skLine('o', [c[0] + 4, c[1] - 12], [c[0] + 12, c[1] - 44])
+      + skDot(c) + skPL(c[0] + 17, c[1] - 10, L.p) + skArrow([14, 84], [14, 12]) + skVL(28, 22, L.n);
+  } },
+  side: { w: 150, f: L =>
+    skArrow([10, 84], [10, 12]) + skVL(24, 22, L.n) + skLine('t', [10, 84], [112, 84]) + skLine('t', [60, 84], [60, 136])
+    + '<circle class="ow" cx="60" cy="68" r="15"/>' + skLine('o', [70, 58], [100, 30]) + skDot([60, 68]) + skPL(70, 100, L.p) }
+};
+/* Encastrement (hors fiche, dessiné dans le même style) */
+SKV.encastrement = {
+  dv: 'x',
+  d3: { w: 150, f: L => {
+    const I = skIso(66, 84);
+    return skLine('t', I(0, 0, -14), I(0, 0, -50)) + skBox(I, -16, 16, 16, -14, 0, 't', false) + skBox(I, -16, 16, 16, 0, 14, 'o', false) + skLine('o', I(0, 0, 14), I(0, 0, 54));
+  } },
+  side: { w: 150, f: L =>
+    '<rect class="tw" x="55" y="64" width="40" height="22"/><rect class="ow" x="55" y="42" width="40" height="22"/>' + skLine('t', [75, 86], [75, 134]) + skLine('o', [75, 42], [75, 12]) }
+};
+const SKNAME = { encastrement: 'Encastrement', pivot: 'Pivot', glissiere: 'Glissière', helicoidale: 'Hélicoïdale', pivotglissant: 'Pivot glissant', doigt: 'Sphérique à doigt', spherique: 'Sphérique', appuiplan: 'Appui plan (plane)', spherecyl: 'Sphère-cylindre', cylindreplan: 'Cylindre-plan', sphereplan: 'Sphère-plan' };
+function skLegend() {
+  return '<div class="sklegend"><span><i style="border-color:#1f5fd1"></i>solide 1 (référence, bâti)</span><span><i style="border-color:#d62828"></i>solide 2 (solide mobile)</span>'
+    + '<span><i style="border-color:#17913c"></i>point et vecteurs de la liaison : <b>un axe = un point + un vecteur</b></span></div>';
+}
+/* maxw : largeur maximale en px ; pt : point imposé (ex. 'B') ; vec : vecteur imposé (ex. 'z') */
+function skSvg(key, maxw, pt, vec) {
+  const V = SKV[key]; if (!V) return '';
+  const L = { p: pt || V.dp || '', ex: !!pt, v: vec || V.dv || 'x', n: 'z', m: 'y' };
+  if (V.norm && vec) L.n = vec;
+  if (key === 'doigt' && vec) { L.v = ORI[vec].x; L.m = ORI[vec].y; }
+  let cells;
+  if (V.one) cells = [V.one];
+  else {
+    cells = [];
+    if (SKS.mode !== '2d') cells.push(V.d3);
+    if (SKS.mode !== '3d') { cells.push(V.side); if (V.face) cells.push(V.face); }
+  }
+  let x = 0, s = '';
+  cells.forEach(c => { s += '<g transform="translate(' + x + ',0)">' + c.f(L) + '</g>'; x += c.w; });
+  return '<svg class="sk2" viewBox="0 0 ' + x + ' 150" style="max-width:' + (maxw || Math.round(x * 1.7)) + 'px" role="img" aria-label="Schéma cinématique : ' + SKNAME[key] + '">' + s + '</svg>';
+}
+
+
+/* ============ DONNÉES : LIAISONS NORMALISÉES (conventions de la fiche « Tableau des liaisons parfaites ») ============ */
 const LIAISONS = [
-  { nom: 'Pivot', ddl: 1, note: '1 rotation autour de z', tc: '{ ωz ; 0 }', ex: 'Roue qui tourne sur son axe' },
-  { nom: 'Glissière', ddl: 1, note: '1 translation selon z', tc: '{ 0 ; Vz }', ex: 'Tiroir de commode' },
-  { nom: 'Hélicoïdale', ddl: 1, note: 'rotation et translation liées (hélice)', tc: '{ ωz ; Vz } (liés)', ex: 'Vis-écrou' },
-  { nom: 'Pivot glissant', ddl: 2, note: '1 rotation + 1 translation selon z', tc: '{ ωz ; Vz }', ex: 'Arbre dans un roulement' },
-  { nom: 'Sphérique', ddl: 3, note: '3 rotations, centre fixe', tc: '{ ωx, ωy, ωz ; 0 }', ex: 'Main sur un levier de vitesses' },
-  { nom: 'Sphère-plan', ddl: 3, note: '2 rotations + 1 translation dans le plan', tc: '{ ωx, ωy ; Vz }', ex: 'Livre glissant sur une table' },
-  { nom: 'Sphère-cylindre', ddl: 4, note: '3 rotations + 1 translation selon l\'axe du cylindre', tc: '{ ωx, ωy, ωz ; Vz }', ex: 'Doigt dans un alésage' },
-  { nom: 'Cylindre-plan', ddl: 4, note: '3 rotations + 1 translation selon la ligne de contact', tc: '{ ωx, ωy, ωz ; Vx }', ex: 'Cylindre posé sur un plan' },
-  { nom: 'Ponctuelle', ddl: 5, note: '3 rotations + 2 translations, 1 seule bloquée', tc: '{ ωx, ωy, ωz ; Vx, Vy }', ex: 'Bille sur une table' },
-  { nom: 'Encastrement', ddl: 0, note: 'Aucun mouvement', tc: '{ 0 ; 0 }', ex: 'Pièce soudée sur le bâti' }
+  { key: 'encastrement', grp: '', nom: 'Encastrement', alias: 'hors fiche', ddl: 0, tc: '{ 0 ; 0 }', act: 'X, Y, Z, L, M, N', note: 'Aucun mouvement relatif.', ex: 'Pièce soudée sur le bâti',
+    geo: 'aucun : les deux solides n\'en forment qu\'un.' },
+  { key: 'glissiere', grp: 'à direction', nom: 'Glissière', alias: '', ddl: 1, tc: '{ 0 ; Vx }', act: 'Y, Z, L, M, N', note: '1 translation selon la direction x.', ex: 'Tiroir de commode',
+    geo: `une <b>direction</b> : le vecteur ${VH('x')} seul (aucun point : la liaison ne dépend pas de la position).` },
+  { key: 'appuiplan', grp: 'à direction', nom: 'Appui plan', alias: '« plane » dans la fiche, plan-plan', ddl: 3, tc: '{ ωz ; Vx, Vy }', act: 'Z, L, M', note: '1 rotation autour de la normale z + 2 translations dans le plan.', ex: 'Livre posé à plat sur une table',
+    geo: `un <b>plan</b>, défini par sa normale ${VH('z')} (liaison « de normale ${VH('z')} »).` },
+  { key: 'pivot', grp: 'à axe', nom: 'Pivot', alias: '', ddl: 1, tc: '{ ωx ; 0 }', act: 'X, Y, Z, M, N', note: '1 rotation autour de l\'axe.', ex: 'Roue sur son axe',
+    geo: `un <b>axe</b> = un point et un vecteur : ${axS('A', 'x')}, droite passant par A et dirigée par ${VH('x')}.` },
+  { key: 'helicoidale', grp: 'à axe', nom: 'Hélicoïdale', alias: '', ddl: 1, tc: '{ ωx ; Vx }, Vx = ± p·ωx/2π', act: 'X, Y, Z, L, M, N (avec L = ∓ p·X/2π)', note: 'Rotation et translation selon l\'axe, liées par le pas p.', ex: 'Vis-écrou',
+    geo: `un <b>axe</b> ${axS('A', 'x')} et un pas p.` },
+  { key: 'pivotglissant', grp: 'à axe', nom: 'Pivot glissant', alias: '', ddl: 2, tc: '{ ωx ; Vx }', act: 'Y, Z, M, N', note: '1 rotation + 1 translation, même axe.', ex: 'Arbre dans un palier lisse',
+    geo: `un <b>axe</b> ${axS('A', 'x')}.` },
+  { key: 'cylindreplan', grp: 'à axe', nom: 'Cylindre-plan', alias: 'ex-linéaire rectiligne', ddl: 4, tc: '{ ωx, ωz ; Vx, Vy }', act: 'Z, M', note: 'Ligne de contact selon x, normale z : 2 rotations (ωx, ωz) + 2 translations (Vx, Vy).', ex: 'Cylindre posé sur un plan',
+    geo: `l'<b>axe</b> ${axS('A', 'x')} (ligne de contact : un point et un vecteur) et la normale ${VH('z')} au plan.` },
+  { key: 'doigt', grp: 'à centre', nom: 'Sphérique à doigt', alias: 'rotule à doigt', ddl: 2, tc: '{ ωx, ωy ; 0 }', act: 'X, Y, Z, N', note: '2 rotations : autour de l\'axe du doigt (x) et de la normale (y) ; la rotation autour de z est bloquée par le doigt.', ex: 'Levier de vitesses',
+    geo: `le <b>centre</b> C, l'axe ${axS('C', 'x')} (direction du doigt) et la normale ${VH('y')} (plan de la rainure).` },
+  { key: 'spherique', grp: 'à centre', nom: 'Sphérique', alias: 'ex-rotule', ddl: 3, tc: '{ ωx, ωy, ωz ; 0 }', act: 'X, Y, Z', note: '3 rotations, centre fixe.', ex: 'Rotule de direction, attache de remorque',
+    geo: 'un <b>centre</b> C (un point, aucun vecteur).' },
+  { key: 'spherecyl', grp: 'à centre', nom: 'Sphère-cylindre', alias: 'ex-linéaire annulaire', ddl: 4, tc: '{ ωx, ωy, ωz ; Vx }', act: 'Y, Z', note: '3 rotations + 1 translation selon la direction x du cylindre.', ex: 'Tige à bout sphérique dans un alésage',
+    geo: `le <b>centre</b> C de la sphère et la direction ${VH('x')} du cylindre.` },
+  { key: 'sphereplan', grp: 'à centre', nom: 'Sphère-plan', alias: 'ex-ponctuelle', ddl: 5, tc: '{ ωx, ωy, ωz ; Vx, Vy }', act: 'Z', note: '3 rotations + 2 translations : seule la translation selon la normale z est bloquée.', ex: 'Bille sur une table',
+    geo: `le <b>centre</b> C de la sphère et la normale ${VH('z')} au plan.` }
 ];
-
-const SERIES = [
-  { nom: 'Pivot + Glissière (même axe)', a: 'Pivot (z)', b: 'Glissière (z)', res: 'Pivot glissant', ddl: 2, tc: '{ ωz ; Vz }', why: 'Les deux mouvements (rotation et translation selon z) subsistent.' },
-  { nom: 'Pivot + Pivot (axes différents)', a: 'Pivot (z)', b: 'Pivot (x)', res: 'Sphérique', ddl: 3, tc: '{ ωx, ωy, ωz ; 0 }', why: 'Deux rotations indépendantes autour d\'axes différents donnent trois rotations.' },
-  { nom: 'Glissière + Glissière (axes ⊥)', a: 'Glissière (x)', b: 'Glissière (y)', res: 'Sphère-plan', ddl: 3, tc: '{ ωx, ωy ; Vz }', why: 'Deux translations indépendantes + une rotation possible autour de la normale.' },
-  { nom: 'Sphérique + Glissière (axe passant par le centre)', a: 'Sphérique', b: 'Glissière (x)', res: 'Sphère-cylindre', ddl: 4, tc: '{ ωx, ωy, ωz ; Vx }', why: 'Trois rotations + la translation selon l\'axe de la glissière.' },
-  { nom: 'Pivot + Pivot (même axe)', a: 'Pivot (z)', b: 'Pivot (z)', res: 'Pivot', ddl: 1, tc: '{ ωz ; 0 }', why: 'Deux rotations de même axe ne font qu\'une seule rotation : redondance.' }
-];
-
-const PARALLELES = [
-  { nom: '2 pivots d\'axes parallèles', a: 'Pivot (z)', b: 'Pivot (z)', res: 'Pivot glissant', ddl: 2, h: 1, why: 'Deux liaisons en parallèle : le degré d\'hyperstatisme est 1.' },
-  { nom: '2 glissières parallèles', a: 'Glissière (x)', b: 'Glissière (x)', res: 'Glissière', ddl: 1, h: 1, why: 'Redondance : deux glissières parallèles bloquent la même chose.' },
-  { nom: '2 sphériques', a: 'Sphérique', b: 'Sphérique', res: 'Pivot', ddl: 1, h: 1, why: 'Deux sphériques en parallèle de centres distincts forment un pivot hyperstatique de degré 1.' },
-  { nom: '2 sphère-plan (même plan)', a: 'Sphère-plan', b: 'Sphère-plan', res: 'Sphère-plan', ddl: 3, h: 3, why: 'Les deux plans imposent les mêmes contraintes : trois redondances.' }
-];
-
-const CHAINES_DATA = [
-  { nom: 'Bras de robot (chaîne ouverte)', type: 'ouverte', nc: 2, rc: 0, m: 2, h: 0, why: 'Chaîne ouverte : chaque liaison apporte ses mobilités, pas de boucle. m = Nc − rc = 2.' },
-  { nom: 'Pompe à pistons (chaîne fermée simple)', type: 'fermee', nc: 3, rc: 2, m: 1, h: 1, why: 'Chaîne fermée : une fermeture cinématique donne 6 équations, mais seules 2 sont indépendantes ici. m = Nc − rc = 1.' },
-  { nom: 'Suspension MacPherson', type: 'fermee', nc: 4, rc: 3, m: 1, h: 2, why: 'Chaîne fermée complexe : m = 1 (débattement de la roue), h = 2 (hyperstatisme dû aux deux triangles).' },
-  { nom: 'Élévateur à ciseaux', type: 'fermee', nc: 5, rc: 4, m: 1, h: 3, why: 'Plusieurs boucles fermées : m = 1 (hauteur), h = 3 (hyperstatisme des liaisons parallèles).' }
-];
+function liaisonCards() {
+  return '<div class="cards skcards">' + LIAISONS.map(l => '<div class="card"><h4>' + l.nom + ' — ' + l.ddl + ' ddl' + (l.grp ? ' <small style="font-weight:400;color:var(--muted)">(liaison ' + l.grp + ')</small>' : '') + '</h4>' + skSvg(l.key)
+    + '<p><b>Torseur cinématique :</b> ' + l.tc + '</p><p><b>Définie par :</b> ' + l.geo + '</p></div>').join('') + '</div>';
+}
 
 /* ============ ATELIER 1 : LIAISONS ============ */
 const LI = { selected: null, hideTC: false };
 function mountLiaisons(root) {
   root.innerHTML = '<h2>1. Liaisons normalisées</h2>'
-    + '<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons normalisées</b>. Chaque liaison autorise certains mouvements (degrés de liberté) et en bloque d\'autres, résumés par son <b>torseur cinématique</b>.</p>'
-    + '<p>Nomenclature utilisée en SII : <b>sphérique</b> (ex-rotule), <b>sphère-plan</b> (ex-appui plan), <b>sphère-cylindre</b> (ex-linéaire annulaire).</p>'
-    + '<div class="files" style="margin:8px 0"><button class="btn sm" id="li-toggle-tc">Masquer les torseurs</button></div>'
+    + '<p>Un mécanisme est un assemblage de solides reliés par des <b>liaisons normalisées</b>. Chaque liaison autorise certains mouvements (ses <b>degrés de liberté</b>, ddl) et en bloque d\'autres. Torseur cinématique et torseur des actions transmissibles sont <b>duaux</b>.</p>'
+    + '<div class="verdict yes"><h4>Un axe, c\'est un point et un vecteur</h4>'
+    + '<p>L\'axe d\'une liaison pivot ' + axS('A', 'x') + ' est la droite qui passe par le point A et qui est dirigée par le vecteur ' + VH('x') + '. Il donne à la fois le <b>centre</b> de la liaison (sa position) et la <b>direction</b> autour de laquelle elle tourne.</p>'
+    + '<p>Deux pivots d\'axes (A, ' + VH('x') + ') et (B, ' + VH('x') + ') sont <b>coaxiaux</b> si et seulement si le vecteur AB est colinéaire à ' + VH('x') + '. Si AB n\'est pas colinéaire à ' + VH('x') + ', leurs axes sont seulement parallèles.</p></div>'
+    + '<p><b>Nomenclature :</b> <b>sphère-plan</b> = ex-ponctuelle (5 ddl) · <b>sphère-cylindre</b> = ex-linéaire annulaire (4 ddl) · <b>cylindre-plan</b> = ex-linéaire rectiligne (4 ddl) · <b>appui plan</b> (« plane », plan-plan, 3 ddl) · <b>sphérique</b> = ex-rotule (3 ddl).</p>'
+    + skLegend()
+    + '<p class="small">Comme sur la fiche de cours : vue spatiale (3D), vue plane de profil et vue plane de face. Le sélecteur « Schémas » en haut de la page permet de n\'afficher que la 3D, que la 2D, ou les deux. Conventions de la fiche : axes et directions selon x, normale au plan selon z (sphérique à doigt : axe x, normale y). Dans les ateliers suivants, les axes sont pris selon z pour simplifier ; cela revient à réorienter le repère.</p>'
+    + '<div class="files" style="margin:8px 0"><button class="btn sm" id="li-toggle-tc" type="button">Masquer les torseurs</button></div>'
     + '<div id="li-grid" class="cards"></div>'
     + '<div id="li-detail"></div>'
     + '<div class="verdict" id="li-msg"></div>';
@@ -254,14 +760,20 @@ function mountLiaisons(root) {
 }
 function renderLi() {
   const grid = $('#li-grid'); if (!grid) return; grid.innerHTML = '';
+  const pick = l => { LI.selected = LI.selected === l.nom ? null : l.nom; renderLi(); };
   LIAISONS.forEach(l => {
     grid.append(h('div', {
-      class: 'card', style: 'cursor:pointer;' + (LI.selected === l.nom ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
-      onclick: () => { LI.selected = LI.selected === l.nom ? null : l.nom; renderLi(); }
+      class: 'card', tabindex: '0', role: 'button', 'aria-pressed': LI.selected === l.nom ? 'true' : 'false',
+      style: 'cursor:pointer;' + (LI.selected === l.nom ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
+      onclick: () => pick(l),
+      onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(l); } }
     },
       h('h4', null, l.nom + ' (' + l.ddl + ' ddl)'),
+      h('div', { class: 'skthumb', html: skSvg(l.key) }),
+      l.grp ? h('p', { style: 'font-size:11px;color:var(--muted);margin:0' }, 'liaison ' + l.grp + (l.alias ? ' · ' + l.alias : '')) : (l.alias ? h('p', { style: 'font-size:11px;color:var(--muted);margin:0' }, l.alias) : null),
       h('p', { style: 'font-size:12px;margin:2px 0' }, l.note),
-      h('p', { style: 'font-size:11px;color:var(--muted);margin:2px 0' }, LI.hideTC ? 'Torseur masqué' : 'Torseur : ' + l.tc),
+      h('p', { style: 'font-size:11.5px;color:var(--muted);margin:2px 0' }, LI.hideTC ? 'Torseurs masqués' : 'Cinématique : ' + l.tc),
+      h('p', { style: 'font-size:11.5px;color:var(--muted);margin:2px 0' }, LI.hideTC ? '' : 'Actions : ' + l.act),
       h('p', { style: 'font-size:11px;color:var(--muted);margin:2px 0' }, 'Ex : ' + l.ex)
     ));
   });
@@ -270,27 +782,70 @@ function renderLi() {
     const l = LIAISONS.find(x => x.nom === LI.selected);
     if (l) {
       detail.append(h('div', { class: 'verdict yes' },
-        h('h4', null, l.nom + ' — ' + l.ddl + ' ddl'),
+        h('h4', null, l.nom + (l.alias ? ' (' + l.alias + ')' : '') + ' — ' + l.ddl + ' ddl, ' + (6 - l.ddl) + ' inconnues statiques'),
+        h('div', { style: 'margin:6px 0', html: skSvg(l.key, 640) }),
+        h('p', { html: '<b>Définie par :</b> ' + l.geo }),
         h('p', { html: '<b>Mouvements autorisés :</b> ' + l.note }),
-        h('p', { html: '<b>Torseur cinématique :</b> ' + l.tc }),
+        h('p', { html: '<b>Torseur cinématique :</b> ' + l.tc + ' &nbsp; (' + l.ddl + ' composante(s) non nulle(s))' }),
+        h('p', { html: '<b>Actions transmissibles :</b> ' + l.act + ' &nbsp; (' + (6 - l.ddl) + ' composante(s) non nulle(s))' }),
         h('p', { html: '<b>Exemple :</b> ' + l.ex })
       ));
     }
   }
   const msg = $('#li-msg');
   msg.className = 'verdict';
-  msg.innerHTML = 'Les 11 liaisons normalisées (dont 10 présentées ici) vont de 0 ddl (encastrement) à 5 ddl (ponctuelle). <b>Dualité :</b> le torseur cinématique a (6 − ddl) composantes non nulles, le torseur d\'actions a ddl composantes non nulles.';
+  msg.innerHTML = '<b>Dualité :</b> le torseur cinématique a <b>ddl</b> composantes non nulles ; le torseur des actions mécaniques transmissibles en a <b>6 − ddl</b>. Exemple : pivot, 1 + 5 = 6.';
 }
-WORKSHOPS.push({ id: 'liaisons', title: 'Liaisons normalisées', hint: 'Tableau interactif des liaisons et de leurs torseurs.', mount: mountLiaisons,
+WORKSHOPS.push({ id: 'liaisons', title: 'Liaisons normalisées', hint: 'Les 11 liaisons normalisées : schémas de la fiche (3D / 2D), axe (point + vecteur), ddl, torseurs.', mount: mountLiaisons,
   reset: () => { LI.selected = null; LI.hideTC = false; } });
 
 /* ============ ATELIER 2 : LIAISON ÉQUIVALENTE ============ */
+const SERIES = [
+  { c: 'Pivot + glissière', l: [{ t: 'pivot', o: 'z', p: 'A' }, { t: 'glissiere', o: 'z', p: 'A' }],
+    why: `Les deux mouvements subsistent : rotation autour de l'axe ${axS('A', 'z')} et translation selon ${VH('z')}. Pivot glissant d'axe ${axS('A', 'z')}.` },
+  { c: '3 pivots concourants', l: [{ t: 'pivot', o: 'x', p: 'A' }, { t: 'pivot', o: 'y', p: 'A' }, { t: 'pivot', o: 'z', p: 'A' }],
+    why: `Trois axes qui passent tous par A et ont trois directions indépendantes : trois rotations, centre A fixe. C'est une sphérique de centre A. Deux pivots ne suffisent pas.` },
+  { c: '2 pivots concourants', l: [{ t: 'pivot', o: 'x', p: 'A' }, { t: 'pivot', o: 'y', p: 'A' }],
+    why: `Seulement deux rotations (autour de ${VH('x')} et ${VH('y')}) : sphérique à doigt (cinématiquement, un joint de Cardan), pas une sphérique.` },
+  { c: 'Glissières x, y + pivot z', l: [{ t: 'glissiere', o: 'x', p: 'A' }, { t: 'glissiere', o: 'y', p: 'A' }, { t: 'pivot', o: 'z', p: 'A' }],
+    why: `Deux translations dans le plan et une rotation autour de la normale ${VH('z')} : appui plan. Deux glissières seules ne donneraient que 2 translations.` },
+  { c: 'Sphérique + glissière', l: [{ t: 'spherique', o: 'z', p: 'A' }, { t: 'glissiere', o: 'z', p: 'A' }],
+    why: `Trois rotations de centre A et une translation selon ${VH('z')} : sphère-cylindre d'axe ${axS('A', 'z')}. La direction de la glissière doit passer par le centre.` },
+  { c: '2 pivots coaxiaux', l: [{ t: 'pivot', o: 'z', p: 'A' }, { t: 'pivot', o: 'z', p: 'B' }],
+    why: `Les axes ${axS('A', 'z')} et ${axS('B', 'z')} avec B = A + z sont confondus : deux rotations de même axe n'en font qu'une. La liaison équivalente est un pivot, avec <b>une mobilité interne</b> (le solide intermédiaire tourne librement).` },
+  { c: '2 pivots parallèles non coaxiaux', l: [{ t: 'pivot', o: 'z', p: 'A' }, { t: 'pivot', o: 'z', p: 'C' }],
+    why: `Axes ${axS('A', 'z')} et ${axS('C', 'z')} avec C = A + x : parallèles mais pas confondus. Le mouvement obtenu (rotation et translation perpendiculaire à AC, 2 ddl) ne correspond à aucune liaison normalisée.` }
+];
+const PARALLELES = [
+  { c: '2 pivots coaxiaux', l: [{ t: 'pivot', o: 'z', p: 'A' }, { t: 'pivot', o: 'z', p: 'B' }],
+    note: `B = A + z : le vecteur AB est colinéaire à ${VH('z')}, les axes ${axS('A', 'z')} et ${axS('B', 'z')} sont confondus.`,
+    why: `Les deux pivots bloquent les mêmes 5 mouvements : chaque condition est imposée deux fois. Le résultat est un pivot, mais très hyperstatique.` },
+  { c: '2 pivots parallèles non coaxiaux', l: [{ t: 'pivot', o: 'z', p: 'A' }, { t: 'pivot', o: 'z', p: 'C' }],
+    note: `C = A + x : AC n'est pas colinéaire à ${VH('z')}, les axes ${axS('A', 'z')} et ${axS('C', 'z')} sont parallèles mais distincts.`,
+    why: `L'entraxe interdit toute rotation : le solide est encastré, et de façon très hyperstatique.` },
+  { c: '2 glissières parallèles', l: [{ t: 'glissiere', o: 'z', p: 'A' }, { t: 'glissiere', o: 'z', p: 'C' }],
+    note: `Deux glissières de même direction ${VH('z')}.`,
+    why: `Même liaison équivalente (glissière), mais les 5 conditions de blocage sont imposées deux fois.` },
+  { c: '2 sphériques', l: [{ t: 'spherique', o: 'z', p: 'A' }, { t: 'spherique', o: 'z', p: 'B' }],
+    note: `Centres A et B, avec B = A + z : la droite (AB) est l'axe ${axS('A', 'z')}.`,
+    why: `La seule rotation compatible avec deux centres fixes est celle d'axe (AB) : pivot, avec 1 condition redondante.` },
+  { c: '2 appuis plans coplanaires', l: [{ t: 'appuiplan', o: 'z', p: 'A' }, { t: 'appuiplan', o: 'z', p: 'C' }],
+    note: `Plans ${axS('A', 'z')} et ${axS('C', 'z')} avec C = A + x : AC est perpendiculaire à ${VH('z')}, les deux plans sont confondus.`,
+    why: `Les deux appuis imposent le même plan : on retrouve un appui plan, avec 3 redondances (Z, L, M imposées deux fois).` },
+  { c: '2 pivots glissants non coaxiaux', l: [{ t: 'pivotglissant', o: 'z', p: 'A' }, { t: 'pivotglissant', o: 'z', p: 'C' }],
+    note: `Axes ${axS('A', 'z')} et ${axS('C', 'z')} parallèles non coaxiaux (C = A + x).`,
+    why: `L'entraxe bloque la rotation propre ; il reste la translation selon ${VH('z')} : glissière hyperstatique.` },
+  { c: 'Sphérique + sphère-cylindre', l: [{ t: 'spherique', o: 'z', p: 'A' }, { t: 'spherecyl', o: 'z', p: 'B' }],
+    note: `Sphérique de centre A, sphère-cylindre d'axe ${axS('B', 'z')} : son axe passe par A.`,
+    why: `Montage isostatique classique du pivot : 3 + 2 = 5 inconnues statiques, aucune redondance.` }
+];
 const LE = { mode: 'serie', idx: 0 };
 function mountEquiv(root) {
   root.innerHTML = '<h2>2. Liaison équivalente</h2>'
-    + '<p>Quand plusieurs liaisons sont associées, on peut les remplacer par une <b>liaison équivalente</b> :</p>'
-    + '<ul><li><b>En série</b> : les torseurs cinématiques s\'ajoutent, la liaison est isostatique.</li>'
-    + '<li><b>En parallèle</b> : les contraintes se cumulent, un hyperstatisme peut apparaître.</li></ul>'
+    + '<p>Plusieurs liaisons associées peuvent être remplacées par une <b>liaison équivalente</b> :</p>'
+    + '<ul><li><b>En série</b> (une chaîne : 1 — 2 — 3 …) : les torseurs cinématiques <b>s\'ajoutent</b> (somme des espaces de mouvements).</li>'
+    + '<li><b>En parallèle</b> (plusieurs arcs entre les mêmes solides) : seuls subsistent les mouvements <b>compatibles avec toutes les liaisons</b> (intersection) ; des redondances (hyperstatisme) peuvent apparaître : h = 6 + m − I<sub>c</sub> (une boucle, γ = 1).</li></ul>'
+    + '<p class="small">Un axe est un point et un vecteur : l\'axe (B, ' + VH('z') + ') passe par B et est dirigé par ' + VH('z') + '. Repère de référence : A = origine, B = A + z, C = A + x, D = A + y.</p>'
     + '<div class="chips" id="le-modes"></div>'
     + '<div id="le-content"></div>'
     + '<div id="le-detail"></div>';
@@ -299,314 +854,441 @@ function mountEquiv(root) {
 function renderLE() {
   const mb = $('#le-modes'); mb.innerHTML = '';
   mb.append(...[['serie', 'En série'], ['parallele', 'En parallèle']].map(([v, l]) => h('button', {
-    type: 'button', class: 'chip' + (LE.mode === v ? ' on' : ''),
+    type: 'button', class: 'chip' + (LE.mode === v ? ' on' : ''), 'aria-pressed': LE.mode === v ? 'true' : 'false',
     onclick: () => { LE.mode = v; LE.idx = 0; renderLE(); }
   }, l)));
   const content = $('#le-content'); content.innerHTML = '';
   const list = LE.mode === 'serie' ? SERIES : PARALLELES;
   const item = list[LE.idx];
-  content.append(h('div', { class: 'task-row' },
-    h('div', null,
-      h('h4', null, item.nom),
-      h('p', { style: 'font-size:13px;margin:2px 0' }, item.a + ' + ' + item.b),
-      h('p', { style: 'font-size:13px;margin:2px 0;color:var(--accent-ink)' }, '→ ' + item.res + ' (' + item.ddl + ' ddl' + (LE.mode === 'parallele' ? ', h = ' + item.h : '') + ')')
-    ),
-    h('div', { class: 'chips' }, list.map((x, i) => h('button', {
-      type: 'button', class: 'chip' + (i === LE.idx ? ' on' : ''),
-      onclick: () => { LE.idx = i; renderLE(); }
-    }, String(i + 1))))
-  ));
+  content.append(h('div', { class: 'chips' }, list.map((x, i) => h('button', {
+    type: 'button', class: 'chip' + (i === LE.idx ? ' on' : ''), 'aria-pressed': i === LE.idx ? 'true' : 'false',
+    onclick: () => { LE.idx = i; renderLE(); }
+  }, x.c))));
   const detail = $('#le-detail'); detail.innerHTML = '';
-  detail.append(h('div', { class: 'verdict ' + (LE.mode === 'serie' ? 'yes' : 'warn') },
-    h('p', { html: '<b>Règle :</b> ' + (LE.mode === 'serie' ? 'V<sub>eq</sub> = V₁ + V₂ : les torseurs cinématiques s\'ajoutent.' : 'Les contraintes se cumulent : la liaison équivalente a moins de ddl, et un hyperstatisme h peut apparaître.') }),
-    h('p', { html: '<b>Explication :</b> ' + item.why }),
-    h('p', { html: '<b>Résultat :</b> ' + item.res + ' — torseur : ' + (item.tc || '—') })
-  ));
+  /* liaisons utilisées, avec leur schéma cinématique */
+  const used = h('div', { class: 'skrow' }, item.l.map(x => h('div', { class: 'card' },
+    h('div', { class: 'skthumb', html: skSvg(x.t, 0, x.p, x.o) }),
+    h('p', { html: '<b>' + lname(x.t, x.o, x.p) + '</b>' }))));
+  detail.append(h('h3', null, 'Liaisons utilisées'), used);
+  const labels = item.l.map(x => llab(x.t, x.o, x.p));
+  if (LE.mode === 'serie') {
+    const r = seriesEq(item.l), eqLab = r.eq ? r.eq.short : 'non normalisée';
+    detail.append(
+      h('h3', null, 'Graphes de liaisons'),
+      h('div', { class: 'gfig' }, h('p', { class: 'gcap', html: '<b>Avant</b> : ' + item.l.length + ' liaisons en série, chaîne 1 — … — ' + (item.l.length + 1) + ' (aucune boucle).' }), h('div', { html: graphChain(labels) })),
+      h('div', { class: 'gfig' }, h('p', { class: 'gcap', html: '<b>Après</b> : un seul arc, la liaison équivalente.' }), h('div', { html: graphChain([eqLab]) })),
+      h('div', { class: 'gstats' },
+        h('div', { class: 'stat' }, h('span', null, 'Σ ddl des liaisons'), h('b', null, String(r.sum))),
+        h('div', { class: 'stat' }, h('span', null, 'ddl de l\'équivalente'), h('b', null, String(r.ddl))),
+        h('div', { class: 'stat' }, h('span', null, 'mobilité interne'), h('b', null, String(r.mi))),
+        h('div', { class: 'stat' }, h('span', null, 'équivalente'), h('b', null, eqLab))),
+      h('div', { class: 'verdict yes' },
+        h('p', { html: '<b>Règle :</b> V<sub>eq</sub> = V₁ + V₂ + … (somme des torseurs cinématiques).' }),
+        h('p', { html: '<b>Explication :</b> ' + item.why }),
+        h('p', { html: '<b>Liaison équivalente :</b> ' + (r.eq ? r.eq.nom + ' — torseur ' + eqTorseur(r.eq) : 'aucune liaison normalisée, torseur à 2 composantes non nulles') }),
+        h('p', { class: 'small', html: 'Une chaîne en série est toujours isostatique (h = 0) : elle ne contient aucune boucle.' })));
+  } else {
+    const r = parallel(item.l), eqLab = r.eq ? r.eq.short : 'non normalisée';
+    detail.append(
+      h('h3', null, 'Graphes de liaisons'),
+      h('div', { class: 'gfig' }, h('p', { class: 'gcap', html: '<b>Avant</b> : ' + item.l.length + ' arcs entre les solides 1 et 2 (une boucle, γ = 1).' }), h('div', { html: graphPar(labels) })),
+      h('div', { class: 'gfig' }, h('p', { class: 'gcap', html: '<b>Après</b> : un seul arc, la liaison équivalente.' }), h('div', { html: graphChain([eqLab]) })),
+      h('div', { class: 'gstats' },
+        h('div', { class: 'stat' }, h('span', null, 'I_c = Σ ddl'), h('b', null, String(r.Ic))),
+        h('div', { class: 'stat' }, h('span', null, 'm (mobilité)'), h('b', null, String(r.m))),
+        h('div', { class: 'stat', style: 'border-color:' + (r.h === 0 ? 'var(--ok)' : 'var(--bad)') }, h('span', null, 'h = 6 + m − I_c'), h('b', { style: 'color:' + (r.h === 0 ? 'var(--ok)' : 'var(--bad)') }, String(r.h))),
+        h('div', { class: 'stat' }, h('span', null, 'équivalente'), h('b', null, eqLab))),
+      h('div', { class: 'verdict ' + (r.h === 0 ? 'yes' : 'warn') },
+        h('p', { html: '<b>Géométrie :</b> ' + item.note }),
+        h('p', { html: '<b>Règle :</b> intersection des mouvements permis ; I<sub>c</sub> compte toutes les inconnues cinématiques, m la mobilité de l\'ensemble.' }),
+        h('p', { html: '<b>Explication :</b> ' + item.why }),
+        h('p', { html: '<b>Liaison équivalente :</b> ' + (r.eq ? r.eq.nom + ' — torseur ' + eqTorseur(r.eq) : 'aucune') }),
+        h('p', { html: '<b>Bilan :</b> ' + (r.h === 0 ? 'isostatique ✓' : 'hyperstatique de degré ' + r.h + ' ⚠') })));
+  }
 }
-WORKSHOPS.push({ id: 'equiv', title: 'Liaison équivalente', hint: 'Composer des liaisons en série et en parallèle.', mount: mountEquiv,
+WORKSHOPS.push({ id: 'equiv', title: 'Liaison équivalente', hint: 'Composer des liaisons en série et en parallèle : schémas, graphes et calcul automatique.', mount: mountEquiv,
   reset: () => { LE.mode = 'serie'; LE.idx = 0; } });
 
 /* ============ ATELIER 3 : GRAPHE ============ */
-const GR = { step: 0 };
+const GR = { step: 0, nl: 4, np: 4 };
+const BM_LABELS = ['Pivot (O, z)', 'Pivot (A, z)', 'Pivot (B, z)', 'Glissière (x)'];
 const GR_STEPS = [
-  { title: 'Étape 1 — Classes d\'équivalence', body: '<p>Regrouper les pièces sans mouvement relatif (même fonction cinématique). Chaque classe devient un solide unique.</p><p><b>Exemple :</b> le bâti et ses vis forment une seule classe.</p>' },
-  { title: 'Étape 2 — Identifier les liaisons', body: '<p>Entre chaque paire de classes en contact, déterminer la liaison normalisée (pivot, glissière, sphérique…). Écrire le torseur cinématique.</p>' },
-  { title: 'Étape 3 — Tracer le graphe', body: '<p>Chaque classe est un nœud (cercle). Chaque liaison est un arc étiqueté.</p><p>Le graphe permet de repérer les chaînes ouvertes et fermées.</p>' },
-  { title: 'Étape 4 — Compter les cycles γ', body: '<p>Pour N<sub>L</sub> liaisons et N<sub>P</sub> pièces (bâti inclus) :</p><div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div>' },
-  { title: 'Étape 5 — Fermetures cinématiques', body: '<p>Pour chaque cycle indépendant :</p><div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div><p>Chaque fermeture fournit jusqu\'à 6 équations scalaires.</p>' }
+  { title: 'Étape 1 — Classes d\'équivalence', body: '<p>Regrouper les pièces sans mouvement relatif. Chaque classe devient un solide unique.</p><p><b>Exemple :</b> le bâti et ses vis forment une seule classe ; la bielle et ses bagues aussi.</p>' },
+  { title: 'Étape 2 — Identifier les liaisons', body: '<p>Entre chaque paire de classes en contact, déterminer la liaison normalisée (pivot, glissière, sphérique…) et ses paramètres géométriques : <b>un axe est un point et un vecteur</b>, par exemple le pivot d\'axe (O, ' + VH('z') + ').</p>' },
+  { title: 'Étape 3 — Tracer le graphe', body: '<p>Chaque classe est un nœud (le bâti est entouré d\'un double cercle), chaque liaison un arc étiqueté par son nom et ses paramètres. Le graphe permet de repérer chaînes ouvertes (séries) et boucles (parallèles, cycles).</p><p>Exemple : bielle-manivelle (0 bâti, 1 manivelle, 2 bielle, 3 piston).</p>' },
+  { title: 'Étape 4 — Compter les cycles γ', body: '<p>Pour N<sub>L</sub> liaisons et N<sub>P</sub> pièces (bâti inclus), graphe connexe :</p><div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div><p>Bielle-manivelle : γ = 4 − 4 + 1 = 1.</p>' },
+  { title: 'Étape 5 — Fermetures cinématiques', body: '<p>Pour chaque cycle indépendant :</p><div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div><p>Chaque fermeture fournit au plus 6 équations scalaires, soit E<sub>c</sub> = 6γ équations au total.</p>' }
 ];
 function mountGraphe(root) {
   root.innerHTML = '<h2>3. Graphe des liaisons</h2>'
-    + '<p>Le <b>graphe des liaisons</b> est une représentation abstraite : nœuds = classes, arcs = liaisons. Il sert à compter les cycles et écrire les fermetures.</p>'
+    + '<p>Le <b>graphe des liaisons</b> est une représentation abstraite : nœuds = classes d\'équivalence, arcs = liaisons. Il sert à compter les cycles et à écrire les fermetures.</p>'
     + '<div class="stepper" id="gr-steps" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"></div>'
     + '<div id="gr-content"></div>'
     + '<div class="files" style="margin-top:10px">'
-    + '<button class="btn" id="gr-prev">◀ Précédent</button>'
-    + '<button class="btn pri" id="gr-next">Suivant ▶</button>'
-    + '<button class="btn" id="gr-reset">Recommencer</button>'
-    + '</div>';
+    + '<button class="btn" id="gr-prev" type="button">◀ Précédent</button>'
+    + '<button class="btn pri" id="gr-next" type="button">Suivant ▶</button>'
+    + '<button class="btn" id="gr-reset" type="button">Recommencer</button>'
+    + '</div>'
+    + '<h3>Calculateur de cycles</h3>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>N<sub>L</sub> = <b id="gr-nl-o">4</b> liaisons</span><input type="range" id="gr-nl" min="1" max="14" step="1" value="4"></label>'
+    + '<label class="fld"><span>N<sub>P</sub> = <b id="gr-np-o">4</b> pièces (bâti inclus)</span><input type="range" id="gr-np" min="2" max="10" step="1" value="4"></label>'
+    + '</div><div id="gr-calc"></div>'
+    + '<h3>Galerie : série, parallèle, cycle</h3>'
+    + '<div class="gfig"><p class="gcap"><b>Série</b> : les arcs se suivent en chaîne (1 — 2 — 3 — 4). Pas de boucle : γ = 3 − 4 + 1 = 0. Les torseurs cinématiques s\'ajoutent.</p>' + graphChain(['Pivot (A, x)', 'Pivot (A, y)', 'Pivot (A, z)']) + '</div>'
+    + '<div class="gfig"><p class="gcap"><b>Parallèle</b> : plusieurs arcs entre les mêmes nœuds. Une boucle : γ = 2 − 2 + 1 = 1. Seuls subsistent les mouvements compatibles avec toutes les liaisons.</p>' + graphPar(['Pivot (A, z)', 'Pivot (B, z)']) + '</div>'
+    + '<div class="gfig"><p class="gcap"><b>Cycle</b> : une chaîne fermée sur le bâti (bielle-manivelle). γ = 4 − 4 + 1 = 1.</p>' + graphDraw(ringGraph(BM_LABELS[0], BM_LABELS[1], BM_LABELS[2], BM_LABELS[3])) + '</div>'
+    + '<div class="gfig"><p class="gcap"><b>Équivalence</b> : une association en série ou en parallèle se remplace par un seul arc (voir l\'atelier 2).</p></div>';
   $('#gr-prev').addEventListener('click', () => { if (GR.step > 0) { GR.step--; renderGR(); } });
   $('#gr-next').addEventListener('click', () => { if (GR.step < GR_STEPS.length - 1) { GR.step++; renderGR(); } });
   $('#gr-reset').addEventListener('click', () => { GR.step = 0; renderGR(); });
-  renderGR();
+  $('#gr-nl').addEventListener('input', e => { GR.nl = +e.target.value; renderGRcalc(); });
+  $('#gr-np').addEventListener('input', e => { GR.np = +e.target.value; renderGRcalc(); });
+  renderGR(); renderGRcalc();
 }
+function graphSvg() { return graphDraw(ringGraph(BM_LABELS[0], BM_LABELS[1], BM_LABELS[2], BM_LABELS[3]), 'Graphe des liaisons de la bielle-manivelle'); }
 function renderGR() {
   const stepBox = $('#gr-steps'); stepBox.innerHTML = '';
   GR_STEPS.forEach((s, i) => {
     stepBox.append(h('button', {
-      type: 'button', class: 'chip' + (i === GR.step ? ' on' : ''),
+      type: 'button', class: 'chip' + (i === GR.step ? ' on' : ''), 'aria-pressed': i === GR.step ? 'true' : 'false',
       style: i < GR.step ? 'opacity:.7' : '',
       onclick: () => { GR.step = i; renderGR(); }
     }, (i + 1) + '. ' + s.title.replace(/^Étape \d+ — /, '')));
   });
   const content = $('#gr-content'); content.innerHTML = '';
   const s = GR_STEPS[GR.step];
-  content.append(h('div', { class: 'verdict yes' }, h('h4', null, s.title), h('div', { html: s.body })));
+  content.append(h('div', { class: 'verdict yes' }, h('h4', null, s.title), h('div', { html: s.body + (GR.step === 2 ? graphSvg() : '') })));
   $('#gr-prev').disabled = GR.step === 0;
   $('#gr-next').disabled = GR.step === GR_STEPS.length - 1;
 }
-WORKSHOPS.push({ id: 'graphe', title: 'Graphe des liaisons', hint: 'Construire le graphe et compter les cycles.', mount: mountGraphe,
-  reset: () => { GR.step = 0; } });
+function renderGRcalc() {
+  $('#gr-nl-o').textContent = GR.nl; $('#gr-np-o').textContent = GR.np;
+  const g = GR.nl - GR.np + 1, box = $('#gr-calc'); box.innerHTML = '';
+  box.append(h('div', { class: 'gstats' },
+    h('div', { class: 'stat' }, h('span', null, 'γ = N_L − N_P + 1'), h('b', null, String(g))),
+    h('div', { class: 'stat' }, h('span', null, 'E_c = 6γ équations'), h('b', null, g >= 0 ? String(6 * g) : '—'))));
+  if (g < 0) box.append(h('div', { class: 'verdict no', html: '<b>Graphe non connexe.</b> Il faut N<sub>L</sub> ≥ N<sub>P</sub> − 1 pour relier toutes les pièces.' }));
+  else if (g === 0) box.append(h('div', { class: 'verdict yes', html: '<b>γ = 0 :</b> chaîne ouverte (arbre), aucune fermeture à écrire.' }));
+  else box.append(h('div', { class: 'verdict warn', html: '<b>γ = ' + g + ' :</b> chaîne fermée, ' + g + ' fermeture(s) cinématique(s) indépendante(s).' }));
+}
+WORKSHOPS.push({ id: 'graphe', title: 'Graphe des liaisons', hint: 'Construire le graphe, compter les cycles, reconnaître série, parallèle et cycle.', mount: mountGraphe,
+  reset: () => { GR.step = 0; GR.nl = 4; GR.np = 4; } });
+
+/* ============ EXEMPLES DE MÉCANISMES (partagés ateliers 4, 5, 7) ============ */
+const CHAINES_DATA = [
+  { nom: 'Bras de robot (3 pivots en série)', court: 'Robot 3 pivots', type: 'ouverte', NL: 3, NP: 4, Ic: 3, m: 3,
+    g: () => graphDraw(lineGraph(['Pivot (O, z)', 'Pivot (A, y)', 'Pivot (B, y)'])),
+    why: 'Aucune boucle : γ = 0. Chaque liaison apporte ses mobilités (m = I<sub>c</sub> = 3) et h = 0 : une chaîne ouverte est toujours isostatique.' },
+  { nom: 'Pivot + glissière + sphérique en série', court: 'Chaîne P-G-S', type: 'ouverte', NL: 3, NP: 4, Ic: 5, m: 5,
+    g: () => graphDraw(lineGraph(['Pivot (O, z)', 'Glissière (x)', 'Sphérique (B)'])),
+    why: 'Même raisonnement : m = I<sub>c</sub> = 1 + 1 + 3 = 5 et h = 0.' },
+  { nom: 'Porte sur deux charnières coaxiales', court: 'Porte 2 pivots', type: 'fermee', NL: 2, NP: 2, Ic: 2, m: 1,
+    g: () => graphPar(['Pivot (A, z)', 'Pivot (B, z)']),
+    why: 'Les axes (A, z) et (B, z), avec B = A + z, sont confondus. Une boucle (γ = 1) : seule la rotation de la porte est possible (m = 1) mais I<sub>c</sub> = 2 seulement : h = 6 + 1 − 2 = <b>5</b>.' },
+  { nom: 'Bielle-manivelle spatiale (3 pivots + glissière)', court: 'Bielle-manivelle P-P-P-G', type: 'fermee', NL: 4, NP: 4, Ic: 4, m: 1,
+    g: () => graphDraw(ringGraph('Pivot (O, z)', 'Pivot (A, z)', 'Pivot (B, z)', 'Glissière (x)')),
+    why: 'Les axes (O, z), (A, z), (B, z) sont parallèles : sur les 6 équations de la fermeture, seules 3 sont utiles (r<sub>c</sub> = 3). h = 6 + 1 − 4 = <b>3</b>. (Le modèle plan, lui, est isostatique.)' },
+  { nom: 'Bielle-manivelle isostatique (pivot, 2 sphériques, glissière)', court: 'Bielle-manivelle P-S-S-G', type: 'fermee', NL: 4, NP: 4, Ic: 8, m: 2,
+    g: () => graphDraw(ringGraph('Pivot (O, z)', 'Sphérique (A)', 'Sphérique (B)', 'Glissière (x)')),
+    why: 'm = 2 : 1 mobilité utile (rotation de la manivelle) + 1 mobilité interne (rotation propre de la bielle autour de la droite (AB)). h = 6 + 2 − 8 = <b>0</b>.' }
+];
+function chH(c) { return 6 * (c.NL - c.NP + 1) + c.m - c.Ic; }
 
 /* ============ ATELIER 4 : MOBILITÉ ============ */
-const MH = { g: 1, m: 1, ic: 3 };
+const MH = { nl: 4, np: 4, ic: 4, m: 1 };
 function mountMob(root) {
   root.innerHTML = '<h2>4. Mobilité et hyperstatisme</h2>'
-    + '<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b></div>'
+    + '<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b> &nbsp; avec &nbsp; γ = N<sub>L</sub> − N<sub>P</sub> + 1</div>'
     + '<ul><li><b>γ</b> : nombre de cycles indépendants du graphe</li>'
-    + '<li><b>m</b> : degré de mobilité</li>'
-    + '<li><b>I<sub>c</sub></b> : total des inconnues cinématiques (somme des ddl)</li>'
-    + '<li><b>h</b> : degré d\'hyperstatisme</li></ul>'
+    + '<li><b>m</b> : mobilité = I<sub>c</sub> − r<sub>c</sub> (r<sub>c</sub> : rang du système de fermetures)</li>'
+    + '<li><b>I<sub>c</sub></b> : inconnues cinématiques = somme des ddl des liaisons</li>'
+    + '<li><b>h</b> : degré d\'hyperstatisme = 6γ − r<sub>c</sub> (toujours ≥ 0)</li></ul>'
+    + '<p class="small">Charger un exemple :</p><div class="chips" id="mh-pre"></div>'
     + '<div class="opts">'
-    + '<label class="fld"><span>γ = <b id="mh-g-out">1</b></span><input type="range" id="mh-g" min="0" max="6" step="1" value="1"></label>'
-    + '<label class="fld"><span>m = <b id="mh-m-out">1</b></span><input type="range" id="mh-m" min="0" max="6" step="1" value="1"></label>'
-    + '<label class="fld"><span>I<sub>c</sub> = <b id="mh-ic-out">3</b></span><input type="range" id="mh-ic" min="0" max="20" step="1" value="3"></label>'
+    + '<label class="fld"><span>N<sub>L</sub> = <b id="mh-nl-o"></b></span><input type="range" id="mh-nl" min="1" max="12" step="1" value="4"></label>'
+    + '<label class="fld"><span>N<sub>P</sub> = <b id="mh-np-o"></b></span><input type="range" id="mh-np" min="2" max="10" step="1" value="4"></label>'
+    + '<label class="fld"><span>I<sub>c</sub> = <b id="mh-ic-o"></b></span><input type="range" id="mh-ic" min="0" max="40" step="1" value="4"></label>'
+    + '<label class="fld"><span>m = <b id="mh-m-o"></b></span><input type="range" id="mh-m" min="0" max="10" step="1" value="1"></label>'
     + '</div>'
     + '<div class="gstats" id="mh-stats"></div>'
     + '<div class="verdict" id="mh-msg"></div>'
     + '<div class="cards">'
-    + '<div class="card"><h4>h = 0</h4><p>Isostatique : toutes les inconnues de liaison sont déterminables.</p></div>'
-    + '<div class="card"><h4>h > 0</h4><p>Hyperstatique : sur-contrainte. Risque de blocage et de contraintes internes.</p></div>'
-    + '<div class="card"><h4>Chaîne ouverte</h4><p>Toujours isostatique : γ = 0 et m = I<sub>c</sub>.</p></div>'
+    + '<div class="card"><h4>h = 0</h4><p>Isostatique : toutes les inconnues de liaison sont déterminées par la statique.</p></div>'
+    + '<div class="card"><h4>h &gt; 0</h4><p>Hyperstatique : h conditions redondantes. Montage exigeant (tolérances), contraintes internes possibles.</p></div>'
+    + '<div class="card"><h4>Chaîne ouverte</h4><p>γ = 0 donc r<sub>c</sub> = 0, m = I<sub>c</sub> et h = 0 : toujours isostatique.</p></div>'
     + '</div>';
-  ['g', 'm', 'ic'].forEach(k => {
-    $('#mh-' + k).addEventListener('input', e => { MH[k] = +e.target.value; renderMH(); });
-  });
-  renderMH();
+  const pre = $('#mh-pre');
+  CHAINES_DATA.forEach(c => pre.append(h('button', { type: 'button', class: 'chip', onclick: () => { MH.nl = c.NL; MH.np = c.NP; MH.ic = c.Ic; MH.m = c.m; syncMH(); renderMH(); } }, c.court)));
+  ['nl', 'np', 'ic', 'm'].forEach(k => $('#mh-' + k).addEventListener('input', e => { MH[k] = +e.target.value; renderMH(); }));
+  syncMH(); renderMH();
 }
+function syncMH() { ['nl', 'np', 'ic', 'm'].forEach(k => { $('#mh-' + k).value = MH[k]; }); }
 function renderMH() {
-  $('#mh-g-out').textContent = MH.g;
-  $('#mh-m-out').textContent = MH.m;
-  $('#mh-ic-out').textContent = MH.ic;
-  const hVal = 6 * MH.g + MH.m - MH.ic;
+  ['nl', 'np', 'ic', 'm'].forEach(k => { $('#mh-' + k + '-o').textContent = MH[k]; });
+  const g = MH.nl - MH.np + 1, hVal = 6 * g + MH.m - MH.ic, rc = MH.ic - MH.m;
   const stats = $('#mh-stats'); stats.innerHTML = '';
+  const bad = hVal < 0 || g < 0 || MH.m > MH.ic;
   stats.append(
-    h('div', { class: 'stat' }, h('span', null, '6γ'), h('b', null, String(6 * MH.g))),
-    h('div', { class: 'stat' }, h('span', null, '+ m'), h('b', null, String(MH.m))),
-    h('div', { class: 'stat' }, h('span', null, '− I<sub>c</sub>'), h('b', null, String(MH.ic))),
-    h('div', { class: 'stat', style: hVal === 0 ? 'border-color:var(--ok);background:rgba(30,122,46,.05)' : 'border-color:var(--bad)' },
-      h('span', null, 'h'), h('b', { style: 'color:' + (hVal === 0 ? 'var(--ok)' : 'var(--bad)') }, String(hVal)))
-  );
+    h('div', { class: 'stat' }, h('span', null, 'γ'), h('b', null, String(g))),
+    h('div', { class: 'stat' }, h('span', { html: '6γ' }), h('b', null, String(6 * g))),
+    h('div', { class: 'stat' }, h('span', { html: 'r<sub>c</sub> = I<sub>c</sub> − m' }), h('b', null, String(rc))),
+    h('div', { class: 'stat', style: 'border-color:' + (bad ? 'var(--warn)' : hVal === 0 ? 'var(--ok)' : 'var(--bad)') },
+      h('span', null, 'h = 6γ + m − I_c'), h('b', { style: 'color:' + (bad ? 'var(--warn)' : hVal === 0 ? 'var(--ok)' : 'var(--bad)') }, String(hVal))));
   const msg = $('#mh-msg');
-  if (hVal === 0) { msg.className = 'verdict yes'; msg.innerHTML = '<b>✓ Isostatique</b> (h = 0). Toutes les inconnues sont déterminables.'; }
-  else if (hVal > 0) { msg.className = 'verdict no'; msg.innerHTML = '<b>✗ Hyperstatique de degré ' + hVal + '</b>. ' + hVal + ' équation(s) de trop : contraintes internes possibles.'; }
-  else { msg.className = 'verdict warn'; msg.innerHTML = '<b>⚠ h négatif</b> : mobilité non contrôlée.'; }
+  if (g < 0) { msg.className = 'verdict warn'; msg.innerHTML = '<b>⚠ Graphe non connexe</b> : il faut N<sub>L</sub> ≥ N<sub>P</sub> − 1.'; }
+  else if (MH.ic > 5 * MH.nl) { msg.className = 'verdict warn'; msg.innerHTML = '<b>⚠ Incohérent</b> : une liaison a au plus 5 ddl, donc I<sub>c</sub> ≤ 5·N<sub>L</sub> = ' + 5 * MH.nl + '.'; }
+  else if (MH.m > MH.ic) { msg.className = 'verdict warn'; msg.innerHTML = '<b>⚠ Incohérent</b> : m = I<sub>c</sub> − r<sub>c</sub> ne peut pas dépasser I<sub>c</sub>.'; }
+  else if (hVal < 0) { msg.className = 'verdict warn'; msg.innerHTML = '<b>⚠ Paramètres incohérents</b> : h = 6γ − r<sub>c</sub> est toujours ≥ 0, car r<sub>c</sub> ≤ 6γ. Ici r<sub>c</sub> = ' + rc + ' &gt; 6γ = ' + 6 * g + '.'; }
+  else if (hVal === 0) { msg.className = 'verdict yes'; msg.innerHTML = '<b>✓ Isostatique</b> (h = 0).' + (g === 0 ? ' C\'est une chaîne ouverte.' : ''); }
+  else { msg.className = 'verdict no'; msg.innerHTML = '<b>✗ Hyperstatique de degré ' + hVal + '</b> : ' + hVal + ' condition(s) redondante(s).'; }
 }
-WORKSHOPS.push({ id: 'mob', title: 'Mobilité et hyperstatisme', hint: 'Calculer h = 6γ + m − Ic.', mount: mountMob,
-  reset: () => { MH.g = 1; MH.m = 1; MH.ic = 3; } });
+WORKSHOPS.push({ id: 'mob', title: 'Mobilité et hyperstatisme', hint: 'Calculer h = 6γ + m − Ic sur des exemples ou des valeurs libres.', mount: mountMob,
+  reset: () => { MH.nl = 4; MH.np = 4; MH.ic = 4; MH.m = 1; } });
 
 /* ============ ATELIER 5 : CHAÎNES ============ */
 const CH = { mode: 'ouverte', idx: 0 };
 function mountChaines(root) {
   root.innerHTML = '<h2>5. Chaînes ouvertes et fermées</h2>'
     + '<ul><li><b>Chaîne ouverte</b> : γ = 0 (pas de cycle). Ex : bras de robot. Toujours isostatique.</li>'
-    + '<li><b>Chaîne fermée</b> : γ ≥ 1 (au moins un cycle). Ex : pompe. Isostatique ou hyperstatique.</li></ul>'
+    + '<li><b>Chaîne fermée</b> : γ ≥ 1 (au moins un cycle). Ex : porte, bielle-manivelle. Isostatique ou hyperstatique selon les liaisons choisies.</li></ul>'
     + '<div class="chips" id="ch-modes"></div>'
-    + '<div id="ch-content"></div>'
-    + '<div id="ch-msg"></div>';
+    + '<div id="ch-content"></div>';
   renderCH();
 }
 function renderCH() {
   const mb = $('#ch-modes'); mb.innerHTML = '';
   mb.append(...[['ouverte', 'Chaînes ouvertes'], ['fermee', 'Chaînes fermées']].map(([v, l]) => h('button', {
-    type: 'button', class: 'chip' + (CH.mode === v ? ' on' : ''),
+    type: 'button', class: 'chip' + (CH.mode === v ? ' on' : ''), 'aria-pressed': CH.mode === v ? 'true' : 'false',
     onclick: () => { CH.mode = v; CH.idx = 0; renderCH(); }
   }, l)));
   const list = CHAINES_DATA.filter(c => c.type === CH.mode);
-  const item = list[CH.idx];
-  const content = $('#ch-content'); content.innerHTML = '';
-  content.append(h('div', { class: 'task-row' },
-    h('div', null,
-      h('h4', null, item.nom),
-      h('p', { style: 'font-size:13px;margin:2px 0' }, 'N_c = ' + item.nc + ', r_c = ' + item.rc + ' → m = ' + item.m + ', h = ' + item.h)
-    ),
-    h('div', { class: 'chips' }, list.map((x, i) => h('button', {
-      type: 'button', class: 'chip' + (i === CH.idx ? ' on' : ''),
-      onclick: () => { CH.idx = i; renderCH(); }
-    }, String(i + 1))))
-  ));
-  const msg = $('#ch-msg'); msg.innerHTML = '';
-  msg.append(h('div', { class: 'verdict ' + (item.h === 0 ? 'yes' : 'warn') },
+  const item = list[CH.idx], g = item.NL - item.NP + 1, hv = chH(item);
+  const box = $('#ch-content'); box.innerHTML = '';
+  box.append(h('div', { class: 'chips' }, list.map((x, i) => h('button', {
+    type: 'button', class: 'chip' + (i === CH.idx ? ' on' : ''), 'aria-pressed': i === CH.idx ? 'true' : 'false',
+    onclick: () => { CH.idx = i; renderCH(); }
+  }, x.nom))));
+  box.append(h('div', { class: 'gfig' }, h('p', { class: 'gcap', html: '<b>Graphe des liaisons</b> (bâti = double cercle)' }), h('div', { html: item.g() })));
+  box.append(h('div', { class: 'gstats' },
+    h('div', { class: 'stat' }, h('span', null, 'N_L / N_P'), h('b', null, item.NL + ' / ' + item.NP)),
+    h('div', { class: 'stat' }, h('span', null, 'γ'), h('b', null, String(g))),
+    h('div', { class: 'stat' }, h('span', null, 'I_c'), h('b', null, String(item.Ic))),
+    h('div', { class: 'stat' }, h('span', null, 'm'), h('b', null, String(item.m))),
+    h('div', { class: 'stat', style: 'border-color:' + (hv === 0 ? 'var(--ok)' : 'var(--bad)') }, h('span', null, 'h'), h('b', { style: 'color:' + (hv === 0 ? 'var(--ok)' : 'var(--bad)') }, String(hv)))));
+  box.append(h('div', { class: 'verdict ' + (hv === 0 ? 'yes' : 'warn') },
     h('p', { html: '<b>Explication :</b> ' + item.why }),
-    h('p', { html: '<b>Bilan :</b> ' + (item.h === 0 ? 'Isostatique ✓' : 'Hyperstatique (h = ' + item.h + ') ⚠') })
-  ));
+    h('p', { html: '<b>Bilan :</b> ' + (hv === 0 ? 'Isostatique ✓' : 'Hyperstatique (h = ' + hv + ') ⚠') })));
 }
-WORKSHOPS.push({ id: 'chaines', title: 'Chaînes ouvertes / fermées', hint: 'Étudier des cas concrets.', mount: mountChaines,
+WORKSHOPS.push({ id: 'chaines', title: 'Chaînes ouvertes / fermées', hint: 'Étudier des cas concrets avec leur graphe de liaisons.', mount: mountChaines,
   reset: () => { CH.mode = 'ouverte'; CH.idx = 0; } });
 
 /* ============ ATELIER 6 : RENDRE ISOSTATIQUE ============ */
-const ISO = { example: 0, showFix: false };
-const ISO_DATA = [
-  {
-    id: 'sph-sph',
-    nom: 'Deux sphériques en parallèle',
-    config: 'Un solide relié au bâti par deux liaisons <b>sphériques</b>, de centres A et B distincts. C\'est un cas classique de pivot hyperstatique.',
-    avant: { NL: 2, NP: 2, gamma: 1, m: 1, Ic: 6, h: 1, verdict: 'Pivot hyperstatique de degré 1', tc: 'Sphérique (3 ddl) + Sphérique (3 ddl) = 6 ddl',
-      why: 'La composition de deux rotations autour de centres distincts ne permet que la rotation autour de l\'axe AB. Une équation de trop : h = 6·1 + 1 − 6 = 1.' },
-    fix: {
-      change: 'On remplace une des deux <b>sphériques</b> par une <b>sphère-cylindre</b> (4 ddl).',
-      NL: 2, NP: 2, gamma: 1, m: 1, Ic: 7, h: 0, verdict: 'Pivot isostatique', tc: 'Sphérique (3 ddl) + Sphère-cylindre (4 ddl) = 7 ddl',
-      why: 'La sphère-cylindre ajoute une inconnue cinématique (la translation selon son axe). h = 6·1 + 1 − 7 = 0.'
-    }
-  },
-  {
-    id: 'pg-pg',
-    nom: 'Deux pivot-glissants parallèles non coaxiaux',
-    config: 'Un solide relié au bâti par deux <b>pivot-glissants</b> d\'axe x, montés en parallèle mais non coaxiaux (décalés en y).',
-    avant: { NL: 2, NP: 2, gamma: 1, m: 1, Ic: 4, h: 3, verdict: 'Glissière hyperstatique de degré 3', tc: 'Pivot glissant (2 ddl) + Pivot glissant (2 ddl) = 4 ddl',
-      why: 'La rotation autour de x est bloquée par le décalage. Les deux pivot-glissants imposent la même translation Vx, créant 3 redondances : h = 6·1 + 1 − 4 = 3.' },
-    fix: {
-      change: 'On remplace un <b>pivot-glissant</b> par une <b>sphère-plan</b> (3 ddl), dont l\'orientation est choisie pour supprimer les redondances inutiles.',
-      NL: 2, NP: 2, gamma: 1, m: 1, Ic: 7, h: 0, verdict: 'Glissière isostatique', tc: 'Pivot glissant (2 ddl) + Sphère-plan (3 ddl) = 5 ddl',
-      why: 'La sphère-plan apporte une contrainte supplémentaire mais dans une direction qui était déjà bloquée : h = 6·1 + 1 − 7 = 0. (Selon l\'orientation, h peut varier entre 0 et 2 ; la configuration h = 0 est celle retenue dans le cours.)'
-    }
-  },
-  {
-    id: 'piv-piv',
-    nom: 'Deux pivots coaxiaux (porte)',
-    config: 'Une porte reliée au bâti par deux <b>pivots</b> d\'axe z, coaxiaux (les deux charnières sur le même axe).',
-    avant: { NL: 2, NP: 2, gamma: 1, m: 1, Ic: 2, h: 1, verdict: 'Pivot hyperstatique de degré 1', tc: 'Pivot (1 ddl) + Pivot (1 ddl) = 2 ddl',
-      why: 'Deux pivots coaxiaux imposent la même rotation : une des deux est redondante. h = 6·1 + 1 − 2 = 5... en fait h = 1 par équivalence.' },
-    fix: {
-      change: 'On remplace un <b>pivot</b> par une <b>sphère-cylindre</b> (4 ddl) d\'axe z.',
-      NL: 2, NP: 2, gamma: 1, m: 1, Ic: 5, h: 0, verdict: 'Pivot isostatique', tc: 'Pivot (1 ddl) + Sphère-cylindre (4 ddl) = 5 ddl',
-      why: 'La sphère-cylindre apporte les translations bloquées par le deuxième pivot. h = 6·1 + 1 − 7... le calcul exact dépend de la géométrie ; le principe est le même : augmenter Ic pour annuler h.'
-    }
-  }
+const ISO_PRE = [
+  { nom: 'Porte : 2 pivots coaxiaux', l: [{ t: 'pivot', o: 'z', p: 'A' }, { t: 'pivot', o: 'z', p: 'B' }],
+    texte: `Une porte est reliée au bâti par deux charnières modélisées par deux <b>pivots coaxiaux</b> d'axes ${axS('A', 'z')} et ${axS('B', 'z')}, avec B = A + z : B appartient à l'axe (A, ${VH('z')}), les deux axes sont confondus. Le mouvement voulu est la rotation autour de cet axe.`,
+    indice: `Remplacer un seul pivot par une sphère-cylindre d'axe ${axS('A', 'z')} donne I<sub>c</sub> = 5 et h = 2 : <b>toujours hyperstatique</b>. Il faut gagner h = 5 ddl au total (I<sub>c</sub> de 2 à 7), donc modifier les deux liaisons (+3 et +2).`,
+    sol: `Sphère-cylindre d'axe ${axS('A', 'z')} en A + <b>appui plan</b> de normale ${axS('B', 'z')} en B : I<sub>c</sub> = 4 + 3 = 7, h = 0. Ce n'est pas la seule solution : sphérique + sphère-cylindre, pivot glissant + sphère-plan de normale ${VH('z')}, sphérique à doigt + sphère-plan… (recherche exhaustive ci-dessous). <b>Piège :</b> sphère-cylindre + <b>sphère-plan</b> (5 ddl) donne I<sub>c</sub> = 9 et m = 3, soit une sphérique : ce n'est plus un pivot.` },
+  { nom: '2 sphériques (pivot)', l: [{ t: 'spherique', o: 'z', p: 'A' }, { t: 'spherique', o: 'z', p: 'B' }],
+    texte: `Un solide est relié au bâti par deux <b>sphériques</b> de centres A et B, avec B = A + z : c'est un pivot d'axe ${axS('A', 'z')}, hyperstatique de degré 1.`,
+    indice: `h = 1 : il suffit de gagner 1 ddl, en remplaçant une sphérique par une liaison à 4 ddl dont la direction est celle de l'axe (AB).`,
+    sol: `Remplacer une sphérique par une <b>sphère-cylindre d'axe ${axS('B', 'z')}</b> (son axe passe par A) : I<sub>c</sub> = 3 + 4 = 7, h = 0.` },
+  { nom: '2 pivots glissants non coaxiaux', l: [{ t: 'pivotglissant', o: 'z', p: 'A' }, { t: 'pivotglissant', o: 'z', p: 'C' }],
+    texte: `Un solide est guidé par deux <b>pivots glissants</b> d'axes ${axS('A', 'z')} et ${axS('C', 'z')}, avec C = A + x : les axes sont parallèles mais <b>pas coaxiaux</b> (AC n'est pas colinéaire à ${VH('z')}). L'entraxe bloque la rotation : on obtient une glissière de direction ${VH('z')}, hyperstatique de degré 3.`,
+    indice: `Il faut gagner h = 3 ddl en modifiant une seule liaison, sans libérer la rotation autour de ${'z'} : la normale de la liaison choisie doit être perpendiculaire à ${'z'} et à AC.`,
+    sol: `Garder le pivot glissant d'axe ${axS('A', 'z')} et remplacer l'autre par une <b>sphère-plan</b> de normale ${axS('C', 'y')} : I<sub>c</sub> = 2 + 5 = 7, h = 0. La recherche exhaustive montre que c'est la seule solution (à l'échange des deux liaisons près).` }
 ];
+const ISO = { pre: 0, l: [], showHint: false, showSol: false, found: null };
+function isoLoad(i) {
+  const p = ISO_PRE[i];
+  ISO.pre = i; ISO.l = p.l.map(x => ({ t: x.t, o: x.o, p: x.p })); ISO.showHint = false; ISO.showSol = false; ISO.found = null;
+}
+function isoCur() { return parallel(ISO.l); }
+function isoRef() { return parallel(ISO_PRE[ISO.pre].l); }
+const DIRV = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
+function axisRel(a, b) {
+  const ka = LTYPES[a.t].kind, kb = LTYPES[b.t].kind;
+  if (ka !== 'axe' || kb !== 'axe') return '';
+  const u = DIRV[a.o], v = DIRV[b.o];
+  const cr = (p, q) => [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
+  const nul = w => Math.abs(w[0]) + Math.abs(w[1]) + Math.abs(w[2]) < 1e-9;
+  if (!nul(cr(u, v))) return 'Les deux axes n\'ont pas la même direction.';
+  const P = PTS[a.p], Q = PTS[b.p], ab = [Q[0] - P[0], Q[1] - P[1], Q[2] - P[2]];
+  return nul(cr(ab, u)) ? 'Axes <b>coaxiaux</b> : même direction et AB colinéaire à ' + VH(a.o) + ' (axes confondus).'
+    : 'Axes <b>parallèles non coaxiaux</b> : même direction mais AB n\'est pas colinéaire à ' + VH(a.o) + '.';
+}
 function mountIso(root) {
   root.innerHTML = '<h2>6. Rendre un système isostatique</h2>'
-    + '<p>Un système <b>hyperstatique</b> a des contraintes redondantes : les inconnues de liaison ne peuvent pas toutes être déterminées, et des contraintes internes apparaissent. Pour le rendre <b>isostatique</b>, il faut <b>augmenter I<sub>c</sub></b> (remplacer une liaison par une autre avec plus de ddl).</p>'
-    + '<div class="cards" id="iso-cards"></div>'
-    + '<div id="iso-content"></div>'
-    + '<div class="files" style="margin-top:10px">'
-    + '<button class="btn" id="iso-prev">◀ Exemple précédent</button>'
-    + '<button class="btn" id="iso-toggle">Voir la correction</button>'
-    + '<button class="btn" id="iso-next">Exemple suivant ▶</button>'
-    + '</div>'
-    + '<div id="iso-detail"></div>';
+    + '<p>Un système <b>hyperstatique</b> a h conditions redondantes. Pour le rendre <b>isostatique</b> sans changer son fonctionnement (même liaison équivalente, donc même m), il faut :</p>'
+    + '<ol><li>calculer h = 6γ + m − I<sub>c</sub> ;</li><li><b>augmenter I<sub>c</sub> de h</b> en remplaçant des liaisons par d\'autres ayant plus de ddl ;</li><li>vérifier que ces ddl ajoutés <b>libèrent les bonnes directions</b> : le simple calcul de h ne suffit pas, la liaison équivalente doit rester la même.</li></ol>'
+    + '<p class="small">Chaque liaison est placée en un point (A, B, C ou D) et orientée par un vecteur (x, y ou z) : un axe est un point et un vecteur. Repère : A = origine, B = A + z, C = A + x, D = A + y.</p>'
+    + '<div class="chips" id="iso-pre"></div>'
+    + '<div id="iso-text"></div>'
+    + '<h3>Banc d\'essai : deux liaisons en parallèle entre un solide et le bâti</h3>'
+    + '<div class="liaison-pair" id="iso-sel"></div>'
+    + '<div id="iso-res"></div>';
   renderIso();
-  $('#iso-prev').addEventListener('click', () => { ISO.example = (ISO.example - 1 + ISO_DATA.length) % ISO_DATA.length; ISO.showFix = false; renderIso(); });
-  $('#iso-next').addEventListener('click', () => { ISO.example = (ISO.example + 1) % ISO_DATA.length; ISO.showFix = false; renderIso(); });
-  $('#iso-toggle').addEventListener('click', () => { ISO.showFix = !ISO.showFix; renderIso(); });
+}
+function isoSelector(idx, title) {
+  const l = ISO.l[idx], T = LTYPES[l.t];
+  const selT = h('select', { 'aria-label': 'Type de la liaison ' + (idx + 1), onchange: e => { l.t = e.target.value; ISO.found = null; renderIso(); } },
+    Object.keys(LTYPES).map(k => h('option', { value: k, selected: k === l.t }, LTYPES[k].nom + ' (' + LTYPES[k].libre.length + ' ddl)')));
+  const noDir = T.kind === 'centre' || T.kind === null;
+  const selO = h('select', { 'aria-label': 'Vecteur de la liaison ' + (idx + 1), disabled: noDir, onchange: e => { l.o = e.target.value; ISO.found = null; renderIso(); } },
+    ['z', 'x', 'y'].map(o => h('option', { value: o, selected: o === l.o }, 'vecteur ' + o)));
+  const noPt = T.kind === 'dir' || T.kind === null;
+  const selP = h('select', { 'aria-label': 'Point de la liaison ' + (idx + 1), disabled: noPt, onchange: e => { l.p = e.target.value; ISO.found = null; renderIso(); } },
+    Object.keys(PTS).map(p => h('option', { value: p, selected: p === l.p }, PTDESC[p])));
+  return h('div', { class: 'card' }, h('h4', null, title),
+    h('div', { class: 'skthumb', html: skSvg(l.t, 0, l.p, l.o) }),
+    h('label', { class: 'fld' }, h('span', null, 'Liaison'), selT),
+    h('label', { class: 'fld' }, h('span', null, 'Vecteur (direction de l\'axe, normale…)'), selO),
+    h('label', { class: 'fld' }, h('span', null, 'Point (centre, point de l\'axe…)'), selP),
+    h('p', { class: 'small', html: lname(l.t, l.o, l.p) }));
 }
 function renderIso() {
-  const cards = $('#iso-cards'); cards.innerHTML = '';
-  ISO_DATA.forEach((ex, i) => {
-    cards.append(h('div', {
-      class: 'card', style: 'cursor:pointer;' + (i === ISO.example ? 'border-color:var(--accent);background:var(--accent-soft)' : ''),
-      onclick: () => { ISO.example = i; ISO.showFix = false; renderIso(); }
-    }, h('h4', null, ex.nom)));
-  });
-  const ex = ISO_DATA[ISO.example];
-  const content = $('#iso-content'); content.innerHTML = '';
-  content.append(h('div', { class: 'verdict warn', html: '<b>Configuration initiale.</b> ' + ex.config }));
-  const detail = $('#iso-detail'); detail.innerHTML = '';
-  const state = ISO.showFix ? ex.fix : ex.avant;
-  detail.append(h('h3', null, ISO.showFix ? 'Après correction' : 'Avant correction'));
-  if (ISO.showFix) {
-    detail.append(h('div', { class: 'verdict yes', html: '<b>Correction :</b> ' + ex.fix.change }));
-  }
-  detail.append(
-    h('div', { class: 'dwrap' }, h('table', { class: 'dt' },
-      h('tbody', null,
-        h('tr', null, h('td', null, 'N<sub>L</sub> (liaisons)'), h('td', { class: 'm' }, String(state.NL))),
-        h('tr', null, h('td', null, 'N<sub>P</sub> (pièces)'), h('td', { class: 'm' }, String(state.NP))),
-        h('tr', null, h('td', null, 'γ'), h('td', { class: 'm' }, String(state.gamma))),
-        h('tr', null, h('td', null, 'm'), h('td', { class: 'm' }, String(state.m))),
-        h('tr', null, h('td', null, 'I<sub>c</sub>'), h('td', { class: 'm' }, String(state.Ic))),
-        h('tr', null, h('td', null, 'h = 6γ + m − I<sub>c</sub>'), h('td', { class: 'm', style: 'font-weight:600;color:' + (state.h === 0 ? 'var(--ok)' : 'var(--bad)') }, String(state.h))),
-        h('tr', null, h('td', null, 'Verdict'), h('td', { class: 'm', style: 'color:' + (state.h === 0 ? 'var(--ok)' : 'var(--bad)') }, state.verdict))
-      ))),
-    h('div', { class: 'verdict ' + (state.h === 0 ? 'yes' : 'warn') },
-      h('p', { html: '<b>Détail :</b> ' + state.why }),
-      h('p', { html: '<b>Torseurs :</b> ' + state.tc })
-    )
-  );
-  $('#iso-toggle').textContent = ISO.showFix ? 'Voir la configuration initiale' : 'Voir la correction';
+  const p = ISO_PRE[ISO.pre];
+  const pre = $('#iso-pre'); pre.innerHTML = '';
+  ISO_PRE.forEach((x, i) => pre.append(h('button', { type: 'button', class: 'chip' + (i === ISO.pre ? ' on' : ''), 'aria-pressed': i === ISO.pre ? 'true' : 'false', onclick: () => { isoLoad(i); renderIso(); } }, x.nom)));
+  const txt = $('#iso-text'); txt.innerHTML = '';
+  txt.append(h('div', { class: 'verdict warn', html: '<b>Problème.</b> ' + p.texte }));
+  const row = h('div', { class: 'files' },
+    h('button', { class: 'btn', type: 'button', onclick: () => { ISO.showHint = !ISO.showHint; renderIso(); } }, ISO.showHint ? 'Masquer l\'indice' : 'Indice'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { ISO.showSol = !ISO.showSol; renderIso(); } }, ISO.showSol ? 'Masquer la solution' : 'Voir la solution'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { isoLoad(ISO.pre); renderIso(); } }, 'Réinitialiser le montage'));
+  txt.append(row);
+  if (ISO.showHint) txt.append(h('div', { class: 'verdict', html: '<b>Indice.</b> ' + p.indice }));
+  if (ISO.showSol) txt.append(h('div', { class: 'verdict yes', html: '<b>Solution.</b> ' + p.sol }));
+  const sel = $('#iso-sel'); sel.innerHTML = '';
+  sel.append(isoSelector(0, 'Liaison 1'), isoSelector(1, 'Liaison 2'));
+  renderIsoRes();
 }
-WORKSHOPS.push({ id: 'isostatique', title: 'Rendre isostatique', hint: 'Deux exemples classiques de correction d\'hyperstatisme.', mount: mountIso,
-  reset: () => { ISO.example = 0; ISO.showFix = false; } });
+function renderIsoRes() {
+  const box = $('#iso-res'); box.innerHTML = '';
+  const r = isoCur(), ref = isoRef();
+  const sameEq = r.eq && sameSpace(r.N, ref.N);
+  const eqLab = r.eq ? r.eq.short : 'non normalisée';
+  const rel = axisRel(ISO.l[0], ISO.l[1]);
+  if (rel) box.append(h('p', { class: 'small', html: '<b>Géométrie :</b> ' + rel }));
+  box.append(h('div', { class: 'gfig' },
+    h('p', { class: 'gcap', html: '<b>Graphe de liaisons du montage</b> (2 arcs en parallèle entre 1 et 2) et liaison équivalente' }),
+    h('div', { html: graphPar(ISO.l.map(x => llab(x.t, x.o, x.p))) }),
+    h('div', { html: graphChain([eqLab]) })));
+  box.append(h('div', { class: 'gstats' },
+    h('div', { class: 'stat' }, h('span', null, 'I_c = Σ ddl'), h('b', null, String(r.Ic))),
+    h('div', { class: 'stat' }, h('span', null, 'm'), h('b', null, String(r.m))),
+    h('div', { class: 'stat' }, h('span', null, 'h initial'), h('b', null, String(ref.h))),
+    h('div', { class: 'stat', style: 'border-color:' + (r.h === 0 ? 'var(--ok)' : 'var(--bad)') }, h('span', null, 'h actuel = 6 + m − I_c'), h('b', { style: 'color:' + (r.h === 0 ? 'var(--ok)' : 'var(--bad)') }, String(r.h))),
+    h('div', { class: 'stat' }, h('span', null, 'liaison équivalente'), h('b', null, r.eq ? r.eq.short : 'non normalisée (m = ' + r.m + ')'))));
+  const refName = ref.eq ? ref.eq.nom : '—';
+  if (r.h === 0 && sameEq) box.append(h('div', { class: 'verdict yes', html: '<b>✓ Isostatique</b> et même liaison équivalente que le problème initial (' + r.eq.nom + ', torseur ' + eqTorseur(r.eq) + ').' }));
+  else if (r.h === 0) box.append(h('div', { class: 'verdict warn', html: '<b>Isostatique, mais la liaison équivalente a changé</b> : ' + (r.eq ? r.eq.nom : 'non normalisée') + ' au lieu de ' + refName + '. Le cahier des charges n\'est plus respecté.' }));
+  else box.append(h('div', { class: 'verdict no', html: '<b>✗ Hyperstatique de degré ' + r.h + '.</b> ' + (sameEq ? 'Il faut encore gagner ' + r.h + ' ddl en gardant la même liaison équivalente.' : 'De plus, la liaison équivalente (' + (r.eq ? r.eq.nom : 'non normalisée') + ') n\'est pas celle du problème (' + refName + ').') }));
+  const btn = h('button', { class: 'btn pri', type: 'button', onclick: () => {
+    const ps = ISO_PRE[ISO.pre].l;
+    ISO.found = searchPairs(ISO.l[0].p, ISO.l[1].p, ref.N); renderIsoRes();
+  } }, 'Chercher toutes les solutions isostatiques');
+  box.append(h('div', { class: 'files', style: 'margin-top:10px' }, btn));
+  if (ISO.found) {
+    const f = ISO.found, shown = f.slice(0, 80);
+    box.append(h('p', { class: 'small', style: 'margin-top:8px', html: f.length + ' couple(s) (liaison 1 en ' + ISO.l[0].p + ', liaison 2 en ' + ISO.l[1].p + ') donnent le mouvement du problème initial (' + refName + ') avec h = 0'
+      + (f.length ? ', tous avec I<sub>c</sub> = ' + f[0].Ic : '') + '. Les couples sont ordonnés : (liaison 1, liaison 2) et (liaison 2, liaison 1) comptent à part quand ils diffèrent.' }));
+    box.append(h('ul', { class: 'sollist' }, shown.map(x => h('li', { html: lname(x.t1, x.o1, x.p1) + ' &nbsp;+&nbsp; ' + lname(x.t2, x.o2, x.p2) }))));
+    if (f.length > shown.length) box.append(h('p', { class: 'small' }, '… et ' + (f.length - shown.length) + ' autres.'));
+  }
+}
+WORKSHOPS.push({ id: 'isostatique', title: 'Rendre isostatique', hint: 'Tester des montages (type, vecteur, point), voir pourquoi un seul changement ne suffit pas, chercher les solutions.', mount: mountIso,
+  reset: () => { isoLoad(0); } });
 
 /* ============ ATELIER 7 : MÉTHODES ============ */
-const MET = { mode: 'statique' };
+const MET = { mode: 'statique', nl: 4, np: 4 };
 const MET_DATA = {
   statique: {
     titre: 'Méthode statique (PFS)',
-    quand: 'Graphe en <b>pieuvre</b> (beaucoup de boucles, hyperstatique) ou mécanisme complexe à isoler.',
-    principe: 'Écrire le <b>PFS</b> pour chaque solide ou groupe de solides judicieusement choisi. Choisir les isolements qui font disparaître les inconnues de liaison. Résoudre le système (jusqu\'à 6 équations par solide).',
+    quand: 'Recherche des <b>efforts dans les liaisons</b>, graphe dense (« pieuvre » : γ grand devant N<sub>P</sub> − 1), évaluation de l\'hyperstatisme.',
+    principe: 'Écrire le <b>PFS</b> sur des solides ou groupes de solides isolés : au plus <b>6(N<sub>P</sub> − 1)</b> équations scalaires, pour I<sub>s</sub> = 6N<sub>L</sub> − I<sub>c</sub> inconnues de liaison. Si h &gt; 0, h inconnues restent indéterminées.',
     etapes: [
-      { t: 'Graphe d\'analyse', c: 'Construire le graphe des liaisons. Identifier les classes et les liaisons.' },
-      { t: 'Choisir l\'isolant', c: 'Isoler le solide ou groupe qui fait apparaître les efforts connus et le moins d\'inconnues possible.' },
-      { t: 'Bilan des efforts', c: 'Inventorier les torseurs des actions extérieures (pesanteur, moteur, liaisons).' },
-      { t: 'Écrire le PFS', c: 'Appliquer le théorème de la résultante et/ou du moment au point et sur l\'axe bien choisis.' },
-      { t: 'Résoudre', c: 'Projeter sur une base, obtenir un système d\'équations scalaires, résoudre.' }
+      { t: 'Graphe d\'analyse', c: 'Construire le graphe des liaisons ; repérer classes et liaisons.' },
+      { t: 'Choisir l\'isolement', c: 'Isoler d\'abord le solide qui fait apparaître le moins d\'inconnues (par exemple un solide soumis à deux glisseurs).' },
+      { t: 'Bilan des actions', c: 'Inventorier les torseurs des actions extérieures (pesanteur, moteur, liaisons).' },
+      { t: 'Écrire le PFS', c: 'Théorème de la résultante et du moment en un point bien choisi.' },
+      { t: 'Résoudre', c: 'Projeter, obtenir un système d\'équations scalaires, résoudre de proche en proche.' }
     ],
     exemple: {
-      nom: 'Suspension MacPherson (pieuvre)',
-      desc: 'Une suspension de voiture : 5 pièces, 4 liaisons, plusieurs boucles. Le graphe est une vraie "pieuvre". On isole successivement le triangle, le bras, la roue… pour déterminer les efforts dans chaque liaison.',
+      nom: 'Bielle-manivelle plane (efforts)',
+      desc: 'On cherche le couple moteur sur la manivelle pour équilibrer un effort extérieur sur le piston.',
       etapes: [
-        'Isoler le triangle supérieur → PFS → 2 équations utiles',
-        'Isoler l\'ensemble triangle + porte-fusée → PFS → 3 équations',
-        'Isoler la roue → PFS → 1 équation',
-        'Résoudre le système (6 équations) pour trouver les efforts'
+        'Isoler la <b>bielle</b> : seulement deux liaisons (en A et B), pas de charge : deux glisseurs, directement opposés selon (AB).',
+        'Isoler le <b>piston</b> : PFS avec l\'effort extérieur, la glissière et l\'action de la bielle → intensité de l\'action de la bielle.',
+        'Isoler la <b>manivelle</b> : PFS en moment en O → couple moteur recherché.'
       ],
-      note: 'Le PFS donne autant d\'équations que d\'inconnues si l\'isolement est bien choisi. Chaque isolement élimine les inconnues internes.'
+      note: 'Chaque isolement élimine des inconnues internes. Le choix de l\'ordre des isolements limite le nombre d\'équations à écrire.'
     }
   },
   cinematique: {
     titre: 'Méthode cinématique (fermeture)',
-    quand: 'Graphe avec <b>une seule boucle</b> (ou peu de boucles), isostatique ou hyperstatique simple.',
-    principe: 'Écrire la <b>fermeture cinématique</b> pour chaque boucle indépendante : la somme des torseurs cinématiques le long de la boucle est nulle. Résoudre le système (jusqu\'à 6 équations par boucle).',
+    quand: '<b>Mobilité</b> et <b>loi entrée-sortie en vitesse</b>, graphe avec peu de boucles (γ petit devant N<sub>P</sub> − 1).',
+    principe: 'Écrire la <b>fermeture cinématique</b> de chaque boucle indépendante : la somme des torseurs cinématiques le long du cycle est nulle. Au total <b>E<sub>c</sub> = 6γ</b> équations scalaires pour I<sub>c</sub> inconnues ; m = I<sub>c</sub> − r<sub>c</sub>.',
     etapes: [
       { t: 'Graphe d\'analyse', c: 'Construire le graphe, identifier les cycles indépendants.' },
-      { t: 'Fermeture', c: 'Écrire V₁ + V₂ + … + Vₙ = 0 pour chaque cycle.' },
-      { t: 'Projection', c: 'Projeter sur une base, obtenir un système d\'équations scalaires.' },
-      { t: 'Résolution', c: 'Résoudre pour trouver les inconnues cinématiques (vitesses, mobilités).' }
+      { t: 'Fermeture', c: 'Écrire V₁ + V₂ + … + Vₙ = 0 pour chaque cycle, torseurs exprimés au même point.' },
+      { t: 'Projection', c: 'Projeter sur une base : système d\'équations scalaires.' },
+      { t: 'Résolution', c: 'Fixer l\'entrée, résoudre pour les autres inconnues cinématiques ; le rang donne m.' }
     ],
     exemple: {
-      nom: 'Quatre-barres (1 boucle)',
-      desc: 'Un mécanisme à 4 barres reliées par 4 pivots forme une seule boucle. La fermeture cinématique s\'écrit : V_pivot1 + V_pivot2 + V_pivot3 + V_pivot4 = 0.',
+      nom: 'Bielle-manivelle plane (loi entrée-sortie)',
+      desc: 'Un seul cycle (γ = 1) : fermeture V<sub>1/0</sub> + V<sub>2/1</sub> + V<sub>3/2</sub> + V<sub>0/3</sub> = 0.',
       etapes: [
-        'V = { ωz ; 0 } pour chaque pivot (4 fois)',
-        'V₁ + V₂ + V₃ + V₄ = 0 → 1 équation scalaire (ωz)',
-        'On obtient la relation entre les vitesses angulaires',
-        'Le système à 6 équations se réduit ici à 1 seule équation scalaire'
+        'Écrire les 4 torseurs au point O : pivots { ω z ; vitesse du point } et glissière { 0 ; V x }.',
+        'Projeter : en modèle plan, 3 équations non triviales (composante ωz et deux composantes de vitesse).',
+        'Inconnues : ω<sub>21</sub>, ω<sub>32</sub>, V<sub>03</sub> une fois l\'entrée ω<sub>10</sub> fixée : 3 équations, 3 inconnues.',
+        'On en déduit la vitesse du piston en fonction de ω<sub>10</sub> : loi entrée-sortie.'
       ],
-      note: 'Pour une seule boucle, la fermeture donne un système de 6 équations dont seules quelques-unes sont utiles. C\'est beaucoup plus rapide qu\'un PFS complet.'
+      note: 'En modèle spatial, la fermeture donne 6 équations dont seulement 3 sont indépendantes (r<sub>c</sub> = 3) : m = 4 − 3 = 1 et h = 6 − 3 = 3.'
     }
   }
 };
+const MET_PRE = [
+  { nom: 'Robot 3 pivots (ouvert)', nl: 3, np: 4 },
+  { nom: 'Bielle-manivelle (1 boucle)', nl: 4, np: 4 },
+  { nom: 'Graphe dense (pieuvre)', nl: 9, np: 4 }
+];
 function mountMethodes(root) {
   root.innerHTML = '<h2>7. Méthodes statique et cinématique</h2>'
-    + '<p>Deux méthodes pour résoudre un mécanisme. Le choix dépend de la <b>topologie du graphe</b> :</p>'
+    + '<p>Deux méthodes pour résoudre un mécanisme. Le choix dépend de l\'<b>objectif</b> (vitesses ou efforts) et de la <b>topologie du graphe</b> : on compare le nombre d\'équations à écrire.</p>'
     + '<div class="cards">'
-    + '<div class="card"><h4>Pieuvre</h4><p>Beaucoup de boucles, hyperstatique → <b>statique (PFS)</b>.</p></div>'
-    + '<div class="card"><h4>Une seule boucle</h4><p>Peu de cycles, isostatique → <b>cinématique (fermeture)</b>.</p></div>'
+    + '<div class="card"><h4>Cinématique</h4><p>E<sub>c</sub> = 6γ équations (γ = N<sub>L</sub> − N<sub>P</sub> + 1).</p></div>'
+    + '<div class="card"><h4>Statique</h4><p>E<sub>s</sub> = 6(N<sub>P</sub> − 1) équations.</p></div>'
     + '</div>'
+    + '<p class="small">Comparateur :</p><div class="chips" id="met-pre"></div>'
+    + '<div class="opts">'
+    + '<label class="fld"><span>N<sub>L</sub> = <b id="met-nl-o"></b></span><input type="range" id="met-nl" min="1" max="14" step="1" value="4"></label>'
+    + '<label class="fld"><span>N<sub>P</sub> = <b id="met-np-o"></b></span><input type="range" id="met-np" min="2" max="10" step="1" value="4"></label>'
+    + '</div><div id="met-calc"></div>'
     + '<div class="methode-tab" id="met-tabs"></div>'
     + '<div id="met-content"></div>';
-  renderMet();
+  const pre = $('#met-pre');
+  MET_PRE.forEach(p => pre.append(h('button', { type: 'button', class: 'chip', onclick: () => { MET.nl = p.nl; MET.np = p.np; $('#met-nl').value = p.nl; $('#met-np').value = p.np; renderMetCalc(); } }, p.nom)));
+  $('#met-nl').value = MET.nl; $('#met-np').value = MET.np;
+  $('#met-nl').addEventListener('input', e => { MET.nl = +e.target.value; renderMetCalc(); });
+  $('#met-np').addEventListener('input', e => { MET.np = +e.target.value; renderMetCalc(); });
+  renderMetCalc(); renderMet();
+}
+function renderMetCalc() {
+  $('#met-nl-o').textContent = MET.nl; $('#met-np-o').textContent = MET.np;
+  const g = MET.nl - MET.np + 1, box = $('#met-calc'); box.innerHTML = '';
+  if (g < 0) { box.append(h('div', { class: 'verdict warn', html: '<b>Graphe non connexe</b> : il faut N<sub>L</sub> ≥ N<sub>P</sub> − 1.' })); return; }
+  const Ec = 6 * g, Es = 6 * (MET.np - 1);
+  box.append(h('div', { class: 'gstats' },
+    h('div', { class: 'stat' }, h('span', null, 'γ'), h('b', null, String(g))),
+    h('div', { class: 'stat' }, h('span', null, 'E_c = 6γ'), h('b', null, String(Ec))),
+    h('div', { class: 'stat' }, h('span', null, 'E_s = 6(N_P − 1)'), h('b', null, String(Es)))));
+  let txt, cls = 'yes';
+  if (g === 0) txt = '<b>Chaîne ouverte (γ = 0) :</b> aucune fermeture à écrire ; la cinématique se réduit à composer les torseurs.';
+  else if (Ec < Es) txt = '<b>Cinématique plus économique</b> (' + Ec + ' équations contre ' + Es + ') pour la mobilité et la loi entrée-sortie.';
+  else if (Ec > Es) { txt = '<b>Statique plus économique</b> (' + Es + ' équations contre ' + Ec + ') : typique d\'une « pieuvre ».'; cls = 'warn'; }
+  else txt = '<b>Équivalent</b> : même nombre d\'équations (' + Ec + ').';
+  box.append(h('div', { class: 'verdict ' + cls, html: txt + '<br><span class="small">À objectif égal. Pour les efforts dans les liaisons, la statique reste incontournable.</span>' }));
 }
 function renderMet() {
   const tabs = $('#met-tabs'); tabs.innerHTML = '';
@@ -634,121 +1316,128 @@ function renderMet() {
     h('ol', null, d.exemple.etapes.map(s => h('li', { html: s })))));
   content.append(h('p', { class: 'small', html: d.exemple.note }));
 }
-WORKSHOPS.push({ id: 'methodes', title: 'Statique / cinématique', hint: 'Choisir la méthode selon la topologie du graphe.', mount: mountMethodes,
-  reset: () => { MET.mode = 'statique'; } });
+WORKSHOPS.push({ id: 'methodes', title: 'Statique / cinématique', hint: 'Choisir la méthode en comparant le nombre d\'équations.', mount: mountMethodes,
+  reset: () => { MET.mode = 'statique'; MET.nl = 4; MET.np = 4; } });
 
 /* ============ ACTIVITÉS ============ */
 const ACT = {
   liaisons: {
     title: 'Liaisons normalisées', level: 'Niveau 1', time: '20 min', course: 'liaisons',
-    goal: 'Connaître les liaisons et leurs torseurs cinématiques (nomenclature sphérique, sphère-plan, sphère-cylindre).',
+    goal: 'Connaître les 11 liaisons normalisées, leurs ddl, leur torseur cinématique et la dualité avec les actions transmissibles.',
     steps: [
-      'Parcourez le tableau. Combien de ddl pour une sphérique ? une sphère-plan ? une sphère-cylindre ?',
-      'Cliquez sur chaque liaison pour voir son torseur.',
-      'Retenez la dualité : torseur cinématique a (6 − ddl) composantes, torseur d\'actions a ddl composantes.',
-      'Associez une liaison à son usage : sphérique = rotule, sphère-plan = appui plan, sphère-cylindre = doigt dans un alésage.'
+      'Parcourez le tableau et classez les liaisons de 0 à 5 ddl.',
+      'Cliquez sur chaque liaison : repérez mouvements autorisés et actions transmissibles.',
+      'Vérifiez la dualité : ddl + nombre d\'inconnues statiques = 6.',
+      'Pour chaque liaison, repérez sur le schéma le point (A) et le vecteur (flèche verte) qui la caractérisent : un axe, c\'est un point et un vecteur.',
+      'Avec le sélecteur « Schémas » (3D, 2D, 3D + 2D), comparez la vue spatiale et les deux vues planes (de profil et de face) de chaque liaison.',
+      'Attention aux anciens noms : ponctuelle = sphère-plan (5 ddl) ; appui plan = plan-plan (3 ddl) ; rotule = sphérique.'
     ],
-    defi: { q: 'Combien de ddl possèdent une sphérique, une sphère-plan, une sphère-cylindre ?', a: '<b>Sphérique : 3</b> (3 rotations). <b>Sphère-plan : 3</b> (2 rotations + 1 translation dans le plan). <b>Sphère-cylindre : 4</b> (3 rotations + 1 translation selon l\'axe).' },
+    defi: { q: 'Une liaison a 4 inconnues statiques. Combien de ddl ? Donnez deux exemples.', a: '6 − 4 = <b>2 ddl</b> : pivot glissant (X, Y, L, M) ou sphérique à doigt (X, Y, Z, N).' },
     qcm: [
       { q: 'Une liaison sphérique a…', o: ['1 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 1, w: 'La sphérique autorise 3 rotations autour de son centre.' },
-      { q: 'Une sphère-plan a…', o: ['1 ddl', '2 ddl', '3 ddl', '5 ddl'], a: 2, w: '2 rotations + 1 translation dans le plan.' },
-      { q: 'Une sphère-cylindre a…', o: ['2 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 2, w: '3 rotations + 1 translation selon l\'axe du cylindre.' },
-      { q: 'Quel est le torseur de la sphère-plan ?', o: ['{ ωz ; 0 }', '{ ωx, ωy ; Vz }', '{ ωx, ωy, ωz ; 0 }', '{ 0 ; 0 }'], a: 1, w: '2 rotations dans le plan + 1 translation normale.' },
-      { q: 'La liaison ponctuelle a…', o: ['2 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 3, w: 'Ponctuelle = 5 ddl (1 seule translation bloquée).' }
+      { q: 'Une sphère-plan (ex-ponctuelle) a…', o: ['1 ddl', '3 ddl', '4 ddl', '5 ddl'], a: 3, w: '3 rotations + 2 translations : seule la translation selon la normale est bloquée.' },
+      { q: 'Quelle liaison a pour inconnues statiques Z, L, M (normale z) ?', o: ['Sphérique', 'Appui plan (plane)', 'Sphère-cylindre', 'Sphère-plan'], a: 1, w: 'L\'appui plan : 3 ddl (ωz, Vx, Vy) et 3 inconnues statiques.' },
+      { q: 'Une sphère-cylindre a 4 ddl. Combien d\'inconnues statiques ?', o: ['1', '2', '3', '4'], a: 1, w: '6 − 4 = 2 (deux forces perpendiculaires à l\'axe).' },
+      { q: 'Le torseur { ωz ; Vx, Vy } est celui de…', o: ['Pivot glissant', 'Sphère-plan', 'Appui plan (plane)', 'Sphérique'], a: 2, w: 'Rotation autour de la normale + 2 translations dans le plan : appui plan.' },
+      { q: 'Une liaison pivot est caractérisée par…', o: ['Un point seulement', 'Un vecteur seulement', 'Son axe : un point et un vecteur directeur', 'Deux points quelconques'], a: 2, w: 'L\'axe (A, z) est la droite passant par A et dirigée par z : il donne le centre et la direction de rotation.' }
     ]
   },
   equiv: {
     title: 'Liaison équivalente', level: 'Niveau 2', time: '20 min', course: 'equivalente',
-    goal: 'Composer des liaisons en série (somme) et en parallèle (restriction).',
+    goal: 'Déterminer la liaison équivalente en série (somme) et en parallèle (intersection), et repérer l\'hyperstatisme.',
     steps: [
-      'Série : Pivot + Glissière (même axe) → Pivot glissant.',
-      'Parallèle : 2 sphériques → Pivot hyperstatique.',
-      '2 pivots en parallèle → Pivot glissant (h = 1).',
-      'Retenez : série = somme des torseurs, parallèle = intersection.'
+      'Série : testez « 3 pivots concourants » puis « 2 pivots concourants » : comparez avec la sphérique.',
+      'Série : testez « Glissière x + Glissière y + Pivot z ».',
+      'Parallèle : « 2 pivots coaxiaux » : relevez I_c, m, h.',
+      'Comparez « 2 sphériques » (h = 1) et « sphérique + sphère-cylindre » (h = 0) : même équivalente, hyperstatisme différent.',
+      'Observez les graphes : une série est une chaîne 0 — 1 — 2…, un parallèle est un ensemble d\'arcs entre 0 et 1. Comparez « 2 pivots coaxiaux » et « 2 pivots parallèles non coaxiaux » : le point de l\'axe compte autant que le vecteur.'
     ],
-    defi: { q: 'Que donne 2 sphériques en parallèle ?', a: 'Un <b>pivot hyperstatique de degré 1</b>. Les deux sphériques imposent la même rotation autour de l\'axe joignant leurs centres.' },
+    defi: { q: 'Que donnent 2 pivots coaxiaux en parallèle ? Calculez h.', a: 'Un pivot. I<sub>c</sub> = 2, m = 1, γ = 1 : h = 6 + 1 − 2 = <b>5</b>.' },
     qcm: [
-      { q: 'En série, les torseurs…', o: ['S\'ajoutent', 'S\'intersectent', 'Se multiplient', 'S\'annulent'], a: 0, w: 'V_eq = V1 + V2.' },
-      { q: 'Pivot + Glissière même axe →', o: ['Pivot', 'Glissière', 'Pivot glissant', 'Sphérique'], a: 2, w: 'Rotation + translation selon le même axe.' },
-      { q: '2 sphériques en parallèle →', o: ['Sphérique', 'Pivot hyperstatique', 'Glissière', 'Pivot glissant'], a: 1, w: 'Pivot hyperstatique de degré 1.' },
-      { q: '2 pivots en parallèle →', o: ['Pivot', 'Pivot glissant (h=1)', 'Sphérique', 'Encastrement'], a: 1, w: 'Pivot glissant hyperstatique de degré 1.' },
-      { q: 'En parallèle, le degré h peut être…', o: ['Nul', 'Positif', 'Négatif', 'Infini'], a: 1, w: 'Les redondances créent h > 0.' }
+      { q: 'En série, le torseur de la liaison équivalente est…', o: ['La somme des torseurs', 'L\'intersection', 'Le produit', 'Nul'], a: 0, w: 'V_eq = V1 + V2 + …' },
+      { q: 'En parallèle, les mouvements possibles sont…', o: ['Leur somme', 'Leur intersection', 'Leur produit', 'Toujours nuls'], a: 1, w: 'Seuls subsistent les mouvements compatibles avec toutes les liaisons.' },
+      { q: 'Pour obtenir une sphérique en série à partir de pivots, il faut…', o: ['2 pivots d\'axes différents', '3 pivots concourants d\'axes indépendants', '1 pivot + 1 glissière', '2 glissières'], a: 1, w: 'Deux pivots concourants donnent seulement 2 rotations (sphérique à doigt).' },
+      { q: '2 sphériques de centres distincts en parallèle →', o: ['Sphérique', 'Pivot d\'axe AB, h = 1', 'Pivot glissant', 'Glissière, h = 0'], a: 1, w: 'I_c = 6, m = 1 : h = 6 + 1 − 6 = 1.' },
+      { q: '2 pivots coaxiaux en parallèle : h = ?', o: ['0', '1', '5', '6'], a: 2, w: 'h = 6 + 1 − 2 = 5.' },
+      { q: 'Deux pivots d\'axes (A, z) et (B, z) sont coaxiaux si…', o: ['B = A', 'AB est colinéaire à z', 'AB est orthogonal à z', 'Toujours'], a: 1, w: 'Même direction z et B sur la droite (A, z) : le vecteur AB est colinéaire à z. Sinon les axes sont seulement parallèles.' }
     ]
   },
   graphe: {
     title: 'Graphe des liaisons', level: 'Niveau 2', time: '20 min', course: 'graphe',
     goal: 'Construire un graphe et compter les cycles.',
-    steps: ['Identifier les classes.', 'Identifier les liaisons.', 'Tracer le graphe.', 'Compter γ = N_L − N_P + 1.', 'Écrire les fermetures.'],
-    defi: { q: 'Un mécanisme a 5 pièces et 6 liaisons. Combien de cycles ?', a: 'γ = N_L − N_P + 1 = 6 − 5 + 1 = <b>2</b>.' },
+    steps: ['Identifier les classes d\'équivalence.', 'Identifier les liaisons.', 'Tracer le graphe.', 'Compter γ = N_L − N_P + 1.', 'Écrire les fermetures.', 'Dans la galerie, repérez une série (chaîne), un parallèle (arcs multiples entre 0 et 1) et un cycle.'],
+    defi: { q: 'Un mécanisme a 5 pièces et 6 liaisons. Combien de cycles ?', a: 'γ = N<sub>L</sub> − N<sub>P</sub> + 1 = 6 − 5 + 1 = <b>2</b>.' },
     qcm: [
-      { q: 'γ se calcule par…', o: ['N_P − N_L + 1', 'N_L − N_P + 1', 'N_L + N_P', 'N_P/N_L'], a: 1, w: 'γ = N_L − N_P + 1.' },
+      { q: 'γ se calcule par…', o: ['N_P − N_L + 1', 'N_L − N_P + 1', 'N_L + N_P', 'N_P / N_L'], a: 1, w: 'γ = N_L − N_P + 1.' },
       { q: 'Une chaîne ouverte a…', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ infini'], a: 0, w: 'Pas de cycle.' },
-      { q: 'Le graphe sert à…', o: ['Repérer les chaînes', 'Calculer les efforts', 'Choisir les matériaux', 'Rien'], a: 0, w: 'Il met en évidence les cycles.' },
-      { q: 'Une fermeture cinématique donne…', o: ['1 équation', '3 équations', '6 équations au plus', '12 équations'], a: 2, w: 'Un torseur a 6 composantes.' },
-      { q: 'Le graphe est…', o: ['À l\'échelle', 'Abstrait', 'Un dessin technique', 'Une photo'], a: 1, w: 'C\'est une représentation abstraite.' }
+      { q: 'Bielle-manivelle (bâti, manivelle, bielle, piston ; 4 liaisons) : γ = ?', o: ['0', '1', '2', '3'], a: 1, w: 'γ = 4 − 4 + 1 = 1.' },
+      { q: 'Une fermeture cinématique donne au plus…', o: ['1 équation', '3 équations', '6 équations', '12 équations'], a: 2, w: 'Un torseur a 6 composantes.' },
+      { q: 'Les nœuds du graphe représentent…', o: ['Les liaisons', 'Les classes d\'équivalence', 'Les forces', 'Les axes'], a: 1, w: 'Nœuds = classes, arcs = liaisons.' }
     ]
   },
   mob: {
     title: 'Mobilité et hyperstatisme', level: 'Niveau 3', time: '20 min', course: 'mobilite',
-    goal: 'Calculer h = 6γ + m − I_c.',
-    steps: ['Augmentez I_c jusqu\'à h = 0.', 'Un chaîne ouverte a h = 0.', 'h > 0 → hyperstatique.'],
+    goal: 'Calculer h = 6γ + m − I_c, l\'interpréter et repérer des paramètres incohérents.',
+    steps: ['Chargez « Porte 2 pivots » : relevez h.', 'Chargez les deux bielles-manivelles : comparez I_c et m.', 'Chaîne ouverte (γ = 0, m = I_c) : h = 0 toujours.', 'Essayez d\'obtenir h < 0 : que signale l\'atelier ?'],
     defi: { q: 'γ = 2, m = 1, I_c = 11. h ?', a: 'h = 12 + 1 − 11 = <b>2</b> : hyperstatique de degré 2.' },
     qcm: [
       { q: 'h = ?', o: ['6γ + m − I_c', '6γ − m + I_c', 'γ + m + I_c', '6γ − m − I_c'], a: 0, w: 'Formule fondamentale.' },
-      { q: 'h = 0 signifie…', o: ['Hyperstatique', 'Isostatique', 'Hypostatique', 'Bloqué'], a: 1, w: 'Isostatique : toutes les inconnues déterminables.' },
+      { q: 'h = 0 signifie…', o: ['Hyperstatique', 'Isostatique', 'Mécanisme bloqué', 'Chaîne fermée'], a: 1, w: 'Isostatique : aucune redondance.' },
       { q: 'Chaîne ouverte → h = ?', o: ['0', '1', 'm', '6γ'], a: 0, w: 'γ = 0 et m = I_c.' },
-      { q: 'h > 0 signifie…', o: ['Isostatique', 'Hyperstatique', 'Hypostatique', 'Rien'], a: 1, w: 'Contraintes redondantes.' },
-      { q: 'Si h = 3, le mécanisme est…', o: ['Isostatique', 'Hyperstatique de degré 3', 'Bloqué', 'Mécanisme à 3 mobilités'], a: 1, w: 'h = 3 : hyperstatique de degré 3.' }
+      { q: 'Un calcul donne h < 0. Cela signifie…', o: ['Un mécanisme très mobile', 'Des paramètres incohérents', 'Un système isostatique', 'Une chaîne ouverte'], a: 1, w: 'h = 6γ − r_c ≥ 0 car r_c ≤ 6γ : h < 0 est impossible.' },
+      { q: 'Porte sur deux charnières coaxiales : h = ?', o: ['0', '1', '5', '6'], a: 2, w: 'γ = 1, m = 1, I_c = 2 : h = 6 + 1 − 2 = 5.' }
     ]
   },
   chaines: {
     title: 'Chaînes ouvertes / fermées', level: 'Niveau 2', time: '15 min', course: 'chaines',
-    goal: 'Distinguer les deux types de chaînes.',
-    steps: ['Chaîne ouverte : γ = 0.', 'Chaîne fermée : γ ≥ 1.', 'Ouverte → isostatique.'],
-    defi: { q: 'Pourquoi une chaîne ouverte est-elle isostatique ?', a: 'γ = 0 et m = I_c, donc h = 0.' },
+    goal: 'Distinguer les deux types de chaînes et interpréter m et h.',
+    steps: ['Chaîne ouverte : γ = 0.', 'Chaîne fermée : γ ≥ 1.', 'Ouverte → isostatique.', 'Comparez les deux bielles-manivelles.', 'Lisez chaque graphe : arbre (γ = 0) ou boucle ? Arcs en série ou en parallèle ?'],
+    defi: { q: 'Pourquoi une chaîne ouverte est-elle isostatique ?', a: 'γ = 0 donc r<sub>c</sub> = 0 : m = I<sub>c</sub> et h = 6·0 + m − I<sub>c</sub> = 0.' },
     qcm: [
       { q: 'Chaîne ouverte →', o: ['γ = 0', 'γ = 1', 'γ > 1', 'γ < 0'], a: 0, w: 'Pas de cycle.' },
-      { q: 'Bras de robot →', o: ['Chaîne ouverte', 'Chaîne fermée', 'Mixte', 'Infinie'], a: 0, w: 'Chaîne ouverte.' },
-      { q: 'Chaîne fermée →', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Parfois les deux', 'Jamais hyperstatique'], a: 2, w: 'Peut être isostatique ou hyperstatique.' },
-      { q: 'Pompe à pistons →', o: ['Ouverte', 'Fermée', 'Mixte', 'Infinie'], a: 1, w: 'Chaîne fermée.' },
-      { q: 'γ se calcule par…', o: ['N_L − N_P + 1', 'N_P − N_L + 1', 'N_L + N_P', 'N_L × N_P'], a: 0, w: 'γ = N_L − N_P + 1.' }
+      { q: 'Bras de robot à 3 pivots en série →', o: ['Chaîne ouverte', 'Chaîne fermée', 'Mixte', 'Hyperstatique'], a: 0, w: 'Chaîne ouverte, h = 0.' },
+      { q: 'Une chaîne fermée est…', o: ['Toujours isostatique', 'Toujours hyperstatique', 'Isostatique ou hyperstatique', 'Jamais mobile'], a: 2, w: 'Cela dépend des liaisons choisies.' },
+      { q: 'Bielle-manivelle spatiale (3 pivots + glissière, axes parallèles) : h = ?', o: ['0', '1', '3', '6'], a: 2, w: 'I_c = 4, m = 1, γ = 1 : h = 6 + 1 − 4 = 3.' },
+      { q: 'Pourquoi m = 2 pour la bielle-manivelle pivot / 2 sphériques / glissière ?', o: ['Deux entrées', 'Une mobilité utile + la rotation propre de la bielle (mobilité interne)', 'Une erreur de modèle', 'Deux boucles'], a: 1, w: 'La bielle peut tourner librement autour de la droite joignant les deux sphériques.' }
     ]
   },
   isostatique: {
     title: 'Rendre un système isostatique', level: 'Niveau 3', time: '25 min', course: 'isostatique',
-    goal: 'Savoir corriger un hyperstatisme en remplaçant une liaison par une autre avec plus de ddl.',
+    goal: 'Savoir rendre un système isostatique en augmentant I_c de h sans changer la liaison équivalente.',
     steps: [
-      'Exemple 1 : deux sphériques → pivot hyperstatique (h = 1). Remplacer une sphérique par une sphère-cylindre → h = 0.',
-      'Exemple 2 : deux pivot-glissants non coaxiaux → glissière hyperstatique (h = 3). Remplacer un pivot-glissant par une sphère-plan → h = 0.',
-      'Exemple 3 : deux pivots coaxiaux → pivot hyperstatique. Remplacer un pivot par une sphère-cylindre → h = 0.',
-      'Principe : augmenter I_c en remplaçant une liaison par une autre avec plus de ddl.'
+      'Chargez « Porte » : 2 pivots coaxiaux, h = 5.',
+      'Remplacez un pivot par une sphère-cylindre d\'axe z : I_c = 5, h = 2. Toujours hyperstatique !',
+      'Remplacez l\'autre pivot par un appui plan de normale z : I_c = 7, h = 0.',
+      'Lancez la recherche exhaustive et repérez les autres solutions (sphérique + sphère-cylindre…).',
+      'Essayez sphère-cylindre + sphère-plan (5 ddl) : I_c = 9 et la liaison équivalente devient une sphérique, le cahier des charges n\'est plus respecté.',
+      'Changez le point ou le vecteur d\'une liaison (axes parallèles non coaxiaux, par exemple) : que devient la liaison équivalente ?'
     ],
-    defi: { q: 'Pourquoi deux sphériques en parallèle forment-elles un pivot hyperstatique ?', a: 'Chaque sphérique autorise 3 rotations autour de son centre. La composition de deux rotations autour de centres distincts ne permet que la rotation autour de l\'axe joignant les centres. On a donc m = 1 (pivot) mais I_c = 6, soit une équation de trop : h = 1. Pour rendre isostatique, on remplace une sphérique par une sphère-cylindre (4 ddl) : I_c = 7, h = 0.' },
+    defi: { q: 'Pourquoi remplacer un seul pivot par une sphère-cylindre ne suffit-il pas pour la porte ?', a: 'Au départ h = 5. Le pivot (1 ddl) devient une sphère-cylindre (4 ddl) : I<sub>c</sub> passe de 2 à 5, donc h = 6 + 1 − 5 = <b>2</b>. Il faut gagner encore 2 ddl : on remplace l\'autre pivot par un appui plan (3 ddl). Au total +3 +2 = +5 ddl, I<sub>c</sub> = 7, h = 0.' },
     qcm: [
-      { q: 'Pour rendre un système isostatique, il faut…', o: ['Augmenter I_c', 'Diminuer I_c', 'Changer m', 'Rien'], a: 0, w: 'On remplace une liaison par une autre avec plus de ddl, ce qui augmente I_c.' },
-      { q: '2 sphériques en parallèle →', o: ['Sphérique', 'Pivot hyperstatique h=1', 'Glissière', 'Encastrement'], a: 1, w: 'Pivot hyperstatique de degré 1.' },
-      { q: 'Pour corriger 2 sphériques hyperstatiques, on remplace une sphérique par…', o: ['Un pivot', 'Une glissière', 'Une sphère-cylindre', 'Un encastrement'], a: 2, w: 'La sphère-cylindre (4 ddl) apporte l\'inconnue manquante.' },
-      { q: '2 pivot-glissants non coaxiaux →', o: ['Pivot', 'Glissière h=3', 'Sphérique', 'Pivot glissant'], a: 1, w: 'Glissière hyperstatique de degré 3.' },
-      { q: 'Pour corriger 2 pivot-glissants, on remplace un pivot-glissant par…', o: ['Une sphérique', 'Une sphère-plan', 'Un pivot', 'Un encastrement'], a: 1, w: 'La sphère-plan permet de supprimer les redondances.' }
+      { q: 'Deux pivots coaxiaux : h = ?', o: ['0', '2', '5', '6'], a: 2, w: 'h = 6 + 1 − 2 = 5.' },
+      { q: 'Pivot + sphère-cylindre (coaxiaux) en parallèle : h = ?', o: ['0', '2', '3', '5'], a: 1, w: 'I_c = 1 + 4 = 5 : h = 6 + 1 − 5 = 2.' },
+      { q: 'Pour rendre isostatique sans changer la fonction, il faut…', o: ['Diminuer I_c', 'Augmenter I_c de h en conservant m', 'Augmenter m', 'Supprimer une pièce'], a: 1, w: 'Et choisir des liaisons qui libèrent les bonnes directions.' },
+      { q: 'Sphère-cylindre (axe AB) en A + appui plan (normale AB) en B donne…', o: ['Une sphérique', 'Un pivot isostatique d\'axe AB', 'Une glissière', 'Un pivot hyperstatique'], a: 1, w: 'Inconnues statiques : X, Y (sphère-cylindre) + Z, L, M (appui plan) = celles du pivot.' },
+      { q: '2 sphériques en parallèle (h = 1) : quelle modification donne un pivot isostatique ?', o: ['Une sphérique devient un pivot', 'Une sphérique devient une sphère-cylindre d\'axe AB', 'Ajouter un encastrement', 'Aucune'], a: 1, w: 'I_c passe de 6 à 7 : h = 0, et la liaison équivalente reste un pivot.' },
+      { q: 'Sphère-cylindre d\'axe (A, z) + sphère-plan de normale z en B = A + z : on obtient…', o: ['Un pivot isostatique', 'Une sphérique (m = 3)', 'Un pivot hyperstatique', 'Un encastrement'], a: 1, w: 'I_c = 4 + 5 = 9 et m = 3 : le mouvement relatif est une sphérique, ce n\'est plus un pivot. Il faut un appui plan, pas une sphère-plan.' }
     ]
   },
   methodes: {
     title: 'Statique / cinématique', level: 'Niveau 3', time: '25 min', course: 'methodes',
-    goal: 'Savoir choisir entre PFS (statique) et fermeture cinématique selon la topologie du graphe.',
+    goal: 'Choisir entre PFS (statique) et fermeture cinématique en comparant le nombre d\'équations.',
     steps: [
-      'Graphe en pieuvre (beaucoup de boucles) → préférer la statique (PFS).',
-      'Graphe à une seule boucle → préférer la cinématique (fermeture).',
-      'Statique : isoler, bilan des efforts, PFS, résoudre.',
-      'Cinématique : fermeture V₁ + V₂ + … = 0, projeter, résoudre.',
-      'Les deux méthodes donnent un système d\'équations scalaires.'
+      'Chargez « Bielle-manivelle » dans le comparateur : E_c = 6, E_s = 18.',
+      'Chargez « Graphe dense » : E_c = 36, E_s = 18.',
+      'Statique : isoler, bilan des actions, PFS, résoudre.',
+      'Cinématique : fermeture V₁ + V₂ + … = 0, projeter, résoudre.'
     ],
-    defi: { q: 'Pourquoi la statique est-elle préférable pour une pieuvre ?', a: 'Dans une pieuvre, il y a beaucoup de cycles et de liaisons. La fermeture cinématique donnerait un très grand nombre d\'équations, dont beaucoup ne sont pas indépendantes. Le PFS, en isolant judicieusement chaque solide, permet de réduire le système et d\'éliminer les inconnues internes progressivement.' },
+    defi: { q: 'Pour N_P = 4 et N_L = 9, combien d\'équations donne chaque méthode ? Laquelle choisir ?', a: 'γ = 9 − 4 + 1 = 6. Cinématique : E<sub>c</sub> = 36. Statique : E<sub>s</sub> = 6(4 − 1) = 18. La <b>statique</b> est plus économique.' },
     qcm: [
-      { q: 'Pour une pieuvre, on préfère…', o: ['La statique (PFS)', 'La cinématique', 'Les deux', 'Aucune'], a: 0, w: 'Le PFS permet de réduire le système.' },
-      { q: 'Pour une seule boucle, on préfère…', o: ['La statique', 'La cinématique', 'Les deux', 'Aucune'], a: 1, w: 'La fermeture cinématique donne un système plus petit.' },
-      { q: 'La fermeture cinématique s\'écrit…', o: ['V₁ + V₂ + … = 0', 'F₁ + F₂ + … = 0', 'M₁ + M₂ + … = 0', 'Ec = 0'], a: 0, w: 'La somme des torseurs cinématiques le long d\'un cycle est nulle.' },
-      { q: 'Le PFS s\'écrit…', o: ['D = T', 'D = 0', 'T = 0', 'Ec = 0'], a: 0, w: 'D = T : torseur dynamique = torseur des efforts extérieurs.' },
-      { q: 'Combien d\'équations donne une fermeture cinématique ?', o: ['1', '3', '6 au plus', '12'], a: 2, w: 'Un torseur a 6 composantes.' }
+      { q: 'Nombre d\'équations de la méthode cinématique :', o: ['6(N_P − 1)', '6γ', '6N_L', 'N_L − N_P'], a: 1, w: 'Une fermeture par cycle indépendant, 6 équations chacune.' },
+      { q: 'Nombre d\'équations de la méthode statique :', o: ['6γ', '6(N_P − 1)', '6N_L', 'γ'], a: 1, w: 'PFS sur N_P − 1 solides (le bâti est exclu).' },
+      { q: 'N_P = 4, N_L = 9 : méthode la plus économique ?', o: ['Cinématique (36 éq.)', 'Statique (18 éq.)', 'Indifférent', 'Aucune'], a: 1, w: 'E_c = 36 > E_s = 18.' },
+      { q: 'Bielle-manivelle (N_P = 4, N_L = 4) :', o: ['Cinématique (6 éq.)', 'Statique (18 éq.)', 'Équivalent', 'Impossible'], a: 0, w: 'γ = 1 : E_c = 6 < E_s = 18.' },
+      { q: 'Quelle méthode donne les efforts dans les liaisons ?', o: ['La statique', 'La cinématique', 'Aucune', 'La fermeture'], a: 0, w: 'Les efforts s\'obtiennent par le PFS.' }
     ]
   }
 };
@@ -761,102 +1450,146 @@ COURSE.push({ id: 'intro', t: 'Introduction', h: `
 <ul><li>mettre en équation le problème ;</li><li>évaluer les possibilités de résolution ;</li><li>comparer des solutions technologiques ;</li><li>évaluer la montabilité et la robustesse.</li></ul>
 <div class="retain"><b>Objectif.</b> Déterminer si un mécanisme est isostatique ou hyperstatique, et calculer sa mobilité.</div>
 ` });
-COURSE.push({ id: 'liaisons', t: 'Liaisons normalisées', h: `
-<h3>Nomenclature</h3>
-<table class="ctable"><thead><tr><th>Liaison</th><th>ddl</th><th>Torseur cinématique</th></tr></thead><tbody>
-<tr><td>Pivot</td><td>1</td><td>{ ωz ; 0 }</td></tr>
-<tr><td>Glissière</td><td>1</td><td>{ 0 ; Vz }</td></tr>
-<tr><td>Hélicoïdale</td><td>1</td><td>{ ωz ; Vz } (liés)</td></tr>
-<tr><td>Pivot glissant</td><td>2</td><td>{ ωz ; Vz }</td></tr>
-<tr><td>Sphérique</td><td>3</td><td>{ ωx, ωy, ωz ; 0 }</td></tr>
-<tr><td>Sphère-plan</td><td>3</td><td>{ ωx, ωy ; Vz }</td></tr>
-<tr><td>Sphère-cylindre</td><td>4</td><td>{ ωx, ωy, ωz ; Vz }</td></tr>
-<tr><td>Cylindre-plan</td><td>4</td><td>{ ωx, ωy, ωz ; Vx }</td></tr>
-<tr><td>Ponctuelle</td><td>5</td><td>{ ωx, ωy, ωz ; Vx, Vy }</td></tr>
-<tr><td>Encastrement</td><td>0</td><td>{ 0 ; 0 }</td></tr>
+COURSE.push({ id: 'liaisons', t: 'Liaisons normalisées', h: () => `
+<h3>Un axe, c'est un point et un vecteur</h3>
+<p>Une droite de l'espace est définie par <b>un point</b> et <b>un vecteur directeur</b>. Pour une liaison pivot, l'<b>axe</b> ${axS('A', 'z')} est la droite passant par A et dirigée par ${VH('z')} : il fixe à la fois la position de la liaison (son <b>centre</b> A) et la direction de rotation (${VH('z')}).</p>
+<ul>
+<li>deux pivots d'axes (A, ${VH('z')}) et (B, ${VH('z')}) sont <b>coaxiaux</b> ⇔ le vecteur AB est colinéaire à ${VH('z')} (B appartient à l'axe (A, ${VH('z')})) ;</li>
+<li>deux pivots d'axes (A, ${VH('z')}) et (C, ${VH('z')}) avec AC non colinéaire à ${VH('z')} sont <b>parallèles non coaxiaux</b> ;</li>
+<li>la glissière ne dépend que d'une <b>direction</b> (aucun point) ; la sphérique que d'un <b>centre</b> (aucun vecteur) ; l'appui plan d'un <b>plan</b> (un point et une normale).</li>
+</ul>
+<h3>Nomenclature (11 liaisons)</h3>
+<p>Conventions de la fiche : axes et directions selon x, normale au plan selon z (sphérique à doigt : axe x, normale y). Torseurs exprimés au point A (ou C) de la liaison. Dans les ateliers 2 et 6, les axes sont pris selon z pour simplifier : cela revient à réorienter le repère.</p>
+<table class="ctable"><thead><tr><th>Liaison</th><th>ddl</th><th>Torseur cinématique</th><th>Actions transmissibles</th></tr></thead><tbody>
+${LIAISONS.map(l => `<tr><td>${l.nom}${l.alias ? ' <small>(' + l.alias + ')</small>' : ''}</td><td>${l.ddl}</td><td>${l.tc}</td><td>${l.act}</td></tr>`).join('')}
 </tbody></table>
+<h3>Schémas cinématiques</h3>
+${skLegend()}
+<p>Vue spatiale (3D), vue plane de profil et vue plane de face, comme sur la fiche de cours. Le sélecteur « Schémas » en haut de la page permet de n'afficher que la 3D ou que la 2D.</p>
+${liaisonCards()}
 <h3>Dualité</h3>
-<p>Le torseur cinématique a (6 − ddl) composantes non nulles. Le torseur des actions mécaniques transmissibles a ddl composantes non nulles.</p>
-<div class="retain"><b>À retenir.</b> Chaque liaison a un torseur cinématique et un torseur d'actions. Le nombre de ddl est le nombre de mouvements autorisés.</div>
+<p>Le torseur cinématique a <b>ddl</b> composantes non nulles ; le torseur des actions mécaniques transmissibles a <b>6 − ddl</b> composantes non nulles.</p>
+<div class="retain"><b>À retenir.</b> Sphère-plan (ex-ponctuelle) : 5 ddl. Appui plan (« plane », plan-plan) : 3 ddl. Sphérique (ex-rotule) : 3 ddl. Sphère-cylindre (ex-linéaire annulaire) : 4 ddl. Un axe = un point + un vecteur.</div>
 ` });
 COURSE.push({ id: 'equivalente', t: 'Liaison équivalente', h: `
 <h3>Série</h3>
-<p>V<sub>eq</sub> = V₁ + V₂ + … : les torseurs cinématiques s'ajoutent. Toujours isostatique.</p>
+<p>V<sub>eq</sub> = V₁ + V₂ + … : les torseurs cinématiques s'ajoutent (somme des espaces de mouvements). Une chaîne en série est toujours isostatique ; elle peut posséder des mobilités internes. Dans le graphe, les arcs se suivent en chaîne :</p>
+${graphChain(['Pivot (A, x)', 'Pivot (A, y)', 'Pivot (A, z)'])}
+<p>Les trois pivots d'axes (A, ${VH('x')}), (A, ${VH('y')}), (A, ${VH('z')}) passent par le même point A : liaison équivalente sphérique de centre A.</p>
+${graphChain(['Sphérique (A)'])}
 <h3>Parallèle</h3>
-<p>Les contraintes se cumulent. Un hyperstatisme h > 0 peut apparaître.</p>
-<h3>Exemples</h3>
+<p>Seuls subsistent les mouvements compatibles avec toutes les liaisons (intersection). Les conditions imposées plusieurs fois créent de l'hyperstatisme : pour une boucle, h = 6 + m − I<sub>c</sub>. Dans le graphe, plusieurs arcs relient les mêmes solides :</p>
+${graphPar(['Pivot (A, z)', 'Pivot (B, z)'])}
+<p>Avec B = A + z, les axes (A, ${VH('z')}) et (B, ${VH('z')}) sont confondus : liaison équivalente pivot d'axe (A, ${VH('z')}), h = 6 + 1 − 2 = 5.</p>
+<h3>Exemples en série</h3>
 <ul>
-<li>Pivot + Glissière même axe → Pivot glissant</li>
-<li>Pivot + Pivot axes différents → Sphérique</li>
-<li>Glissière + Glissière axes ⊥ → Sphère-plan</li>
-<li>Sphérique + Glissière (axe passant par le centre) → Sphère-cylindre</li>
-<li>2 sphériques en parallèle → Pivot hyperstatique (h = 1)</li>
+<li>Pivot d'axe (A, ${VH('z')}) + glissière de direction ${VH('z')} → pivot glissant d'axe (A, ${VH('z')})</li>
+<li>3 pivots concourants en A, d'axes (A, ${VH('x')}), (A, ${VH('y')}), (A, ${VH('z')}) → sphérique de centre A</li>
+<li>2 pivots concourants (A, ${VH('x')}) et (A, ${VH('y')}) → sphérique à doigt (2 ddl)</li>
+<li>Glissière ${VH('x')} + glissière ${VH('y')} + pivot (A, ${VH('z')}) → appui plan de normale (A, ${VH('z')})</li>
+<li>Sphérique de centre A + glissière ${VH('z')} → sphère-cylindre d'axe (A, ${VH('z')})</li>
+<li>2 pivots coaxiaux (A, ${VH('z')}) et (B, ${VH('z')}) → pivot, avec une mobilité interne</li>
+<li>2 pivots parallèles non coaxiaux (A, ${VH('z')}) et (C, ${VH('z')}) → mouvement à 2 ddl sans liaison normalisée</li>
 </ul>
-<div class="retain"><b>À retenir.</b> Série = somme des torseurs. Parallèle = intersection des contraintes.</div>
+<h3>Exemples en parallèle</h3>
+<ul>
+<li>2 pivots coaxiaux → pivot, h = 5</li>
+<li>2 pivots parallèles non coaxiaux (A, ${VH('z')}) et (C, ${VH('z')}) → encastrement, h = 4</li>
+<li>2 glissières parallèles → glissière, h = 5</li>
+<li>2 sphériques de centres A et B → pivot d'axe (A, ${VH('z')}) si B = A + z, h = 1</li>
+<li>2 appuis plans coplanaires → appui plan, h = 3</li>
+<li>Sphérique de centre A + sphère-cylindre d'axe (B, ${VH('z')}) → pivot, h = 0</li>
+</ul>
+<div class="retain"><b>À retenir.</b> Série = somme des torseurs. Parallèle = intersection des mouvements, avec hyperstatisme possible. Pour comparer des axes, comparer le point <b>et</b> le vecteur.</div>
 ` });
 COURSE.push({ id: 'graphe', t: 'Graphe des liaisons', h: `
-<p>Nœuds = classes d'équivalence, arcs = liaisons.</p>
+<p>Nœuds = classes d'équivalence (le bâti est entouré d'un double cercle), arcs = liaisons étiquetées par leur nom et leurs paramètres : un axe est un point et un vecteur.</p>
+<h3>Série, parallèle, cycle</h3>
+<p><b>Série</b> : les arcs se suivent en chaîne, pas de boucle.</p>
+${graphChain(['Pivot (A, x)', 'Pivot (A, y)', 'Pivot (A, z)'])}
+<p><b>Parallèle</b> : plusieurs arcs entre les mêmes nœuds, une boucle.</p>
+${graphPar(['Pivot (A, z)', 'Pivot (B, z)'])}
+<p><b>Cycle</b> : chaîne fermée sur le bâti (bielle-manivelle).</p>
+${graphSvg()}
 <h3>Cycles indépendants</h3>
 <div class="formula">γ = N<sub>L</sub> − N<sub>P</sub> + 1</div>
 <h3>Fermetures cinématiques</h3>
 <div class="formula">V₁ + V₂ + … + V<sub>n</sub> = 0</div>
-<p>Chaque fermeture donne jusqu'à 6 équations scalaires.</p>
+<p>Chaque fermeture donne au plus 6 équations scalaires : E<sub>c</sub> = 6γ au total.</p>
 ` });
 COURSE.push({ id: 'mobilite', t: 'Mobilité et hyperstatisme', h: `
-<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b></div>
-<ul><li>h = 0 : isostatique</li><li>h > 0 : hyperstatique</li><li>Chaîne ouverte : γ = 0, m = I_c, h = 0</li></ul>
+<h3>Système cinématique</h3>
+<p>E<sub>c</sub> = 6γ équations, I<sub>c</sub> inconnues, rang r<sub>c</sub>. Alors <b>m = I<sub>c</sub> − r<sub>c</sub></b>.</p>
+<h3>Système statique</h3>
+<p>E<sub>s</sub> = 6(N<sub>P</sub> − 1) équations, I<sub>s</sub> = 6N<sub>L</sub> − I<sub>c</sub> inconnues, rang r<sub>s</sub> = 6(N<sub>P</sub> − 1) − m. Le degré d'hyperstatisme est h = I<sub>s</sub> − r<sub>s</sub>.</p>
+<div class="formula"><b>h = 6γ + m − I<sub>c</sub></b> &nbsp; (= 6γ − r<sub>c</sub> ≥ 0)</div>
+<ul><li>h = 0 : isostatique</li><li>h &gt; 0 : hyperstatique de degré h</li><li>Chaîne ouverte : γ = 0, m = I<sub>c</sub>, h = 0</li><li>m = m<sub>utile</sub> + m<sub>interne</sub></li></ul>
+<div class="retain"><b>À retenir.</b> h ne peut pas être négatif : un résultat négatif signale une erreur de modèle ou de comptage.</div>
 ` });
 COURSE.push({ id: 'chaines', t: 'Chaînes ouvertes et fermées', h: `
 <p><b>Ouverte</b> : γ = 0, toujours isostatique.</p>
+${graphDraw(lineGraph(['Pivot (O, z)', 'Pivot (A, y)', 'Pivot (B, y)']))}
 <p><b>Fermée</b> : γ ≥ 1, isostatique ou hyperstatique.</p>
+${graphDraw(ringGraph('Pivot (O, z)', 'Pivot (A, z)', 'Pivot (B, z)', 'Glissière (x)'))}
+<table class="ctable"><thead><tr><th>Mécanisme</th><th>γ</th><th>I<sub>c</sub></th><th>m</th><th>h</th></tr></thead><tbody>
+${CHAINES_DATA.map(c => `<tr><td>${c.nom}</td><td>${c.NL - c.NP + 1}</td><td>${c.Ic}</td><td>${c.m}</td><td>${chH(c)}</td></tr>`).join('')}
+</tbody></table>
 <div class="retain"><b>À retenir.</b> Ouverte → isostatique. Fermée → hyperstatisme possible.</div>
 ` });
 COURSE.push({ id: 'isostatique', t: 'Rendre isostatique', h: `
-<p>Un système hyperstatique a des contraintes redondantes. Pour le rendre isostatique, il faut <b>augmenter I<sub>c</sub></b> (remplacer une liaison par une autre avec plus de ddl).</p>
-<h3>Exemple 1 : deux sphériques</h3>
+<p>Un système hyperstatique a des conditions redondantes. Pour le rendre isostatique <b>sans changer sa fonction</b> (même liaison équivalente, donc même m) :</p>
+<ol><li>calculer h = 6γ + m − I<sub>c</sub> ;</li><li>augmenter I<sub>c</sub> de h en remplaçant des liaisons par d'autres ayant plus de ddl ;</li><li>vérifier que les ddl ajoutés libèrent bien les directions redondantes et que la liaison équivalente reste la même.</li></ol>
+<h3>Exemple 1 : porte, deux pivots coaxiaux</h3>
+<p>Axes (A, ${VH('z')}) et (B, ${VH('z')}) avec B = A + z : même droite.</p>
 <ul>
-<li>2 sphériques en parallèle → pivot, I_c = 6, m = 1, h = 1</li>
-<li>Remplacer une sphérique par une sphère-cylindre (4 ddl) → I_c = 7, h = 0</li>
+<li>I<sub>c</sub> = 2, m = 1, h = 6 + 1 − 2 = <b>5</b></li>
+<li>Un pivot → sphère-cylindre d'axe (A, ${VH('z')}) : I<sub>c</sub> = 5, h = 2 : <b>encore hyperstatique</b>. Un seul changement ne suffit pas.</li>
+<li>Pivot → sphère-cylindre (+3 ddl) <b>et</b> l'autre pivot → appui plan de normale (B, ${VH('z')}) (+2 ddl) : I<sub>c</sub> = 7, h = 0</li>
+<li>Autres solutions (10 au total dans la recherche exhaustive de l'atelier 6) : sphérique + sphère-cylindre d'axe (AB) ; pivot glissant + sphère-plan de normale ${VH('z')} ; sphérique à doigt + sphère-plan (orientations à bien choisir).</li>
+<li><b>Piège</b> : sphère-cylindre + <b>sphère-plan</b> (5 ddl) donne I<sub>c</sub> = 9 et m = 3 : on obtient une sphérique, ce n'est plus un pivot.</li>
 </ul>
-<h3>Exemple 2 : deux pivot-glissants</h3>
+<h3>Exemple 2 : deux sphériques</h3>
 <ul>
-<li>2 pivot-glissants non coaxiaux → glissière, I_c = 4, m = 1, h = 3</li>
-<li>Remplacer un pivot-glissant par une sphère-plan (3 ddl) → I_c = 5 à 7 selon l'orientation, h = 0 dans la configuration retenue</li>
+<li>Pivot d'axe (A, ${VH('z')}), I<sub>c</sub> = 6, m = 1, h = 1</li>
+<li>Une sphérique → sphère-cylindre d'axe (AB) : I<sub>c</sub> = 7, h = 0</li>
 </ul>
-<h3>Exemple 3 : deux pivots coaxiaux</h3>
+<h3>Exemple 3 : deux pivots glissants non coaxiaux</h3>
 <ul>
-<li>2 pivots coaxiaux → pivot, I_c = 2, m = 1, h = 1</li>
-<li>Remplacer un pivot par une sphère-cylindre (4 ddl) → I_c = 5, h = 0</li>
+<li>Axes (A, ${VH('z')}) et (C, ${VH('z')}), C = A + x : glissière de direction ${VH('z')}, I<sub>c</sub> = 4, m = 1, h = 3</li>
+<li>Un pivot glissant → sphère-plan de normale (C, ${VH('y')}), perpendiculaire à l'axe et à AC : I<sub>c</sub> = 2 + 5 = 7, h = 0 (solution unique à l'échange des deux liaisons près)</li>
 </ul>
-<div class="retain"><b>À retenir.</b> Pour réduire h, augmenter I_c en choisissant une liaison avec plus de ddl.</div>
+<div class="retain"><b>À retenir.</b> Il faut gagner h ddl, mais le bon choix de liaisons dépend de la géométrie (points et vecteurs) : vérifier toujours la liaison équivalente obtenue.</div>
 ` });
 COURSE.push({ id: 'methodes', t: 'Méthodes statique et cinématique', h: `
-<h3>Statique (PFS)</h3>
-<p>Adaptée aux <b>pieuvres</b> (beaucoup de boucles, hyperstatique). On isole chaque solide, on écrit le PFS, on résout.</p>
 <h3>Cinématique (fermeture)</h3>
-<p>Adaptée aux <b>chaînes à une seule boucle</b>. On écrit V₁ + V₂ + … = 0, on projette, on résout.</p>
+<p>E<sub>c</sub> = 6γ équations. Adaptée à la <b>mobilité</b> et aux <b>lois entrée-sortie en vitesse</b>, surtout si γ est petit.</p>
+<h3>Statique (PFS)</h3>
+<p>E<sub>s</sub> = 6(N<sub>P</sub> − 1) équations. Adaptée à la recherche des <b>efforts</b> et aux graphes denses (pieuvres, où γ est grand devant N<sub>P</sub> − 1).</p>
 <h3>Choix</h3>
-<table class="ctable"><thead><tr><th>Topologie</th><th>Méthode</th><th>Raison</th></tr></thead><tbody>
-<tr><td>Pieuvre (plusieurs boucles)</td><td>Statique (PFS)</td><td>Le PFS réduit le système en isolant judicieusement.</td></tr>
-<tr><td>Une seule boucle</td><td>Cinématique (fermeture)</td><td>La fermeture donne un système plus petit.</td></tr>
-<tr><td>Hyperstatique</td><td>Statique</td><td>La cinématique ne permet pas de conclure sur les efforts.</td></tr>
+<table class="ctable"><thead><tr><th>Situation</th><th>Méthode</th><th>Raison</th></tr></thead><tbody>
+<tr><td>Chaîne ouverte (γ = 0)</td><td>Composition de torseurs</td><td>Aucune fermeture à écrire.</td></tr>
+<tr><td>Peu de boucles (6γ &lt; 6(N<sub>P</sub> − 1))</td><td>Cinématique</td><td>Moins d'équations.</td></tr>
+<tr><td>Pieuvre (6γ &gt; 6(N<sub>P</sub> − 1))</td><td>Statique</td><td>Moins d'équations ; les isolements éliminent les inconnues internes.</td></tr>
+<tr><td>Efforts dans les liaisons</td><td>Statique</td><td>Seule la statique les donne. Si h &gt; 0, h inconnues restent indéterminées.</td></tr>
 </tbody></table>
-<div class="retain"><b>À retenir.</b> Choisir la méthode selon la topologie du graphe : pieuvre → statique, boucle unique → cinématique.</div>
+<div class="retain"><b>À retenir.</b> Comparer 6γ et 6(N<sub>P</sub> − 1), et tenir compte de l'objectif (vitesses ou efforts).</div>
 ` });
 COURSE.push({ id: 'gloss', t: 'Vocabulaire', h: `
 <dl class="gloss">
-<dt>Sphérique</dt><dd>Liaison à 3 rotations (ex-rotule).</dd>
-<dt>Sphère-plan</dt><dd>Liaison à 2 rotations + 1 translation dans le plan (ex-appui plan).</dd>
-<dt>Sphère-cylindre</dt><dd>Liaison à 3 rotations + 1 translation selon l'axe (ex-linéaire annulaire).</dd>
+<dt>Sphérique</dt><dd>3 rotations autour d'un centre (ex-rotule).</dd>
+<dt>Appui plan</dt><dd>Plan-plan : rotation autour de la normale + 2 translations dans le plan (3 ddl).</dd>
+<dt>Sphère-plan</dt><dd>Ex-ponctuelle : 3 rotations + 2 translations (5 ddl).</dd>
+<dt>Sphère-cylindre</dt><dd>Ex-linéaire annulaire : 3 rotations + translation selon l'axe (4 ddl).</dd>
+<dt>Cylindre-plan</dt><dd>Ex-linéaire rectiligne : 2 rotations + 2 translations (4 ddl).</dd>
 <dt>ddl</dt><dd>Degré de liberté.</dd>
 <dt>Chaîne ouverte</dt><dd>Sans cycle (γ = 0).</dd>
 <dt>Chaîne fermée</dt><dd>Avec au moins un cycle (γ ≥ 1).</dd>
 <dt>γ</dt><dd>Nombre de cycles indépendants.</dd>
-<dt>m</dt><dd>Mobilité.</dd>
+<dt>m</dt><dd>Mobilité (utile + interne).</dd>
 <dt>I<sub>c</sub></dt><dd>Inconnues cinématiques (somme des ddl).</dd>
 <dt>h</dt><dd>Degré d'hyperstatisme.</dd>
-<dt>Isostatique</dt><dd>h = 0 : toutes les inconnues déterminables.</dd>
-<dt>Hyperstatique</dt><dd>h > 0 : sur-contrainte.</dd>
+<dt>Isostatique</dt><dd>h = 0.</dd>
+<dt>Hyperstatique</dt><dd>h &gt; 0 : conditions redondantes.</dd>
 <dt>PFS</dt><dd>Principe fondamental de la statique.</dd>
 <dt>Fermeture cinématique</dt><dd>Somme des torseurs cinématiques nulle sur un cycle.</dd>
 </dl>
@@ -911,8 +1644,8 @@ function renderAct() {
   if (AS.tab === 'steps') {
     body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time));
     body.append(h('div', { class: 'goal', html: '<b>Objectif.</b> ' + a.goal }));
-    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
-    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s.replace(/([A-Za-z]+)_([a-z]+)/g, '$1<sub>$2</sub>') }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q.replace(/([A-Za-z]+)_([a-z]+)/g, '$1<sub>$2</sub>') }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
     if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
     body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
       const b = ev.currentTarget;
@@ -932,7 +1665,7 @@ function renderAct() {
         inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
         fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
       });
-      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
       body.append(fs);
     });
     const done = Object.keys(s.a).length;
@@ -965,7 +1698,7 @@ function renderCourse() {
   }, (i + 1) + '. ' + s.t)));
   const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
   const art = h('article', { class: 'cbody' });
-  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: typeof cur.h === 'function' ? cur.h() : cur.h }));
   art.append(h('div', { class: 'cpn' },
     idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
     idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
@@ -987,12 +1720,30 @@ function openDlg(title, body) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
 $('#bHelp').addEventListener('click', () => {
   openDlg('Aide', h('div', { html: '<p>Sept ateliers interactifs sur la théorie des mécanismes : liaisons normalisées, liaison équivalente, graphe, mobilité, chaînes, rendre isostatique, méthodes statique/cinématique.</p>' +
-    '<h3>Nomenclature</h3><p><b>Sphérique</b> (ex-rotule), <b>sphère-plan</b> (ex-appui plan), <b>sphère-cylindre</b> (ex-linéaire annulaire).</p>' +
-    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM.</li><li>Le bouton <b>Cours</b> propose une synthèse.</li></ul>' +
+    '<h3>Nomenclature</h3><p><b>Sphérique</b> (ex-rotule, 3 ddl), <b>sphère-plan</b> (ex-ponctuelle, 5 ddl), <b>sphère-cylindre</b> (ex-linéaire annulaire, 4 ddl), <b>cylindre-plan</b> (ex-linéaire rectiligne, 4 ddl), <b>appui plan</b> (plan-plan, 3 ddl).</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Un <b>axe</b> est défini par un point et un vecteur : (A, z) est la droite passant par A et dirigée par z.</li><li>Le bouton <b>Activité</b> propose consignes, défi et QCM.</li><li>Le bouton <b>Cours</b> propose une synthèse.</li><li>Le sélecteur <b>Schémas</b> affiche les schémas cinématiques en 3D, en 2D (profil et face) ou les deux.</li><li>Les résultats des ateliers 2 et 6 sont calculés par un moteur de torseurs : vous pouvez changer les liaisons, leur vecteur et leur point.</li></ul>' +
     '<h3>Vos données</h3><p>Réponses mémorisées dans ce navigateur uniquement.</p>' }));
 });
 
+const SKM = [['3d', '3D'], ['2d', '2D'], ['both', '3D + 2D']];
+let SKMODE = 'both';
+try { const v = localStorage.getItem('atelier-theorie-meca-sk'); if (v === '3d' || v === '2d' || v === 'both') SKMODE = v; } catch (e) {}
+function skApply() {
+  document.body.setAttribute('data-sk', SKMODE);
+  const seg = $('#skSeg'); seg.innerHTML = '';
+  SKM.forEach(m => seg.append(h('button', { type: 'button', class: 'btn sm' + (SKMODE === m[0] ? ' pri' : ''), 'aria-pressed': SKMODE === m[0] ? 'true' : 'false', onclick: () => skSet(m[0]) }, m[1])));
+}
+function skSet(m) {
+  SKMODE = m; SKS.mode = m;
+  try { localStorage.setItem('atelier-theorie-meca-sk', m); } catch (e) {}
+  skApply();
+  const sc = $('#scroller'), keep = sc ? sc.scrollTop : 0, cw = document.querySelector('.cwrap'), ck = cw ? cw.scrollTop : 0;
+  if (CS.open) { renderCourse(); const c2 = document.querySelector('.cwrap'); if (c2) c2.scrollTop = ck; }
+  else { mountWs(); const s2 = $('#scroller'); if (s2) s2.scrollTop = keep; }
+}
 (function init() {
+  skApply();
+  isoLoad(0);
   AS.open = !isSmall();
   renderSeg();
   mountWs();
