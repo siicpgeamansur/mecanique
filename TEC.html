@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Coordonnées cartésiennes · cylindriques · sphériques</title>
+<title>TEC · Rotor et roue de vélo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
+/* ===== Base et charte ===== */
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 :root{
@@ -15,9 +16,10 @@
   --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
   --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
   --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
   --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
   --ok-soft:rgba(30,122,46,.15);--bad-soft:rgba(192,40,31,.15);--warn-soft:rgba(154,91,0,.13);
-  --gcol:#188038;--mcol:#9a5b00;--wcol:#7b4fc2;--acol:#2e8b3a;--rcol:#c0281f;
+  --gcol:#1e7a2e;--mcol:#9a5b00;--wcol:#7b4fc2;--acol:#2e8b3a;
   --canvas:#f8fbff;--grid:#dce5ee;
   color-scheme:light;
 }
@@ -26,7 +28,7 @@
   --fg:#f2f2f2;--muted:#a0a0a0;--accent:#f2f2f2;--accent-fg:#14151f;--accent-soft:#2a2a2a;--accent-ink:#d0d0d0;--run:#4ade80;
   --ok:#4ade80;--warn:#ffb74d;--bad:#ff7b7b;--violet:#c792ff;
   --ok-soft:rgba(74,222,128,.18);--bad-soft:rgba(248,113,113,.2);--warn-soft:rgba(255,183,77,.15);
-  --gcol:#4ade80;--mcol:#ffb74d;--wcol:#c792ff;--acol:#4ade80;--rcol:#ff7b7b;
+  --gcol:#6ea0ff;--mcol:#ff5c6a;--wcol:#c792ff;--acol:#4ade80;
   --canvas:#101010;--grid:#262626;
   color-scheme:dark;
 }
@@ -54,25 +56,32 @@ button,input,select,textarea{font:inherit;color:inherit}
 #stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
 #hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
 #scroller{flex:1;min-height:0;overflow:auto}
+/* largeur élargie et centrée : la barre de réglages utilise l'espace droit */
 #ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1500px;margin:0 auto}
 #ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
 #ws h3{font-size:16.5px;margin:24px 0 6px}
 #ws p,#ws li{font-size:14.5px;line-height:1.55}
 #ws .small{font-size:12.5px}
-
+/* ===== Grille deux colonnes : contenu + réglages ===== */
 .ws-two{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
 .ws-main{min-width:0}
 .ws-side{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;max-height:calc(100vh - 170px);overflow:auto}
 .ws-side h3{margin:0 0 10px;font-size:15px}
+.ws-side .opts{display:flex;flex-direction:column;gap:8px;align-items:stretch;margin:0}
+.ws-side .opts .fld{margin:0;width:100%}
+.ws-side .opts input[type=range]{width:100%}
+.ws-side .chips{margin:10px 0 0}
+.ws-side .fld span{font-size:12px}
 .ws-side .gstats{grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 0}
 .ws-side .stat{padding:5px 8px}
-.ws-side .chips{margin:10px 0 0}
 @media (max-width:1150px){
   .ws-two{grid-template-columns:1fr}
   .ws-side{position:static;max-height:none}
+  .ws-side .opts{flex-direction:row;flex-wrap:wrap}
+  .ws-side .opts .fld{width:auto;min-width:200px}
   .ws-side .gstats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 }
-
+/* ===== Activité ===== */
 #act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
 #act .pbody{font-size:13.5px;overflow:auto;padding:12px;flex:1;min-height:0}
 .phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
@@ -92,7 +101,7 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
 .opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
 .why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
 .score{font-weight:600;font-size:15px;margin:4px 0 8px}
-
+/* ===== Cours ===== */
 #course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
 .ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
@@ -113,10 +122,14 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
 .ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
 .ctable th{background:var(--panel2);font-weight:600}
 .retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
-.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;overflow-x:auto;font-family:var(--font-mono);font-size:13.5px;line-height:1.7}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;overflow-x:auto;font-family:var(--font-mono);font-size:13.5px}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
 .gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
 .cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
-
+/* ===== Éléments d'atelier ===== */
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}
+.opts .fld{margin:0}
+.opts input[type=range]{width:200px;max-width:100%}
 .fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
 .fld b{color:var(--accent);font-family:var(--font-mono);font-weight:500;font-size:12px}
 input[type=range]{padding:0;accent-color:var(--accent)}
@@ -125,45 +138,42 @@ input[type=text],input[type=number],textarea,select{width:100%;background:var(--
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
 .chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .chip input{accent-color:var(--accent);margin:0}
-.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel);margin:8px 0}
+.chip i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.chip b{font-family:var(--font-mono);font-size:11.5px;font-weight:500;color:var(--muted)}
+.chip.on b{color:var(--accent-fg);opacity:.8}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px;background:var(--panel);margin:8px 0}
 .stagebox canvas{display:block;width:100%;height:340px;background:var(--canvas);border-radius:8px}
-.gl{width:100%;height:470px;border-radius:8px;overflow:hidden;background:var(--canvas)}
-.gl canvas{display:block;height:auto;border-radius:0}
-.gl .fallback{padding:20px;color:var(--muted);font-size:13.5px;text-align:center}
-@media (max-width:820px){.gl{height:330px}}
+.stagebox canvas.tplot{height:215px;margin-top:8px}
 .gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
 .stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat span{font-size:12px;color:var(--muted)}.stat b{font-size:13.5px;font-family:var(--font-mono);overflow-wrap:anywhere}
 .verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
 .verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
-.panel h3{margin:0 0 8px;font-size:15px;color:var(--accent-ink)}
-.cgroup{background:var(--panel2);border-radius:8px;padding:8px 10px;margin-bottom:8px}
-.cgroup strong{display:block;font-size:12.5px;color:var(--accent-ink);margin-bottom:5px}
-.crow{display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:center;margin-bottom:4px}
-.crow span{font-weight:600;color:var(--accent);font-size:13px;text-align:center}
-.crow input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-family:var(--font-mono);font-size:12.5px;color:var(--fg)}
-
-/* la modale d'aide : masquée par défaut, stylée seulement quand ouverte */
-#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);z-index:50;padding:16px;display:flex;align-items:center;justify-content:center}
-#dlg[hidden]{display:none!important}
-#dlg .dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
-#dlg .dlgbox>header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
-#dlg .dlgbox>header b{font-size:16px}
-#dlg .dlgbox>.dbody{padding:14px 16px;overflow:auto;font-size:13.5px}
-#dlg .dlgbox h3{margin:14px 0 4px;font-size:14px}
-#dlg .dlgbox p,#dlg .dlgbox li{margin:4px 0;font-size:13.5px}
-
+.tors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.tbox{background:var(--panel2);border-radius:8px;padding:6px 10px;min-width:0;overflow-x:auto;border-left:4px solid var(--line)}
+.gbox{border-left-color:var(--gcol)}.mbox{border-left-color:var(--mcol)}
+.tbox .cap{font-size:12px;color:var(--muted);margin-bottom:4px}
+.tbox mjx-container{margin:2px 0!important;font-size:92%!important}
+.huygens-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:10px 0}
+.hmat{background:var(--panel2);border-radius:8px;padding:8px 12px;min-width:0;overflow-x:auto;border-left:3px solid var(--accent)}
+.hmat span{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.hmat pre{margin:0;font:12.5px/1.4 var(--font-mono);white-space:pre}
+.eq{font-family:var(--font-mono);font-size:12.5px}
+.G{color:var(--gcol);font-weight:600}.M{color:var(--mcol);font-weight:600}
+/* ===== Responsive ===== */
 @media (max-width:820px){
   .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
   #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
   .work{flex-direction:column;gap:8px}
   .stagebox canvas{height:260px}
+  .stagebox canvas.tplot{height:180px}
+  .tors{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
 </style>
 <script>
-try{if(localStorage.getItem('coord-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}
+/* Évite un flash clair si l'utilisateur a choisi le sombre */
+try{if(localStorage.getItem('tec-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}
 </script>
 </head>
 <body>
@@ -171,12 +181,11 @@ try{if(localStorage.getItem('coord-theme')==='dark')document.documentElement.dat
   <header class="band"><div class="inner row">
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-        <line x1="13" y1="22" x2="22" y2="18" stroke="var(--rcol)" stroke-width="2"/>
-        <line x1="13" y1="22" x2="5" y2="18" stroke="var(--gcol)" stroke-width="2"/>
-        <line x1="13" y1="22" x2="13" y2="4" stroke="var(--wcol)" stroke-width="2"/>
-        <circle cx="17" cy="10" r="2.4" fill="var(--mcol)"/>
+        <circle cx="13" cy="13" r="11" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <circle cx="9" cy="15" r="5" fill="var(--ok)" opacity="0.85"/>
+        <circle cx="9" cy="15" r="1.6" fill="var(--bg)"/>
       </svg>
-      <span>Coordonnées <small>cartésiennes · cylindriques · sphériques</small></span>
+      <span>TEC <small>Rotor et roue de vélo · CPGE</small></span>
     </div>
     <div class="files">
       <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
@@ -194,19 +203,20 @@ try{if(localStorage.getItem('coord-theme')==='dark')document.documentElement.dat
 </div>
 <div id="dlg" hidden></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+window.MathJax={options:{enableMenu:false,enableAssistiveMml:false},svg:{fontCache:"none"},startup:{typeset:false}};
+</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
 <script>
 (function(){
 'use strict';
 
 /* ================= Helpers ================= */
 const $ = id => document.getElementById(id);
+const g = 9.81;
 const f = (x,d=3)=>{if(!isFinite(x))return "–";const a=Math.abs(x);if(a!==0&&(a<1e-3||a>=1e4))return x.toExponential(2);return x.toFixed(d).replace(".",",")};
 const fmt = (x,d)=>f(x,d);
-const deg = x => x*180/Math.PI;
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 function h(tag, attrs, ...kids){
   const el=document.createElement(tag);
   if(attrs) for(const [k,v] of Object.entries(attrs)){
@@ -220,6 +230,16 @@ function h(tag, attrs, ...kids){
   for(const k of kids.flat()) if(k!=null&&k!==false) el.append(k.nodeType?k:document.createTextNode(k));
   return el;
 }
+function bindRange(id,fn,unit,d){
+  const e=$(id),o=$("o"+id); if(!e) return;
+  const up=()=>{o.textContent=fmt(+e.value,d)+(unit?" "+unit:"")};
+  e.addEventListener("input",()=>{up();fn()}); up();
+}
+function mkChips(id,list){
+  $(id).innerHTML=list.map(x=>`<label class="chip"><input type="checkbox" id="${id}_${x.key}" checked><i style="background:var(${x.col})"></i><span>${x.html}</span><b id="${id}v_${x.key}"></b></label>`).join("");
+}
+
+/* ================= Canvas utilitaires ================= */
 function setup(cv){
   if(!cv) return null;
   const dpr=window.devicePixelRatio||1, r=cv.getBoundingClientRect();
@@ -229,26 +249,69 @@ function setup(cv){
   return {c,w,h:hh};
 }
 function arrow(c,x0,y0,x1,y1,col,lab,lw){
-  lw=lw||2; const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy); if(L<3)return;
+  lw=lw||2.2; const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy); if(L<3)return;
   const ux=dx/L,uy=dy/L,hl=Math.min(L*0.6,lw*4.2),hw=lw*2.1;
   c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap="round";
   c.beginPath();c.moveTo(x0,y0);c.lineTo(x1-ux*hl*0.8,y1-uy*hl*0.8);c.stroke();
   c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-hl*ux+hw*uy,y1-hl*uy-hw*ux);c.lineTo(x1-hl*ux-hw*uy,y1-hl*uy+hw*ux);c.closePath();c.fill();
   if(lab){c.font="600 13px "+css("--font-ui");c.fillText(lab,x1+6,y1-6)}
 }
+function sub(c,x,y,main,s,col,size){
+  size=size||16; c.fillStyle=col; c.font="700 "+size+"px "+css("--font-ui"); c.fillText(main,x,y);
+  const w=c.measureText(main).width; c.font="700 "+Math.round(size*0.68)+"px "+css("--font-ui"); c.fillText(s,x+w+1,y+size*0.3);
+  return x+w+1+c.measureText(s).width;
+}
+function arcArrow(c,cx,cy,rad,a0,da,col){
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=3.4;c.lineCap="round";
+  c.beginPath();c.arc(cx,cy,rad,-a0,-(a0+da),da>0);c.stroke();
+  const a1=a0+da,s=da>0?1:-1,ex=cx+rad*Math.cos(a1),ey=cy-rad*Math.sin(a1);
+  const tx=-s*Math.sin(a1),ty=-s*Math.cos(a1),nx=-ty,ny=tx;
+  c.beginPath();c.moveTo(ex+11*tx,ey+11*ty);c.lineTo(ex+6*nx,ey+6*ny);c.lineTo(ex-6*nx,ey-6*ny);c.closePath();c.fill();
+  return [cx+(rad+15)*Math.cos(a1),cy-(rad+15)*Math.sin(a1)];
+}
+function scaleBar(c,w,hh,sc){
+  const steps=[.005,.01,.02,.05,.1,.2,.5,1,2,5]; let L=steps[0];
+  for(const s of steps) if(s*sc<=w*0.22) L=s;
+  const px=L*sc,x=16,y=hh-14;
+  c.strokeStyle=css("--fg"); c.fillStyle=css("--fg"); c.lineWidth=2; c.lineCap="butt";
+  c.beginPath(); c.moveTo(x,y); c.lineTo(x+px,y); c.moveTo(x,y-5); c.lineTo(x,y+5); c.moveTo(x+px,y-5); c.lineTo(x+px,y+5); c.stroke();
+  c.font="600 12px "+css("--font-ui"); c.textAlign="center";
+  c.fillText(L>=1?L+" m":String(Math.round(L*1000)/10).replace(".",",")+" cm",x+px/2,y-8); c.textAlign="left";
+}
 function dot(c,x,y,col,lab,dx=8,dy=-8){
   c.fillStyle=col; c.beginPath(); c.arc(x,y,4.5,0,7); c.fill();
   if(lab){ c.font="600 14px "+css("--font-ui"); c.fillText(lab,x+dx,y+dy); }
 }
-
-/* ========== ÉTAT GLOBAL DÉCLARÉ TÔT (pour éviter les TDZ) ========== */
-let darkTheme = false;
-try{ darkTheme = localStorage.getItem('coord-theme') === 'dark'; }catch(e){}
-let G3 = null;   /* scène Three.js — déclaré ici, affecté dans init3D() */
-let onChange = ()=>{};   /* callback recalculé à chaque montage d'atelier */
-const PT = { x:3, y:2, z:4 };   /* point partagé par tous les ateliers */
+function plotTime(cv,Tt,ser,tcur,xlabel){
+  if(!cv) return;
+  const {c,w,h:hh}=setup(cv), pl=50,pr=12,pt0=30,pb=28;
+  const on=ser.filter(s=>s.on), norm=on.length!==1;
+  if(!on.length){c.fillStyle=css("--muted");c.font="14px "+css("--font-ui");c.textAlign="center";c.fillText("Coche au moins une grandeur",w/2,hh/2);c.textAlign="left";return}
+  let lo=0,hi=0;
+  on.forEach(s=>{const k=norm?1/s.max:1;s.v.forEach(y=>{const z=y*k;if(z<lo)lo=z;if(z>hi)hi=z})});
+  const lo0=lo,hi0=hi,pad=0.12*(hi-lo||1); lo-=pad; hi+=pad;
+  const X=t=>pl+t/Tt*(w-pl-pr), Y=y=>pt0+(hi-y)/(hi-lo)*(hh-pt0-pb);
+  c.lineWidth=1;c.strokeStyle=css("--line");c.strokeRect(pl,pt0,w-pl-pr,hh-pt0-pb);
+  c.strokeStyle=css("--muted");c.beginPath();c.moveTo(pl,Y(0));c.lineTo(w-pr,Y(0));c.stroke();
+  c.fillStyle=css("--muted");c.font="11px "+css("--font-mono");
+  c.textAlign="center";[0,0.5,1].forEach(u=>{c.beginPath();c.moveTo(X(u*Tt),hh-pb);c.lineTo(X(u*Tt),hh-pb+4);c.stroke();c.fillText(fmt(u*Tt,2),X(u*Tt),hh-pb+16)});
+  c.fillText(xlabel||"t (s)",X(0.75*Tt),hh-pb+16);
+  const lab=v=>v===0?"0":norm?String(Math.round(v*100)/100).replace("-","−").replace(".",","):fmt(v,Math.abs(v)<10?2:0);
+  [lo0,0,hi0].filter((v,i,a)=>a.indexOf(v)===i).forEach(v=>c.fillText(lab(v),pl-5,Y(v)+4));
+  c.textAlign="left";
+  if(norm){c.fillStyle=css("--muted");c.font="12px "+css("--font-ui");c.fillText("Grandeurs divisées par leur max (valeur réelle dans les pastilles)",8,17)}
+  else{const s=on[0]; const e=sub(c,8,19,s.name,s.sub||"",css("--fg"),15); c.fillStyle=css("--muted");c.font="12px "+css("--font-ui");c.fillText("("+s.unit+")",e+5,19)}
+  on.forEach(s=>{const k=norm?1/s.max:1,n=s.v.length-1;
+    c.strokeStyle=css(s.col);c.lineWidth=2.6;c.lineJoin="round";c.beginPath();
+    s.v.forEach((y,i)=>{const x=X(i/n*Tt);i?c.lineTo(x,Y(y*k)):c.moveTo(x,Y(y*k))});c.stroke()});
+  c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1;c.beginPath();c.moveTo(X(tcur),pt0);c.lineTo(X(tcur),hh-pb);c.stroke();c.setLineDash([]);
+  on.forEach(s=>{const k=norm?1/s.max:1;
+    c.fillStyle=css(s.col);c.strokeStyle=css("--panel");c.lineWidth=2;c.beginPath();c.arc(X(tcur),Y(s.cur*k),6.5,0,7);c.fill();c.stroke()});
+}
 
 /* ================= Thème ================= */
+let darkTheme = false;
+try{ darkTheme = localStorage.getItem('tec-theme') === 'dark'; }catch(e){}
 function applyTheme(){
   document.documentElement.dataset.theme = darkTheme ? 'dark' : 'light';
   const b = $('bTheme');
@@ -256,633 +319,584 @@ function applyTheme(){
     b.textContent = darkTheme ? 'Mode clair' : 'Mode sombre';
     b.setAttribute('aria-label', darkTheme ? 'Activer le mode clair' : 'Activer le mode sombre');
   }
-  if(G3 && G3.scene && G3.scene.background) G3.scene.background.set(darkTheme ? 0x101010 : 0xf8fbff);
 }
 applyTheme();
 $('bTheme').addEventListener('click', ()=>{
-  darkTheme = !darkTheme;
-  try{ localStorage.setItem('coord-theme', darkTheme ? 'dark' : 'light'); }catch(e){}
-  applyTheme();
-  if(UI.cur==='c2d'){ drawTop(); drawSide(); }
+  darkTheme = !darkTheme; applyTheme();
+  try{ localStorage.setItem('tec-theme', darkTheme ? 'dark' : 'light'); }catch(e){}
 });
 
-/* ================= Point partagé ================= */
-function derived(){
-  const {x,y,z}=PT;
-  const rho = Math.hypot(x,y);
-  const r = Math.hypot(x,y,z);
-  const phi = Math.atan2(y,x);
-  const theta = r>1e-9 ? Math.acos(clamp(z/r,-1,1)) : 0;
-  return {x,y,z,rho,r,phi,theta};
-}
+/* ================= État UI ================= */
+const UI = { cur: 'rotor' };
+const AS = { key: 'rotor', tab: 'steps', open: false, st: {}, arm: null };
+const CS = { open: false, id: 'torseurs' };
 
-function coordsHTML(){
-  return `
-    <h3>Coordonnées du point</h3>
-    <div class="cgroup">
-      <strong>Cartésiennes (x, y, z)</strong>
-      <div class="crow"><span>x</span><input type="number" id="cx" step="0.1" value="3"></div>
-      <div class="crow"><span>y</span><input type="number" id="cy" step="0.1" value="2"></div>
-      <div class="crow"><span>z</span><input type="number" id="cz" step="0.1" value="4"></div>
-    </div>
-    <div class="cgroup">
-      <strong>Cylindriques (ρ, φ, z)</strong>
-      <div class="crow"><span>ρ</span><input type="number" id="crho" step="0.1" value="3.606"></div>
-      <div class="crow"><span>φ</span><input type="number" id="cphi" step="0.01" value="0.588"></div>
-      <div class="crow"><span>z</span><input type="number" id="cz2" step="0.1" value="4"></div>
-      <div class="small" style="margin-top:2px">φ en radians</div>
-    </div>
-    <div class="cgroup">
-      <strong>Sphériques (r, θ, φ)</strong>
-      <div class="crow"><span>r</span><input type="number" id="cr" step="0.1" value="5.385"></div>
-      <div class="crow"><span>θ</span><input type="number" id="cth" step="0.01" value="0.733"></div>
-      <div class="crow"><span>φ</span><input type="number" id="cphi2" step="0.01" value="0.588"></div>
-      <div class="small" style="margin-top:2px">θ, φ en radians</div>
-    </div>
-  `;
-}
-function checksHTML(){
-  return `
-    <h3 style="margin-top:14px">Vérifications</h3>
-    <div class="gstats">
-      <div class="stat"><span>x² + y²</span><b id="vXY"></b></div>
-      <div class="stat"><span>ρ²</span><b id="vRho2"></b></div>
-      <div class="stat"><span>ρ² + z²</span><b id="vRhoZ"></b></div>
-      <div class="stat"><span>r²</span><b id="vR2"></b></div>
-    </div>
-  `;
-}
-
-function syncInputs(){
-  const d = derived();
-  const act = document.activeElement;
-  const set=(id,v)=>{const e=$(id); if(e && e!==act) e.value = (Math.abs(v)<5e-4?0:v).toFixed(3);};
-  set('cx',d.x); set('cy',d.y); set('cz',d.z);
-  set('crho',d.rho); set('cphi',d.phi); set('cz2',d.z);
-  set('cr',d.r); set('cth',d.theta); set('cphi2',d.phi);
-  const ro=(id,v)=>{const e=$(id); if(e) e.textContent=v;};
-  ro('vXY',   fmt(d.x*d.x+d.y*d.y,4));
-  ro('vRho2', fmt(d.rho*d.rho,4));
-  ro('vRhoZ', fmt(d.rho*d.rho+d.z*d.z,4));
-  ro('vR2',   fmt(d.r*d.r,4));
-}
-function fromCart(){
-  PT.x = parseFloat($('cx').value)||0;
-  PT.y = parseFloat($('cy').value)||0;
-  PT.z = parseFloat($('cz').value)||0;
-  syncInputs(); onChange();
-}
-function fromCyl(){
-  const rho = parseFloat($('crho').value)||0;
-  const phi = parseFloat($('cphi').value)||0;
-  const z   = parseFloat($('cz2').value)||0;
-  PT.x = rho*Math.cos(phi); PT.y = rho*Math.sin(phi); PT.z = z;
-  syncInputs(); onChange();
-}
-function fromSph(){
-  const r = parseFloat($('cr').value)||0;
-  const th= parseFloat($('cth').value)||0;
-  const ph= parseFloat($('cphi2').value)||0;
-  PT.x = r*Math.sin(th)*Math.cos(ph);
-  PT.y = r*Math.sin(th)*Math.sin(ph);
-  PT.z = r*Math.cos(th);
-  syncInputs(); onChange();
-}
-function bindCoords(){
-  const on=(id,fn)=>{const e=$(id); if(e) e.addEventListener('input',fn);};
-  ['cx','cy','cz'].forEach(id=>on(id,fromCart));
-  ['crho','cphi','cz2'].forEach(id=>on(id,fromCyl));
-  ['cr','cth','cphi2'].forEach(id=>on(id,fromSph));
-}
-function setPT(x,y,z){ PT.x=x; PT.y=y; PT.z=z; syncInputs(); onChange(); }
-
-/* ================= Three.js ================= */
-const toThree = (x,y,z)=> new THREE.Vector3(x, z, y);
-
-function makeLabel(text, color){
-  const cv=document.createElement('canvas'); cv.width=128; cv.height=64;
-  const g2=cv.getContext('2d');
-  g2.font='bold 46px system-ui, sans-serif';
-  g2.fillStyle='#'+color.toString(16).padStart(6,'0');
-  g2.textAlign='center'; g2.textBaseline='middle';
-  g2.fillText(text,64,34);
-  const tex=new THREE.CanvasTexture(cv);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
-  sp.scale.set(1.0,0.5,1);
-  return sp;
-}
-function clearGroup(g){
-  if(!g) return;
-  while(g.children.length){
-    const c=g.children[0]; g.remove(c);
-    if(c.geometry) c.geometry.dispose();
-    if(c.material){ Array.isArray(c.material)?c.material.forEach(m=>m.dispose()):c.material.dispose(); }
+/* ================= MathJax ================= */
+function typeset(items){
+  const MJ=window.MathJax;
+  const live=items.filter(i=>i.el&&document.body.contains(i.el));
+  if(MJ&&MJ.typesetPromise&&MJ.startup&&MJ.startup.promise){
+    live.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div>\\['+i.tex+'\\]'});
+    const els=live.map(i=>i.el); try{MJ.typesetClear(els)}catch(e){}
+    MJ.startup.promise.then(()=>MJ.typesetPromise(els)).catch(()=>{}); return true;
   }
+  live.forEach(i=>{i.el.innerHTML='<div class="cap">'+i.cap+'</div><div class="eq">'+i.fb+'</div>'});
+  return false;
 }
-function line(g, pts, color, dashed){
-  const geo=new THREE.BufferGeometry().setFromPoints(pts);
-  const mat = dashed
-    ? new THREE.LineDashedMaterial({color,dashSize:0.18,gapSize:0.12})
-    : new THREE.LineBasicMaterial({color});
-  const l=new THREE.Line(geo,mat);
-  if(dashed) l.computeLineDistances();
-  g.add(l);
-}
+const tx=(x,d)=>fmt(x,d).replace(",","{,}");
 
-function init3D(){
-  const host=$('gl'); if(!host) return;
-  if(!window.THREE){
-    host.innerHTML='<div class="fallback">La scène 3D n\'a pas pu être chargée (bibliothèque Three.js indisponible). Vérifiez votre connexion réseau.</div>';
-    return;
+/* ================= ROTOR ================= */
+const S={th:0,w:0,t:0,run:true,cross:[],prev:0,method:"G"};
+function P(){return{R:+$("Rr").value,r:+$("rr").value,m:+$("mR").value,k:+$("kR").value,th0:+$("thR").value*Math.PI/180}}
+function rotorQ(){
+  const p=P(),C=p.k*p.m*p.r*p.r,d=p.R-p.r;
+  const Jg=p.m*d*d+C*Math.pow(1-p.R/p.r,2);
+  const IM=C+p.m*p.r*p.r,Jm=IM*Math.pow(d/p.r,2);
+  return {p,C,d,Jg,IM,Jm,T0:2*Math.PI*Math.sqrt(Jm/(p.m*g*d))};
+}
+function resetR(){ if(!$("Rr"))return; const q=rotorQ(); S.th=q.p.th0;S.w=0;S.t=0;S.cross=[];S.prev=S.th; const e=$("rTm");if(e)e.textContent="–"; }
+function accR(th,q){return -q.p.m*g*q.d*Math.sin(th)/q.Jm}
+function stepR(dt,q){
+  const a=S.th,b=S.w;
+  const k1=[b,accR(a,q)],k2=[b+dt/2*k1[1],accR(a+dt/2*k1[0],q)],k3=[b+dt/2*k2[1],accR(a+dt/2*k2[0],q)],k4=[b+dt*k3[1],accR(a+dt*k3[0],q)];
+  S.th=a+dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);
+  S.w=b+dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
+  S.t+=dt;
+  if(S.prev<0&&S.th>=0){S.cross.push(S.t);if(S.cross.length>=2){const n=S.cross.length;const e=$("rTm");if(e)e.textContent=fmt(S.cross[n-1]-S.cross[n-2],3)+" s"}}
+  S.prev=S.th;
+}
+function Kell(k){let a=1,b=Math.sqrt(1-k*k);for(let i=0;i<30;i++){const t=(a+b)/2;b=Math.sqrt(a*b);a=t}return Math.PI/(2*a)}
+const SR={T:1,ser:[]};
+function buildR(){
+  if(!$("Rr")) return;
+  const q=rotorQ(),p=q.p,ck=1-p.R/p.r,N=240;
+  SR.T=q.T0*(2/Math.PI)*Kell(Math.sin(p.th0/2));
+  let th=p.th0,w=0; const dt=SR.T/N,A=[],O=[],V=[];
+  const acc=x=>-p.m*g*q.d*Math.sin(x)/q.Jm;
+  for(let i=0;i<=N;i++){
+    A.push(-(p.R/p.r)*th*180/Math.PI);O.push(ck*w);V.push(q.d*w);
+    const k1=[w,acc(th)],k2=[w+dt/2*k1[1],acc(th+dt/2*k1[0])],k3=[w+dt/2*k2[1],acc(th+dt/2*k2[0])],k4=[w+dt*k3[1],acc(th+dt*k3[0])];
+    th+=dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]);w+=dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]);
   }
-  const w=host.clientWidth||600, hh=host.clientHeight||460;
-  const scene=new THREE.Scene();
-  scene.background=new THREE.Color(darkTheme?0x101010:0xf8fbff);
-
-  const camera=new THREE.PerspectiveCamera(45,w/hh,0.1,200);
-  camera.position.set(9,7,11);
-
-  const renderer=new THREE.WebGLRenderer({antialias:true});
-  renderer.setSize(w,hh);
-  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
-  host.appendChild(renderer.domElement);
-
-  const controls=new THREE.OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true; controls.dampingFactor=0.08;
-  controls.target.set(0,2,0);
-
-  scene.add(new THREE.AmbientLight(0xffffff,0.65));
-  const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(6,12,8); scene.add(dl);
-
-  const grid=new THREE.GridHelper(12,12, darkTheme?0x445566:0xa8b6c6, darkTheme?0x263340:0xd6e0ea);
-  scene.add(grid);
-
-  const L=5.5;
-  const mk=(dir,color,name)=>{
-    scene.add(new THREE.ArrowHelper(dir.clone().normalize(), new THREE.Vector3(0,0,0), L, color, 0.55, 0.28));
-    const s=makeLabel(name,color);
-    s.position.copy(dir.clone().normalize().multiplyScalar(L+0.75));
-    scene.add(s);
-  };
-  mk(new THREE.Vector3(1,0,0),0xd93025,'x');
-  mk(new THREE.Vector3(0,0,1),0x188038,'y');
-  mk(new THREE.Vector3(0,1,0),0x1a73e8,'z');
-
-  const point=new THREE.Mesh(
-    new THREE.SphereGeometry(0.18,24,24),
-    new THREE.MeshStandardMaterial({color:0xe8710a,emissive:0x3a1a00})
-  );
-  scene.add(point);
-
-  const cart=new THREE.Group(), cyl=new THREE.Group(), sph=new THREE.Group();
-  scene.add(cart,cyl,sph);
-
-  G3={scene,camera,renderer,controls,point,cart,cyl,sph,raf:0};
-  const loop=()=>{ if(!G3) return; G3.raf=requestAnimationFrame(loop); G3.controls.update(); G3.renderer.render(G3.scene,G3.camera); };
-  loop();
+  const mx=a=>Math.max(1e-9,...a.map(Math.abs));
+  SR.ser=[{key:"a",v:A,max:mx(A),col:"--acol",name:"α",sub:"",unit:"°"},
+          {key:"o",v:O,max:mx(O),col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
+          {key:"v",v:V,max:mx(V),col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
 }
-function dispose3D(){
-  if(!G3) return;
-  cancelAnimationFrame(G3.raf);
-  try{ G3.renderer.dispose(); }catch(e){}
-  const el=G3.renderer.domElement;
-  if(el && el.parentNode) el.parentNode.removeChild(el);
-  G3=null;
+function drawPlotR(q,th){
+  if(!$("chR_a")) return;
+  const p=q.p,ck=1-p.R/p.r;
+  const cur={a:-(p.R/p.r)*th*180/Math.PI,o:ck*S.w,v:q.d*S.w},u={a:" °",o:" rad/s",v:" m/s"};
+  SR.ser.forEach(s=>{s.on=$("chR_"+s.key).checked;s.cur=cur[s.key];const e=$("chRv_"+s.key);if(e)e.textContent=fmt(cur[s.key],s.key==="a"?1:3)+u[s.key]});
+  plotTime($("cvPt"),SR.T,SR.ser,S.t%SR.T);
 }
-function resize3D(){
-  if(!G3) return;
-  const host=$('gl'); if(!host) return;
-  const w=host.clientWidth, hh=host.clientHeight;
-  if(w<10||hh<10) return;
-  G3.camera.aspect=w/hh; G3.camera.updateProjectionMatrix();
-  G3.renderer.setSize(w,hh);
-}
-function update3D(){
-  if(!G3) return;
-  const d=derived();
-  G3.point.position.copy(toThree(d.x,d.y,d.z));
-  [G3.cart,G3.cyl,G3.sph].forEach(clearGroup);
-
-  const showCart = $('gCart') ? $('gCart').checked : true;
-  const showCyl  = $('gCyl')  ? $('gCyl').checked  : true;
-  const showSph  = $('gSph')  ? $('gSph').checked  : true;
-
-  if(showCart){
-    line(G3.cart,[toThree(0,0,0), toThree(d.x,0,0)],0xd93025,true);
-    line(G3.cart,[toThree(d.x,0,0), toThree(d.x,d.y,0)],0x188038,true);
-    line(G3.cart,[toThree(d.x,d.y,0), toThree(d.x,d.y,d.z)],0x1a73e8,true);
-    const proj=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12), new THREE.MeshBasicMaterial({color:0x8a94a3}));
-    proj.position.copy(toThree(d.x,d.y,0));
-    G3.cart.add(proj);
+function drawR(){
+  if(!$("cvR")) return;
+  const q=rotorQ(),p=q.p,{c,w,h:hh}=setup($("cvR"));
+  const sc=Math.min(w*0.9/(2*p.R),hh*0.86/(1.15*p.R));
+  const ox=w/2,oy=hh*0.07;
+  const X=x=>ox+x*sc,Y=y=>oy-y*sc;
+  const th=S.th,phi=(1-p.R/p.r)*th,al=phi-th;
+  c.strokeStyle=css("--muted");c.lineWidth=5;c.beginPath();c.arc(X(0),Y(0),p.R*sc,0.05,Math.PI-0.05);c.stroke();
+  const gx=(p.R-p.r)*Math.sin(th),gy=-(p.R-p.r)*Math.cos(th),mx=p.R*Math.sin(th),my=-p.R*Math.cos(th);
+  c.setLineDash([5,5]);c.strokeStyle=css("--muted");c.lineWidth=1;
+  c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(0),Y(-p.R));c.stroke();
+  c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(mx),Y(my));c.stroke();c.setLineDash([]);
+  c.strokeStyle=css("--accent");c.lineWidth=2;
+  c.beginPath();c.arc(X(0),Y(0),0.3*p.R*sc,Math.PI/2,Math.PI/2-th,th>0);c.stroke();
+  c.fillStyle=css("--accent");c.font="700 15px "+css("--font-ui");c.fillText("θ",X(0)+(th>=0?8:-20),Y(-0.36*p.R));
+  c.fillStyle=css("--accent")+"22";c.strokeStyle=css("--accent");c.lineWidth=2.5;
+  c.beginPath();c.arc(X(gx),Y(gy),p.r*sc,0,7);c.fill();c.stroke();
+  for(let i=0;i<3;i++){const a=phi+i*2*Math.PI/3;c.lineWidth=i?1.5:3;
+    c.beginPath();c.moveTo(X(gx),Y(gy));c.lineTo(X(gx+p.r*Math.cos(a)),Y(gy+p.r*Math.sin(a)));c.stroke()}
+  const gX=X(gx),gY=Y(gy),rg=p.r*sc;
+  if($("alR")&&$("alR").checked){
+    const col=css("--acol");
+    c.setLineDash([4,4]);c.strokeStyle=css("--muted");c.lineWidth=1.3;
+    c.beginPath();c.moveTo(gX-1.45*rg*Math.cos(th),gY+1.45*rg*Math.sin(th));c.lineTo(gX+1.45*rg*Math.cos(th),gY-1.45*rg*Math.sin(th));c.stroke();c.setLineDash([]);
+    sub(c,gX-1.45*rg*Math.cos(th)-16,gY+1.45*rg*Math.sin(th)+16,"x","i",css("--muted"),14);
+    c.strokeStyle=css("--accent");c.lineWidth=1.3;c.beginPath();c.moveTo(gX+rg*Math.cos(phi),gY-rg*Math.sin(phi));c.lineTo(gX+1.45*rg*Math.cos(phi),gY-1.45*rg*Math.sin(phi));c.stroke();
+    sub(c,gX+1.45*rg*Math.cos(phi)+4,gY-1.45*rg*Math.sin(phi)-4,"x","2",css("--accent"),14);
+    c.strokeStyle=col;c.lineWidth=2.6;c.beginPath();c.arc(gX,gY,0.8*rg,-th,-phi,al>0);c.stroke();
+    const mid=th+al/2;
+    if(Math.abs(al)>0.02){c.fillStyle=col;c.font="700 19px "+css("--font-ui");c.fillText("α",gX+1.12*rg*Math.cos(mid)-6,gY-1.12*rg*Math.sin(mid)+6)}
   }
-
-  if(showCyl && d.rho>0.05){
-    const mesh=new THREE.Mesh(
-      new THREE.CylinderGeometry(d.rho,d.rho,Math.abs(d.z)+0.6,48,1,true),
-      new THREE.MeshBasicMaterial({color:0x22aa77,wireframe:true,transparent:true,opacity:0.22})
-    );
-    mesh.position.copy(toThree(0,0,d.z/2));
-    G3.cyl.add(mesh);
-    line(G3.cyl,[toThree(0,0,0), toThree(d.x,d.y,0)],0x0f9d58,true);
-    const arc=[];
-    for(let i=0;i<=32;i++){ const a=d.phi*i/32; arc.push(toThree(d.rho*Math.cos(a), d.rho*Math.sin(a), 0)); }
-    line(G3.cyl,arc,0x0f9d58);
-  }
-
-  if(showSph && d.r>0.05){
-    const mesh=new THREE.Mesh(
-      new THREE.SphereGeometry(d.r,32,24),
-      new THREE.MeshBasicMaterial({color:0xaa66ff,wireframe:true,transparent:true,opacity:0.15})
-    );
-    G3.sph.add(mesh);
-    line(G3.sph,[toThree(0,0,0), toThree(d.x,d.y,d.z)],0x7c3aed,true);
-    if(d.rho>0.02){
-      const arc=[];
-      for(let i=0;i<=24;i++){
-        const t=d.theta*i/24;
-        arc.push(toThree(d.r*Math.sin(t)*Math.cos(d.phi), d.r*Math.sin(t)*Math.sin(d.phi), d.r*Math.cos(t)));
-      }
-      line(G3.sph,arc,0x7c3aed);
+  dot(c,gX,gY,css("--gcol"),"G",-18,20);
+  dot(c,X(0),Y(0),css("--fg"),"C",8,-8);
+  if($("cirR")&&$("cirR").checked){dot(c,X(mx),Y(my),css("--mcol"),null);
+    c.fillStyle=css("--mcol");c.font="700 14px "+css("--font-ui");c.textAlign="center";
+    c.fillText("M = CIR",X(mx)+30*Math.sin(th),Y(my)+30*Math.cos(th)+4);c.textAlign="left"}
+  if($("vecR")&&$("vecR").checked){
+    const wm=Math.sqrt(2*p.m*g*q.d*(1-Math.cos(p.th0))/q.Jm)||1e-9;
+    const vmax=q.d*wm,Lmax=Math.min(2.4*rg,0.55*p.R*sc),L=q.d*S.w/vmax*Lmax;
+    const ex=gX+Math.cos(th)*L,ey=gY-Math.sin(th)*L;
+    if(Math.abs(L)>5){arrow(c,gX,gY,ex,ey,css("--gcol"),null,5);
+      sub(c,ex+(L>0?10:-34),ey-12,"V","G",css("--gcol"),20)}
+    const ck=1-p.R/p.r,Om=ck*S.w,Omax=Math.abs(ck)*wm,da=Math.max(-1,Math.min(1,Om/Omax))*4.3;
+    if(Math.abs(da)>0.15){
+      const e=arcArrow(c,gX,gY,0.5*rg,1.2*Math.PI,da,css("--wcol"));
+      c.fillStyle=css("--wcol");c.font="700 21px "+css("--font-ui");c.fillText("Ω",e[0]-8,e[1]+7);
     }
   }
+  scaleBar(c,w,hh,sc);
+  const P_ext=-p.m*g*q.d*S.w*Math.sin(th),dEc=q.Jm*S.w*accR(th,q);
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  set("rTh",fmt(th*180/Math.PI,1)+" °");set("rAl",fmt(-(p.R/p.r)*th*180/Math.PI,1)+" °");
+  set("rJ",fmt(q.Jm,4)+" kg·m²");set("rT0",fmt(q.T0,3)+" s");
+  set("rdE",fmt(dEc,3)+" W");set("rP",fmt(P_ext,3)+" W");
+  drawPlotR(q,th);
+}
+let triesR=0;
+function renderTors(){
+  if(!$("torG")) return;
+  const q=rotorQ(),p=q.p,ck=1-p.R/p.r;
+  const tg=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{G,2/1}=(R-r)\,\dot\theta\,\vec x_i=${tx(q.d,2)}\,\dot\theta\,\vec x_i\end{array}\right\}_{G}`;
+  const tm=String.raw`\left\{\mathcal V_{2/1}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/1}=\left(1-\frac{R}{r}\right)\dot\theta\,\vec z_1=${tx(ck,2)}\,\dot\theta\,\vec z_1\\ \vec V_{M,2/1}=\vec 0\end{array}\right\}_{M}`;
+  const ok=typeset([
+    {el:$("torG"),cap:"Torseur cinématique de 2/1 en G",tex:tg,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>G</sub> = "+fmt(q.d,2)+" θ̇ x<sub>i</sub> }<sub>G</sub>"},
+    {el:$("torM"),cap:"Torseur cinématique de 2/1 en M",tex:tm,fb:"{V₂/₁} = { Ω = "+fmt(ck,2)+" θ̇ z₁ ; V<sub>M</sub> = 0 }<sub>M</sub>"}]);
+  if(!ok&&triesR++<40)setTimeout(renderTors,500);
+}
+function renderStepsR(){
+  if(!$("stepsR")) return;
+  const q=rotorQ(),{p}=q,ck=(1-p.R/p.r);
+  const ok=Math.abs(q.Jg-q.Jm)<1e-12*Math.max(1,q.Jg);
+  let hh="";
+  if(S.method==="G"){
+    hh=`<li><span class="t">1 · Cinématique en G</span><span class="eq">Ω<sub>2/1</sub> = (1−R/r) θ̇ z = <b>${fmt(ck,3)}</b> θ̇ z &nbsp;;&nbsp; V<sub>G,2/1</sub> = (R−r) θ̇ x<sub>i</sub> = <b>${fmt(q.d,3)}</b> θ̇ x<sub>i</sub></span><br><span class="note">Il faut établir la relation α̇ = −(R/r) θ̇ avec Varignon entre M et G.</span></li>
+    <li><span class="t">2 · Comoment en G (matrice d'inertie en G, déjà donnée)</span><span class="eq">E<sub>c</sub> = ½ [ m V<sub>G</sub>² + Ω·I<sub>G</sub>Ω ] = ½ [ m(R−r)² + C₂(1−R/r)² ] θ̇²</span><br>
+      <span class="eq"><span class="G">= ½ [ ${fmt(p.m*q.d*q.d,4)} + ${fmt(q.C*ck*ck,4)} ] θ̇² = ½ · ${fmt(q.Jg,4)} θ̇²</span></span></li>
+    <li><span class="t">3 · Puissance extérieure</span><span class="eq">P<sub>ext</sub> = −m g (R−r) θ̇ sin θ &nbsp; (contact en M : puissance nulle)</span></li>
+    <li><span class="t">4 · TEC</span><span class="eq">J<sub>eq</sub> θ̈ + m g (R−r) sin θ = 0 &nbsp; avec J<sub>eq</sub> = <span class="G">${fmt(q.Jg,4)}</span> kg·m²</span></li>`;
+  }else{
+    hh=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>M,2/1</sub> = 0</span><br><span class="note">M est le centre instantané de rotation : le mouvement de 2/1 est une rotation pure d'axe (M, z). Seul Ω reste à exprimer : Ω = (R−r)θ̇ / r en norme.</span></li>
+    <li><span class="t">2 · Déplacer la matrice d'inertie en M (Huygens), une seule fois</span>
+      <span class="eq">MG = r y<sub>i</sub> &nbsp;⇒&nbsp; I<sub>M</sub>(2) = diag( A₂ + m r² , A₂ , <span class="M">C₂ + m r²</span> )</span><br>
+      <span class="eq">C₂ + m r² = ${fmt(q.C,5)} + ${fmt(p.m*p.r*p.r,5)} = <span class="M">${fmt(q.IM,5)}</span> kg·m²</span></li>
+    <li><span class="t">3 · Énergie cinétique : V<sub>M</sub> = 0, donc un seul terme</span><span class="eq">E<sub>c</sub> = ½ Ω·I<sub>M</sub>Ω = ½ (C₂ + m r²) [(R−r)/r]² θ̇²</span><br>
+      <span class="eq"><span class="M">= ½ · ${fmt(q.IM,5)} · ${fmt(Math.pow(q.d/p.r,2),3)} θ̇² = ½ · ${fmt(q.Jm,4)} θ̇²</span></span></li>
+    <li><span class="t">4 · Puissance extérieure et TEC</span><span class="eq">P<sub>ext</sub> = −m g (R−r) θ̇ sin θ &nbsp;⇒&nbsp; J<sub>eq</sub> θ̈ + m g (R−r) sin θ = 0</span></li>`;
+  }
+  $("stepsR").innerHTML=hh;
+  $("verdR").innerHTML=`J<sub>eq</sub> obtenu en G : <b class="G">${fmt(q.Jg,5)}</b> &nbsp;·&nbsp; en M : <b class="M">${fmt(q.Jm,5)}</b> kg·m² ${ok?"→ identiques":"→ écart"}.
+   Période : T = 2π √[(R−r)(C₂+m r²)/(m g r²)] = <b>${fmt(q.T0,3)} s</b>.
+   ${S.method==="G"?"En G, il faut deux termes de comoment et la cinématique de G.":"En M, un seul terme d'inertie suffit, et la matrice se déplace par Huygens."}`;
+}
+function onRotorParams(){
+  if(!$("Rr")) return;
+  const R=+$("Rr").value; $("rr").max=(R*0.9).toFixed(3);
+  if(+$("rr").value>R*0.9) $("rr").value=R*0.9;
+  const e=$("orr"); if(e) e.textContent=fmt(+$("rr").value,3)+" m";
+  resetR(); buildR(); renderStepsR(); renderTors(); drawR();
 }
 
-/* ================= Atelier 1 : Exploration 3D ================= */
-function mount3D(root){
+/* ================= VÉLO ================= */
+const B={t:0,run:true,method:"G",hold:0,L:3,rh:0.03};
+function bq(){
+  const r=+$("bb").value,beta=r*Math.PI/180,rr=+$("rb").value;
+  const mj=+$("mj").value,ms=+$("ms").value,mh=+$("mh").value,m=mj+ms+mh;
+  const C=mj*rr*rr+ms*rr*rr/3+0.5*mh*B.rh*B.rh;
+  const k=C/(m*rr*rr),a=g*Math.sin(beta)/(1+k);
+  return {beta,r:rr,m,C,k,a,f:k*m*a,mu:k*Math.tan(beta)/(1+k),tf:Math.sqrt(2*B.L/a)};
+}
+const SB={ser:[],T:1};
+function buildB(){
+  if(!$("bb")) return;
+  const q=bq(),N=120,Pp=[],O=[],V=[];
+  for(let i=0;i<=N;i++){const t=q.tf*i/N;Pp.push(-q.a*t*t/(2*q.r));O.push(-q.a*t/q.r);V.push(q.a*t)}
+  SB.T=q.tf;
+  SB.ser=[{key:"p",v:Pp,max:Math.abs(Pp[N])||1e-9,col:"--acol",name:"ψ",sub:"",unit:"rad"},
+          {key:"o",v:O,max:Math.abs(O[N])||1e-9,col:"--wcol",name:"Ω",sub:"",unit:"rad/s"},
+          {key:"v",v:V,max:V[N]||1e-9,col:"--gcol",name:"V",sub:"G",unit:"m/s"}];
+}
+function drawB(){
+  if(!$("cvB")) return;
+  const q=bq(),{c,w,h:hh}=setup($("cvB"));
+  const t=Math.min(B.t,q.tf),s=0.5*q.a*t*t,v=q.a*t;
+  const sc=Math.min((w-90)/(B.L*Math.cos(q.beta)+4.3*q.r),0.62*hh/(B.L*Math.sin(q.beta)+2*q.r));
+  const x0=30+1.1*q.r*sc,y0=(hh-B.L*Math.sin(q.beta)*sc)/2-q.r*sc*0.1;
+  const cb=Math.cos(q.beta),sb=Math.sin(q.beta),Pt=(x,y)=>[x0+x*cb-y*sb,y0+x*sb+y*cb];
+  const R=q.r*sc,gx=s*sc,gy=-R,vmax=q.a*q.tf;
+  const gcol=css("--gcol"),wcol=css("--wcol");
+  c.save();c.translate(x0,y0);c.rotate(q.beta);
+  c.fillStyle=css("--grid");c.fillRect(-0.5*R,0,B.L*sc+R,14);
+  c.strokeStyle=css("--muted");c.lineWidth=3;c.beginPath();c.moveTo(-0.5*R,0);c.lineTo(B.L*sc+R,0);c.stroke();
+  for(let d=0;d<=B.L;d+=0.5){c.lineWidth=1;c.beginPath();c.moveTo(d*sc,0);c.lineTo(d*sc,8);c.stroke()}
+  let sbk=0;
+  if($("ghB")&&$("ghB").checked){sbk=Math.min(0.5*g*Math.sin(q.beta)*t*t,B.L);c.fillStyle=css("--muted");c.fillRect(sbk*sc-7,16,14,10)}
+  c.strokeStyle=css("--accent");c.lineWidth=Math.max(3,R*0.09);c.beginPath();c.arc(gx,gy,R,0,7);c.stroke();
+  for(let i=0;i<16;i++){const a=s/q.r+i*Math.PI/8;c.strokeStyle=i===0?css("--mcol"):css("--accent");c.lineWidth=i===0?2.5:1;
+    c.beginPath();c.moveTo(gx,gy);c.lineTo(gx+R*Math.cos(a),gy+R*Math.sin(a));c.stroke()}
+  c.fillStyle=css("--panel");c.strokeStyle=css("--accent");c.lineWidth=2;c.beginPath();c.arc(gx,gy,R*0.1,0,7);c.fill();c.stroke();
+  dot(c,gx,gy,gcol,null);dot(c,gx,0,css("--mcol"),null);
+  const L=v/vmax*2.2*R;
+  if(L>5)arrow(c,gx,gy,gx+L,gy,gcol,null,5);
+  let om=null;
+  const da=-(v/vmax)*4.3;
+  if(Math.abs(da)>0.15)om=arcArrow(c,gx,gy,0.5*R,Math.PI*0.9,da,wcol);
+  let fl=0;
+  if($("fcB")&&$("fcB").checked){fl=Math.min(1.4*R,q.f/(q.m*g)*R*6);if(fl>4)arrow(c,gx,-3,gx-fl,-3,css("--bad"),null,3)}
+  c.restore();
+  c.textAlign="left";
+  let p1=Pt(gx,gy);c.fillStyle=gcol;c.font="700 14px "+css("--font-ui");c.fillText("G",p1[0]-18,p1[1]+20);
+  p1=Pt(gx,0);c.fillStyle=css("--mcol");c.fillText("I (V = 0)",p1[0]-24,p1[1]+30);
+  if(L>5){p1=Pt(gx+L+10,gy);sub(c,p1[0],p1[1]-8,"V","G",gcol,20)}
+  if(om){p1=Pt(om[0],om[1]);c.fillStyle=wcol;c.font="700 21px "+css("--font-ui");c.fillText("Ω",p1[0]-8,p1[1]+7)}
+  if(fl>4){p1=Pt(gx-fl-14,-8);c.fillStyle=css("--bad");c.font="700 15px "+css("--font-ui");c.fillText("f",p1[0],p1[1])}
+  if($("ghB")&&$("ghB").checked){p1=Pt(sbk*sc,16);c.fillStyle=css("--muted");c.font="12px "+css("--font-ui");c.fillText("bloc sans frottement",p1[0]-48,p1[1]+30)}
+  scaleBar(c,w,hh,sc);
+  const cur={p:-s/q.r,o:-v/q.r,v:v},u={p:" rad",o:" rad/s",v:" m/s"};
+  SB.ser.forEach(e=>{e.on=$("chB_"+e.key).checked;e.cur=cur[e.key];const el=$("chBv_"+e.key);if(el)el.textContent=fmt(cur[e.key],2)+u[e.key]});
+  plotTime($("cvTB"),SB.T,SB.ser,t);
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  set("bC",fmt(q.C,4)+" kg·m²");set("bk",fmt(q.k,3));
+  set("ba",fmt(q.a,3)+" m/s²");set("bf",fmt(q.f,2)+" N");set("bmu",fmt(q.mu,3));
+  set("bv",fmt(v,2)+" m/s");
+}
+let triesB=0;
+function renderTorsB(){
+  if(!$("torBG")) return;
+  const q=bq(),k=1/q.r,tk=fmt(k,2).replace(",","{,}");
+  const tg=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{G,2/0}=\dot s\,\vec x_0\end{array}\right\}_{G}`;
+  const ti=String.raw`\left\{\mathcal V_{2/0}\right\}=\left\{\begin{array}{l}\vec\Omega_{2/0}=\dot\psi\,\vec z_0=-\frac{\dot s}{r}\,\vec z_0=-${tk}\,\dot s\,\vec z_0\\ \vec V_{I,2/0}=\vec 0\end{array}\right\}_{I}`;
+  const ok=typeset([
+    {el:$("torBG"),cap:"Torseur cinématique de 2/0 en G",tex:tg,fb:"{V₂/₀} = { Ω = −"+fmt(k,2)+" ṡ z₀ ; V<sub>G</sub> = ṡ x₀ }<sub>G</sub>"},
+    {el:$("torBI"),cap:"Torseur cinématique de 2/0 en I",tex:ti,fb:"{V₂/₀} = { Ω = −"+fmt(k,2)+" ṡ z₀ ; V<sub>I</sub> = 0 }<sub>I</sub>"}]);
+  if(!ok&&triesB++<40)setTimeout(renderTorsB,500);
+  const e=$("bAxes"); if(e) e.textContent="x₀ le long de la pente vers le bas, z₀ = x₀ ∧ y₀ sortant de l'écran";
+}
+function stepsB(){
+  if(!$("stepsB")) return;
+  const q=bq();
+  const meff=q.m+q.C/(q.r*q.r),IM=q.C+q.m*q.r*q.r;
+  let hh;
+  if(B.method==="G"){
+    hh=`<li><span class="t">1 · Cinématique en G</span><span class="eq">RSG en I : V<sub>I</sub> = 0 ⇒ V<sub>G</sub> = r Ω &nbsp;;&nbsp; Ω = v / r</span></li>
+    <li><span class="t">2 · Comoment en G : deux termes</span><span class="eq">E<sub>c</sub> = ½ m v² + ½ C Ω² = ½ ( m + C/r² ) v²</span><br>
+      <span class="eq"><span class="G">= ½ ( ${fmt(q.m,3)} + ${fmt(q.C/(q.r*q.r),3)} ) v² = ½ · ${fmt(meff,3)} v²</span></span></li>
+    <li><span class="t">3 · Puissance extérieure</span><span class="eq">P<sub>ext</sub> = m g sin β · v &nbsp; (réaction en I : P = 0, car V<sub>I</sub> = 0)</span></li>
+    <li><span class="t">4 · TEC</span><span class="eq">( m + C/r² ) v v̇ = m g sin β v ⇒ a = <span class="G">${fmt(q.a,3)} m/s²</span></span></li>`;
+  }else{
+    hh=`<li><span class="t">1 · Roulement sans glissement</span><span class="eq">V<sub>I,2/0</sub> = 0 : I est le centre instantané de rotation</span></li>
+    <li><span class="t">2 · Matrice d'inertie en I par Huygens (IG = r)</span><span class="eq">I<sub>I</sub>(2) · zz = C + m r² = ${fmt(q.C,4)} + ${fmt(q.m*q.r*q.r,4)} = <span class="M">${fmt(IM,4)}</span> kg·m²</span></li>
+    <li><span class="t">3 · Énergie cinétique : un seul terme</span><span class="eq">E<sub>c</sub> = ½ (C + m r²) Ω² = ½ <span class="M">${fmt(IM,4)}</span> (v/r)²</span><br><span class="note">I se déplace sur le sol, mais IG = r reste constant : l'expression vaut à chaque instant.</span></li>
+    <li><span class="t">4 · TEC</span><span class="eq">(C + m r²) Ω Ω̇ = m g sin β · r Ω ⇒ a = r Ω̇ = <span class="M">${fmt(q.a,3)} m/s²</span></span></li>`;
+  }
+  $("stepsB").innerHTML=hh;
+  $("verdB").innerHTML=`a = g sin β / (1 + k) avec k = C/(m r²) = <b>${fmt(q.k,3)}</b> : la roue descend ${fmt(1+q.k,2)} fois moins vite qu'un bloc sans frottement. Arrivée en <b>${fmt(q.tf,2)} s</b>.
+   Le frottement f = ${fmt(q.f,2)} N est non nul mais ne travaille pas. Il faut μ ≥ ${fmt(q.mu,3)} pour rouler sans glisser.`;
+}
+function resetB(){ B.t=0; B.hold=0; }
+function onB(){ if(!$("bb")) return; resetB(); buildB(); stepsB(); renderTorsB(); drawB(); }
+
+/* ================= HUYGENS ================= */
+function huygensUpd(){
+  if(!$("hMG")) return;
+  const m=+$("hm").value,A=+$("hA").value,Bb=+$("hB").value,C=+$("hC").value,a=+$("hx").value,b=+$("hy").value,c=+$("hz").value;
+  const G=[[A,0,0],[0,Bb,0],[0,0,C]];
+  const H=[[b*b+c*c,-a*b,-a*c],[-a*b,a*a+c*c,-b*c],[-a*c,-b*c,a*a+b*b]];
+  const M=G.map((r,i)=>r.map((v,j)=>v+m*H[i][j]));
+  const mat=Mx=>Mx.map(r=>r.map(v=>(Math.abs(v)<5e-7?"0":f(v,4)).padStart(8)).join(" ")).join("\n");
+  $("hMG").textContent=mat(G); $("hMM").textContent=mat(M);
+  const off=Math.abs(a*b)+Math.abs(a*c)+Math.abs(b*c)>1e-9;
+  $("hTxt").textContent=off?"MG n'est pas porté par un axe : des termes hors diagonale apparaissent (−m·a·b, −m·a·c, −m·b·c).":
+    "MG est porté par un axe : la matrice reste diagonale. Seuls les deux termes des axes perpendiculaires à MG augmentent de m·d².";
+}
+function huygensSet(o){
+  for(const k in o){
+    const inp=$(k), out=$("o"+k);
+    if(inp) inp.value=o[k];
+    if(out){
+      const isM = /h[xyz]/.test(k);
+      out.textContent = fmt(+o[k], k==="hm"?1:isM?2:4) + (k==="hm"?" kg":isM?" m":"");
+    }
+  }
+  huygensUpd();
+}
+
+/* ================= MOUNT ROTOR (deux colonnes) ================= */
+function mountRotor(root){
   root.innerHTML = `
     <div class="ws-two">
       <div class="ws-main">
-        <h2>Exploration 3D</h2>
-        <p class="small">Le même point M est décrit par trois jeux de coordonnées. Les guides montrent la construction géométrique de chacune : projections parallèles aux axes (cartésien), rayon et angle φ (cylindrique), rayon et angle θ (sphérique).</p>
-        <div class="stagebox"><div class="gl" id="gl"></div></div>
-        <p class="small" style="margin:6px 0 0">Souris gauche = rotation · molette = zoom · clic droit = déplacement. Axes : <b style="color:var(--rcol)">x rouge</b>, <b style="color:var(--gcol)">y vert</b>, <b style="color:var(--wcol)">z bleu (vertical)</b>.</p>
-        <h3>Valeurs</h3>
-        <div class="gstats">
-          <div class="stat"><span>ρ</span><b id="vRho"></b></div>
-          <div class="stat"><span>r</span><b id="vR"></b></div>
-          <div class="stat"><span>φ</span><b id="vPhi"></b></div>
-          <div class="stat"><span>θ</span><b id="vTheta"></b></div>
+        <h2>Banc d'inertie</h2>
+        <p class="small">Un rotor de rayon r roule sans glisser à l'intérieur de deux plaques circulaires de rayon R. Il oscille autour de sa position d'équilibre. Le TEC s'écrit avec le même J<sub>eq</sub>, que l'on se place en G (deux termes) ou en M, centre instantané de rotation (un seul terme).</p>
+
+        <div class="stagebox">
+          <canvas id="cvR" aria-label="Rotor roulant sans glisser dans une plaque circulaire"></canvas>
+          <div class="chips" id="chR" role="group" aria-label="Grandeurs affichées"></div>
+          <div class="files" style="margin-top:8px">
+            <button class="btn pri" id="playR" type="button">Pause</button>
+            <button class="btn" id="resetR" type="button">Relâcher à θ₀</button>
+          </div>
         </div>
+
+        <div class="stagebox">
+          <canvas id="cvPt" class="tplot" aria-label="α, Ω et V_G en fonction du temps sur une période"></canvas>
+        </div>
+
+        <div class="tors">
+          <div class="tbox gbox" id="torG"></div>
+          <div class="tbox mbox" id="torM"></div>
+        </div>
+
+        <h3>Écrire le TEC : où se placer ?</h3>
+        <div class="seg" role="group" aria-label="Point de réduction">
+          <button type="button" id="mG" aria-pressed="true">En G</button>
+          <button type="button" id="mM" aria-pressed="false">En M (CIR)</button>
+        </div>
+        <ol class="steps" id="stepsR"></ol>
+        <div class="verdict" id="verdR"></div>
       </div>
+
       <aside class="ws-side" aria-label="Réglages">
-        ${coordsHTML()}
-        <h3 style="margin-top:14px">Affichage</h3>
+        <h3>Réglages</h3>
+        <div class="opts">
+          <label class="fld"><span>Rayon des plaques R = <b id="oRr"></b></span><input type="range" id="Rr" min="0.10" max="0.60" step="0.01" value="0.30"></label>
+          <label class="fld"><span>Rayon du rotor r = <b id="orr"></b></span><input type="range" id="rr" min="0.02" max="0.25" step="0.005" value="0.10"></label>
+          <label class="fld"><span>Masse m₂ = <b id="omR"></b></span><input type="range" id="mR" min="0.5" max="10" step="0.1" value="3"></label>
+          <label class="fld"><span>Inertie C₂ = k·m₂r², k = <b id="okR"></b></span><input type="range" id="kR" min="0.2" max="1.5" step="0.05" value="0.5"></label>
+          <label class="fld"><span>Angle initial θ₀ = <b id="othR"></b></span><input type="range" id="thR" min="2" max="80" step="1" value="12"></label>
+          <label class="fld"><span>Vitesse de lecture = <b id="ovR"></b></span><input type="range" id="vR" min="0.1" max="1" step="0.05" value="0.4"></label>
+        </div>
         <div class="chips">
-          <label class="chip"><input type="checkbox" id="gCart" checked> Guides cartésiens</label>
-          <label class="chip"><input type="checkbox" id="gCyl" checked> Guides cylindriques</label>
-          <label class="chip"><input type="checkbox" id="gSph" checked> Guides sphériques</label>
+          <label class="chip"><input type="checkbox" id="vecR" checked> Ω et V<sub>G</sub></label>
+          <label class="chip"><input type="checkbox" id="alR" checked> Angle α</label>
+          <label class="chip"><input type="checkbox" id="cirR" checked> Point M</label>
         </div>
-        <div class="files" style="margin-top:10px">
-          <button class="btn" id="bRand" type="button">Point aléatoire</button>
-          <button class="btn" id="bReset" type="button">Réinitialiser</button>
-        </div>
-        ${checksHTML()}
-      </aside>
-    </div>
-  `;
-  bindCoords();
-  init3D();
-  onChange = ()=>{ update3D(); updateReadouts(); };
-  ['gCart','gCyl','gSph'].forEach(id=>{ const e=$(id); if(e) e.addEventListener('change', update3D); });
-  $('bRand').onclick = ()=>{
-    setPT(+(Math.random()*8-4).toFixed(2), +(Math.random()*8-4).toFixed(2), +(Math.random()*6).toFixed(2));
-  };
-  $('bReset').onclick = ()=>setPT(3,2,4);
-  syncInputs(); update3D(); updateReadouts();
-}
-function updateReadouts(){
-  const d=derived();
-  const ro=(id,v)=>{const e=$(id); if(e) e.textContent=v;};
-  ro('vRho', fmt(d.rho,3));
-  ro('vR',   fmt(d.r,3));
-  ro('vPhi', fmt(d.phi,3)+' rad');
-  ro('vTheta', fmt(d.theta,3)+' rad');
-}
-
-/* ================= Atelier 2 : Vues 2D ================= */
-function mount2D(root){
-  root.innerHTML = `
-    <div class="ws-two">
-      <div class="ws-main">
-        <h2>Vues 2D</h2>
-        <p class="small">Deux coupes du même point : vue de dessus dans le plan xOy (on y lit ρ et φ) et vue de côté dans le plan vertical contenant M (on y lit r, θ et z).</p>
-
-        <div class="stagebox">
-          <canvas id="cvTop" style="height:330px" aria-label="Vue de dessus : plan xOy, ρ et φ"></canvas>
-        </div>
-        <p class="small" style="margin:6px 0 16px">Vue de dessus (plan xOy). Le cercle en pointillés est de rayon ρ. L'angle φ se mesure depuis l'axe x vers l'axe y.</p>
-
-        <div class="stagebox">
-          <canvas id="cvSide" style="height:330px" aria-label="Vue de côté : r, θ, z"></canvas>
-        </div>
-        <p class="small" style="margin:6px 0 0">Vue de côté dans le plan vertical contenant M. L'angle θ se mesure depuis l'axe z vers le rayon OM ; z est la hauteur et ρ la distance horizontale.</p>
-
-        <h3>Valeurs</h3>
+        <h3 style="margin-top:14px">Grandeurs</h3>
         <div class="gstats">
-          <div class="stat"><span>ρ</span><b id="vRho"></b></div>
-          <div class="stat"><span>r</span><b id="vR"></b></div>
-          <div class="stat"><span>φ</span><b id="vPhi"></b></div>
-          <div class="stat"><span>θ</span><b id="vTheta"></b></div>
+          <div class="stat"><span>J_eq</span><b id="rJ"></b></div>
+          <div class="stat"><span>T petites osc.</span><b id="rT0"></b></div>
+          <div class="stat"><span>T mesurée</span><b id="rTm">–</b></div>
+          <div class="stat"><span>θ</span><b id="rTh"></b></div>
+          <div class="stat"><span>α</span><b id="rAl"></b></div>
+          <div class="stat"><span>P_ext</span><b id="rP"></b></div>
+          <div class="stat"><span>dE<sub>c</sub>/dt</span><b id="rdE"></b></div>
         </div>
-      </div>
-      <aside class="ws-side" aria-label="Réglages">
-        ${coordsHTML()}
-        <div class="files" style="margin-top:10px">
-          <button class="btn" id="bReset" type="button">Réinitialiser (3 ; 2 ; 4)</button>
-        </div>
-        ${checksHTML()}
       </aside>
     </div>
   `;
-  bindCoords();
-  onChange = ()=>{ drawTop(); drawSide(); updateReadouts(); };
-  $('bReset').onclick = ()=>setPT(3,2,4);
-  syncInputs(); drawTop(); drawSide(); updateReadouts();
+  mkChips("chR",[{key:"a",col:"--acol",html:"α"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
+  bindRange("Rr",onRotorParams,"m",2); bindRange("rr",onRotorParams,"m",3); bindRange("mR",onRotorParams,"kg",1);
+  bindRange("kR",onRotorParams,"",2); bindRange("thR",onRotorParams,"°",0); bindRange("vR",()=>{},"×",2);
+  $("vecR").onchange=$("cirR").onchange=$("alR").onchange=drawR;
+  $("playR").onclick=()=>{S.run=!S.run;$("playR").textContent=S.run?"Pause":"Lecture"};
+  $("resetR").onclick=()=>{resetR();drawR()};
+  $("mG").onclick=()=>{S.method="G";$("mG").setAttribute("aria-pressed","true");$("mM").setAttribute("aria-pressed","false");renderStepsR()};
+  $("mM").onclick=()=>{S.method="M";$("mM").setAttribute("aria-pressed","true");$("mG").setAttribute("aria-pressed","false");renderStepsR()};
+  S.run = true; S.method = "G";
+  resetR(); buildR(); renderStepsR(); renderTors(); drawR();
 }
 
-function drawTop(){
-  const cv=$('cvTop'); if(!cv) return;
-  const {c,w,h:hh}=setup(cv);
-  const d=derived();
-  const R=Math.max(1,Math.abs(d.x),Math.abs(d.y),d.rho)*1.25;
-  const sc=Math.min(w,hh)*0.42/R;
-  const ox=w/2, oy=hh/2;
-  const X=v=>ox+v*sc, Y=v=>oy-v*sc;
-
-  const step=R>12?5:1;
-  c.strokeStyle=css('--grid'); c.lineWidth=1;
-  for(let v=-Math.ceil(R/step)*step; v<=R+1e-9; v+=step){
-    c.beginPath(); c.moveTo(X(v),Y(-R)); c.lineTo(X(v),Y(R)); c.stroke();
-    c.beginPath(); c.moveTo(X(-R),Y(v)); c.lineTo(X(R),Y(v)); c.stroke();
-  }
-
-  arrow(c,X(0),Y(0),X(R),Y(0),css('--rcol'),null,2);
-  arrow(c,X(0),Y(0),X(0),Y(R),css('--gcol'),null,2);
-  c.font="700 14px "+css('--font-ui');
-  c.fillStyle=css('--rcol'); c.fillText('x',X(R)+6,Y(0)+4);
-  c.fillStyle=css('--gcol'); c.fillText('y',X(0)+6,Y(R)-4);
-  c.fillStyle=css('--muted'); c.fillText('O',X(0)-16,Y(0)+16);
-
-  if(d.rho>1e-6){
-    c.setLineDash([5,5]); c.strokeStyle=css('--mcol'); c.lineWidth=1.5;
-    c.beginPath(); c.arc(X(0),Y(0),d.rho*sc,0,2*Math.PI); c.stroke();
-    c.setLineDash([]);
-  }
-
-  c.strokeStyle=css('--accent'); c.lineWidth=2.5;
-  c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(d.x),Y(d.y)); c.stroke();
-
-  if(d.rho>1e-6){
-    const rad=Math.min(0.34*d.rho,R*0.32)*sc;
-    const a0=Math.min(0,-d.phi), a1=Math.max(0,-d.phi);
-    c.strokeStyle=css('--acol'); c.lineWidth=2.5;
-    c.beginPath(); c.arc(X(0),Y(0),rad,a0,a1,false); c.stroke();
-    const mid=-d.phi/2;
-    c.fillStyle=css('--acol'); c.font="700 16px "+css('--font-ui');
-    c.fillText('φ', X(0)+(rad+14)*Math.cos(mid)-5, Y(0)+(rad+14)*Math.sin(mid)+5);
-  }
-
-  dot(c,X(d.x),Y(d.y),css('--mcol'),null);
-  c.fillStyle=css('--mcol'); c.font="600 13px "+css('--font-ui');
-  c.fillText('M (x ; y)', X(d.x)+10, Y(d.y)-10);
-
-  const mx=X(d.x/2), my=Y(d.y/2);
-  c.fillStyle=css('--accent'); c.font="700 14px "+css('--font-ui');
-  c.fillText('ρ', mx+6, my-6);
-}
-
-function drawSide(){
-  const cv=$('cvSide'); if(!cv) return;
-  const {c,w,h:hh}=setup(cv);
-  const d=derived();
-  const R=Math.max(1, d.rho, Math.abs(d.z))*1.25;
-  const ox=w*0.18, oy=d.z<0 ? hh*0.5 : hh*0.82;
-  const sc=Math.min(w*0.75/R, (d.z<0?hh*0.45:hh*0.72)/R);
-  const X=v=>ox+v*sc, Y=v=>oy-v*sc;
-
-  const step=R>12?5:1;
-  c.strokeStyle=css('--grid'); c.lineWidth=1;
-  for(let v=0; v<=R+1e-9; v+=step){
-    c.beginPath(); c.moveTo(X(v),Y(-R)); c.lineTo(X(v),Y(R)); c.stroke();
-  }
-  for(let v=-Math.ceil(R/step)*step; v<=R+1e-9; v+=step){
-    c.beginPath(); c.moveTo(X(0),Y(v)); c.lineTo(X(R),Y(v)); c.stroke();
-  }
-
-  arrow(c,X(0),Y(0),X(R),Y(0),css('--accent'),null,2);
-  arrow(c,X(0),Y(0),X(0),Y(R),css('--wcol'),null,2);
-  arrow(c,X(0),Y(0),X(0),Y(Math.min(-R,d.z*1.2)),css('--wcol'),null,2);
-  c.font="700 14px "+css('--font-ui');
-  c.fillStyle=css('--accent'); c.fillText('ρ', X(R)+6, Y(0)+4);
-  c.fillStyle=css('--wcol'); c.fillText('z', X(0)+8, Y(R)-2);
-  c.fillStyle=css('--muted'); c.fillText('O', X(0)-16, Y(0)+16);
-
-  c.setLineDash([4,4]); c.strokeStyle=css('--muted'); c.lineWidth=1.2;
-  c.beginPath(); c.moveTo(X(d.rho),Y(0)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
-  c.beginPath(); c.moveTo(X(0),Y(d.z)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
-  c.setLineDash([]);
-
-  c.strokeStyle=css('--wcol'); c.lineWidth=2.5;
-  c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
-
-  if(d.r>1e-6){
-    const aEnd=-Math.atan2(d.z,d.rho);
-    const rad=Math.min(0.34*d.r,R*0.32)*sc;
-    c.strokeStyle=css('--acol'); c.lineWidth=2.5;
-    c.beginPath(); c.arc(X(0),Y(0),rad,-Math.PI/2,aEnd,false); c.stroke();
-    const mid=(-Math.PI/2+aEnd)/2;
-    c.fillStyle=css('--acol'); c.font="700 16px "+css('--font-ui');
-    c.fillText('θ', X(0)+(rad+14)*Math.cos(mid)-5, Y(0)+(rad+14)*Math.sin(mid)+5);
-  }
-
-  dot(c,X(d.rho),Y(d.z),css('--mcol'),null);
-  c.fillStyle=css('--mcol'); c.font="600 13px "+css('--font-ui');
-  c.fillText('M', X(d.rho)+10, Y(d.z)-10);
-
-  const mx=X(d.rho/2), my=Y(d.z/2);
-  c.fillStyle=css('--wcol'); c.font="700 14px "+css('--font-ui');
-  c.fillText('r', mx+8, my-6);
-
-  c.fillStyle=css('--muted'); c.font="11px "+css('--font-mono');
-  c.fillText(fmt(d.rho,2), X(d.rho)-12, Y(0)+16);
-  c.fillText(fmt(d.z,2), X(0)-40, Y(d.z)+4);
-}
-
-/* ================= Atelier 3 : Convertisseur ================= */
-function mountConv(root){
+/* ================= MOUNT VÉLO (deux colonnes) ================= */
+function mountVelo(root){
   root.innerHTML = `
     <div class="ws-two">
       <div class="ws-main">
-        <h2>Convertisseur</h2>
-        <p class="small">Les trois jeux de coordonnées sont recalculés en détail à partir du point courant. Saisissez une valeur dans n'importe quel système : les autres se mettent à jour instantanément.</p>
-        <div id="convOut"></div>
-        <div class="files" style="margin-top:12px">
-          <button class="btn" id="pA" type="button">Point (3 ; 2 ; 4)</button>
-          <button class="btn" id="pB" type="button">Sur l'axe z</button>
-          <button class="btn" id="pC" type="button">Dans le plan xOy</button>
-          <button class="btn" id="pD" type="button">Origine</button>
+        <h2>Roue de vélo</h2>
+        <p class="small">Une roue descend une pente en roulant sans glisser. Le frottement en I est nécessaire pour que la roue tourne, mais sa puissance est nulle. Comparer avec un bloc qui glisserait sans frottement.</p>
+
+        <div class="stagebox">
+          <canvas id="cvB" aria-label="Roue de vélo descendant une pente en roulant sans glisser"></canvas>
+          <div class="chips" id="chB" role="group" aria-label="Grandeurs affichées"></div>
+          <div class="files" style="margin-top:8px">
+            <button class="btn pri" id="playB" type="button">Pause</button>
+            <button class="btn" id="resetB" type="button">Relancer</button>
+          </div>
         </div>
+
+        <div class="stagebox">
+          <canvas id="cvTB" class="tplot" aria-label="Angle, vitesse angulaire et vitesse de G en fonction du temps"></canvas>
+        </div>
+
+        <div class="tors">
+          <div class="tbox gbox" id="torBG"></div>
+          <div class="tbox mbox" id="torBI"></div>
+        </div>
+        <p class="small" id="bAxes" style="margin:6px 0 0"></p>
+
+        <h3>Écrire le TEC : où se placer ?</h3>
+        <div class="seg" role="group" aria-label="Point de réduction">
+          <button type="button" id="bG" aria-pressed="true">En G</button>
+          <button type="button" id="bM" aria-pressed="false">En I (contact)</button>
+        </div>
+        <ol class="steps" id="stepsB"></ol>
+        <div class="verdict" id="verdB"></div>
       </div>
+
       <aside class="ws-side" aria-label="Réglages">
-        ${coordsHTML()}
-        ${checksHTML()}
+        <h3>Réglages</h3>
+        <div class="opts">
+          <label class="fld"><span>Pente β = <b id="obb"></b></span><input type="range" id="bb" min="2" max="40" step="1" value="15"></label>
+          <label class="fld"><span>Rayon r = <b id="orb"></b></span><input type="range" id="rb" min="0.20" max="0.40" step="0.01" value="0.34"></label>
+          <label class="fld"><span>Masse jante + pneu = <b id="omj"></b></span><input type="range" id="mj" min="0.3" max="2.5" step="0.05" value="0.9"></label>
+          <label class="fld"><span>Masse rayons = <b id="oms"></b></span><input type="range" id="ms" min="0" max="1" step="0.05" value="0.3"></label>
+          <label class="fld"><span>Masse moyeu = <b id="omh"></b></span><input type="range" id="mh" min="0.1" max="1" step="0.05" value="0.3"></label>
+          <label class="fld"><span>Vitesse de lecture = <b id="ovb"></b></span><input type="range" id="vb" min="0.25" max="2" step="0.25" value="1"></label>
+        </div>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" id="ghB" checked> Bloc sans frottement</label>
+          <label class="chip"><input type="checkbox" id="fcB" checked> Frottement en I</label>
+        </div>
+        <h3 style="margin-top:14px">Grandeurs</h3>
+        <div class="gstats">
+          <div class="stat"><span>C (axe z)</span><b id="bC"></b></div>
+          <div class="stat"><span>k = C/(m r²)</span><b id="bk"></b></div>
+          <div class="stat"><span>Accélération a</span><b id="ba"></b></div>
+          <div class="stat"><span>Frottement f</span><b id="bf"></b></div>
+          <div class="stat"><span>μ minimal</span><b id="bmu"></b></div>
+          <div class="stat"><span>Vitesse v</span><b id="bv"></b></div>
+        </div>
       </aside>
     </div>
   `;
-  bindCoords();
-  onChange = ()=>drawConv();
-  $('pA').onclick = ()=>setPT(3,2,4);
-  $('pB').onclick = ()=>setPT(0,0,4);
-  $('pC').onclick = ()=>setPT(3,2,0);
-  $('pD').onclick = ()=>setPT(0,0,0);
-  syncInputs(); drawConv();
+  mkChips("chB",[{key:"p",col:"--acol",html:"ψ"},{key:"o",col:"--wcol",html:"Ω"},{key:"v",col:"--gcol",html:"V<sub>G</sub>"}]);
+  bindRange("bb",onB,"°",0); bindRange("rb",onB,"m",2); bindRange("mj",onB,"kg",2);
+  bindRange("ms",onB,"kg",2); bindRange("mh",onB,"kg",2); bindRange("vb",()=>{},"×",2);
+  $("ghB").onchange=$("fcB").onchange=drawB;
+  $("playB").onclick=()=>{B.run=!B.run;$("playB").textContent=B.run?"Pause":"Lecture"};
+  $("resetB").onclick=resetB;
+  $("bG").onclick=()=>{B.method="G";$("bG").setAttribute("aria-pressed","true");$("bM").setAttribute("aria-pressed","false");stepsB()};
+  $("bM").onclick=()=>{B.method="I";$("bM").setAttribute("aria-pressed","true");$("bG").setAttribute("aria-pressed","false");stepsB()};
+  B.run = true; B.method = "G";
+  resetB(); buildB(); stepsB(); renderTorsB(); drawB();
 }
-function drawConv(){
-  const box=$('convOut'); if(!box) return;
-  const d=derived();
-  const rho2=d.x*d.x+d.y*d.y;
-  const r2=d.r*d.r;
-  box.innerHTML = `
-    <div class="panel">
-      <h3>Cartésien → cylindrique</h3>
-      <div class="formula">
-ρ = √(x² + y²) = √((${fmt(d.x,3)})² + (${fmt(d.y,3)})²) = √${fmt(rho2,4)} = <b>${fmt(d.rho,4)}</b><br>
-φ = atan2(y ; x) = atan2(${fmt(d.y,3)} ; ${fmt(d.x,3)}) = <b>${fmt(d.phi,4)}</b> rad = ${fmt(deg(d.phi),2)}°<br>
-z = <b>${fmt(d.z,4)}</b>
+
+/* ================= MOUNT HUYGENS (deux colonnes) ================= */
+function mountHuygens(root){
+  root.innerHTML = `
+    <div class="ws-two">
+      <div class="ws-main">
+        <h2>Torseurs et Huygens</h2>
+        <p class="small">Matrice d'inertie en G diagonale (A, B, C), puis vecteur MG = (a, b, c). La matrice en M est I<sub>G</sub> + m·[…]. Le préréglage reprend le rotor : MG = r y<sub>i</sub>.</p>
+
+        <div class="huygens-out">
+          <div class="hmat"><span>I<sub>G</sub>(S), en kg·m²</span><pre id="hMG"></pre></div>
+          <div class="hmat"><span>I<sub>M</sub>(S) = I<sub>G</sub> + m[…]</span><pre id="hMM"></pre></div>
+        </div>
+        <p class="small" id="hTxt"></p>
+
+        <h3>Rappel : formule de Huygens</h3>
+        <div class="formula">I<sub>M</sub>(S) = I<sub>G</sub>(S) + m · [ b²+c² &nbsp; −ab &nbsp; −ac ; −ab &nbsp; a²+c² &nbsp; −bc ; −ac &nbsp; −bc &nbsp; a²+b² ]</div>
+        <ul class="small">
+          <li>Les deux matrices s'écrivent dans la <b>même base</b>.</li>
+          <li>Un des deux points est obligatoirement G. Pour passer de M à M', on passe par G.</li>
+          <li>La matrice en M est toujours « plus grande » sur la diagonale : on ajoute des termes positifs.</li>
+        </ul>
       </div>
-    </div>
-    <div class="panel">
-      <h3>Cartésien → sphérique</h3>
-      <div class="formula">
-r = √(x² + y² + z²) = √(ρ² + z²) = √(${fmt(d.rho*d.rho,4)} + ${fmt(d.z*d.z,4)}) = <b>${fmt(d.r,4)}</b><br>
-θ = acos(z / r) = acos(${fmt(d.z,3)} / ${fmt(d.r,3)}) = <b>${fmt(d.theta,4)}</b> rad = ${fmt(deg(d.theta),2)}°<br>
-φ = atan2(y ; x) = <b>${fmt(d.phi,4)}</b> rad = ${fmt(deg(d.phi),2)}°
-      </div>
-    </div>
-    <div class="panel">
-      <h3>Sphérique → cartésien (restitution)</h3>
-      <div class="formula">
-x = r·sinθ·cosφ = ${fmt(d.r,3)} × ${fmt(Math.sin(d.theta),4)} × ${fmt(Math.cos(d.phi),4)} = <b>${fmt(d.x,4)}</b><br>
-y = r·sinθ·sinφ = ${fmt(d.r,3)} × ${fmt(Math.sin(d.theta),4)} × ${fmt(Math.sin(d.phi),4)} = <b>${fmt(d.y,4)}</b><br>
-z = r·cosθ = ${fmt(d.r,3)} × ${fmt(Math.cos(d.theta),4)} = <b>${fmt(d.z,4)}</b>
-      </div>
-    </div>
-    <div class="panel">
-      <h3>Vérifications</h3>
-      <div class="formula">
-x² + y² = ${fmt(rho2,6)} &nbsp;=&nbsp; ρ² = ${fmt(d.rho*d.rho,6)}<br>
-ρ² + z² = ${fmt(d.rho*d.rho+d.z*d.z,6)} &nbsp;=&nbsp; r² = ${fmt(r2,6)}
-      </div>
-      <div class="verdict ${Math.abs(d.rho)<1e-6?'warn':(d.r<1e-6?'warn':'yes')}">
-        ${d.r<1e-6
-          ? '<b>Origine :</b> θ et φ sont indéfinis, seul r = 0 a un sens.'
-          : (d.rho<1e-6
-            ? '<b>Sur l’axe z :</b> φ est indéfini (ρ = 0). θ vaut 0 si z > 0, π si z < 0.'
-            : 'Les trois représentations décrivent bien le même point, et les conversions sont inverses l’une de l’autre.')}
-      </div>
+
+      <aside class="ws-side" aria-label="Réglages">
+        <h3>Réglages</h3>
+        <div class="opts">
+          <label class="fld"><span>Masse m = <b id="ohm"></b></span><input type="range" id="hm" min="0.5" max="10" step="0.1" value="3"></label>
+          <label class="fld"><span>A (axe x) = <b id="ohA"></b></span><input type="range" id="hA" min="0" max="0.05" step="0.0005" value="0.0075"></label>
+          <label class="fld"><span>B (axe y) = <b id="ohB"></b></span><input type="range" id="hB" min="0" max="0.05" step="0.0005" value="0.0075"></label>
+          <label class="fld"><span>C (axe z) = <b id="ohC"></b></span><input type="range" id="hC" min="0" max="0.05" step="0.0005" value="0.015"></label>
+          <label class="fld"><span>a = MG·x = <b id="ohx"></b></span><input type="range" id="hx" min="-0.3" max="0.3" step="0.01" value="0"></label>
+          <label class="fld"><span>b = MG·y = <b id="ohy"></b></span><input type="range" id="hy" min="-0.3" max="0.3" step="0.01" value="0.1"></label>
+          <label class="fld"><span>c = MG·z = <b id="ohz"></b></span><input type="range" id="hz" min="-0.3" max="0.3" step="0.01" value="0"></label>
+        </div>
+        <div class="files" style="margin-top:10px">
+          <button class="btn" id="hRotor" type="button">Préréglage rotor</button>
+          <button class="btn" id="hDiag" type="button">MG oblique</button>
+        </div>
+      </aside>
     </div>
   `;
+  const ids=[["hm","kg",1],["hA","",4],["hB","",4],["hC","",4],["hx","m",2],["hy","m",2],["hz","m",2]];
+  ids.forEach(x=>bindRange(x[0],huygensUpd,x[1],x[2]));
+  $("hRotor").onclick=()=>huygensSet({hm:3,hA:0.0075,hB:0.0075,hC:0.015,hx:0,hy:0.1,hz:0});
+  $("hDiag").onclick=()=>huygensSet({hx:0.1,hy:0.1,hz:0.05});
+  huygensUpd();
 }
 
 /* ================= WORKSHOPS ================= */
 const WORKSHOPS = [
-  { id:'c3d', title:'Exploration 3D',
-    hint:"Faites tourner la scène et cochez/décochez les guides pour relier chaque système de coordonnées à sa construction géométrique.",
-    mount:mount3D, leave:dispose3D,
-    reset:()=>{ setPT(3,2,4); if($('gCart')){$('gCart').checked=true;$('gCyl').checked=true;$('gSph').checked=true;} update3D(); } },
-  { id:'c2d', title:'Vues 2D',
-    hint:"Deux coupes planes du même point : le plan xOy (ρ et φ) et le plan vertical contenant M (r, θ, z).",
-    mount:mount2D, reset:()=>setPT(3,2,4) },
-  { id:'ccv', title:'Convertisseur',
-    hint:"Saisissez une coordonnée dans n'importe quel système : les deux autres et le détail des formules se recalculent instantanément.",
-    mount:mountConv, reset:()=>setPT(3,2,4) }
+  { id:'rotor', title:"Banc d'inertie", hint:"Un rotor roule sans glisser dans une plaque. Basculez entre En G et En M pour voir que J_eq est le même, mais que les termes du comoment diffèrent.", mount:mountRotor, reset:()=>{resetR();buildR();renderStepsR();renderTors();}, leave:()=>{S.run=false;} },
+  { id:'velo', title:'Roue de vélo', hint:"Une roue descend une pente en roulant sans glisser. Le frottement en I ne travaille pas, mais il est nécessaire pour tourner.", mount:mountVelo, reset:()=>{resetB();buildB();stepsB();renderTorsB();}, leave:()=>{B.run=false;} },
+  { id:'huygens', title:'Torseurs et Huygens', hint:"Déplacez la matrice d'inertie de G vers M. Les termes diagonaux augmentent, et MG oblique crée des termes non diagonaux.", mount:mountHuygens, reset:()=>{} }
 ];
 function wsById(id){ return WORKSHOPS.find(w=>w.id===id)||WORKSHOPS[0]; }
 
 /* ================= ACTIVITÉS ================= */
 const ACT = {
-  c3d: {
-    title:"Exploration 3D", level:"Niveau 1 · Découvrir", time:"25 min", course:"cyl",
-    goal:"Relier chaque coordonnée à un élément géométrique visible sur la scène, et vérifier que les trois systèmes décrivent le même point.",
+  rotor: {
+    title:"Banc d'inertie", level:"Niveau 1 · Découvrir", time:"30 min", course:"point",
+    goal:"Choisir le point où écrire le TEC pour minimiser les termes, et vérifier que E<sub>c</sub> ne dépend pas du point.",
     steps:[
-      "Placez le point en (3 ; 2 ; 4). Vérifiez ρ, r, φ et θ dans le panneau de droite.",
-      "Ne laissez que les guides cartésiens : quelles longueurs lit-on le long des axes ?",
-      "Ne laissez que les guides cylindriques : repérez le cylindre de rayon ρ et l'angle φ dans le plan xOy.",
-      "Ne laissez que les guides sphériques : repérez la sphère de rayon r et l'angle θ mesuré depuis l'axe z.",
-      "Déplacez le point sur l'axe z (x = y = 0). Que devient φ ? Et ρ ?"
+      "Lancez l'animation et observez le mouvement du rotor et du point M (point de contact).",
+      "Notez J<sub>eq</sub> en G et en M pour différentes valeurs de m et r. Sont-ils égaux ?",
+      "Basculez entre « En G » et « En M » et comparez les étapes de calcul.",
+      "Quand C₂ → 0 (masse au centre), que devient J<sub>eq</sub> ? Comparez avec un pendule simple."
     ],
-    defi:{ q:"Un point a pour coordonnées cylindriques ρ = 5, φ = π/2, z = −2. Quelles sont ses coordonnées cartésiennes et sphériques ?",
-      a:"Cartésiennes : x = ρ cos φ = 0, y = ρ sin φ = 5, z = −2. Sphériques : r = √(25+4) = √29 ≈ <b>5,385</b> ; θ = acos(−2/√29) ≈ <b>1,951 rad</b> (111,8°) ; φ = <b>π/2</b>." },
+    defi:{ q:"Que vaut la période si toute la masse est concentrée au centre (C₂ = 0) ?",
+      a:"T = 2π√((R−r)/g), comme un pendule simple de longueur R−r. En effet J<sub>eq</sub> = m(R−r)² et T = 2π√(J<sub>eq</sub>/(mg(R−r))) = 2π√((R−r)/g)." },
     qcm:[
-      { q:"Quelle coordonnée cylindrique reste identique à la coordonnée cartésienne ?",
-        o:["ρ","φ","z","aucune"], a:2,
-        w:"La coordonnée cylindrique z est exactement la hauteur cartésienne : les deux systèmes partagent le même axe vertical." },
-      { q:"À quoi correspond ρ dans le plan xOy ?",
-        o:["L'angle depuis l'axe x","La distance à l'origine dans le plan xOy","La distance à l'origine en 3D","La hauteur"], a:1,
-        w:"ρ = √(x²+y²) est la distance du projeté de M sur le plan xOy à l'origine. La distance 3D, elle, s'appelle r." },
-      { q:"Quel est le domaine de θ en coordonnées sphériques (convention usuelle) ?",
-        o:["[0 ; 2π[","[0 ; π]","]−π ; π]","[−π/2 ; π/2]"], a:1,
-        w:"θ est l'angle entre l'axe z et le rayon OM ; il varie de 0 (pôle nord) à π (pôle sud)." },
-      { q:"Sur l'axe z (x = y = 0, z > 0), que valent ρ, φ et θ ?",
-        o:["ρ = 0, φ = 0, θ = 0","ρ = 0, φ indéfini, θ = 0","ρ = z, φ = 0, θ = π/2","ρ = 0, φ = 0, θ = π"], a:1,
-        w:"ρ = 0 et le rayon OM est confondu avec l'axe z : θ = 0. Mais φ n'a plus de sens puisque le projeté est à l'origine." },
-      { q:"Deux points ont le même r et le même θ mais des φ différents de π/2. Comment sont-ils disposés ?",
-        o:["Sur une même verticale","Sur un même cercle horizontal, symétriques par rapport à l'axe z","Sur une même demi-droite","Ils sont confondus"], a:1,
-        w:"À r et θ fixés, le point décrit un cercle de rayon r sin θ dans un plan horizontal. Un écart de π/2 sur φ le fait tourner d'un quart de tour autour de l'axe z." }
+      {q:"Pour écrire E<sub>c</sub> = ½ Ω·I<sub>M</sub>Ω avec un seul terme, quelle propriété de M utilise-t-on ?",
+       o:["M est le centre de masse du rotor","V<sub>M,2/1</sub> = 0 : le roulement sans glissement fait de M le centre instantané de rotation","M est le point le plus bas de la plaque","M est un point fixe de la plaque"],a:1,
+       w:"Avec V<sub>M</sub> = 0, le comoment se réduit au seul terme de rotation. M n'est pas fixe : c'est un point géométrique de contact qui se déplace sur la plaque, mais sa vitesse est nulle à l'instant considéré."},
+      {q:"Le rotor a pour moment d'inertie C₂ par rapport à (G, z). Que vaut le terme zz de I<sub>M</sub>(2), avec MG = r ?",
+       o:["C₂","C₂ − m r²","C₂ + m r²","C₂ + m (R−r)²"],a:2,
+       w:"Huygens : on ajoute m·d² où d est la distance entre les deux axes parallèles. Ici d = MG = r."},
+      {q:"Au contact en M, la force de frottement n'est pas nulle. Pourquoi sa puissance l'est-elle ?",
+       o:["Parce que la force est perpendiculaire à la vitesse","Parce que la vitesse de glissement en M est nulle","Parce que le frottement est négligé","Parce que c'est une action intérieure"],a:1,
+       w:"La puissance d'une action de contact contient la vitesse de glissement V<sub>M,2/1</sub> = 0. Une force peut être non nulle et ne pas travailler."},
+      {q:"On fait tendre C₂ vers 0 (toute la masse au centre). Quelle période retrouve-t-on ?",
+       o:["T = 2π√(r/g)","T = 2π√((R−r)/g), celle d'un pendule simple de longueur R−r","T = 2π√(R/g)","Elle tend vers l'infini"],a:1,
+       w:"Avec C₂ = 0, T = 2π√((R−r)(m r²)/(m g r²)) = 2π√((R−r)/g). Le centre G décrit un cercle de rayon R−r."}
     ]
   },
-  c2d: {
-    title:"Vues 2D", level:"Niveau 2 · Lire une figure", time:"25 min", course:"sph",
-    goal:"Lire ρ et φ sur une coupe horizontale, r et θ sur une coupe verticale, et comprendre pourquoi ces deux angles ne sont pas dans le même plan.",
+  velo: {
+    title:"Roue de vélo", level:"Niveau 2 · Approfondir", time:"30 min", course:"point",
+    goal:"Distinguer les points où le frottement travaille et où il ne travaille pas, et relier le coefficient k à l'accélération.",
     steps:[
-      "Placez le point en (3 ; 2 ; 4). Sur la vue de dessus, vérifiez que le cercle en pointillés a bien pour rayon ρ.",
-      "Sur la vue de dessus, lisez φ : entre quels axes est-il compté, et dans quel sens ?",
-      "Sur la vue de côté, vérifiez que r est la longueur du segment oblique et que z est la hauteur.",
-      "Mesurez θ sur la vue de côté : est-il compté depuis l'axe z ou depuis l'horizontale ?",
-      "Mettez z = 0 : que devient θ ? Mettez x = y = 0 : que devient φ ?"
+      "Lancez la descente. Où est le point de contact I ? Sa vitesse est-elle nulle ?",
+      "Montrez la force de frottement f en I. Pourquoi ne travaille-t-elle pas ?",
+      "Comparez avec le bloc qui glisse sans frottement : quel est le facteur sur l'accélération ?",
+      "Faites varier la masse de la jante (k varie). Comment varie l'accélération ?"
     ],
-    defi:{ q:"Sur la vue de côté, on lit ρ = 4 et z = 3. Donner r et θ, puis expliquer pourquoi θ n'apparaît pas sur la vue de dessus.",
-      a:"r = √(4² + 3²) = <b>5</b> ; θ = atan(ρ/z) = atan(4/3) ≈ <b>0,927 rad</b> (53,1°). θ est un angle dans un plan vertical : il mesure l'inclinaison du rayon par rapport à l'axe z. La vue de dessus écrase totalement cette direction verticale, donc θ n'y est pas visible." },
+    defi:{ q:"Quel est le rapport d'accélération entre un cerceau (k = 1) et un bloc sans frottement sur la même pente ?",
+      a:"a_cerceau = g sin β / (1+1) = ½ g sin β. a_bloc = g sin β. La roue descend deux fois moins vite en accélération." },
     qcm:[
-      { q:"Sur la vue de dessus (plan xOy), quelles coordonnées peut-on lire directement ?",
-        o:["ρ et φ","r et θ","θ et φ","x et θ"], a:0,
-        w:"La vue de dessus ne montre que le projeté de M dans le plan xOy : sa distance à l'origine (ρ) et son angle depuis l'axe x (φ)." },
-      { q:"Sur la vue de côté, l'angle θ est mesuré :",
-        o:["depuis l'axe horizontal ρ","depuis l'axe vertical z","depuis la verticale vers le bas","depuis le rayon OM vers l'horizontale"], a:1,
-        w:"θ est l'angle entre l'axe z et le rayon OM : il se mesure donc depuis la verticale, vers l'horizontale quand θ augmente." },
-      { q:"Que devient la vue de dessus si l'on met z = 0 en gardant x et y ?",
-        o:["Elle ne change pas","Le point disparaît","Le cercle de rayon ρ disparaît","φ devient nul"], a:0,
-        w:"La vue de dessus ne dépend que de x et y, c'est-à-dire de ρ et φ. Changer z ne la modifie pas d'un pixel." },
-      { q:"Deux points de même ρ et même z mais de φ différents sont représentés :",
-        o:["au même endroit sur les deux vues","au même endroit sur la vue de côté, à des endroits différents sur la vue de dessus","à des endroits différents sur les deux vues","nulle part"], a:1,
-        w:"La vue de côté ne dépend que de ρ et z : elle ne distingue pas φ. La vue de dessus, elle, place le point sur le cercle de rayon ρ à l'angle φ." }
+      {q:"Une roue pleine (k = ½) et un cerceau (k = 1) de même masse et de même rayon descendent la même pente. Lequel arrive en premier ?",
+       o:["Le cerceau, car sa masse est à la périphérie","Le disque plein, car a = g sin β/(1+k) est plus grande avec k plus petit","Ils arrivent ensemble","Cela dépend du rayon"],a:1,
+       w:"Plus la masse est loin de l'axe, plus il faut d'énergie cinétique de rotation pour une même vitesse : à Ep égale, v est plus petite. a vaut ⅔ g sin β pour le disque et ½ g sin β pour le cerceau."},
+      {q:"Quelle puissance fait varier l'énergie cinétique de la roue qui descend ?",
+       o:["Celle du frottement en I, qui entraîne la rotation","Celle de la réaction normale","Celle du poids seulement","Celles du poids et du frottement"],a:2,
+       w:"Le frottement en I est indispensable pour que la roue tourne, mais sa puissance est nulle (V<sub>I</sub> = 0). La normale aussi. Seul le poids fournit de la puissance."},
+      {q:"On veut écrire E<sub>c</sub> = ½ I<sub>A</sub> Ω² en un point A quelconque du solide, en mouvement. Est-ce correct ?",
+       o:["Oui, à condition d'avoir la matrice d'inertie en A","Non, il faut que V<sub>A</sub> = 0 ; sinon le comoment compte aussi un terme en V<sub>A</sub>","Oui, car l'énergie cinétique ne dépend pas du point","Non, seul G convient toujours"],a:1,
+       w:"E<sub>c</sub> = ½ {V}⊗{C} s'écrit en n'importe quel point, mais la forme à un terme exige V<sub>A</sub> = 0. C'est le cas de M et de I grâce au roulement sans glissement."},
+      {q:"Le frottement en I vaut-il 0 N ?",
+       o:["Oui, sinon la roue ne tourne pas","Non, il est non nul mais ne travaille pas (V<sub>I</sub> = 0)","Oui, car le contact est parfait","Non, il est toujours égal à mg"],a:1,
+       w:"Le frottement statique f = k·m·a est non nul. Il crée le couple qui fait tourner la roue. Mais sa puissance est nulle car le point d'application I a une vitesse nulle."}
     ]
   },
-  ccv: {
-    title:"Convertisseur", level:"Niveau 2 · Calculer", time:"20 min", course:"conv",
-    goal:"Appliquer les formules de conversion dans les deux sens et repérer les cas où elles cessent d'être inversibles.",
+  huygens: {
+    title:"Torseurs et Huygens", level:"Niveau 1 · Outil", time:"20 min", course:"huygens",
+    goal:"Calculer I<sub>M</sub> à partir de I<sub>G</sub>, vérifier que la diagonale augmente et que MG oblique crée des termes non diagonaux.",
     steps:[
-      "Partez de (3 ; 2 ; 4) et lisez les trois blocs de calcul. Retrouvez ρ et r à la main.",
-      "Entrez ρ = 2, φ = 0,5 rad, z = 1 dans le système cylindrique : vérifiez les valeurs cartésiennes obtenues.",
-      "Entrez r = 3, θ = π/3, φ = π/4 dans le système sphérique : retrouvez x, y, z.",
-      "Cliquez sur « Sur l'axe z » : lisez l'avertissement affiché et expliquez-le.",
-      "Cliquez sur « Origine » : quelles coordonnées restent définies ?"
+      "Cliquez « Préréglage rotor ». Vérifiez la matrice I<sub>M</sub>.",
+      "Modifiez la masse m : quels termes de I<sub>M</sub> changent ?",
+      "Cliquez « MG oblique » : que se passe-t-il sur les termes hors diagonale ?",
+      "Pour le rotor, MG = r y<sub>i</sub> : quel terme de la matrice augmente de m r² ?"
     ],
-    defi:{ q:"Un point a pour coordonnées sphériques r = 2, θ = π/3, φ = π/2. Donner ses coordonnées cylindriques et cartésiennes.",
-      a:"sin θ = √3/2, cos θ = 1/2. Cartésiennes : x = 2 × (√3/2) × 0 = 0 ; y = 2 × (√3/2) × 1 = √3 ≈ <b>1,732</b> ; z = 2 × 1/2 = <b>1</b>. Cylindriques : ρ = √(x²+y²) = √3 ≈ <b>1,732</b> ; φ = <b>π/2</b> ; z = <b>1</b>." },
+    defi:{ q:"Pour le rotor avec I<sub>G</sub> = diag(A, A, C) et MG = (0, r, 0), donner I<sub>M</sub>.",
+      a:"I<sub>M</sub> = diag(A + m r², A, C + m r²). Les termes diagonaux : I<sub>xx</sub> = A + m(r²+0²) = A + m r², I<sub>yy</sub> = A + 0 = A, I<sub>zz</sub> = C + m r². Les termes hors diagonale sont nuls car un des produits est nul." },
     qcm:[
-      { q:"La conversion cartésien → sphérique utilise θ = acos(z / r). Pourquoi cette formule est-elle inutilisable à l'origine ?",
-        o:["Parce que z = 0","Parce que r = 0 et la division est impossible : θ n'a pas de sens à l'origine","Parce que acos n'est pas définie en 1","Parce que x et y sont nuls"], a:1,
-        w:"À l'origine, r = 0 : aucun rayon, donc aucune direction. θ et φ sont indéfinis ; seul r = 0 a un sens." },
-      { q:"Quelle identité relie les trois systèmes ?",
-        o:["x + y + z = r","x² + y² = ρ² et ρ² + z² = r²","ρ = r sin φ","z = r cos φ"], a:1,
-        w:"Ces deux identités de Pythagore sont la base de toutes les conversions et permettent de vérifier un calcul rapidement." },
-      { q:"φ est calculé par atan2(y, x) et non par atan(y/x). Pourquoi ?",
-        o:["atan2 est plus rapide","atan(y/x) perd le signe et ne distingue pas les quadrants, et échoue si x = 0","atan n'existe pas en programmation","Les deux sont équivalents"], a:1,
-        w:"atan2(y, x) tient compte des signes de y et de x séparément : il donne l'angle dans ]−π ; π] sur tout le plan, et gère le cas x = 0." },
-      { q:"Si l'on double x et y en gardant z, que deviennent ρ, r et φ ?",
-        o:["ρ, r et φ doublent","ρ et r augmentent (r moins que ρ), φ ne change pas","φ double, ρ et r ne changent pas","rien ne change"], a:1,
-        w:"ρ est multiplié par 2. r = √(ρ²+z²) augmente aussi mais moins que ρ, car z ne change pas. φ = atan2(y, x) est inchangé : le point s'éloigne le long du même rayon." }
+      {q:"On connaît I<sub>G</sub>(S) diagonale et MG = (a, b, 0). Que vaut le terme xy de I<sub>M</sub>(S) ?",
+       o:["0","−m a b","+m a b","m (a² + b²)"],a:1,
+       w:"Le terme hors diagonale de la matrice de Huygens vaut −m·a·b (produit des coordonnées de MG). Il disparaît seulement si MG est porté par un axe de la base."},
+      {q:"On connaît I<sub>M</sub>(S) et on veut I<sub>M'</sub>(S). Peut-on appliquer Huygens directement entre M et M' ?",
+       o:["Oui, avec le vecteur MM'","Non : un des deux points doit être le centre de masse G, on passe par G","Oui, mais seulement si M et M' sont sur un même axe","Non, il faut recalculer l'intégrale"],a:1,
+       w:"La formule suppose que G est l'un des deux points. Pour aller de M à M', on retranche d'abord le terme en MG pour revenir en G, puis on ajoute le terme en M'G."},
+      {q:"Que peut-on dire des termes diagonaux de I<sub>M</sub> par rapport à ceux de I<sub>G</sub> ?",
+       o:["Ils sont toujours plus petits","Ils sont égaux ou augmentés d'un terme m·d² ≥ 0","Ils peuvent être négatifs","Ils ne changent jamais"],a:1,
+       w:"Sur la diagonale, on ajoute m fois la somme de deux carrés : c'est toujours positif. Les termes hors diagonale, en revanche, peuvent être négatifs."},
+      {q:"Huygens : MG = 0,5 m vers x. Quels termes diagonaux de I<sub>M</sub> changent et de combien ?",
+       o:["Tous, de m·0,5²","Seuls I<sub>yy</sub> et I<sub>zz</sub> augmentent de m·0,25","Seul I<sub>xx</sub> augmente","Aucun, MG est porté par x"],a:1,
+       w:"Avec MG = (0,5 ; 0 ; 0) : a = 0,5, b = c = 0. La diagonale de la matrice de Huygens vaut (0, 0,25, 0,25). Donc I<sub>xx</sub> est inchangé, I<sub>yy</sub> et I<sub>zz</sub> augmentent de m·0,25."}
     ]
   }
 };
@@ -891,132 +905,104 @@ function actScore(a){ const s=actState(); return a.qcm.filter((q,i)=>s.a[i]===q.
 
 /* ================= COURS ================= */
 const COURSE = [
-  { id:'cart', t:'Repère cartésien', h:`
-<p>Le repère cartésien est formé d'une origine O et de trois axes orthonormés (O, x), (O, y), (O, z). Le point M est repéré par ses trois coordonnées (x, y, z), projections orthogonales sur chaque axe.</p>
-<div class="formula">OM = x·e<sub>x</sub> + y·e<sub>y</sub> + z·e<sub>z</sub> &nbsp;&nbsp; r = √(x² + y² + z²)</div>
-<h3>Avantages</h3>
+  { id:'torseurs', t:'Torseurs cinématique et cinétique', h:`
+<p>Un <b>torseur</b> est défini par sa résultante et son moment en un point. On change de point par la relation de Varignon : le moment en Q vaut le moment en P plus QP ∧ résultante.</p>
+<h3>Cinématique de S/R</h3>
+<div class="formula">{V<sub>S/R</sub>} = { Ω<sub>S/R</sub> ; V<sub>P,S/R</sub> }<sub>P</sub> &nbsp; avec &nbsp; V<sub>Q</sub> = V<sub>P</sub> + QP ∧ Ω</div>
+<h3>Cinétique de S/R</h3>
+<div class="formula">{C<sub>S/R</sub>} = { m V<sub>G,S/R</sub> ; σ<sub>P,S/R</sub> }<sub>P</sub></div>
+<p>avec σ<sub>P</sub> = σ<sub>G</sub> + PG ∧ m V<sub>G</sub> et σ<sub>G</sub> = I<sub>G</sub>(S) Ω. Le moment cinétique en G s'obtient avec la matrice d'inertie en G.</p>
+<h3>Actions mécaniques sur S</h3>
+<div class="formula">{T<sub>ext→S</sub>} = { R ; M<sub>P</sub> }<sub>P</sub></div>
+<div class="retain"><b>À retenir.</b> Un torseur, c'est une résultante et un moment en un point. Varignon permet de changer de point, mais les deux termes changent ensemble.</div>` },
+
+  { id:'comoment', t:'Comoment et puissance', h:`
+<p>Le <b>comoment</b> de deux torseurs est un scalaire. Il se calcule avec les éléments de réduction écrits au <b>même point</b> P, et sa valeur ne dépend pas de ce point.</p>
+<div class="formula">{A} ⊗ {B} = R<sub>A</sub> · M<sub>P,B</sub> + M<sub>P,A</sub> · R<sub>B</sub></div>
+<h3>Puissance d'une action mécanique</h3>
+<div class="formula">P(ext→S/R) = {T<sub>ext→S</sub>} ⊗ {V<sub>S/R</sub>} = R · V<sub>P,S/R</sub> + M<sub>P</sub> · Ω<sub>S/R</sub></div>
+<h3>Énergie cinétique</h3>
+<div class="formula">E<sub>c</sub>(S/R) = ½ {C<sub>S/R</sub>} ⊗ {V<sub>S/R</sub>} = ½ [ m V<sub>P</sub> · V<sub>G</sub> + σ<sub>P</sub> · Ω ]</div>
+<h3>Liaison parfaite ou contact sans glissement</h3>
+<div class="formula">P = {T} ⊗ {V} = 0 car la composante de V en jeu (vitesse de glissement) est nulle</div>
+<div class="retain"><b>À retenir.</b> Le comoment donne le même nombre en tout point, mais l'expression est plus ou moins longue selon le point.</div>` },
+
+  { id:'tec', t:"Théorème de l'énergie cinétique", h:`
+<p>Dans un référentiel galiléen, pour un ensemble matériel E :</p>
+<div class="formula">dE<sub>c</sub>(E/R<sub>g</sub>)/dt = P(ext→E/R<sub>g</sub>) + P<sub>int</sub>(E)</div>
+<p>Pour un solide unique, P<sub>int</sub> = 0. Les liaisons parfaites ne contribuent pas. On obtient une équation scalaire sans inconnue de liaison, ce qui convient à un système à un degré de liberté.</p>
+<h3>Méthode en quatre lignes</h3>
+<ol>
+<li><b>Cinématique</b> : exprimer Ω et V<sub>G</sub> avec un seul paramètre (ici θ̇), grâce au roulement sans glissement.</li>
+<li><b>Choix du point</b> : chercher un point de vitesse nulle. S'il existe, y déplacer la matrice d'inertie.</li>
+<li><b>Énergie cinétique et puissances</b> : calculer E<sub>c</sub> et ne garder que les puissances qui ne sont pas nulles.</li>
+<li><b>TEC</b> : dériver E<sub>c</sub>, égaler à P<sub>ext</sub>, simplifier par θ̇ puis linéariser si besoin.</li>
+</ol>
+<div class="retain"><b>À retenir.</b> Le TEC fait disparaître les inconnues de liaison. C'est l'outil idéal pour un système à un degré de liberté.</div>` },
+
+  { id:'point', t:'Où écrire E<sub>c</sub> ?', h:`
+<p>Le comoment donne le même nombre en tout point, mais l'expression est plus ou moins longue.</p>
+<h3>En G (formule de König)</h3>
+<div class="formula">E<sub>c</sub> = ½ m V<sub>G</sub>² + ½ Ω · I<sub>G</sub> Ω</div>
+<p>Deux termes. Pratique quand I<sub>G</sub> est donnée, comme pour le rotor.</p>
+<h3>En un point P de vitesse nulle (point fixe ou centre instantané de rotation)</h3>
+<div class="formula">V<sub>P</sub> = 0 ⇒ E<sub>c</sub> = ½ Ω · I<sub>P</sub> Ω</div>
+<p>Un seul terme. Il suffit de déplacer la matrice d'inertie en P (Huygens). C'est le cas de M pour le rotor et de I pour la roue.</p>
+<div class="verdict warn"><b>Attention :</b> la forme à un terme n'est valable que si V<sub>P</sub> = 0 à l'instant considéré. Un point P quelconque en mouvement garde le terme m V<sub>P</sub>·V<sub>G</sub>.</div>
+<div class="retain"><b>À retenir.</b> Chercher un point de vitesse nulle (point fixe ou CIR) permet de diviser par deux le nombre de termes. C'est le réflexe à avoir.</div>` },
+
+  { id:'huygens', t:'Huygens : déplacer la matrice', h:`
+<p>Si G est le centre de masse de S et si MG = (a, b, c) dans la base choisie :</p>
+<div class="formula">I<sub>M</sub>(S) = I<sub>G</sub>(S) + m · [ b²+c² &nbsp; −ab &nbsp; −ac ; −ab &nbsp; a²+c² &nbsp; −bc ; −ac &nbsp; −bc &nbsp; a²+b² ]</div>
+<p>Sur la diagonale, on retrouve le théorème de Huygens scalaire : I<sub>Δ</sub> = I<sub>Δ<sub>G</sub></sub> + m d², avec d la distance entre les deux axes parallèles. Les termes hors diagonale apparaissent dès que MG n'est pas porté par un axe de la base.</p>
 <ul>
-<li>Les vecteurs de base e<sub>x</sub>, e<sub>y</sub>, e<sub>z</sub> sont <b>constants</b> : ils ne dépendent pas de la position du point.</li>
-<li>Les translations s'écrivent simplement, et le produit scalaire est immédiat.</li>
+<li>Les deux matrices s'écrivent dans la <b>même base</b>.</li>
+<li>Un des deux points est obligatoirement G. Pour passer de M à M', on passe par G : on retire m[…] en M, puis on ajoute m[…] en M'.</li>
+<li>La matrice en M est toujours « plus grande » sur la diagonale : on ajoute des termes positifs.</li>
 </ul>
-<h3>Limites</h3>
-<p>Dès que le problème a une symétrie de révolution (autour d'un axe) ou sphérique (autour d'un point), les formules cartésiennes deviennent lourdes : les surfaces naturelles (cylindre, sphère) y ont des équations compliquées.</p>
-<div class="retain"><b>À retenir.</b> Le repère cartésien est le plus simple à manipuler, mais il ignore les symétries du problème.</div>` },
+<div class="retain"><b>À retenir.</b> Huygens permet de déplacer la matrice d'inertie d'un point à un autre, à condition qu'un des deux points soit le centre de masse G.</div>` },
 
-  { id:'cyl', t:'Coordonnées cylindriques', h:`
-<p>On projette M en M′ sur le plan xOy. Les coordonnées cylindriques (ρ, φ, z) sont :</p>
+  { id:'bilan', t:'Méthode récapitulative', h:`
+<table class="ctable"><thead><tr><th>Étape</th><th>Ce qu'on fait</th><th>Ce qu'on cherche</th></tr></thead><tbody>
+<tr><td>1 · Cinématique</td><td>Exprimer Ω et V<sub>G</sub> en fonction d'un seul paramètre</td><td>La relation de roulement sans glissement</td></tr>
+<tr><td>2 · Choix du point</td><td>Repérer un point de vitesse nulle (point fixe ou CIR)</td><td>Réduire le comoment à un seul terme</td></tr>
+<tr><td>3 · Énergie cinétique</td><td>Calculer E<sub>c</sub> = ½ {C} ⊗ {V}</td><td>Le J<sub>eq</sub> du système</td></tr>
+<tr><td>4 · Puissances</td><td>Ne garder que les puissances non nulles</td><td>P<sub>ext</sub> en fonction du paramètre</td></tr>
+<tr><td>5 · TEC</td><td>Dériver E<sub>c</sub> = P<sub>ext</sub>, simplifier par θ̇</td><td>L'équation différentielle du mouvement</td></tr>
+<tr><td>6 · Linéarisation</td><td>Si θ petit, sin θ ≈ θ</td><td>La période des petites oscillations</td></tr>
+</tbody></table>
+<h3>Que choisir comme point ?</h3>
 <ul>
-<li><b>ρ</b> = distance OM′ = √(x² + y²), avec ρ ≥ 0 ;</li>
-<li><b>φ</b> = angle orienté de l'axe x vers OM′, dans le plan xOy ;</li>
-<li><b>z</b> = la cote, identique à la coordonnée cartésienne.</li>
+<li><b>Point fixe</b> (axe de rotation) : c'est le plus simple. La matrice d'inertie y est souvent donnée.</li>
+<li><b>Centre instantané de rotation</b> (roulement sans glissement) : un seul terme aussi, mais il faut déplacer la matrice par Huygens.</li>
+<li><b>Centre de masse G</b> : deux termes (König), mais la matrice y est souvent déjà connue.</li>
 </ul>
-<div class="formula">x = ρ cos φ &nbsp;&nbsp; y = ρ sin φ &nbsp;&nbsp; z = z<br>
-ρ = √(x² + y²) &nbsp;&nbsp; φ = atan2(y, x)</div>
-<h3>Surfaces coordonnées</h3>
-<table class="ctable"><thead><tr><th>Équation</th><th>Surface</th></tr></thead><tbody>
-<tr><td>ρ = constante</td><td>Cylindre de révolution d'axe (O, z)</td></tr>
-<tr><td>φ = constante</td><td>Demi-plan contenant l'axe (O, z)</td></tr>
-<tr><td>z = constante</td><td>Plan horizontal</td></tr>
-</tbody></table>
-<h3>Quand les utiliser ?</h3>
-<p>Dès que le problème présente une <b>symétrie de révolution</b> autour d'un axe : tige, cylindre, disque en rotation, champ créé par un fil rectiligne infini.</p>
-<div class="retain"><b>À retenir.</b> Cylindrique = polaire dans un plan + une hauteur z inchangée.</div>` },
-
-  { id:'sph', t:'Coordonnées sphériques', h:`
-<p>Les coordonnées sphériques (r, θ, φ) sont :</p>
-<ul>
-<li><b>r</b> = distance OM, avec r ≥ 0 ;</li>
-<li><b>θ</b> = angle entre l'axe (O, z) et OM, appelé <i>colatitude</i>, avec θ ∈ [0 ; π] ;</li>
-<li><b>φ</b> = angle de l'axe x vers le projeté M′ de M dans le plan xOy, avec φ ∈ ]−π ; π] ou [0 ; 2π[.</li>
-</ul>
-<div class="formula">x = r sin θ cos φ &nbsp;&nbsp; y = r sin θ sin φ &nbsp;&nbsp; z = r cos θ<br>
-r = √(x² + y² + z²) &nbsp;&nbsp; θ = acos(z / r) &nbsp;&nbsp; φ = atan2(y, x)</div>
-<div class="verdict warn"><b>Attention aux conventions.</b> En physique, θ est souvent la colatitude mesurée depuis l'axe z. En mathématiques, on note parfois θ l'angle dans le plan xOy. Vérifiez toujours la convention de votre cours.</div>
-<h3>Surfaces coordonnées</h3>
-<table class="ctable"><thead><tr><th>Équation</th><th>Surface</th></tr></thead><tbody>
-<tr><td>r = constante</td><td>Sphère de centre O</td></tr>
-<tr><td>θ = constante</td><td>Cône de sommet O et d'axe (O, z)</td></tr>
-<tr><td>φ = constante</td><td>Demi-plan contenant l'axe (O, z)</td></tr>
-</tbody></table>
-<h3>Quand les utiliser ?</h3>
-<p>Dès que le problème présente une <b>symétrie sphérique</b> : sphère, atome, champ créé par une charge ponctuelle, gravitation.</p>
-<div class="retain"><b>À retenir.</b> Sphérique = une distance r et deux angles : θ depuis l'axe z, φ dans le plan horizontal.</div>` },
-
-  { id:'conv', t:'Relations de conversion', h:`
-<table class="ctable"><thead><tr><th>Vers</th><th>Cartésien</th><th>Cylindrique</th><th>Sphérique</th></tr></thead><tbody>
-<tr><td><b>Cartésien</b></td><td>—</td><td>ρ = √(x²+y²)<br>φ = atan2(y, x)<br>z = z</td><td>r = √(x²+y²+z²)<br>θ = acos(z/r)<br>φ = atan2(y, x)</td></tr>
-<tr><td><b>Cylindrique</b></td><td>x = ρ cos φ<br>y = ρ sin φ<br>z = z</td><td>—</td><td>r = √(ρ²+z²)<br>θ = acos(z/r)<br>φ = φ</td></tr>
-<tr><td><b>Sphérique</b></td><td>x = r sinθ cosφ<br>y = r sinθ sinφ<br>z = r cosθ</td><td>ρ = r sin θ<br>φ = φ<br>z = r cos θ</td><td>—</td></tr>
-</tbody></table>
-<h3>Les deux identités à connaître</h3>
-<div class="formula">x² + y² = ρ² &nbsp;&nbsp; et &nbsp;&nbsp; ρ² + z² = r²</div>
-<p>Elles se lisent directement sur les figures : théorème de Pythagore dans le plan xOy pour la première, puis dans le plan vertical contenant M pour la seconde.</p>
-<h3>Pourquoi atan2 ?</h3>
-<p>La fonction <code>atan(y/x)</code> ne donne qu'un angle dans ]−π/2 ; π/2[ et échoue si x = 0. La fonction <code>atan2(y, x)</code> utilise les signes des deux arguments et renvoie l'angle correct dans ]−π ; π] sur tout le plan.</p>
-<div class="retain"><b>À retenir.</b> Toute conversion doit être vérifiée avec les identités ρ² = x² + y² et r² = ρ² + z².</div>` },
-
-  { id:'local', t:'Repère local et vecteurs unitaires', h:`
-<p>Contrairement au repère cartésien, les repères cylindrique et sphérique ont des vecteurs unitaires qui <b>dépendent de la position du point</b>.</p>
-<h3>Base cylindrique (e<sub>ρ</sub>, e<sub>φ</sub>, e<sub>z</sub>)</h3>
-<div class="formula">e<sub>ρ</sub> = cos φ e<sub>x</sub> + sin φ e<sub>y</sub><br>
-e<sub>φ</sub> = −sin φ e<sub>x</sub> + cos φ e<sub>y</sub><br>
-e<sub>z</sub> = e<sub>z</sub></div>
-<h3>Base sphérique (e<sub>r</sub>, e<sub>θ</sub>, e<sub>φ</sub>)</h3>
-<div class="formula">e<sub>r</sub> = sin θ cos φ e<sub>x</sub> + sin θ sin φ e<sub>y</sub> + cos θ e<sub>z</sub><br>
-e<sub>θ</sub> = cos θ cos φ e<sub>x</sub> + cos θ sin φ e<sub>y</sub> − sin θ e<sub>z</sub><br>
-e<sub>φ</sub> = −sin φ e<sub>x</sub> + cos φ e<sub>y</sub></div>
-<h3>Conséquence : vitesse et accélération</h3>
-<p>Comme les vecteurs de base tournent avec le point, il faut dériver <b>aussi</b> les vecteurs, ce qui fait apparaître des termes supplémentaires.</p>
-<div class="formula">v = ρ̇ e<sub>ρ</sub> + ρ φ̇ e<sub>φ</sub> + ż e<sub>z</sub> &nbsp;&nbsp;(cylindrique)<br>
-v = ṙ e<sub>r</sub> + r θ̇ e<sub>θ</sub> + r sin θ φ̇ e<sub>φ</sub> &nbsp;&nbsp;(sphérique)</div>
-<p>Le terme <b>r sin θ φ̇</b> est la vitesse due à la rotation autour de l'axe z : c'est le rayon du cercle décrit, r sin θ, multiplié par la vitesse angulaire φ̇. On retrouve <b>ρ φ̇</b> en cylindrique.</p>
-<div class="retain"><b>À retenir.</b> En cylindrique comme en sphérique, la dérivée d'un vecteur de base n'est pas nulle : c'est l'origine des termes en ρ φ̇ et r sin θ φ̇.</div>` },
-
-  { id:'degen', t:'Dégénérescences', h:`
-<p>Les conversions ne sont pas inversibles partout : certains angles perdent leur sens lorsque le point est sur un axe ou à l'origine.</p>
-<table class="ctable"><thead><tr><th>Position du point</th><th>Situation</th></tr></thead><tbody>
-<tr><td>Sur l'axe z, z ≠ 0</td><td>ρ = 0 : <b>φ est indéfini</b>. θ vaut 0 si z > 0, π si z < 0.</td></tr>
-<tr><td>À l'origine</td><td>r = 0 : <b>θ et φ sont indéfinis</b>. Seul r = 0 a un sens.</td></tr>
-<tr><td>Dans le plan xOy, z = 0</td><td>θ = π/2 exactement : le rayon est horizontal.</td></tr>
-<tr><td>Sur l'axe x, y = 0, x > 0</td><td>φ = 0. Sur l'axe x avec x < 0 : φ = π.</td></tr>
-<tr><td>Sur l'axe y, x = 0, y > 0</td><td>φ = π/2. Avec y < 0 : φ = −π/2.</td></tr>
-</tbody></table>
-<h3>Conséquence pratique</h3>
-<p>Un même point admet une infinité de jeux (r, θ, φ) si l'on ne fixe pas les intervalles. Les conventions usuelles :</p>
-<div class="formula">ρ ≥ 0 &nbsp;&nbsp; r ≥ 0 &nbsp;&nbsp; θ ∈ [0 ; π] &nbsp;&nbsp; φ ∈ ]−π ; π]</div>
-<p>Avec ces intervalles, la correspondance est bijective partout <b>sauf</b> sur l'axe z et à l'origine.</p>
-<div class="retain"><b>À retenir.</b> Sur l'axe z, φ est indéfini ; à l'origine, θ et φ le sont. Dans un calcul numérique, ces cas produisent des divisions par zéro ou des angles arbitraires.</div>` },
+<div class="retain"><b>À retenir.</b> Le TEC est une méthode puissante et systématique. Le choix du point où écrire E<sub>c</sub> détermine la longueur du calcul.</div>` },
 
   { id:'gloss', t:'Vocabulaire', h:`
 <dl class="gloss">
-<dt>Repère orthonormé</dt><dd>Origine et trois axes perpendiculaires munis de vecteurs unitaires.</dd>
-<dt>Coordonnées cartésiennes</dt><dd>Triplet (x, y, z) : projections orthogonales sur les trois axes.</dd>
-<dt>Coordonnées cylindriques</dt><dd>Triplet (ρ, φ, z) : distance à l'axe z, angle autour de cet axe, cote.</dd>
-<dt>Coordonnées sphériques</dt><dd>Triplet (r, θ, φ) : distance à l'origine, colatitude, longitude.</dd>
-<dt>Colatitude</dt><dd>Angle θ mesuré depuis l'axe z vers le rayon OM ; entre 0 et π.</dd>
-<dt>Longitude / azimuth</dt><dd>Angle φ mesuré dans le plan xOy depuis l'axe x.</dd>
-<dt>Surface de coordonnée</dt><dd>Lieu des points où une coordonnée est constante : plan, cylindre, cône ou sphère.</dd>
-<dt>Base locale</dt><dd>Vecteurs unitaires (e<sub>ρ</sub>, e<sub>φ</sub>, e<sub>z</sub>) ou (e<sub>r</sub>, e<sub>θ</sub>, e<sub>φ</sub>) attachés au point ; ils dépendent de sa position.</dd>
-<dt>Dégénérescence</dt><dd>Point où une coordonnée angulaire perd son sens (axe z, origine).</dd>
-<dt>atan2</dt><dd>Fonction à deux arguments donnant l'angle polaire dans ]−π ; π] sur tout le plan.</dd>
+<dt>Torseur</dt><dd>Objet défini par une résultante et un moment en un point. Change de point par Varignon.</dd>
+<dt>Comoment</dt><dd>Produit scalaire de deux torseurs, calculé au même point. Indépendant du point.</dd>
+<dt>Énergie cinétique</dt><dd>Demi-comoment du torseur cinétique par le torseur cinématique : E<sub>c</sub> = ½ {C} ⊗ {V}.</dd>
+<dt>Théorème de l'énergie cinétique</dt><dd>dE<sub>c</sub>/dt = P(ext) + P(int). Pour un solide unique, P(int) = 0.</dd>
+<dt>Centre instantané de rotation (CIR)</dt><dd>Point du solide dont la vitesse est nulle à l'instant considéré. Le mouvement est alors une rotation pure autour de ce point.</dd>
+<dt>Huygens</dt><dd>Formule pour déplacer la matrice d'inertie de G vers un autre point M : I<sub>M</sub> = I<sub>G</sub> + m·[…] avec MG.</dd>
+<dt>J<sub>eq</sub></dt><dd>Moment d'inertie équivalent du système ramené à un seul degré de liberté.</dd>
+<dt>Formule de König</dt><dd>E<sub>c</sub> = ½ m V<sub>G</sub>² + ½ Ω·I<sub>G</sub>Ω : énergie cinétique décomposée en translation de G + rotation propre.</dd>
 </dl>` }
 ];
 function courseSection(id){ return COURSE.find(s=>s.id===id)||COURSE[0]; }
 
 /* ================= SHELL UI ================= */
-const UI = { cur: 'c3d' };
-const AS = { key: 'c3d', tab: 'steps', open: false, st: {}, arm: null };
-const CS = { open: false, id: 'cart' };
-
 function renderSeg(){
-  const seg=$('wsSeg'); if(!seg) return; seg.innerHTML='';
-  WORKSHOPS.forEach((w,i)=>seg.append(h('button',{type:'button',role:'tab','aria-pressed':w.id===UI.cur?'true':'false','aria-selected':w.id===UI.cur?'true':'false',onclick:()=>gotoWs(w.id)},(i+1)+'. '+w.title)));
+  const seg=$("wsSeg"); if(!seg) return; seg.innerHTML="";
+  WORKSHOPS.forEach((w,i)=>seg.append(h('button',{type:'button',role:'tab','aria-pressed':w.id===UI.cur?'true':'false','aria-selected':w.id===UI.cur?'true':'false',onclick:()=>gotoWs(w.id)}, (i+1)+'. '+w.title)));
 }
 function mountWs(){
-  const w=wsById(UI.cur), root=$('ws');
-  $('hint').textContent=w.hint; root.innerHTML='';
+  const w=wsById(UI.cur), root=$("ws");
+  $("hint").textContent=w.hint; root.innerHTML="";
   w.mount(root);
-  const sc=$('scroller'); if(sc) sc.scrollTop=0;
+  const sc=$("scroller"); if(sc) sc.scrollTop=0;
 }
 function gotoWs(id){
   const old=wsById(UI.cur); if(old.leave) old.leave();
@@ -1026,11 +1012,11 @@ function gotoWs(id){
 }
 
 function renderAct(){
-  const box=$('act'), btn=$('bAct');
+  const box=$("act"), btn=$("bAct");
   btn.setAttribute('aria-pressed',AS.open?'true':'false'); btn.classList.toggle('pri',AS.open);
   box.hidden=!AS.open;
-  if(!AS.open){ box.innerHTML=''; return; }
-  box.innerHTML='';
+  if(!AS.open){ box.innerHTML=""; return; }
+  box.innerHTML="";
   const a=ACT[AS.key];
   const close=h('button',{class:'btn sm',type:'button',onclick:()=>{AS.open=false;renderAct();}},'Fermer');
   box.append(h('div',{class:'phead'},h('b',null,'Activité'),h('span',{class:'sub'},a.title),close));
@@ -1070,14 +1056,14 @@ function renderAct(){
   box.append(body);
 }
 function actToggle(){ if(CS.open){CS.open=false;renderCourse();} AS.open=!AS.open; renderAct(); }
-$('bAct').addEventListener('click',actToggle);
+$("bAct").addEventListener('click',actToggle);
 
 function renderCourse(){
-  const box=$('course'), btn=$('bCourse'), work=$('work');
+  const box=$("course"), btn=$("bCourse"), work=$("work");
   btn.setAttribute('aria-pressed',CS.open?'true':'false'); btn.classList.toggle('pri',CS.open);
-  box.hidden=!CS.open; work.hidden=CS.open; $('modes').hidden=CS.open;
-  if(!CS.open){ box.innerHTML=''; return; }
-  box.innerHTML='';
+  box.hidden=!CS.open; work.hidden=CS.open; $("modes").hidden=CS.open;
+  if(!CS.open){ box.innerHTML=""; return; }
+  box.innerHTML="";
   const cur=courseSection(CS.id), idx=COURSE.indexOf(cur);
   const go=id=>{CS.id=id;renderCourse();};
   const nav=h('nav',{class:'ctoc','aria-label':'Sommaire du cours'},COURSE.map((s,i)=>h('button',{type:'button',class:s.id===cur.id?'on':'','aria-current':s.id===cur.id?'true':'false',onclick:()=>go(s.id)},(i+1)+'. '+s.t)));
@@ -1087,46 +1073,46 @@ function renderCourse(){
   art.append(h('div',{class:'cpn'},
     idx>0?h('button',{class:'btn',type:'button',onclick:()=>go(COURSE[idx-1].id)},'← '+COURSE[idx-1].t):h('span'),
     idx<COURSE.length-1?h('button',{class:'btn pri',type:'button',onclick:()=>go(COURSE[idx+1].id)},COURSE[idx+1].t+' →'):h('span')));
-  const top=h('div',{class:'ctop'},h('b',null,'Cours : systèmes de coordonnées'),h('button',{class:'btn pri sm',type:'button',onclick:()=>{CS.open=false;renderCourse();}},'Retour à l’atelier'));
+  const top=h('div',{class:'ctop'},h('b',null,'Cours : torseurs et TEC'),h('button',{class:'btn pri sm',type:'button',onclick:()=>{CS.open=false;renderCourse();}},'Retour à l’atelier'));
   box.append(top,sel,h('div',{class:'cwrap'},nav,art));
 }
 function openCourse(id){ if(id) CS.id=id; CS.open=true; renderCourse(); }
-$('bCourse').addEventListener('click',()=>{CS.open=!CS.open;renderCourse();});
+$("bCourse").addEventListener('click',()=>{CS.open=!CS.open;renderCourse();});
 
-function closeDlg(){
-  const d=$('dlg');
-  d.hidden=true;
-  d.innerHTML='';
-}
+function closeDlg(){ $("dlg").hidden=true; $("dlg").innerHTML=""; }
 function openDlg(title,body){
-  const d=$('dlg');
-  d.innerHTML='';
-  d.hidden=false;
-  d.append(h('div',{class:'dlgbox',role:'dialog','aria-label':title},
-    h('header',null,h('b',null,title),h('button',{class:'btn sm',type:'button',onclick:closeDlg},'Fermer')),
-    h('div',{class:'dbody'},body)));
+  const d=$("dlg"); d.innerHTML=""; d.hidden=false;
+  d.append(h('div',{class:'dlgbox',role:'dialog','aria-label':title},h('header',null,h('b',null,title),h('button',{class:'btn sm',type:'button',onclick:closeDlg},'Fermer')),h('div',{class:'dbody'},body)));
   d.onclick=ev=>{ if(ev.target===d) closeDlg(); };
 }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('dlg').hidden) closeDlg(); });
-$('bHelp').addEventListener('click',()=>{
-  openDlg('Aide', h('div',{html:'<p>Trois ateliers sur les systèmes de coordonnées : exploration 3D, vues 2D (coupes) et convertisseur.</p>'+
-    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Les coordonnées se saisissent dans le panneau collant à droite (sous le contenu sur mobile). Modifier un système met à jour les deux autres.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM corrigé.</li><li>Le bouton <b>Cours</b> détaille chaque système, les conversions, le repère local et les dégénérescences.</li><li>Le bouton <b>Mode sombre / clair</b> commute le thème (choix mémorisé).</li></ul>'+
-    '<h3>Scène 3D</h3><p>Souris gauche = rotation · molette = zoom · clic droit = déplacement. Axes : x rouge, y vert, z bleu (vertical).</p>'}));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$("dlg").hidden) closeDlg(); });
+$("bHelp").addEventListener('click',()=>{
+  openDlg('Aide', h('div',{html:'<p>Trois ateliers sur le théorème de l’énergie cinétique (CPGE) : banc d’inertie (rotor), roue de vélo, et calculateur de Huygens.</p>'+
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Les réglages sont dans le panneau collant à droite (ou en dessous sur mobile).</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> détaille les torseurs, le comoment, le TEC et Huygens.</li><li>Le bouton <b>Mode sombre / clair</b> commute le thème (choix mémorisé).</li></ul>'+
+    '<h3>Vos données</h3><p>Le thème et les réponses au QCM restent dans ce navigateur.</p>'}));
 });
 
-/* ================= RESIZE + INIT ================= */
-window.addEventListener('resize',()=>{
-  resize3D();
-  if(UI.cur==='c2d'){ drawTop(); drawSide(); }
-});
+/* ================= BOUCLE PRINCIPALE ================= */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(UI.cur==='rotor' && $("cvR")){
+    if(S.run){ const q=rotorQ(), n=10, ds=dt*(+$("vR").value); for(let i=0;i<n;i++) stepR(ds/n,q); }
+    drawR();
+  } else if(UI.cur==='velo' && $("cvB")){
+    if(B.run){ const q=bq(); if(B.t<q.tf) B.t+=dt*(+$("vb").value); else { B.hold+=dt; if(B.hold>1.2) resetB(); } }
+    drawB();
+  }
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize',()=>{ if($("cvR")) drawR(); if($("cvB")) drawB(); });
 
-const hmap={c3d:0,c2d:1,ccv:2}, hash=location.hash.slice(1);
-if(hash in hmap) UI.cur=hash;
+/* ================= INIT ================= */
+const hmap={rotor:0,velo:1,huygens:2}, hh=location.hash.slice(1);
+if(hh in hmap) UI.cur=hh;
 AS.key=UI.cur;
-renderSeg();
-mountWs();
-renderAct();
-renderCourse();
+renderSeg(); mountWs(); renderAct(); renderCourse();
+requestAnimationFrame(frame);
 })();
 </script>
 </body>
