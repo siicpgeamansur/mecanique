@@ -60,7 +60,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 #ws p,#ws li{font-size:14.5px;line-height:1.55}
 #ws .small{font-size:12.5px}
 
-/* grille deux colonnes */
 .ws-two{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
 .ws-main{min-width:0}
 .ws-side{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;max-height:calc(100vh - 170px);overflow:auto}
@@ -74,7 +73,6 @@ button,input,select,textarea{font:inherit;color:inherit}
   .ws-side .gstats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 }
 
-/* Activité */
 #act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
 #act .pbody{font-size:13.5px;overflow:auto;padding:12px;flex:1;min-height:0}
 .phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
@@ -95,7 +93,6 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
 .why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
 .score{font-weight:600;font-size:15px;margin:4px 0 8px}
 
-/* Cours */
 #course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
 .ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
@@ -120,7 +117,6 @@ fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
 .gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
 .cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
 
-/* éléments d'atelier */
 .fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
 .fld b{color:var(--accent);font-family:var(--font-mono);font-weight:500;font-size:12px}
 input[type=range]{padding:0;accent-color:var(--accent)}
@@ -133,6 +129,7 @@ input[type=text],input[type=number],textarea,select{width:100%;background:var(--
 .stagebox canvas{display:block;width:100%;height:340px;background:var(--canvas);border-radius:8px}
 .gl{width:100%;height:470px;border-radius:8px;overflow:hidden;background:var(--canvas)}
 .gl canvas{display:block;height:auto;border-radius:0}
+.gl .fallback{padding:20px;color:var(--muted);font-size:13.5px;text-align:center}
 @media (max-width:820px){.gl{height:330px}}
 .gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
 .stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -146,6 +143,16 @@ input[type=text],input[type=number],textarea,select{width:100%;background:var(--
 .crow{display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:center;margin-bottom:4px}
 .crow span{font-weight:600;color:var(--accent);font-size:13px;text-align:center}
 .crow input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-family:var(--font-mono);font-size:12.5px;color:var(--fg)}
+
+/* la modale d'aide : masquée par défaut, stylée seulement quand ouverte */
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);z-index:50;padding:16px;display:flex;align-items:center;justify-content:center}
+#dlg[hidden]{display:none!important}
+#dlg .dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+#dlg .dlgbox>header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+#dlg .dlgbox>header b{font-size:16px}
+#dlg .dlgbox>.dbody{padding:14px 16px;overflow:auto;font-size:13.5px}
+#dlg .dlgbox h3{margin:14px 0 4px;font-size:14px}
+#dlg .dlgbox p,#dlg .dlgbox li{margin:4px 0;font-size:13.5px}
 
 @media (max-width:820px){
   .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
@@ -234,9 +241,14 @@ function dot(c,x,y,col,lab,dx=8,dy=-8){
   if(lab){ c.font="600 14px "+css("--font-ui"); c.fillText(lab,x+dx,y+dy); }
 }
 
-/* ================= Thème ================= */
+/* ========== ÉTAT GLOBAL DÉCLARÉ TÔT (pour éviter les TDZ) ========== */
 let darkTheme = false;
 try{ darkTheme = localStorage.getItem('coord-theme') === 'dark'; }catch(e){}
+let G3 = null;   /* scène Three.js — déclaré ici, affecté dans init3D() */
+let onChange = ()=>{};   /* callback recalculé à chaque montage d'atelier */
+const PT = { x:3, y:2, z:4 };   /* point partagé par tous les ateliers */
+
+/* ================= Thème ================= */
 function applyTheme(){
   document.documentElement.dataset.theme = darkTheme ? 'dark' : 'light';
   const b = $('bTheme');
@@ -244,7 +256,7 @@ function applyTheme(){
     b.textContent = darkTheme ? 'Mode clair' : 'Mode sombre';
     b.setAttribute('aria-label', darkTheme ? 'Activer le mode clair' : 'Activer le mode sombre');
   }
-  if(G3 && G3.scene) G3.scene.background.set(darkTheme ? 0x101010 : 0xf8fbff);
+  if(G3 && G3.scene && G3.scene.background) G3.scene.background.set(darkTheme ? 0x101010 : 0xf8fbff);
 }
 applyTheme();
 $('bTheme').addEventListener('click', ()=>{
@@ -255,7 +267,6 @@ $('bTheme').addEventListener('click', ()=>{
 });
 
 /* ================= Point partagé ================= */
-const PT = { x:3, y:2, z:4 };
 function derived(){
   const {x,y,z}=PT;
   const rho = Math.hypot(x,y);
@@ -264,7 +275,6 @@ function derived(){
   const theta = r>1e-9 ? Math.acos(clamp(z/r,-1,1)) : 0;
   return {x,y,z,rho,r,phi,theta};
 }
-let onChange = ()=>{};
 
 function coordsHTML(){
   return `
@@ -348,7 +358,6 @@ function setPT(x,y,z){ PT.x=x; PT.y=y; PT.z=z; syncInputs(); onChange(); }
 
 /* ================= Three.js ================= */
 const toThree = (x,y,z)=> new THREE.Vector3(x, z, y);
-let G3 = null;
 
 function makeLabel(text, color){
   const cv=document.createElement('canvas'); cv.width=128; cv.height=64;
@@ -381,7 +390,11 @@ function line(g, pts, color, dashed){
 }
 
 function init3D(){
-  const host=$('gl'); if(!host || !window.THREE) return;
+  const host=$('gl'); if(!host) return;
+  if(!window.THREE){
+    host.innerHTML='<div class="fallback">La scène 3D n\'a pas pu être chargée (bibliothèque Three.js indisponible). Vérifiez votre connexion réseau.</div>';
+    return;
+  }
   const w=host.clientWidth||600, hh=host.clientHeight||460;
   const scene=new THREE.Scene();
   scene.background=new THREE.Color(darkTheme?0x101010:0xf8fbff);
@@ -425,13 +438,13 @@ function init3D(){
   scene.add(cart,cyl,sph);
 
   G3={scene,camera,renderer,controls,point,cart,cyl,sph,raf:0};
-  const loop=()=>{ G3.raf=requestAnimationFrame(loop); G3.controls.update(); G3.renderer.render(G3.scene,G3.camera); };
+  const loop=()=>{ if(!G3) return; G3.raf=requestAnimationFrame(loop); G3.controls.update(); G3.renderer.render(G3.scene,G3.camera); };
   loop();
 }
 function dispose3D(){
   if(!G3) return;
   cancelAnimationFrame(G3.raf);
-  G3.renderer.dispose();
+  try{ G3.renderer.dispose(); }catch(e){}
   const el=G3.renderer.domElement;
   if(el && el.parentNode) el.parentNode.removeChild(el);
   G3=null;
@@ -596,7 +609,6 @@ function drawTop(){
   const ox=w/2, oy=hh/2;
   const X=v=>ox+v*sc, Y=v=>oy-v*sc;
 
-  // grille
   const step=R>12?5:1;
   c.strokeStyle=css('--grid'); c.lineWidth=1;
   for(let v=-Math.ceil(R/step)*step; v<=R+1e-9; v+=step){
@@ -604,7 +616,6 @@ function drawTop(){
     c.beginPath(); c.moveTo(X(-R),Y(v)); c.lineTo(X(R),Y(v)); c.stroke();
   }
 
-  // axes
   arrow(c,X(0),Y(0),X(R),Y(0),css('--rcol'),null,2);
   arrow(c,X(0),Y(0),X(0),Y(R),css('--gcol'),null,2);
   c.font="700 14px "+css('--font-ui');
@@ -612,18 +623,15 @@ function drawTop(){
   c.fillStyle=css('--gcol'); c.fillText('y',X(0)+6,Y(R)-4);
   c.fillStyle=css('--muted'); c.fillText('O',X(0)-16,Y(0)+16);
 
-  // cercle de rayon rho
   if(d.rho>1e-6){
     c.setLineDash([5,5]); c.strokeStyle=css('--mcol'); c.lineWidth=1.5;
     c.beginPath(); c.arc(X(0),Y(0),d.rho*sc,0,2*Math.PI); c.stroke();
     c.setLineDash([]);
   }
 
-  // segment OM
   c.strokeStyle=css('--accent'); c.lineWidth=2.5;
   c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(d.x),Y(d.y)); c.stroke();
 
-  // arc phi
   if(d.rho>1e-6){
     const rad=Math.min(0.34*d.rho,R*0.32)*sc;
     const a0=Math.min(0,-d.phi), a1=Math.max(0,-d.phi);
@@ -634,12 +642,10 @@ function drawTop(){
     c.fillText('φ', X(0)+(rad+14)*Math.cos(mid)-5, Y(0)+(rad+14)*Math.sin(mid)+5);
   }
 
-  // point M et étiquette
   dot(c,X(d.x),Y(d.y),css('--mcol'),null);
   c.fillStyle=css('--mcol'); c.font="600 13px "+css('--font-ui');
   c.fillText('M (x ; y)', X(d.x)+10, Y(d.y)-10);
 
-  // étiquette rho
   const mx=X(d.x/2), my=Y(d.y/2);
   c.fillStyle=css('--accent'); c.font="700 14px "+css('--font-ui');
   c.fillText('ρ', mx+6, my-6);
@@ -654,7 +660,6 @@ function drawSide(){
   const sc=Math.min(w*0.75/R, (d.z<0?hh*0.45:hh*0.72)/R);
   const X=v=>ox+v*sc, Y=v=>oy-v*sc;
 
-  // grille
   const step=R>12?5:1;
   c.strokeStyle=css('--grid'); c.lineWidth=1;
   for(let v=0; v<=R+1e-9; v+=step){
@@ -664,7 +669,6 @@ function drawSide(){
     c.beginPath(); c.moveTo(X(0),Y(v)); c.lineTo(X(R),Y(v)); c.stroke();
   }
 
-  // axes
   arrow(c,X(0),Y(0),X(R),Y(0),css('--accent'),null,2);
   arrow(c,X(0),Y(0),X(0),Y(R),css('--wcol'),null,2);
   arrow(c,X(0),Y(0),X(0),Y(Math.min(-R,d.z*1.2)),css('--wcol'),null,2);
@@ -673,17 +677,14 @@ function drawSide(){
   c.fillStyle=css('--wcol'); c.fillText('z', X(0)+8, Y(R)-2);
   c.fillStyle=css('--muted'); c.fillText('O', X(0)-16, Y(0)+16);
 
-  // segments en pointillés jusqu'aux axes
   c.setLineDash([4,4]); c.strokeStyle=css('--muted'); c.lineWidth=1.2;
   c.beginPath(); c.moveTo(X(d.rho),Y(0)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
   c.beginPath(); c.moveTo(X(0),Y(d.z)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
   c.setLineDash([]);
 
-  // rayon OM
   c.strokeStyle=css('--wcol'); c.lineWidth=2.5;
   c.beginPath(); c.moveTo(X(0),Y(0)); c.lineTo(X(d.rho),Y(d.z)); c.stroke();
 
-  // arc theta (depuis +z vers le rayon)
   if(d.r>1e-6){
     const aEnd=-Math.atan2(d.z,d.rho);
     const rad=Math.min(0.34*d.r,R*0.32)*sc;
@@ -694,17 +695,14 @@ function drawSide(){
     c.fillText('θ', X(0)+(rad+14)*Math.cos(mid)-5, Y(0)+(rad+14)*Math.sin(mid)+5);
   }
 
-  // point M
   dot(c,X(d.rho),Y(d.z),css('--mcol'),null);
   c.fillStyle=css('--mcol'); c.font="600 13px "+css('--font-ui');
   c.fillText('M', X(d.rho)+10, Y(d.z)-10);
 
-  // étiquette r
   const mx=X(d.rho/2), my=Y(d.z/2);
   c.fillStyle=css('--wcol'); c.font="700 14px "+css('--font-ui');
   c.fillText('r', mx+8, my-6);
 
-  // graduations des axes
   c.fillStyle=css('--muted'); c.font="11px "+css('--font-mono');
   c.fillText(fmt(d.rho,2), X(d.rho)-12, Y(0)+16);
   c.fillText(fmt(d.z,2), X(0)-40, Y(d.z)+4);
@@ -1095,14 +1093,18 @@ function renderCourse(){
 function openCourse(id){ if(id) CS.id=id; CS.open=true; renderCourse(); }
 $('bCourse').addEventListener('click',()=>{CS.open=!CS.open;renderCourse();});
 
-function closeDlg(){ $('dlg').hidden=true; $('dlg').innerHTML=''; }
+function closeDlg(){
+  const d=$('dlg');
+  d.hidden=true;
+  d.innerHTML='';
+}
 function openDlg(title,body){
-  const d=$('dlg'); d.innerHTML=''; d.hidden=false;
-  d.style.cssText='position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px';
-  const boxEl=h('div',{style:'background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column'},
-    h('header',{style:'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)'},h('b',null,title),h('button',{class:'btn sm',type:'button',onclick:closeDlg},'Fermer')),
-    h('div',{style:'padding:14px 16px;overflow:auto;font-size:13.5px'},body));
-  d.append(boxEl);
+  const d=$('dlg');
+  d.innerHTML='';
+  d.hidden=false;
+  d.append(h('div',{class:'dlgbox',role:'dialog','aria-label':title},
+    h('header',null,h('b',null,title),h('button',{class:'btn sm',type:'button',onclick:closeDlg},'Fermer')),
+    h('div',{class:'dbody'},body)));
   d.onclick=ev=>{ if(ev.target===d) closeDlg(); };
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('dlg').hidden) closeDlg(); });
@@ -1113,12 +1115,18 @@ $('bHelp').addEventListener('click',()=>{
 });
 
 /* ================= RESIZE + INIT ================= */
-window.addEventListener('resize',()=>{ resize3D(); if(UI.cur==='c2d'){ drawTop(); drawSide(); } });
+window.addEventListener('resize',()=>{
+  resize3D();
+  if(UI.cur==='c2d'){ drawTop(); drawSide(); }
+});
 
-const hmap={c3d:0,c2d:1,ccv:2}, hh=location.hash.slice(1);
-if(hh in hmap) UI.cur=hh;
+const hmap={c3d:0,c2d:1,ccv:2}, hash=location.hash.slice(1);
+if(hash in hmap) UI.cur=hash;
 AS.key=UI.cur;
-renderSeg(); mountWs(); renderAct(); renderCourse();
+renderSeg();
+mountWs();
+renderAct();
+renderCourse();
 })();
 </script>
 </body>
