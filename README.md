@@ -40,6 +40,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Bras robotisé 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html) | Animation de deux bras en liaison pivot entre eux, l'un étant en liaison pivot avec le bâti. Il est possible de modifier les longueurs des bras et les positions angulaires des pivots pour visualiser la zone inaccessible. |
+| [Roulement sans glissements](https://siicpgeamansur.github.io/mecanique/rsg.html) | Animation pour comprendre le glissement et la condition de roulement sans glissements d'une roue sur le sol. |
 | [Réducteurs](https://siicpgeamansur.github.io/mecanique/reducteurs.html) | Réducteurs à train d'engrenages simples ou à train épicycloïdaux. |
 | [Théorie des mécanismes](https://siicpgeamansur.github.io/mecanique/TdM.html) | Théorie des mécanismes : degré de mobilité, hyperstatisme et liaison équivalente. |
 
