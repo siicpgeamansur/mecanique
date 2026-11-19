@@ -1,0 +1,656 @@
+<title>Atelier Roulement sans glissement</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Mise en page : barre d'outils, zone de travail (roue animée, curseur, trois champs de vitesses) et panneau Activité/QCM à droite (sous la zone sur téléphone), vue Cours avec sommaire. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+#scroller>*{flex:none}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  --c-rc:#1c1cd8;--c-cs:#1f8a1f;--c-rs:#d81e1e;
+  --t-rc:#eef0ff;--t-cs:#edf8ed;--t-rs:#fff0f0;
+  --grid:#9aa1a9;--ground:#8a9099;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#000000;--bar:#0e0e0e;--panel:#000000;--panel2:#161616;--field:#000000;--line:#3a3a3a;
+  --fg:#f2f2f2;--muted:#a0a0a0;--accent:#5b9bd5;--accent-fg:#000000;--accent-soft:#1c1c1c;--accent-ink:#b5d4f1;
+  --ok:#5fd16a;--warn:#e0a24a;--bad:#ff7b72;
+  --c-rc:#8c97ff;--c-cs:#5fd16a;--c-rs:#ff7b72;
+  --t-rc:#0e0e0e;--t-cs:#0e0e0e;--t-rs:#0e0e0e;
+  --grid:#707070;--ground:#8a8a8a;
+  color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.grow{flex:1}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto;padding:10px 12px 14px;display:flex;flex-direction:column;gap:12px}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+select{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+/* roue */
+.wheelsvg{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.ctl{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:9px}
+.zones{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.zones span:nth-child(2){text-align:center;color:var(--ok);font-weight:600}.zones span:last-child{text-align:right}
+.presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-block;font-weight:600;padding:3px 10px;border-radius:999px;font-size:13px;border:1px solid var(--line)}
+.badge.ok{background:rgba(30,122,46,.16);color:var(--ok);border-color:var(--ok)}
+.badge.ko{background:rgba(192,40,31,.12);color:var(--bad);border-color:var(--bad)}
+.badge.ex{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 12px}
+.reads div{border-left:3px solid var(--line);padding:1px 8px;font-size:12.5px;color:var(--muted)}
+.reads b{display:block;font-family:var(--font-mono);font-size:14px;color:var(--fg);font-weight:500}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pan{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pan h4{margin:0;text-align:center;font-size:14px}
+.pan svg{width:100%;height:auto;display:block}
+.tbox{border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:center;font-size:12.5px}
+.tbox small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.tors{display:inline-flex;align-items:center;gap:3px;font-family:'IBM Plex Serif',Georgia,serif;font-style:italic;flex-wrap:nowrap}
+.tors .br{font-size:34px;font-weight:200;line-height:1;font-style:normal}
+.tors .stk{display:flex;flex-direction:column;gap:2px;font-size:14px;align-items:center;padding:0 2px}
+.tors sub{font-size:10px;font-style:italic}
+.vec{text-decoration:overline}
+.tbox .eq{display:flex;flex-wrap:wrap;gap:4px;align-items:center;justify-content:center;font-family:'IBM Plex Serif',Georgia,serif;font-style:italic;font-size:14px}
+.pan.rc h4{color:var(--c-rc)}.pan.rc .tbox{background:var(--t-rc);border-color:var(--c-rc)}
+.pan.cs h4{color:var(--c-cs)}.pan.cs .tbox{background:var(--t-cs);border-color:var(--c-cs)}
+.pan.rs h4{color:var(--c-rs)}.pan.rs .tbox{background:var(--t-rs);border-color:var(--c-rs)}
+/* activité */
+#act{flex:none;width:clamp(290px,26vw,360px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+details.rep{margin:4px 0 0}details.rep summary{cursor:pointer;color:var(--accent-ink);font-size:13px}
+details.rep div{background:var(--panel2);border-radius:6px;padding:6px 9px;margin-top:4px;font-size:13px}
+table.rel{border-collapse:collapse;width:100%;font-size:12px;margin:6px 0}
+table.rel th,table.rel td{border:1px solid var(--line);padding:3px 5px;text-align:right;font-family:var(--font-mono)}
+table.rel th{background:var(--panel2);font-family:var(--font-ui);font-weight:600;text-align:center}
+.tblwrap{overflow-x:auto}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;flex:none}
+.opt.good{background:rgba(30,122,46,.18)}.opt.bad{background:rgba(192,40,31,.18)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.tw{overflow-x:auto;max-width:100%}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto;font-family:'IBM Plex Serif',Georgia,serif;font-style:italic}
+.formula i{font-style:italic}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+.cbody svg.fig{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:block;margin:8px 0}
+@media (max-width:900px){
+  html,body{height:auto}
+  #app{height:auto}
+  .work{flex-direction:column}
+  #stage{overflow:visible}
+  #scroller{overflow:visible}
+  #act{width:auto;max-height:none}
+  .trio{grid-template-columns:1fr}
+  .ctoc{display:none}.ctoc-sel{display:block}
+  .cwrap{display:block}
+  .cbody{overflow:visible}
+  #course{min-height:0}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<div id="app">
+<div class="band"><div class="inner row">
+  <div class="brand">Atelier Roulement sans glissement <small>SII 1ère année</small></div>
+  <div class="seg" role="group" aria-label="Vue">
+    <button id="vLab" aria-pressed="true">Atelier</button>
+    <button id="vCourse" aria-pressed="false">Cours</button>
+  </div>
+  <span class="grow"></span>
+  <button class="btn" id="theme" aria-pressed="false">Mode sombre</button>
+</div></div>
+
+<div id="lab" class="work inner">
+  <div id="stage">
+    <div id="hint">Déplacez le curseur de la translation pure jusqu'à la rotation pure. Au milieu, la roue roule sans glisser : la vitesse de I est nulle.</div>
+    <div id="scroller">
+      <svg id="main" class="wheelsvg" viewBox="0 0 900 330" role="img" aria-label="Roue sur le sol avec le champ des vitesses sur un diamètre vertical"></svg>
+
+      <div class="ctl">
+        <div class="presets">
+          <button class="btn" id="pTr">Translation pure</button>
+          <button class="btn pri" id="pRsg">Roulement sans glissement</button>
+          <button class="btn" id="pRot">Rotation pure</button>
+          <span class="grow"></span>
+          <button class="btn" id="play">Pause</button>
+          <label class="small" style="margin:0">Vitesse
+            <select id="spd"><option value="0.1">×0,1</option><option value="0.2" selected>×0,2</option><option value="0.5">×0,5</option></select>
+          </label>
+        </div>
+        <div>
+          <label for="slider" class="small" style="margin:0 0 4px;display:block">Répartition du mouvement : translation du cadre ↔ rotation de la roue</label>
+          <input type="range" id="slider" min="0" max="100" step="1" value="50">
+          <div class="zones"><span>Translation pure<br>(roue bloquée)</span><span>Roulement<br>sans glissement</span><span>Rotation pure<br>(patinage total)</span></div>
+        </div>
+        <div class="presets">
+          <span id="badge" class="badge ok">RSG</span>
+          <label class="small" style="margin:0"><input type="checkbox" id="optVec" checked> Champ des vitesses R/S</label>
+          <label class="small" style="margin:0"><input type="checkbox" id="optTrace" checked> Trajectoire d'un point de la jante</label>
+        </div>
+        <div class="reads" id="reads"></div>
+      </div>
+
+      <div class="trio">
+        <div class="pan rc"><h4>1. Roue / Cadre (R/C)</h4><svg id="p1" viewBox="0 0 300 235" role="img" aria-label="Champ des vitesses de R par rapport à C"></svg><div class="tbox" id="tb1"></div></div>
+        <div class="pan cs"><h4>2. Cadre / Sol (C/S)</h4><svg id="p2" viewBox="0 0 300 235" role="img" aria-label="Champ des vitesses de C par rapport à S"></svg><div class="tbox" id="tb2"></div></div>
+        <div class="pan rs"><h4>3. Roue / Sol (R/S)</h4><svg id="p3" viewBox="0 0 300 235" role="img" aria-label="Champ des vitesses de R par rapport à S"></svg><div class="tbox" id="tb3"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="act" aria-label="Activité et QCM">
+    <div class="phead"><b>Activité</b></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tAct" aria-selected="true">Activité</button>
+      <button role="tab" id="tQcm" aria-selected="false">QCM</button>
+    </div>
+    <div class="pbody" id="actBody"></div>
+  </aside>
+</div>
+
+<div id="course" hidden>
+  <div class="ctop">
+    <b>Cours : roulement sans glissement</b>
+    <button class="btn sm" id="toLab">Ouvrir l'atelier</button>
+  </div>
+  <select id="toc2" class="ctoc-sel" aria-label="Sommaire"></select>
+  <div class="cwrap">
+    <nav class="ctoc" id="toc" aria-label="Sommaire"></nav>
+    <div class="cbody" id="cbody">
+
+<section><p class="ckick">Partie 1</p><h2>Situation et paramétrage</h2>
+<p>On étudie une roue <b>R</b> de rayon <i>R</i>, montée sur un cadre (châssis) <b>C</b> qui avance sur le sol <b>S</b> en ligne droite. Ce modèle plan représente une roue de véhicule, de brouette, de chariot ou de robot mobile.</p>
+<ul>
+<li><b>S</b> : sol, repère galiléen de référence, axe <span class="vec">x</span> horizontal vers la droite, <span class="vec">y</span> vers le haut, <span class="vec">z</span> sortant de la feuille.</li>
+<li><b>C</b> : cadre, en translation rectiligne par rapport à S : <i>V</i>(O, C/S) = <i>V</i> <span class="vec">x</span>.</li>
+<li><b>R</b> : roue, en rotation par rapport à C autour de l'axe (O, <span class="vec">z</span>) : vecteur rotation Ω(R/C) = ω <span class="vec">z</span>.</li>
+<li><b>I</b> : point de contact géométrique entre la roue et le sol. A : point diamétralement opposé, au sommet de la roue.</li>
+</ul>
+<p>Convention : ω est une valeur algébrique. Une roue qui avance vers la droite en roulant tourne dans le sens horaire, donc <b>ω &lt; 0</b>.</p>
+<div class="retain"><b>À retenir.</b> Le mouvement de la roue par rapport au sol est la composition de deux mouvements simples : la translation du cadre et la rotation de la roue sur son axe.</div>
+</section>
+
+<section><p class="ckick">Partie 2</p><h2>Champ des vitesses d'un solide</h2>
+<p>Pour un solide indéformable, les vitesses de deux points A et B sont liées par la relation de changement de point :</p>
+<div class="formula">V(B, R/C) = V(A, R/C) + Ω(R/C) ∧ AB</div>
+<p>La vitesse est donc une fonction <b>affine</b> de la position : sur un diamètre, les extrémités des vecteurs vitesse sont alignées. C'est la droite en pointillés des trois schémas de l'atelier.</p>
+<h3>Torseur cinématique</h3>
+<p>Le champ des vitesses est résumé par le torseur cinématique, écrit en un point (ici O) :</p>
+<div class="formula">{V(R/C)} = { ω <span class="vec">z</span> ; <span class="vec">0</span> }<sub>O</sub></div>
+<p>La résultante est le vecteur rotation ω <span class="vec">z</span>, le moment en O est la vitesse du point O. Sur un diamètre vertical de la roue, avec s ∈ [−1 ; 1] la position relative (s = 1 en A, s = −1 en I) :</p>
+<div class="formula">V(P, R/C) = − ωR · s <span class="vec">x</span></div>
+<p>Ce champ est <b>antisymétrique</b> : il est nul en O et change de signe de part et d'autre de O.</p>
+<div class="retain"><b>À retenir.</b> Une translation donne un champ uniforme (torseur couple, ω = 0). Une rotation autour d'un point donne un champ antisymétrique, nul au centre de rotation.</div>
+</section>
+
+<section><p class="ckick">Partie 3</p><h2>Composition des mouvements</h2>
+<p>Pour tout point P de la roue, la vitesse par rapport au sol est la somme de la vitesse d'entraînement (celle du cadre) et de la vitesse relative (celle de la roue par rapport au cadre) :</p>
+<div class="formula">V(P, R/S) = V(P, R/C) + V(P, C/S)</div>
+<p>En termes de torseurs, exprimés au même point O :</p>
+<div class="formula">{V(R/S)} = {V(R/C)} + {V(C/S)} = { ω <span class="vec">z</span> ; V <span class="vec">x</span> }<sub>O</sub></div>
+<div class="tw"><table class="ctable">
+<tr><th>Point</th><th>V(P, R/C)</th><th>V(P, C/S)</th><th>V(P, R/S)</th></tr>
+<tr><td>A (sommet)</td><td>− ωR <span class="vec">x</span></td><td>V <span class="vec">x</span></td><td>(V − ωR) <span class="vec">x</span></td></tr>
+<tr><td>O (centre)</td><td><span class="vec">0</span></td><td>V <span class="vec">x</span></td><td>V <span class="vec">x</span></td></tr>
+<tr><td>I (contact)</td><td>+ ωR <span class="vec">x</span></td><td>V <span class="vec">x</span></td><td>(V + ωR) <span class="vec">x</span></td></tr>
+</table></div>
+<div class="retain"><b>À retenir.</b> Les trois schémas de l'atelier se lisent ainsi : le champ 3 est la somme des champs 1 et 2, point par point.</div>
+</section>
+
+<section><p class="ckick">Partie 4</p><h2>Vitesse de glissement</h2>
+<p>Au point de contact I, on distingue le point I de la roue et le point du sol qui lui est géométriquement confondu. Le sol est immobile, donc la <b>vitesse de glissement</b> de la roue par rapport au sol est :</p>
+<div class="formula">V(I ∈ R/S) = (V + ωR) <span class="vec">x</span> = g <span class="vec">x</span></div>
+<div class="tw"><table class="ctable">
+<tr><th>Signe de g</th><th>Situation</th><th>Interprétation</th></tr>
+<tr><td>g &gt; 0</td><td>V &gt; |ωR|</td><td>La roue tourne trop lentement par rapport à son avance : elle <b>glisse vers l'avant</b> (blocage au freinage).</td></tr>
+<tr><td>g = 0</td><td>V = −ωR</td><td><b>Roulement sans glissement</b>.</td></tr>
+<tr><td>g &lt; 0</td><td>V &lt; |ωR|</td><td>La roue tourne trop vite : elle <b>patine</b> (démarrage sur sol glissant).</td></tr>
+</table></div>
+<div class="retain"><b>À retenir.</b> Les deux cas extrêmes de l'atelier sont la roue bloquée qui translate (ω = 0, g = V) et la roue qui tourne sur place (V = 0, g = ωR).</div>
+</section>
+
+<section><p class="ckick">Partie 5</p><h2>Condition de roulement sans glissement</h2>
+<p>Le roulement sans glissement (RSG) est réalisé lorsque la vitesse de glissement est nulle :</p>
+<div class="formula">V(I ∈ R/S) = <span class="vec">0</span> &nbsp;⇔&nbsp; V + ωR = 0 &nbsp;⇔&nbsp; V = − ωR</div>
+<p>Avec ω = θ̇ et V = ẋ, on obtient ẋ + Rθ̇ = 0. Pour un sol rectiligne, cette relation s'intègre : x + Rθ = constante. La roue avance d'un arc de longueur Rθ pour chaque rotation de θ.</p>
+<h3>Conséquences</h3>
+<ul>
+<li>Vitesse du centre O : V (par rapport au sol).</li>
+<li>Vitesse du sommet A : (V − ωR) <span class="vec">x</span> = <b>2V</b> <span class="vec">x</span>.</li>
+<li>Vitesse de I : nulle. Le torseur s'écrit {V(R/S)} = { ω <span class="vec">z</span> ; <span class="vec">0</span> }<sub>I</sub>.</li>
+<li>Un point de la jante décrit une <b>cycloïde</b> (cochez la trajectoire dans l'atelier).</li>
+<li>Attention : I a une vitesse nulle mais <b>pas une accélération nulle</b>. En RSG à ω constant, elle vaut Rω² et pointe vers O.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> RSG ⇔ V(I, R/S) = 0 ⇔ V = −ωR. C'est une relation entre deux paramètres de mouvement (V et ω), qui remplace une vitesse de glissement par un seul degré de liberté.</div>
+</section>
+
+<section><p class="ckick">Partie 6</p><h2>Centre instantané de rotation (CIR)</h2>
+<p>Pour un mouvement plan avec ω ≠ 0, il existe un point où la vitesse est nulle : le CIR de R/S. Sur la verticale passant par O, il se trouve à la hauteur</p>
+<div class="formula">h = V / ω &nbsp;(par rapport à O, vers le haut)</div>
+<p>Comme V &gt; 0 et ω &lt; 0, h est négatif : le CIR est sous O. Distance au centre : |h| = V/|ω|.</p>
+<div class="tw"><table class="ctable">
+<tr><th>Cas</th><th>Position du CIR</th><th>Champ des vitesses</th></tr>
+<tr><td>Translation pure (ω = 0)</td><td>À l'infini</td><td>Uniforme</td></tr>
+<tr><td>Glissement, g &gt; 0 (V &gt; |ωR|)</td><td>Sous I, sous le sol</td><td>Quelconque : droite des vitesses inclinée</td></tr>
+<tr><td>RSG</td><td>En I</td><td>Antisymétrique de centre I</td></tr>
+<tr><td>Patinage, g &lt; 0 (V &lt; |ωR|)</td><td>Entre O et I</td><td>Quelconque</td></tr>
+<tr><td>Rotation pure (V = 0)</td><td>En O</td><td>Antisymétrique de centre O</td></tr>
+</table></div>
+<p>Dans l'atelier, le CIR est le point creux marqué sur le schéma 3 et sur la roue animée. Il se trouve à l'intersection de l'axe de la roue et de la droite en pointillés.</p>
+<div class="retain"><b>À retenir.</b> En RSG, le CIR est le point de contact I : à chaque instant, la roue tourne autour de I, ce qui explique V(A) = 2V.</div>
+</section>
+
+<section><p class="ckick">Partie 7</p><h2>Aspects technologiques : l'adhérence</h2>
+<p>Le roulement sans glissement n'est possible que si le contact peut transmettre l'effort tangentiel nécessaire. Avec la loi de Coulomb, il faut que l'effort tangentiel T et l'effort normal N vérifient :</p>
+<div class="formula">|T| ≤ f · N</div>
+<p>où f est le coefficient d'adhérence. Si cette condition n'est plus respectée, la roue glisse.</p>
+<ul>
+<li><b>Freinage trop fort</b> : la roue se bloque (ω → 0), on se rapproche du cas « translation pure ». Le véhicule perd en maîtrise de trajectoire. Le système <b>ABS</b> module le freinage pour rester près de g = 0.</li>
+<li><b>Accélération trop forte</b> : la roue patine (cas « rotation pure » à la limite). Un système <b>antipatinage</b> limite le couple moteur.</li>
+<li>Un <b>odomètre</b> de robot mobile utilise l'hypothèse RSG : la distance parcourue vaut x = R·θ. Si la roue glisse, la mesure est fausse.</li>
+</ul>
+<div class="retain"><b>À retenir.</b> En RSG, le contact ne dissipe pas d'énergie par glissement. Dès que g ≠ 0, le frottement dissipe de la puissance : P = T · g.</div>
+</section>
+
+<section><p class="ckick">Partie 8</p><h2>Glossaire et méthode</h2>
+<dl class="gloss">
+<dt>Vitesse de glissement</dt><dd>Vitesse du point de contact I de la roue par rapport au sol : g = V + ωR.</dd>
+<dt>RSG</dt><dd>Roulement sans glissement : g = 0.</dd>
+<dt>CIR</dt><dd>Centre instantané de rotation : point de vitesse nulle dans un mouvement plan.</dd>
+<dt>Champ uniforme</dt><dd>Toutes les vitesses sont égales (ω = 0).</dd>
+<dt>Champ antisymétrique</dt><dd>Vitesse nulle en un point, proportionnelle à la distance à ce point.</dd>
+<dt>Torseur cinématique</dt><dd>Objet {résultante ω ; moment V(P)} qui décrit le champ des vitesses d'un solide.</dd>
+</dl>
+<h3>Méthode pour traiter un problème de roulement</h3>
+<ol>
+<li>Définir les solides (sol, cadre, roue) et le repère, orienter les axes.</li>
+<li>Écrire les torseurs cinématiques {V(R/C)} et {V(C/S)} au même point.</li>
+<li>Les composer : {V(R/S)} = {V(R/C)} + {V(C/S)}.</li>
+<li>Exprimer V(I ∈ R/S) et le comparer à zéro : condition de RSG.</li>
+<li>En déduire les vitesses utiles (centre, sommet, point de la jante) et le CIR.</li>
+</ol>
+</section>
+
+      <div class="cpn"><button class="btn" id="cPrev">← Précédent</button><button class="btn pri" id="cNext">Suivant →</button></div>
+    </div>
+  </div>
+</div>
+</div>
+<div id="toast" hidden></div>
+<script>
+(function(){
+'use strict';
+var U=3, Rm=0.3;            /* U = 3 m/s (unité de vitesse), rayon réel 0,30 m */
+var $=function(id){return document.getElementById(id)};
+var st={p:.5,play:true,trace:true,vec:true,speed:.2,cx:115,th:0,trail:[],last:0};
+try{if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)st.play=false}catch(e){}
+
+function Vn(){return 2*(1-st.p)}      /* V en unités U */
+function WRn(){return -2*st.p}        /* ωR en unités U (ω<0 : sens horaire) */
+function Gn(){return Vn()+WRn()}      /* vitesse de glissement en I */
+function fmt(x,d){d=d==null?2:d;if(Math.abs(x)<5e-9)x=0;var s=x.toFixed(d).replace('.',',');return s.charAt(0)==='-'?'−'+s.slice(1):s}
+function fmts(x,d){return (x>0.0049?'+':'')+fmt(x,d)}
+function isRSG(){return Math.abs(Gn())<0.02}
+
+function arrow(x,y,dx,col,w,op){
+  w=w||2.6;op=op==null?1:op;
+  if(Math.abs(dx)<1.5)return '<circle cx="'+x+'" cy="'+y+'" r="3" opacity="'+op+'" style="fill:var('+col+')"/>';
+  var d=dx>0?1:-1,hl=Math.min(10,Math.abs(dx)*.6),hw=4.4,x2=x+dx;
+  return '<g opacity="'+op+'" style="stroke:var('+col+');fill:var('+col+')"><line x1="'+x+'" y1="'+y+'" x2="'+(x2-d*hl*.8)+'" y2="'+y+'" stroke-width="'+w+'"/><polygon stroke="none" points="'+x2+','+y+' '+(x2-d*hl)+','+(y-hw)+' '+(x2-d*hl)+','+(y+hw)+'"/></g>';
+}
+function txt(x,y,s,anchor,size,col,style){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anchor||'start')+'" font-size="'+(size||11)+'" style="fill:var('+(col||'--fg')+');'+(style||'')+'">'+s+'</text>';
+}
+function valLabel(x,y,v,col){
+  if(Math.abs(v)<0.005)return '';
+  var m=v*U;return txt(x+(v>=0?6:-6),y-7,fmts(m,2)+' m/s',v>=0?'start':'end',11,col);
+}
+
+/* ---- panneaux de champ des vitesses ---- */
+function panel(svg,kind){
+  var cx=150,cy=125,R=60,k=45;
+  var col={rc:'--c-rc',cs:'--c-cs',rs:'--c-rs'}[kind];
+  var f=function(s){return kind==='rc'?-WRn()*s:(kind==='cs'?Vn():Vn()-WRn()*s)};
+  var h='';
+  h+='<line x1="20" y1="'+(cy+R)+'" x2="280" y2="'+(cy+R)+'" stroke-width="2" style="stroke:var(--ground)"/>';
+  h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke-width="1.2" stroke-dasharray="5 4" style="stroke:var(--grid)"/>';
+  h+='<line x1="'+cx+'" y1="'+(cy-R)+'" x2="'+cx+'" y2="'+(cy+R)+'" stroke-width="1" style="stroke:var(--grid)"/>';
+  /* droite portant les extrémités des vecteurs (champ affine) */
+  var s1=-1.8,s2=1.8;
+  h+='<line x1="'+(cx+f(s1)*k)+'" y1="'+(cy-s1*R)+'" x2="'+(cx+f(s2)*k)+'" y2="'+(cy-s2*R)+'" stroke-width="1.2" stroke-dasharray="5 4" opacity=".7" style="stroke:var('+col+')"/>';
+  [1,.5,0,-.5,-1].forEach(function(s){h+=arrow(cx,cy-s*R,f(s)*k,col,s===.5||s===-.5?1.6:2.8,s===.5||s===-.5?.55:1)});
+  /* points */
+  h+='<circle cx="'+cx+'" cy="'+(cy-R)+'" r="3.5" style="fill:var('+col+')"/>';
+  h+='<circle cx="'+cx+'" cy="'+(cy+R)+'" r="3.5" style="fill:var('+col+')"/>';
+  if(kind==='rc')h+='<circle cx="'+cx+'" cy="'+cy+'" r="5" stroke-width="1.8" style="fill:var(--bg);stroke:var('+col+')"/>';
+  else h+='<circle cx="'+cx+'" cy="'+cy+'" r="3.5" style="fill:var('+col+')"/>';
+  /* libellés */
+  h+=txt(cx-7,cy-R-8,'A','end',13,col,'font-style:italic');
+  h+=txt(cx-7,cy-8,'O','end',13,col,'font-style:italic');
+  h+=txt(cx-7,cy+R-8,'I','end',13,col,'font-style:italic');
+  var vA=f(1),vO=f(0),vI=f(-1);
+  h+=valLabel(cx+vA*k,cy-R,vA,col);
+  if(kind!=='cs'||true)h+=valLabel(cx+vO*k,cy,vO,col);
+  if(kind!=='cs')h+=valLabel(cx+vI*k,cy+R,vI,col);
+  /* CIR sur le schéma 3 */
+  if(kind==='rs'){
+    if(st.p<0.005){h+=txt(150,228,'CIR à l’infini',  'middle',11,'--muted')}
+    else{
+      var yc=cy-(Vn()/WRn())*R;
+      if(yc>=14&&yc<=226){
+        h+='<circle cx="'+cx+'" cy="'+yc+'" r="6.5" stroke-width="2" style="fill:var(--bg);stroke:var(--c-rs)"/>';
+        h+=txt(cx+11,yc+5,isRSG()?'I (CIR)':'CIR','start',12,'--c-rs');
+      }else h+=txt(150,228,'CIR hors cadre ('+fmt(-Vn()/WRn(),1)+' R sous O)','middle',11,'--muted');
+    }
+  }
+  svg.innerHTML=h;
+}
+function tors(top,bot,pt){
+  return '<span class="tors"><span class="br">{</span><span class="stk"><span>'+top+'</span><span>'+bot+'</span></span><span class="br">}</span><sub>'+pt+'</sub></span>';
+}
+var zv='<span class="vec">z</span>',xv='<span class="vec">x</span>',nv='<span class="vec">0</span>';
+function boxes(){
+  var w=WRn()*U/Rm;
+  $('tb1').innerHTML='<div class="eq"><span>{<i>V</i><sub>R/C</sub>} =</span>'+tors('ω '+zv,nv,'O')+'</div><small>Champ anti-symétrique · ω = '+fmt(w,1)+' rad/s</small>';
+  $('tb2').innerHTML='<div class="eq"><span>{<i>V</i><sub>C/S</sub>} =</span>'+tors(nv,'V '+xv,'O')+'</div><small>Champ uniforme · V = '+fmt(Vn()*U,2)+' m/s</small>';
+  var t3;
+  if(st.p<0.005)t3='<div class="eq"><span>{<i>V</i><sub>R/S</sub>} =</span>'+tors(nv,'V '+xv,'O')+'</div><small>Champ uniforme (torseur couple) · ω = 0</small>';
+  else if(isRSG())t3='<div class="eq"><span>{<i>V</i><sub>R/S</sub>} =</span>'+tors('ω '+zv,nv,'I')+'</div><small>V(I, R/S) = '+nv+' (RSG) · champ anti-symétrique de centre I</small>';
+  else if(st.p>0.995)t3='<div class="eq"><span>{<i>V</i><sub>R/S</sub>} =</span>'+tors('ω '+zv,nv,'O')+'</div><small>Rotation pure · champ anti-symétrique de centre O</small>';
+  else t3='<div class="eq"><span>{<i>V</i><sub>R/S</sub>} =</span>'+tors('ω '+zv,'V '+xv,'O')+'</div><small>V(I, R/S) = (V+ωR) '+xv+' = '+fmts(Gn()*U,2)+' '+xv+' m/s</small>';
+  $('tb3').innerHTML=t3;
+}
+
+/* ---- roue animée ---- */
+var main=$('main');
+function drawMain(){
+  var W=900,cy=185,R=70,k=50,gy=cy+R,x=st.cx,h='';
+  var i;
+  h+='<line x1="20" y1="'+gy+'" x2="880" y2="'+gy+'" stroke-width="2.5" style="stroke:var(--ground)"/>';
+  for(i=20;i<=880;i+=24)h+='<line x1="'+i+'" y1="'+gy+'" x2="'+(i-9)+'" y2="'+(gy+11)+'" stroke-width="1.2" style="stroke:var(--ground)"/>';
+  h+=txt(26,gy+28,'Sol S','start',12,'--muted');
+  /* trajectoire du point marqué */
+  if(st.trace&&st.trail.length>1){
+    var pts=st.trail.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1)}).join(' ');
+    h+='<polyline points="'+pts+'" fill="none" stroke-width="1.8" opacity=".85" style="stroke:var(--warn)"/>';
+  }
+  /* roue */
+  var deg=-st.th*180/Math.PI;
+  h+='<g transform="translate('+x+','+cy+') rotate('+deg+')">';
+  h+='<circle r="'+R+'" stroke-width="4" style="fill:var(--panel2);stroke:var(--fg)"/>';
+  h+='<circle r="'+(R-13)+'" fill="none" stroke-width="1.2" style="stroke:var(--line)"/>';
+  [0,60,120].forEach(function(a){h+='<line x1="'+(-(R-13))+'" y1="0" x2="'+(R-13)+'" y2="0" stroke-width="3" transform="rotate('+a+')" style="stroke:var(--muted)"/>'});
+  h+='<circle r="6" style="fill:var(--fg)"/>';
+  h+='<circle cx="'+(R-7)+'" cy="0" r="6" stroke-width="1.5" style="fill:var(--warn);stroke:var(--bg)"/>';
+  h+='</g>';
+  /* champ des vitesses R/S sur le diamètre vertical (fixe) */
+  if(st.vec){
+    var f=function(s){return Vn()-WRn()*s};
+    h+='<line x1="'+x+'" y1="'+(cy-R)+'" x2="'+x+'" y2="'+gy+'" stroke-width="1" style="stroke:var(--grid)"/>';
+    h+='<line x1="'+(x+f(-1.7)*k)+'" y1="'+(cy+1.7*R)+'" x2="'+(x+f(1.7)*k)+'" y2="'+(cy-1.7*R)+'" stroke-width="1.2" stroke-dasharray="5 4" opacity=".7" style="stroke:var(--c-rs)"/>';
+    [1,.5,0,-.5,-1].forEach(function(s){h+=arrow(x,cy-s*R,f(s)*k,'--c-rs',s===.5||s===-.5?1.6:3,s===.5||s===-.5?.55:1)});
+    h+=txt(x-8,cy-R-8,'A','end',14,'--c-rs','font-style:italic');
+    h+=txt(x-8,cy-8,'O','end',14,'--c-rs','font-style:italic');
+    h+=txt(x-8,gy-8,'I','end',14,'--c-rs','font-style:italic');
+    h+=valLabel(x+f(1)*k,cy-R,f(1),'--c-rs')+valLabel(x+f(0)*k,cy,f(0),'--c-rs')+valLabel(x+f(-1)*k,gy,f(-1),'--c-rs');
+    if(st.p>=0.005){
+      var yc=cy-(Vn()/WRn())*R;
+      if(yc>=20&&yc<=318){
+        h+='<circle cx="'+x+'" cy="'+yc+'" r="7" stroke-width="2.2" style="fill:var(--bg);stroke:var(--c-rs)"/>';
+        h+=txt(x+12,yc+5,isRSG()?'I (CIR)':'CIR','start',13,'--c-rs');
+      }
+    }
+  }else{
+    h+='<circle cx="'+x+'" cy="'+gy+'" r="4" style="fill:var(--c-rs)"/>'+txt(x+8,gy-8,'I','start',14,'--c-rs','font-style:italic');
+  }
+  h+=txt(W-18,26,'Repère lié au sol S · R = 0,30 m · U = 3 m/s','end',12,'--muted');
+  main.innerHTML=h;
+}
+function step(dt){
+  var kpx=70/Rm;
+  st.cx+=Vn()*U*kpx*st.speed*dt;
+  st.th+=(WRn()*U/Rm)*st.speed*dt;
+  var a=st.th, px=st.cx+63*Math.cos(a), py=185-63*Math.sin(a);
+  if(st.cx>780){st.cx=115;st.trail=[];px=st.cx+63*Math.cos(a);py=185-63*Math.sin(a)}
+  st.trail.push([px,py]);if(st.trail.length>1200)st.trail.shift();
+}
+function loop(t){
+  var dt=st.last?Math.min(.05,(t-st.last)/1000):0;st.last=t;
+  if(!$('lab').hidden){if(st.play)step(dt);drawMain()}
+  requestAnimationFrame(loop);
+}
+
+/* ---- état et lectures ---- */
+function readsHTML(){
+  var w=WRn()*U/Rm;
+  var cir=st.p<0.005?'à l’infini':(isRSG()?'en I':fmt(-Vn()/WRn(),2)+' R sous O');
+  return '<div>V(O, R/S)<b>'+fmt(Vn()*U,2)+' m/s</b></div>'+
+   '<div>ω (R/C)<b>'+fmt(w,1)+' rad/s</b></div>'+
+   '<div>V(A, R/S)<b>'+fmt((Vn()-WRn())*U,2)+' m/s</b></div>'+
+   '<div>V(I, R/S) = g<b>'+fmts(Gn()*U,2)+' m/s</b></div>'+
+   '<div>CIR<b>'+cir+'</b></div>';
+}
+function update(){
+  panel($('p1'),'rc');panel($('p2'),'cs');panel($('p3'),'rs');
+  boxes();
+  $('reads').innerHTML=readsHTML();
+  var b=$('badge'),g=Gn();
+  if(st.p<0.005){b.className='badge ko';b.textContent='Translation pure : roue bloquée'}
+  else if(st.p>0.995){b.className='badge ko';b.textContent='Rotation pure : patinage total'}
+  else if(isRSG()){b.className='badge ok';b.textContent='Roulement sans glissement ✓'}
+  else if(g>0){b.className='badge ex';b.textContent='Glissement (g > 0) : la roue tourne trop lentement'}
+  else{b.className='badge ex';b.textContent='Patinage (g < 0) : la roue tourne trop vite'}
+}
+function setP(v){
+  v=Math.max(0,Math.min(100,v));
+  if(Math.abs(v-50)<=2)v=50;
+  $('slider').value=v;st.p=v/100;st.trail=[];update();
+}
+$('slider').addEventListener('input',function(){setP(+this.value)});
+$('pTr').addEventListener('click',function(){setP(0)});
+$('pRsg').addEventListener('click',function(){setP(50)});
+$('pRot').addEventListener('click',function(){setP(100)});
+$('play').addEventListener('click',function(){st.play=!st.play;this.textContent=st.play?'Pause':'Lecture'});
+$('spd').addEventListener('change',function(){st.speed=+this.value});
+$('optVec').addEventListener('change',function(){st.vec=this.checked});
+$('optTrace').addEventListener('change',function(){st.trace=this.checked;st.trail=[]});
+$('play').textContent=st.play?'Pause':'Lecture';
+
+window.RSG={st:st,Vn:Vn,WRn:WRn,Gn:Gn,fmt:fmt,fmts:fmts,U:U,Rm:Rm,$:$,setP:setP,update:update,drawMain:drawMain};
+update();drawMain();requestAnimationFrame(loop);
+})();
+(function(){
+'use strict';
+var A=window.RSG,$=A.$,fmt=A.fmt,fmts=A.fmts,U=A.U,Rm=A.Rm;
+var VEC='<span style="text-decoration:overline">x</span>';
+
+/* ---- Activité ---- */
+var rows=[];
+function relTable(){
+  if(!rows.length)return '<p class="small">Aucun relevé pour l’instant.</p>';
+  var h='<div class="tblwrap"><table class="rel"><tr><th>Curseur</th><th>V (m/s)</th><th>ω (rad/s)</th><th>V(A,R/S)</th><th>V(I,R/S)</th></tr>';
+  rows.forEach(function(r){h+='<tr><td>'+r[0]+' %</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td></tr>'});
+  return h+'</table></div>';
+}
+function actHTML(){
+  return '<div class="goal"><b>Objectif.</b> À partir du champ des vitesses, caractériser les cas de glissement d’une roue sur le sol et la condition de roulement sans glissement.</div>'+
+  '<ol class="steps">'+
+  '<li><b>Translation pure.</b> Cliquez sur « Translation pure » puis sur <i>Relever</i>. Comparez les trois vecteurs du schéma 3. Que vaut V(I, R/S) ? La roue tourne-t-elle ?</li>'+
+  '<li><b>Rotation pure.</b> Même démarche. Où se trouve le CIR ? Que vaut V(O, R/S) ?</li>'+
+  '<li><b>Roulement sans glissement.</b> Placez le curseur au centre et relevez. Quelle relation lie V et ωR ? Quelle est la vitesse de A ?</li>'+
+  '<li><b>Entre les deux.</b> Relevez aux positions 25 % et 75 %. Dans quel cas la roue glisse-t-elle vers l’avant ? Dans quel cas patine-t-elle ?</li>'+
+  '<li><b>Superposition.</b> Pour chaque relevé, vérifiez que le champ du schéma 3 est la somme des champs des schémas 1 et 2.</li>'+
+  '</ol>'+
+  '<div class="presets" style="margin-bottom:6px"><button class="btn sm pri" id="relBtn">Relever</button><button class="btn sm" id="relClr">Effacer</button></div>'+
+  '<div id="relOut">'+relTable()+'</div>'+
+  '<h4 style="margin:14px 0 6px">Défis</h4>'+
+  '<div class="defi"><p><b>Défi 1.</b> En RSG, montrez par composition des mouvements que V(A, R/S) = 2V.</p>'+
+  '<details class="rep"><summary>Réponse</summary><div>V(A, R/C) = −ωR '+VEC+' et V(A, C/S) = V '+VEC+'. Donc V(A, R/S) = (V − ωR) '+VEC+'. Le RSG impose ωR = −V, d’où V(A, R/S) = 2V '+VEC+'.</div></details></div>'+
+  '<div class="defi"><p><b>Défi 2.</b> Le curseur est à 25 %. Sans regarder l’écran, calculez g puis la position du CIR.</p>'+
+  '<details class="rep"><summary>Réponse</summary><div>V = 1,5 U = 4,5 m/s et ωR = −0,5 U = −1,5 m/s. Donc g = V + ωR = +3 m/s : glissement vers l’avant. Le CIR est à la hauteur h = V/ω, soit |h| = 3R = 0,90 m sous O, donc 0,60 m sous le sol.</div></details></div>'+
+  '<div class="defi"><p><b>Défi 3.</b> Pour quelle seule position du curseur a-t-on V(A, R/S) = 2·V(O, R/S) ?</p>'+
+  '<details class="rep"><summary>Réponse</summary><div>V(A) = V(O) − ωR. L’égalité V(A) = 2V(O) donne −ωR = V, c’est-à-dire V + ωR = 0 : roulement sans glissement, curseur à 50 %.</div></details></div>'+
+  '<div class="defi"><p><b>Défi 4.</b> Cochez la trajectoire d’un point de la jante. Décrivez la courbe dans les trois cas : translation pure, RSG, rotation pure.</p>'+
+  '<details class="rep"><summary>Réponse</summary><div>Translation pure : droite horizontale. Rotation pure : cercle de rayon R centré en O. RSG : cycloïde (arches reposant sur le sol, où la vitesse du point est nulle).</div></details></div>';
+}
+function relBind(){
+  var b=$('relBtn');if(!b)return;
+  b.onclick=function(){
+    if(rows.length>=10){toast('10 relevés maximum : effacez le tableau.');return}
+    rows.push([Math.round(A.st.p*100),fmt(A.Vn()*U,2),fmt(A.WRn()*U/Rm,1),fmt((A.Vn()-A.WRn())*U,2),fmts(A.Gn()*U,2)]);
+    $('relOut').innerHTML=relTable();
+  };
+  $('relClr').onclick=function(){rows=[];$('relOut').innerHTML=relTable()};
+}
+var tt;
+function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2600)}
+
+/* ---- QCM ---- */
+var Q=[
+ {q:'Le roulement sans glissement d’une roue sur le sol est caractérisé par :',o:['V(O, R/S) = 0','V(I, R/S) = 0, I étant le point de contact','ω = 0','V(A, R/S) = 0'],ok:1,why:'C’est la vitesse de glissement au contact qui s’annule. Le centre O avance et la roue tourne.'},
+ {q:'En RSG, le centre de la roue a la vitesse V par rapport au sol. La vitesse du point le plus haut A vaut :',o:['V','V/2','2V','0'],ok:2,why:'V(A, R/S) = V(O, R/S) + Ω ∧ OA = V − ωR. Or ωR = −V, donc 2V.'},
+ {q:'Avec x vers la droite et z sortant de la feuille, une roue avance à V > 0 en RSG. Le signe de ω est :',o:['ω > 0 (sens trigonométrique)','ω < 0 (sens horaire)','ω = 0','On ne peut pas savoir'],ok:1,why:'V + ωR = 0 donne ω = −V/R, négatif : la roue tourne dans le sens horaire.'},
+ {q:'Une roue translate sans tourner (ω = 0) à la vitesse V. La vitesse de glissement en I vaut :',o:['0','V x','−V x','2V x'],ok:1,why:'g = V + ωR = V. Le glissement est maximal : c’est le cas de la roue bloquée.'},
+ {q:'Une roue tourne sans translater (V = 0, ω ≠ 0). Où se trouve le CIR de R/S ?',o:['À l’infini','En I','En O','En A'],ok:2,why:'La seule vitesse nulle est celle du centre O : la roue tourne sur place.'},
+ {q:'On a V = 2 m/s et ωR = −3 m/s. Que valent V(I, R/S) et la situation ?',o:['0 : roulement sans glissement','−1 m/s x : la roue patine','+5 m/s x : la roue glisse vers l’avant','−5 m/s x : la roue patine'],ok:1,why:'g = V + ωR = 2 − 3 = −1 m/s. La roue tourne trop vite par rapport à son avance : elle patine.'},
+ {q:'En RSG à ω constant, l’accélération du point I de la roue est :',o:['nulle, puisque sa vitesse est nulle','dirigée vers O, de norme Rω²','dirigée vers l’avant','dirigée vers le sol'],ok:1,why:'La vitesse de I est nulle seulement à cet instant. L’accélération est centripète : Rω² vers O.'}
+];
+var qDone=false;
+function qcmHTML(){
+  var h='<p class="small">Sept questions, une seule bonne réponse chacune.</p>';
+  Q.forEach(function(q,i){
+    h+='<fieldset class="q"><legend>'+(i+1)+'. '+q.q+'</legend>';
+    q.o.forEach(function(o,j){h+='<label class="opt"><input type="radio" name="q'+i+'" value="'+j+'"> <span>'+o+'</span></label>'});
+    h+='<div class="why" id="why'+i+'" hidden></div></fieldset>';
+  });
+  h+='<div class="score" id="score"></div><div class="presets"><button class="btn pri" id="qOk">Valider</button><button class="btn" id="qRaz">Recommencer</button></div>';
+  return h;
+}
+function qcmBind(){
+  $('qOk').onclick=function(){
+    var sc=0,left=0;
+    Q.forEach(function(q,i){
+      var sel=document.querySelector('input[name="q'+i+'"]:checked');
+      var labs=document.querySelectorAll('input[name="q'+i+'"]');
+      labs.forEach(function(r,j){var l=r.parentNode;l.classList.remove('good','bad');if(j===q.ok)l.classList.add('good');else if(sel&&+sel.value===j)l.classList.add('bad')});
+      if(!sel)left++;else if(+sel.value===q.ok)sc++;
+      var w=$('why'+i);w.textContent=q.why;w.hidden=false;
+    });
+    $('score').textContent='Score : '+sc+' / '+Q.length+(left?' ('+left+' sans réponse)':'');
+  };
+  $('qRaz').onclick=function(){$('actBody').innerHTML=qcmHTML();qcmBind()};
+}
+function showTab(t){
+  $('tAct').setAttribute('aria-selected',t==='act');$('tQcm').setAttribute('aria-selected',t==='qcm');
+  if(t==='act'){$('actBody').innerHTML=actHTML();relBind()}
+  else{$('actBody').innerHTML=qcmHTML();qcmBind()}
+  $('actBody').scrollTop=0;
+}
+$('tAct').onclick=function(){showTab('act')};
+$('tQcm').onclick=function(){showTab('qcm')};
+showTab('act');
+
+/* ---- Cours ---- */
+var secs=Array.prototype.slice.call($('cbody').querySelectorAll('section')),cur=0;
+secs.forEach(function(s,i){
+  var title=s.querySelector('h2').textContent;
+  var b=document.createElement('button');b.textContent=(i+1)+'. '+title;b.onclick=function(){showSec(i)};$('toc').appendChild(b);
+  var o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+title;$('toc2').appendChild(o);
+});
+$('toc2').onchange=function(){showSec(+this.value)};
+function showSec(i){
+  cur=Math.max(0,Math.min(secs.length-1,i));
+  secs.forEach(function(s,j){s.hidden=j!==cur});
+  Array.prototype.forEach.call($('toc').children,function(b,j){b.classList.toggle('on',j===cur)});
+  $('toc2').value=cur;
+  $('cPrev').style.visibility=cur===0?'hidden':'visible';
+  $('cNext').style.visibility=cur===secs.length-1?'hidden':'visible';
+  $('cbody').scrollTop=0;
+  try{window.scrollTo(0,0)}catch(e){}
+}
+$('cPrev').onclick=function(){showSec(cur-1)};
+$('cNext').onclick=function(){showSec(cur+1)};
+showSec(0);
+
+/* ---- Thème clair / sombre ---- */
+function setTheme(d){
+  document.documentElement.setAttribute('data-theme',d?'dark':'light');
+  $('theme').textContent=d?'Mode clair':'Mode sombre';$('theme').setAttribute('aria-pressed',d);
+  A.update();A.drawMain();
+}
+$('theme').onclick=function(){setTheme(document.documentElement.getAttribute('data-theme')!=='dark')};
+setTheme(false);
+
+/* ---- Vues ---- */
+function view(v){
+  var lab=v==='lab';
+  $('lab').hidden=!lab;$('course').hidden=lab;
+  $('vLab').setAttribute('aria-pressed',lab);$('vCourse').setAttribute('aria-pressed',!lab);
+}
+$('vLab').onclick=function(){view('lab')};
+$('vCourse').onclick=function(){view('course')};
+$('toLab').onclick=function(){view('lab')};
+})();
+</script>
