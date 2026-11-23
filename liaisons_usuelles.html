@@ -2,782 +2,1064 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liaisons usuelles – Torseurs & Mouvements</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier Liaisons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  :root {
-    --bg: #ffffff; --card: #f8fafc; --accent: #2563eb;
-    --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-    --input-bg: #fff; --code-bg: #f1f5f9;
-    --ok: #16a34a; --ko: #dc2626;
-  }
-  [data-theme="dark"] {
-    --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
-    --text: #e2e8f0; --muted: #94a3b8; --border: #334155;
-    --input-bg: #0f172a; --code-bg: #0f172a;
-    --ok: #4ade80; --ko: #f87171;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh; padding: 1rem;
-  }
-  h1 { text-align: center; font-size: 1.6rem; color: var(--accent); margin-bottom: .3rem; }
-  .subtitle { text-align: center; color: var(--muted); margin-bottom: 1.2rem; font-size: .95rem; }
-  .container { max-width: 1300px; margin: 0 auto; display: grid; gap: 1.1rem; }
-  .card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 1.15rem;
-  }
-  .card h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: .7rem; }
-  .theme-toggle {
-    position: fixed; top: 1rem; right: 1rem; z-index: 100;
-    background: var(--card); border: 1px solid var(--border); color: var(--text);
-    border-radius: 999px; padding: .4rem .9rem; font-size: .9rem; cursor: pointer;
-  }
-  .liaison-select {
-    display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center;
-  }
-  .liaison-select button {
-    background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 8px; padding: .38rem .75rem; font-size: .84rem; cursor: pointer;
-  }
-  .liaison-select button.active {
-    background: var(--accent); color: #fff; border-color: var(--accent);
-  }
-  .main-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem;
-  }
-  @media (max-width: 980px) { .main-grid { grid-template-columns: 1fr; } }
-  #canvas-container {
-    width: 100%; height: 400px; border-radius: 10px;
-    overflow: hidden; border: 1px solid var(--border); background: #0a0a12;
-  }
-  [data-theme="light"] #canvas-container { background: #e2e8f0; }
-  .geo { font-size: .92rem; color: var(--muted); margin: .4rem 0 .8rem; }
-  .dof-badge {
-    display: inline-block; background: var(--accent); color: #fff;
-    font-size: .75rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px;
-  }
-  .instruction {
-    background: rgba(37,99,235,.08);
-    border-left: 4px solid var(--accent);
-    padding: .6rem .9rem; border-radius: 0 8px 8px 0;
-    font-size: .9rem; margin-bottom: 1rem;
-  }
-  .torseurs {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
-  }
-  @media (max-width: 600px) { .torseurs { grid-template-columns: 1fr; } }
-  .torseur-box {
-    background: var(--code-bg); border: 1px solid var(--border);
-    border-radius: 10px; padding: .9rem;
-  }
-  .torseur-title {
-    font-size: .86rem; color: var(--muted); margin-bottom: .6rem; font-weight: 600;
-  }
-  .bmatrix-wrapper { display: inline-block; }
-  .bmatrix {
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'Fira Code', Consolas, monospace; font-size: 1.05rem;
-  }
-  .bm-brace {
-    font-size: 2.8rem; line-height: 1; color: var(--muted); user-select: none;
-  }
-  .bm-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px 14px;
-  }
-  .bm-bottom {
-    text-align: right;
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-top: 2px;
-    padding-right: 4px;
-  }
-  .comp {
-    min-width: 52px; text-align: center;
-    padding: .3rem .25rem; border-radius: 6px; cursor: pointer;
-    user-select: none; border: 1px solid var(--border);
-    background: var(--input-bg);
-  }
-  .comp:hover { border-color: var(--accent); }
-  .comp.selected {
-    background: rgba(37,99,235,.15); border-color: var(--accent); font-weight: 700;
-  }
-  .comp.correct {
-    background: rgba(22,163,74,.18); border-color: var(--ok); color: var(--ok); font-weight: 700;
-  }
-  .comp.wrong {
-    background: rgba(220,38,38,.15); border-color: var(--ko); color: var(--ko); font-weight: 700;
-  }
-  .axes-legend {
-    margin-top: 0.9rem;
-    font-size: 0.88rem;
-    color: var(--muted);
-    display: flex;
-    gap: 1.4rem;
-    flex-wrap: wrap;
-  }
-  .axes-legend span { display: flex; align-items: center; gap: 0.35rem; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .btn {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: #fff; border: none; border-radius: 8px;
-    padding: .5rem 1.15rem; font-size: .9rem; font-weight: 600; cursor: pointer;
-  }
-  .btn-secondary { background: #64748b; }
-  .btn-row { margin-top: 1rem; display: flex; gap: .6rem; flex-wrap: wrap; }
-  .feedback {
-    margin-top: .7rem; font-size: .9rem; display: none;
-    padding: .55rem .85rem; border-radius: 8px;
-  }
-  .feedback.show { display: block; }
-  .feedback.ok { background: rgba(22,163,74,.12); color: var(--ok); }
-  .feedback.ko { background: rgba(220,38,38,.12); color: var(--ko); }
-  .sliders { margin-top: .9rem; }
-  .slider-row {
-    display: grid; grid-template-columns: 110px 1fr 48px;
-    align-items: center; gap: .5rem; margin-bottom: .4rem; font-size: .88rem;
-  }
-  input[type=range] { width: 100%; }
-  .info { font-size: .85rem; color: var(--muted); margin-top: .5rem; }
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. Même gabarit que l'Atelier Récursivité. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  --ok-soft:rgba(30,122,46,.15);--warn-soft:rgba(154,91,0,.13);--bad-soft:rgba(192,40,31,.13);
+  --g-s:#cfe3f6;--g-p:#f6e2bf;--g-c:#d3ecd7;--g-ps:#dcd6ee;--g-m:#e4e8ee;
+  --overlay:rgba(10,16,22,.55);--shadow:rgba(0,0,0,.28);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#14181d;--bar:#1d232a;--panel:#191e24;--panel2:#212830;--field:#14181d;--line:#3b4551;
+  --fg:#e8ecf0;--muted:#9ba6b2;--accent:#5b9bd5;--accent-fg:#0b1620;--accent-soft:#203449;--accent-ink:#b3d4f2;--run:#62c673;
+  --node-stroke:#a7b8c9;
+  --ok:#62c673;--warn:#e3a94f;--bad:#f2766d;
+  --ok-soft:rgba(98,198,115,.18);--warn-soft:rgba(227,169,79,.17);--bad-soft:rgba(242,118,109,.17);
+  --g-s:#27425c;--g-p:#5b4420;--g-c:#25492d;--g-ps:#3d3760;--g-m:#2d3640;
+  --overlay:rgba(0,0,0,.65);--shadow:rgba(0,0,0,.6);color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+sub,sup{line-height:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1000px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.zsh{border:1px solid var(--line);border-radius:10px;padding:9px 12px 3px;background:var(--panel2)}.zsh-t{margin-bottom:6px}.zsh .chips{margin-bottom:8px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.opts input[type=number]{width:96px;font-family:var(--font-mono)}
+.zgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:6px 0 10px}
+.zgrid .fld{margin:0 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.two>div{min-width:0}
+.viewlbl{font-size:12.5px;color:var(--muted);margin:8px 0 2px!important}
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--bg)}
+svg.g{display:block;width:100%;height:auto}
+.formula.sm{font-size:13.5px;line-height:1.7}
+.calc{margin:6px 0 10px}.calc .formula{margin:4px 0}
+.chk{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+.chk div{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:13.5px}
+.chk .mk{flex:none;font-weight:700;width:1.2em;text-align:center}
+.chk .okk{background:var(--ok-soft);border-color:var(--ok)}.chk .okk .mk{color:var(--ok)}
+.chk .nok{background:var(--bad-soft);border-color:var(--bad)}.chk .nok .mk{color:var(--bad)}
+.tbl{overflow-x:auto;margin:8px 0}
+table.ctable{border-collapse:collapse;font-size:13px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.ctable td.n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+details.adv{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:12px 0;background:var(--panel)}
+details.adv summary{cursor:pointer;font-weight:600;color:var(--accent-ink)}
+details.adv[open] summary{margin-bottom:8px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--node-stroke);vertical-align:-1px;margin-right:5px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0}
+/* dessins d'engrenages */
+.gear{stroke:var(--node-stroke);stroke-width:1.2;stroke-linejoin:round}
+.gear.s{fill:var(--g-s)}.gear.p{fill:var(--g-p)}.gear.c{fill:var(--g-c)}.gear.m{fill:var(--g-m)}.gear.in{fill:var(--g-s)}.gear.out{fill:var(--g-c)}
+.pitch{fill:none;stroke:var(--muted);stroke-dasharray:4 3;stroke-width:.8;opacity:.75}
+.hub{fill:var(--bg);stroke:var(--node-stroke);stroke-width:1.2}
+.mk{fill:var(--bad)}
+.arm{fill:var(--g-ps);stroke:var(--node-stroke);stroke-width:1.2;opacity:.62}
+.shaft{stroke:var(--node-stroke);stroke-width:1.6}
+.gtxt{font:600 12px var(--font-mono);fill:var(--fg);text-anchor:middle}
+.gtxt.sm{font-size:10.5px;font-weight:500;fill:var(--muted)}
+.gtxt.l{text-anchor:start}
+.dirtxt{font:600 15px var(--font-ui);fill:var(--accent-ink);text-anchor:middle}
+.hatchln{stroke:var(--node-stroke);stroke-width:1.1}
+.fixlbl{font:600 11px var(--font-ui);fill:var(--bad);text-anchor:middle}
+.ground{stroke:var(--node-stroke);stroke-width:1}
+.rect{stroke:var(--node-stroke);stroke-width:1.2}
+.rect.in{fill:var(--g-s)}.rect.out{fill:var(--g-c)}.rect.s{fill:var(--g-s)}.rect.p{fill:var(--g-p)}.rect.c{fill:var(--g-c)}.rect.m{fill:var(--g-m)}
+.bean{stroke:var(--node-stroke);stroke-width:1;fill:none;opacity:.7}
+.plot-ax{stroke:var(--muted);stroke-width:1}
+.plot-grid{stroke:var(--line);stroke-width:.7;stroke-dasharray:3 3}
+.plot-lbl{font:11px var(--font-mono);fill:var(--muted)}
+.plot-ttl{font:600 12px var(--font-ui);fill:var(--fg)}
+.curve{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.curve.fill{fill:var(--accent-soft);stroke:none}
+.cursor{stroke:var(--bad);stroke-width:1.4}
+.cdot{fill:var(--bad)}
+.rail{position:relative;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);margin:8px 0}
+.rail .car{position:absolute;top:4px;width:34px;height:24px;margin-left:-17px;border-radius:5px;background:var(--accent);border:1px solid var(--accent-ink)}
+/* exercices */
+.exs{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel);margin:8px 0}
+.exs p{margin:4px 0}
+.fieldrow{display:flex;gap:10px 16px;flex-wrap:wrap;margin:10px 0}
+.fieldrow .fld{margin:0;min-width:150px;flex:1 1 150px}
+.fieldrow input{font-family:var(--font-mono)}
+.fieldrow input.okk{border-color:var(--ok);background:var(--ok-soft)}
+.fieldrow input.nok{border-color:var(--bad);background:var(--bad-soft)}
+.solbox{border-left:3px solid var(--accent);padding:2px 12px;margin:10px 0;background:var(--panel2);border-radius:0 8px 8px 0}
+.scoreline{font:500 12.5px var(--font-mono);color:var(--muted);margin:2px 0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px var(--shadow);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+}
+/* illustrations du cours */
+.fig{margin:14px 0;max-width:100%}
+.fig .gwrap{background:var(--bg)}
+.fig figcaption{font-size:13px;line-height:1.5;color:var(--muted);margin:6px 2px 0}
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0;align-items:start}
+.figrow .fig{margin:0;min-width:0}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+/* atelier liaisons */
+#ws{max-width:1200px}
+.torsrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0}
+.tbox{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--panel2);min-width:0}
+.tbox .ttl{font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.tbox .tpt{font-size:12px;color:var(--muted);text-align:right;margin-top:2px}
+.tm{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono)}
+.tb{font-size:2.4rem;line-height:1;color:var(--muted);user-select:none}
+.tg{display:grid;grid-template-columns:repeat(2,minmax(46px,auto));gap:4px 8px}
+.tc,.comp{min-width:48px;text-align:center;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--field);font-size:13.5px;font-family:var(--font-mono)}
+.comp{cursor:pointer;user-select:none}
+.comp:hover{border-color:var(--accent)}
+.comp.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.comp.correct{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:600}
+.comp.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-weight:600}
+.tc.nz{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.tc.pr{background:var(--warn-soft);border-color:var(--warn);color:var(--warn);font-weight:600}
+.canvas3d{width:100%;height:400px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+.canvas3d canvas{display:block}
+.axl{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:8px 0}
+.axl i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.lcard{margin:0}
+.lcard .torsrow{margin:6px 0 0}
+.lcard .tm{transform:scale(.9);transform-origin:left center}
+.fig .tbl{margin:0}
+@media (max-width:820px){.canvas3d{height:300px}}
+
 </style>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">
-    <span id="theme-icon">🌙</span> <span id="theme-label">Sombre</span>
-  </button>
-
-  <h1>Liaisons usuelles & Torseurs</h1>
-  <p class="subtitle">Dualité cinématique / statique – Cliquez sur les composantes non nulles</p>
-
-  <div class="container">
-    <div class="card">
-      <div class="liaison-select" id="liaison-buttons"></div>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="9.5" cy="13" r="7" fill="none" stroke="var(--fg)" stroke-width="1.6" stroke-dasharray="3.2 1.6"/><circle cx="18.5" cy="13" r="5.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.6 1.4"/><circle cx="9.5" cy="13" r="1.8" fill="var(--warn)"/></svg><span>Atelier Liaisons <small>SI · CPGE</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bTheme" type="button" aria-pressed="false">Mode sombre</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
     </div>
-
-    <div class="main-grid">
-      <div class="card">
-        <h2 id="liaison-name">–</h2>
-        <div id="liaison-dof"></div>
-        <div class="geo" id="liaison-geo"></div>
-
-        <div class="instruction">
-          Cliquez sur les composantes <strong>non nulles</strong> de chaque torseur.<br>
-          Par défaut toutes les composantes valent <strong>0</strong>.
-        </div>
-
-        <div class="torseurs" id="torseurs"></div>
-
-        <div class="axes-legend">
-          <span><div class="dot" style="background:#ef4444"></div> Rouge = <strong>x⃗</strong></span>
-          <span><div class="dot" style="background:#3b82f6"></div> Bleu = <strong>y⃗</strong></span>
-          <span><div class="dot" style="background:#22c55e"></div> Vert = <strong>z⃗</strong> (vers le bas)</span>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn" onclick="checkAnswer()">Vérifier</button>
-          <button class="btn btn-secondary" onclick="resetSelection()">Réinitialiser</button>
-        </div>
-        <div class="feedback" id="feedback"></div>
-      </div>
-
-      <div class="card">
-        <h2>Mouvement de la pièce mobile (bleue)</h2>
-        <div id="canvas-container"></div>
-        <div class="sliders" id="sliders"></div>
-        <p class="info">Les curseurs commandent les degrés de liberté autorisés.<br>
-        Souris = tourner la vue • Molette = zoom</p>
-      </div>
-    </div>
-  </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-function toggleTheme() {
-  const html = document.documentElement;
-  const dark = html.getAttribute('data-theme') === 'dark';
-  if (dark) {
-    html.removeAttribute('data-theme');
-    document.getElementById('theme-icon').textContent = '🌙';
-    document.getElementById('theme-label').textContent = 'Sombre';
-    localStorage.setItem('theme', 'light');
-  } else {
-    html.setAttribute('data-theme', 'dark');
-    document.getElementById('theme-icon').textContent = '☀️';
-    document.getElementById('theme-label').textContent = 'Clair';
-    localStorage.setItem('theme', 'dark');
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
   }
-  if (scene) {
-    scene.background = new THREE.Color(
-      document.documentElement.getAttribute('data-theme') === 'dark' ? 0x0a0a12 : 0xe2e8f0
-    );
-  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
 }
-if (localStorage.getItem('theme') === 'dark') {
-  document.documentElement.setAttribute('data-theme', 'dark');
-  document.getElementById('theme-icon').textContent = '☀️';
-  document.getElementById('theme-label').textContent = 'Clair';
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+function reduced() { try { return window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-liaisons-v1', theme: 'atelier-liaisons-theme' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const ANIM = { fn: null, last: 0 };
+const TAU = 2 * Math.PI, DEG = 180 / Math.PI;
+const copy = o => JSON.parse(JSON.stringify(o));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function fx(v, d) {
+  if (d == null) d = 2;
+  if (!isFinite(v)) return '∞';
+  const f = Math.pow(10, d); let r = Math.round(v * f) / f; if (Object.is(r, -0)) r = 0;
+  let s = String(r); if (/e/.test(s)) s = r.toFixed(d);
+  return s.replace('.', ',').replace('-', '−');
+}
+const sg = (v, d) => (v > 0 ? '+' : '') + fx(v, d);
+function parseAns(s) {
+  s = String(s).trim().replace(/\s/g, '').replace(/[−–]/g, '-').replace(/,/g, '.');
+  if (/^[-+]?(\d+\.?\d*|\.\d+)\/[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) { const q = s.split('/'); return +q[0] / +q[1]; }
+  if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return +s;
+  return NaN;
+}
+function okAns(v, t, rel, abs) { rel = rel == null ? 0.02 : rel; abs = abs == null ? 0.005 : abs; return isFinite(v) && Math.abs(v - t) <= Math.max(abs, Math.abs(t) * rel); }
+const subz = s => String(s).replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+function svgTxt(parent, attrs, str) {
+  const t = el('text', attrs, parent), parts = String(str).split(/_([A-Za-z0-9]+)/);
+  parts.forEach((p, i) => {
+    if (i % 2 === 0) { if (p) { const sp = el('tspan', {}, t); sp.textContent = p; if (i > 0) sp.setAttribute('dy', '-3'); } }
+    else { const sp = el('tspan', { dy: '3', 'font-size': '0.78em' }, t); sp.textContent = p; }
+  });
+  return t;
+}
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', { html: k[0] }), h('b', { html: k[1] })))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', disabled: it[2] === true, html: subz(it[1]), onclick: () => cb(it[0]) })));
+}
+function rng(label, min, max, step, get, set, fmtFn) {
+  const out = h('b', null, fmtFn(get()));
+  const inp = h('input', { type: 'range', min, max, step, 'aria-label': label });
+  inp.value = get();
+  inp.addEventListener('input', () => { set(+inp.value); out.textContent = fmtFn(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', { html: subz(label) + ' = ' }, out), inp);
+}
+let SVGN = 0;
+
+/* ---------- les dix liaisons ---------- */
+/* indices : cinématique [Ωx, Ωy, Ωz, Vx, Vy, Vz] ; statique [X, Y, Z, L, M, N] */
+const CS_SYM = ['Ωx', 'Ωy', 'Ωz', 'Vx', 'Vy', 'Vz'], ST_SYM = ['X', 'Y', 'Z', 'L', 'M', 'N'];
+const MM = 0.05; /* 1 mm = 0,05 unité de la scène 3D */
+const LIAISONS = [
+  { id: 'encastrement', name: 'Encastrement', dof: 0, point: 'A', cine: [], stat: [0, 1, 2, 3, 4, 5], params: [],
+    geo: 'Aucun élément géométrique particulier : la liaison est complète.', hint: 'aucun élément géométrique particulier' },
+  { id: 'pivot', name: 'Pivot', dof: 1, point: 'A ∈ Δ', cine: [2], stat: [0, 1, 2, 3, 4],
+    geo: 'Caractérisée par son <b>axe Δ</b> (selon z⃗).', hint: 'son axe Δ = (A, z⃗)',
+    params: [{ id: 'rz', label: 'θ_z', min: -3.14, max: 3.14, step: 0.01, value: 0, unit: 'rad' }] },
+  { id: 'glissiere', name: 'Glissière', dof: 1, point: 'A', cine: [5], stat: [0, 1, 3, 4, 5],
+    geo: 'Caractérisée par sa <b>direction</b> (selon z⃗).', hint: 'sa direction z⃗',
+    params: [{ id: 'tz', label: 'z', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }] },
+  { id: 'helicoidale', name: 'Hélicoïdale', dof: 1, point: 'A ∈ Δ', cine: [2, 5], stat: [0, 1, 2, 3, 4, 5],
+    geo: 'Caractérisée par son <b>axe Δ</b> (z⃗) et son <b>pas p</b> (mm/tour). Rotation et translation sont liées : V = (p/2π)·ω et N = (p/2π)·Z.', hint: 'son axe Δ = (A, z⃗)',
+    params: [{ id: 'th', label: 'θ_z', min: -12.57, max: 12.57, step: 0.05, value: 0, unit: 'rad' }, { id: 'p', label: 'Pas p', min: 2, max: 14, step: 0.5, value: 8, unit: 'mm/tr', noAnim: true }] },
+  { id: 'pivotglissant', name: 'Pivot glissant', dof: 2, point: 'A ∈ Δ', cine: [2, 5], stat: [0, 1, 3, 4],
+    geo: 'Caractérisée par son <b>axe Δ</b> (z⃗). Rotation et translation sont indépendantes.', hint: 'son axe Δ = (A, z⃗)',
+    params: [{ id: 'rz', label: 'θ_z', min: -3.14, max: 3.14, step: 0.01, value: 0, unit: 'rad' }, { id: 'tz', label: 'z', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }] },
+  { id: 'spherique', name: 'Sphérique', dof: 3, point: 'C', cine: [0, 1, 2], stat: [0, 1, 2],
+    geo: 'Caractérisée par son <b>centre C</b>.', hint: 'son centre C',
+    params: [{ id: 'rx', label: 'θ_x', min: -1.3, max: 1.3, step: 0.01, value: 0, unit: 'rad' }, { id: 'ry', label: 'θ_y', min: -1.3, max: 1.3, step: 0.01, value: 0, unit: 'rad' }, { id: 'rz', label: 'θ_z', min: -1.3, max: 1.3, step: 0.01, value: 0, unit: 'rad' }] },
+  { id: 'sphereplan', name: 'Sphère / Plan', dof: 5, point: 'I', cine: [0, 1, 2, 3, 4], stat: [2],
+    geo: 'Liaison ponctuelle. Caractérisée par le <b>plan de contact</b> (normale z⃗) et le <b>point de contact I</b>.', hint: 'le plan de contact (normale z⃗) et le point de contact I',
+    params: [{ id: 'tx', label: 'x', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }, { id: 'ty', label: 'y', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }, { id: 'rx', label: 'θ_x', min: -1.5, max: 1.5, step: 0.01, value: 0, unit: 'rad' }, { id: 'ry', label: 'θ_y', min: -1.5, max: 1.5, step: 0.01, value: 0, unit: 'rad' }, { id: 'rz', label: 'θ_z', min: -1.5, max: 1.5, step: 0.01, value: 0, unit: 'rad' }] },
+  { id: 'spherecylindre', name: 'Sphère / Cylindre', dof: 4, point: 'A ∈ axe', cine: [0, 1, 2, 5], stat: [0, 1],
+    geo: 'Liaison linéaire annulaire. Caractérisée par l’<b>axe du cylindre</b> (z⃗).', hint: 'l’axe du cylindre (A, z⃗)',
+    params: [{ id: 'tz', label: 'z', min: -28, max: 28, step: 0.5, value: 0, unit: 'mm' }, { id: 'rx', label: 'θ_x', min: -1.6, max: 1.6, step: 0.01, value: 0, unit: 'rad' }, { id: 'ry', label: 'θ_y', min: -1.6, max: 1.6, step: 0.01, value: 0, unit: 'rad' }, { id: 'rz', label: 'θ_z', min: -1.6, max: 1.6, step: 0.01, value: 0, unit: 'rad' }] },
+  { id: 'cylindreplan', name: 'Cylindre / Plan', dof: 4, point: 'A', cine: [0, 2, 3, 4], stat: [2, 4],
+    geo: 'Liaison linéaire rectiligne. Caractérisée par la <b>direction des génératrices</b> (x⃗) et le <b>plan</b> (normale z⃗).', hint: 'la direction des génératrices x⃗ et le plan (normale z⃗)',
+    params: [{ id: 'tx', label: 'x', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }, { id: 'ty', label: 'y', min: -24, max: 24, step: 0.5, value: 0, unit: 'mm' }, { id: 'rx', label: 'θ_x (axe du cylindre)', min: -3.14, max: 3.14, step: 0.01, value: 0, unit: 'rad' }, { id: 'rz', label: 'θ_z', min: -1.5, max: 1.5, step: 0.01, value: 0, unit: 'rad' }] },
+  { id: 'appuiplan', name: 'Appui plan', dof: 3, point: 'A', cine: [2, 3, 4], stat: [2, 3, 4],
+    geo: 'Caractérisée par le <b>plan de contact</b> (normale z⃗).', hint: 'le plan de contact (normale z⃗)',
+    params: [{ id: 'tx', label: 'x', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }, { id: 'ty', label: 'y', min: -30, max: 30, step: 0.5, value: 0, unit: 'mm' }, { id: 'rz', label: 'θ_z', min: -1.8, max: 1.8, step: 0.01, value: 0, unit: 'rad' }] }
+];
+const LBY = id => LIAISONS.find(l => l.id === id);
+const DUAL = i => (i + 3) % 6;
+const symH = (kind, i) => kind === 'cine' ? CS_SYM[i][0] + '<sub>' + CS_SYM[i][1] + '</sub>' : ST_SYM[i];
+const listH = (kind, idx) => idx.length ? idx.map(i => symH(kind, i)).join(', ') : '—';
+
+/* ---------- matrices de torseurs (HTML) ---------- */
+function tmat(kind, L, opt) {
+  opt = opt || {}; const set = new Set(kind === 'cine' ? L.cine : L.stat);
+  const cells = [0, 3, 1, 4, 2, 5].map(i => {
+    let cls = 'tc', txt = '0';
+    if (set.has(i)) { txt = symH(kind, i); cls += opt.pair && kind === 'cine' ? ' pr' : ' nz'; }
+    else if (opt.pair && kind === 'stat' && L.cine.includes(DUAL(i)) && L.id !== 'helicoidale') cls += ' pr';
+    return '<span class="' + cls + '">' + txt + '</span>';
+  }).join('');
+  return '<span class="tm"><span class="tb">{</span><span class="tg">' + cells + '</span><span class="tb">}</span></span>';
+}
+function tbox(kind, L, opt) {
+  const ttl = kind === 'cine' ? '{𝒱<sub>1/0</sub>} torseur cinématique' : '{𝒯<sub>0→1</sub>} actions transmissibles';
+  return '<div class="tbox"><div class="ttl">' + ttl + '</div>' + tmat(kind, L, opt) + '<div class="tpt">(' + L.point + ', x⃗, y⃗, z⃗)</div></div>';
 }
 
-const LIAISONS = {
-  encastrement: {
-    name: "Encastrement", dof: "0 ddl",
-    geo: "Aucun élément géométrique particulier (liaison complète).",
-    point: "A",
-    cineFree: [], 
-    statFree: [0,1,2,3,4,5],
-    params: []
+/* ---------- aides de dessin ---------- */
+function mkSvg(vb, label) { return el('svg', { class: 'g', viewBox: vb, role: 'img', 'aria-label': label }); }
+function figEl(node, cap, maxw) { return h('figure', { class: 'fig' }, h('div', { class: 'gwrap', style: maxw ? 'max-width:' + maxw + 'px' : null }, node), h('figcaption', { html: cap })); }
+function figRow(list) { return h('div', { class: 'figrow' }, list); }
+function arrowMk(svg) {
+  const d = el('defs', {}, svg), id = 'am' + (++SVGN), m = el('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, d);
+  el('path', { d: 'M0 0L10 5L0 10Z', fill: 'var(--accent-ink)' }, m);
+  return 'url(#' + id + ')';
+}
+function dimH(svg, ar, x1, x2, y, label) {
+  el('line', { x1: x1.toFixed(1), x2: x2.toFixed(1), y1: y, y2: y, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: ((x1 + x2) / 2).toFixed(1), y: y - 5, style: 'font-size:11.5px' }, label);
+}
+function dimV(svg, ar, x, y1, y2, label, tx) {
+  el('line', { x1: x, x2: x, y1, y2, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: tx, y: (y1 + y2) / 2 + 4, style: 'font-size:11.5px' }, label);
+}
+function hatchDefs(svg, id) {
+  const d = el('defs', {}, svg), p = el('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, d);
+  el('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'hatchln' }, p);
+}
+
+/* ---------- pictogrammes des liaisons (vue de face, x⃗ vers la droite, z⃗ vers le bas, y⃗ vers l'observateur) ---------- */
+const RX = '#ef4444', GZ = '#22c55e', BY = '#3b82f6';
+function pAxes(svg) {
+  el('line', { x1: 20, y1: 22, x2: 46, y2: 22, stroke: RX, 'stroke-width': 2 }, svg);
+  el('line', { x1: 20, y1: 22, x2: 20, y2: 48, stroke: GZ, 'stroke-width': 2 }, svg);
+  el('circle', { cx: 20, cy: 22, r: 5, fill: 'var(--bg)', stroke: BY, 'stroke-width': 2 }, svg);
+  el('circle', { cx: 20, cy: 22, r: 1.7, fill: BY }, svg);
+  [['x', 52, 26, RX], ['z', 17, 60, GZ], ['y', 6, 17, BY]].forEach(q => { el('text', { x: q[1], y: q[2], style: 'font:600 11px var(--font-ui);fill:' + q[3] }, svg).textContent = q[0]; });
+}
+function rEl(svg, x, y, w, hh, cls, rx) { const a = { class: 'rect ' + cls, x, y, width: w, height: hh }; if (rx) a.rx = rx; return el('rect', a, svg); }
+function lblP(svg, x, y, t) { el('text', { x, y, class: 'gtxt', style: 'font-size:11px' }, svg).textContent = t; }
+function arrL(svg, ar, x1, y1, x2, y2, dbl) {
+  const a = { x1, y1, x2, y2, stroke: 'var(--accent-ink)', 'stroke-width': 2.2, 'marker-end': ar }; if (dbl) a['marker-start'] = ar; el('line', a, svg);
+}
+function arrC(svg, ar, d) { el('path', { d, fill: 'none', stroke: 'var(--accent-ink)', 'stroke-width': 2.2, 'marker-end': ar }, svg); }
+function dotY(svg, x, y) { el('circle', { cx: x, cy: y, r: 6, fill: 'var(--bg)', stroke: 'var(--accent-ink)', 'stroke-width': 2 }, svg); el('circle', { cx: x, cy: y, r: 1.8, fill: 'var(--accent-ink)' }, svg); }
+function tx(svg, x, y, t, anchor) { svgTxt(svg, { class: 'gtxt', x, y, style: 'font-size:12px' + (anchor ? ';text-anchor:' + anchor : '') }, t); }
+const PICT = {
+  encastrement(svg) { rEl(svg, 30, 66, 90, 48, 'm'); rEl(svg, 120, 66, 90, 48, 's'); lblP(svg, 75, 94, '0'); lblP(svg, 165, 94, '1'); tx(svg, 120, 150, 'aucun mouvement relatif'); },
+  pivot(svg, ar) {
+    rEl(svg, 112, 18, 16, 146, 'm'); rEl(svg, 128, 68, 80, 18, 's'); rEl(svg, 104, 62, 32, 30, 's', 4);
+    arrC(svg, ar, 'M76 50 A44 12 0 0 1 164 50'); tx(svg, 176, 42, 'Ω_z', 'start'); lblP(svg, 120, 154, '0'); lblP(svg, 180, 81, '1');
   },
-  pivot: {
-    name: "Pivot", dof: "1 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong> (selon z⃗).",
-    point: "A ∈ Δ",
-    cineFree: [2],
-    statFree: [0,1,2,3,4],
-    params: [{ id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 }]
+  glissiere(svg, ar) {
+    rEl(svg, 108, 14, 24, 152, 'm'); rEl(svg, 94, 66, 52, 40, 's', 4);
+    arrL(svg, ar, 176, 46, 176, 126, true); tx(svg, 186, 90, 'V_z', 'start'); lblP(svg, 120, 156, '0'); lblP(svg, 120, 90, '1');
   },
-  glissiere: {
-    name: "Glissière", dof: "1 ddl",
-    geo: "Caractérisée par sa <strong>direction</strong> (selon z⃗).",
-    point: "A",
-    cineFree: [5],
-    statFree: [0,1,3,4,5],
-    params: [{ id: "tz", label: "Vz", min: -1.8, max: 1.8, step: 0.01, value: 0 }]
+  helicoidale(svg, ar) {
+    rEl(svg, 110, 14, 20, 140, 'm'); rEl(svg, 92, 66, 56, 46, 's', 4);
+    [78, 90, 102].forEach(y => el('line', { x1: 96, y1: y + 6, x2: 144, y2: y - 6, stroke: 'var(--node-stroke)', 'stroke-width': 1.4 }, svg));
+    arrC(svg, ar, 'M76 52 A44 12 0 0 1 164 52'); tx(svg, 176, 46, 'ω', 'start');
+    arrL(svg, ar, 190, 62, 190, 118, true); tx(svg, 200, 94, 'V', 'start'); tx(svg, 120, 176, 'V = (p/2π)·ω');
   },
-  helicoidale: {
-    name: "Hélicoïdale", dof: "1 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗) et son <strong>pas p</strong>.",
-    point: "A ∈ Δ",
-    cineFree: [2,5],
-    statFree: [0,1,2,3,4],
-    params: [{ id: "hel", label: "Paramètre hélicoïdal", min: -4, max: 4, step: 0.01, value: 0 }]
+  pivotglissant(svg, ar) {
+    rEl(svg, 112, 14, 16, 140, 'm'); rEl(svg, 96, 70, 48, 44, 's', 4);
+    arrC(svg, ar, 'M76 54 A44 12 0 0 1 164 54'); tx(svg, 176, 48, 'Ω_z', 'start');
+    arrL(svg, ar, 190, 66, 190, 124, true); tx(svg, 200, 98, 'V_z', 'start'); tx(svg, 120, 172, 'indépendants');
   },
-  pivotglissant: {
-    name: "Pivot glissant", dof: "2 ddl",
-    geo: "Caractérisée par son <strong>axe Δ</strong> (z⃗).",
-    point: "A ∈ Δ",
-    cineFree: [2,5],
-    statFree: [0,1,3,4],
-    params: [
-      { id: "rz", label: "Ωz", min: -3.14, max: 3.14, step: 0.01, value: 0 },
-      { id: "tz", label: "Vz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
+  spherique(svg, ar) {
+    el('circle', { cx: 120, cy: 118, r: 42, class: 'rect m' }, svg); el('circle', { cx: 120, cy: 118, r: 27, class: 'rect s' }, svg); rEl(svg, 114, 30, 12, 66, 's', 3);
+    arrC(svg, ar, 'M84 54 A36 10 0 0 1 156 54'); tx(svg, 164, 50, 'Ω_z', 'start'); arrC(svg, ar, 'M188 84 A12 30 0 0 1 188 144'); tx(svg, 200, 116, 'Ω_x', 'start'); tx(svg, 120, 174, 'Ω_x, Ω_y, Ω_z');
+  },
+  sphereplan(svg, ar) {
+    rEl(svg, 20, 142, 200, 12, 'm'); el('circle', { cx: 120, cy: 110, r: 32, class: 'rect s' }, svg);
+    el('circle', { cx: 120, cy: 142, r: 3.4, class: 'mk' }, svg); el('text', { x: 128, y: 138, style: 'font:600 11px var(--font-ui);fill:var(--bad)' }, svg).textContent = 'I';
+    arrL(svg, ar, 70, 58, 170, 58, true); tx(svg, 120, 50, 'V_x, V_y'); arrC(svg, ar, 'M92 82 A32 10 0 0 1 148 82'); tx(svg, 120, 174, 'Ω_x, Ω_y, Ω_z');
+  },
+  spherecylindre(svg, ar) {
+    el('rect', { x: 86, y: 14, width: 68, height: 150, fill: 'var(--g-m)', 'fill-opacity': 0.4, stroke: 'var(--node-stroke)', 'stroke-width': 2.2 }, svg);
+    el('circle', { cx: 120, cy: 90, r: 26, class: 'rect s' }, svg);
+    arrL(svg, ar, 190, 40, 190, 140, true); tx(svg, 200, 94, 'V_z', 'start'); arrC(svg, ar, 'M100 90 A22 8 0 0 1 140 90'); tx(svg, 120, 178, 'Ω_x, Ω_y, Ω_z, V_z');
+  },
+  cylindreplan(svg, ar) {
+    rEl(svg, 20, 142, 200, 12, 'm'); rEl(svg, 56, 110, 128, 32, 's', 16); el('ellipse', { cx: 184, cy: 126, rx: 7, ry: 16, fill: 'var(--g-ps)', stroke: 'var(--node-stroke)', 'stroke-width': 1.2 }, svg);
+    arrL(svg, ar, 70, 84, 170, 84, true); tx(svg, 120, 76, 'V_x'); dotY(svg, 206, 100); tx(svg, 218, 104, 'V_y', 'start');
+    arrC(svg, ar, 'M198 108 A10 20 0 0 1 198 146'); tx(svg, 210, 152, 'Ω_x', 'start'); arrC(svg, ar, 'M88 100 A32 8 0 0 1 152 100'); tx(svg, 120, 174, 'V_x, V_y, Ω_x, Ω_z');
+  },
+  appuiplan(svg, ar) {
+    rEl(svg, 20, 142, 200, 12, 'm'); rEl(svg, 64, 108, 112, 34, 's', 3);
+    arrL(svg, ar, 70, 82, 170, 82, true); tx(svg, 120, 74, 'V_x'); dotY(svg, 204, 124); tx(svg, 216, 128, 'V_y', 'start');
+    arrC(svg, ar, 'M80 98 A40 9 0 0 1 160 98'); tx(svg, 170, 96, 'Ω_z', 'start'); tx(svg, 120, 174, 'V_x, V_y, Ω_z');
+  }
+};
+function pictoSvg(L) { const svg = mkSvg('0 0 240 182', 'Schéma de la liaison ' + L.name), ar = arrowMk(svg); pAxes(svg); PICT[L.id](svg, ar); return svg; }
+function liaisonCard(L) {
+  return h('figure', { class: 'fig lcard' }, h('div', { class: 'gwrap', style: 'max-width:320px' }, pictoSvg(L)),
+    h('div', { class: 'torsrow', html: tbox('cine', L) + tbox('stat', L) }),
+    h('figcaption', { html: '<b>' + L.name + '</b> · ' + L.dof + ' ddl · caractérisée par ' + L.hint + '.' }));
+}
+
+/* ---------- figures du cours ---------- */
+const FIGS = {};
+FIGS.axes = () => {
+  const svg = mkSvg('0 0 480 240', 'Repère x, y, z de la page'), ar = arrowMk(svg);
+  const o = [130, 80];
+  el('line', { x1: o[0], y1: o[1], x2: o[0] + 130, y2: o[1], stroke: RX, 'stroke-width': 3, 'marker-end': ar }, svg);
+  el('line', { x1: o[0], y1: o[1], x2: o[0], y2: o[1] + 130, stroke: GZ, 'stroke-width': 3, 'marker-end': ar }, svg);
+  el('line', { x1: o[0], y1: o[1], x2: o[0] - 62, y2: o[1] + 50, stroke: BY, 'stroke-width': 3, 'marker-end': ar }, svg);
+  [['x⃗', o[0] + 138, o[1] + 5, RX], ['z⃗', o[0] + 8, o[1] + 150, GZ], ['y⃗', o[0] - 80, o[1] + 66, BY]].forEach(q => { el('text', { x: q[1], y: q[2], style: 'font:600 15px var(--font-ui);fill:' + q[3] }, svg).textContent = q[0]; });
+  el('circle', { cx: o[0], cy: o[1], r: 4, fill: 'var(--fg)' }, svg); el('text', { x: o[0] + 8, y: o[1] - 8, class: 'gtxt', style: 'text-anchor:start' }, svg).textContent = 'A';
+  ['x⃗ : rouge, vers la droite', 'y⃗ : bleu, vers l’observateur', 'z⃗ : vert, vers le bas', 'x⃗ ∧ y⃗ = z⃗ (repère direct)'].forEach((t, i) => el('text', { x: 290, y: 80 + 28 * i, class: 'gtxt', style: 'text-anchor:start;font-weight:500' }, svg).textContent = t);
+  return figEl(svg, 'Repère utilisé dans l’atelier. Une rotation ou une translation est positive quand elle va dans le sens de l’axe (règle de la main droite pour les rotations).', 520);
+};
+FIGS.torsorGen = () => {
+  const G = { id: 'g', point: 'A', cine: [0, 1, 2, 3, 4, 5], stat: [0, 1, 2, 3, 4, 5] };
+  const mk = (kind, cap) => h('figure', { class: 'fig' }, h('div', { class: 'torsrow', html: tbox(kind, G) }), h('figcaption', { html: cap }));
+  return figRow([mk('cine', 'Colonne de gauche : le <b>taux de rotation</b> Ω⃗ = (Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub>). Colonne de droite : la <b>vitesse</b> V⃗(A) = (V<sub>x</sub>, V<sub>y</sub>, V<sub>z</sub>).'), mk('stat', 'Colonne de gauche : la <b>résultante</b> R⃗ = (X, Y, Z). Colonne de droite : le <b>moment</b> M⃗(A) = (L, M, N).')]);
+};
+FIGS.dual = () => figRow(['pivot', 'glissiere'].map(id => {
+  const L = LBY(id), c = id === 'pivot' ? 'Pivot : Ω<sub>z</sub> est libre, donc le moment N (même rang, colonne de droite) est nul. Les cases orange sont liées deux à deux.' : 'Glissière : V<sub>z</sub> est libre, donc la force Z (même rang, colonne de gauche) est nulle.';
+  return h('figure', { class: 'fig' }, h('div', { class: 'torsrow', html: tbox('cine', L, { pair: true }) + tbox('stat', L, { pair: true }) }), h('figcaption', { html: c }));
+}));
+FIGS.cardsAxe = () => figRow(['pivot', 'glissiere', 'pivotglissant'].map(id => liaisonCard(LBY(id))));
+FIGS.cardHel = () => figRow([liaisonCard(LBY('helicoidale'))]);
+FIGS.cardsPonct = () => figRow(['sphereplan', 'spherecylindre', 'cylindreplan'].map(id => liaisonCard(LBY(id))));
+FIGS.cardsAutres = () => figRow(['encastrement', 'spherique', 'appuiplan'].map(id => liaisonCard(LBY(id))));
+FIGS.helix = () => {
+  const svg = mkSvg('0 0 720 275', 'Pas d’une liaison hélicoïdale et relation entre rotation et translation'), ar = arrowMk(svg);
+  rEl(svg, 70, 34, 70, 214, 'm');
+  for (let k = 0; k < 6; k++) { const y = 64 + k * 34; el('line', { x1: 70, y1: y + 14, x2: 140, y2: y - 14, stroke: 'var(--node-stroke)', 'stroke-width': 2 }, svg); }
+  rEl(svg, 56, 150, 98, 44, 's', 4); el('text', { x: 105, y: 177, class: 'gtxt' }, svg).textContent = '1';
+  dimV(svg, ar, 168, 78, 112, 'p', 192);
+  el('text', { x: 205, y: 100, class: 'gtxt', style: 'text-anchor:start;font-weight:500' }, svg).textContent = 'pas p = avance par tour';
+  arrC(svg, ar, 'M48 28 A57 9 0 0 1 162 28'); el('text', { x: 105, y: 10, class: 'gtxt' }, svg).textContent = 'ω';
+  arrL(svg, ar, 30, 200, 30, 140, false); el('text', { x: 20, y: 172, class: 'gtxt', style: 'text-anchor:end' }, svg).textContent = 'V';
+  const x0 = 380, y0 = 225, X = t => x0 + t / (4 * Math.PI) * 300, Y = z => y0 - z / 2 * 170;
+  el('line', { class: 'plot-ax', x1: x0, x2: 700, y1: y0, y2: y0 }, svg); el('line', { class: 'plot-ax', x1: x0, x2: x0, y1: 30, y2: y0 }, svg);
+  el('line', { x1: x0, y1: y0, x2: X(4 * Math.PI), y2: Y(2), stroke: 'var(--accent)', 'stroke-width': 2.4 }, svg);
+  [[Math.PI * 2, 1, '2π', 'p'], [Math.PI * 4, 2, '4π', '2p']].forEach(q => {
+    el('line', { class: 'plot-grid', x1: X(q[0]), x2: X(q[0]), y1: Y(q[1]), y2: y0 }, svg); el('line', { class: 'plot-grid', x1: x0, x2: X(q[0]), y1: Y(q[1]), y2: Y(q[1]) }, svg);
+    el('text', { class: 'plot-lbl', x: X(q[0]), y: y0 + 15, 'text-anchor': 'middle' }, svg).textContent = q[2];
+    el('text', { class: 'plot-lbl', x: x0 - 6, y: Y(q[1]) + 4, 'text-anchor': 'end' }, svg).textContent = q[3];
+  });
+  el('text', { class: 'plot-ttl', x: x0 + 6, y: 26 }, svg).textContent = 'z (mm)'; el('text', { class: 'plot-ttl', x: 700, y: y0 + 30, 'text-anchor': 'end' }, svg).textContent = 'θ (rad)';
+  svgTxt(svg, { class: 'gtxt', x: 440, y: 96, style: 'font-size:13px;text-anchor:start' }, 'z = (p/2π)·θ');
+  svgTxt(svg, { class: 'gtxt', x: 440, y: 118, style: 'font-size:13px;text-anchor:start;fill:var(--accent-ink)' }, 'V = (p/2π)·ω');
+  return figEl(svg, 'À gauche : sur une vis, une rotation d’un tour fait avancer l’écrou de p. À droite : la position z est proportionnelle à l’angle θ ; en dérivant par rapport au temps, V = (p/2π)·ω (p en mm/tour, V en mm/s, ω en rad/s).', 720);
+};
+FIGS.recap = () => {
+  const rows = LIAISONS.map(L => {
+    let c = listH('cine', L.cine), s = listH('stat', L.stat);
+    if (L.id === 'helicoidale') { c += ' avec V<sub>z</sub> = (p/2π)·Ω<sub>z</sub>'; s += ' avec N = (p/2π)·Z'; }
+    return '<tr><td><b>' + L.name + '</b></td><td class="n">' + L.dof + '</td><td>' + c + '</td><td>' + s + '</td><td>' + L.hint + '</td></tr>';
+  }).join('');
+  return h('div', { class: 'tbl', html: '<table class="ctable"><thead><tr><th>Liaison</th><th>ddl</th><th>Composantes cinématiques non nulles</th><th>Actions transmissibles non nulles</th><th>Éléments géométriques</th></tr></thead><tbody>' + rows + '</tbody></table>' });
+};
+function hydrateFigs(root) {
+  root.querySelectorAll('[data-fig]').forEach(ph => {
+    const f = FIGS[ph.getAttribute('data-fig')];
+    if (!f) { ph.remove(); return; }
+    try { ph.replaceWith(f()); } catch (e) { console.error('figure ' + ph.getAttribute('data-fig'), e); ph.remove(); }
+  });
+}
+
+/* ================= Atelier 1 : liaisons, torseurs et vue 3D ================= */
+const L1D = { key: 'pivot' };
+const L1 = { key: 'pivot', cine: new Set(), stat: new Set(), checked: false, shown: false, P: {}, T: null, H: { w: 2, Z: 100 } };
+function themeBg() {
+  try { const v = getComputedStyle(document.documentElement).getPropertyValue('--panel2').trim().replace('#', ''); const n = parseInt(v, 16); return isNaN(n) ? 0xf1f3f6 : n; } catch (e) { return 0xf1f3f6; }
+}
+function disposeThree() {
+  const T = L1.T; if (!T) return;
+  try { T.renderer.dispose(); if (T.renderer.forceContextLoss) T.renderer.forceContextLoss(); T.controls.dispose(); } catch (e) { /* rien */ }
+  L1.T = null;
+}
+function textSprite(txt, color) {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d');
+  x.font = 'bold 44px sans-serif'; x.fillStyle = color; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, 32, 34);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
+  sp.scale.set(0.34, 0.34, 1); return sp;
+}
+function axesGroup(len) {
+  const g = new THREE.Group(), up = new THREE.Vector3(0, 1, 0);
+  [[[1, 0, 0], 0xef4444, 'x', '#ef4444'], [[0, 0, 1], 0x3b82f6, 'y', '#3b82f6'], [[0, -1, 0], 0x22c55e, 'z', '#22c55e']].forEach(a => {
+    const d = new THREE.Vector3(...a[0]), mat = new THREE.MeshBasicMaterial({ color: a[1] }), q = new THREE.Quaternion().setFromUnitVectors(up, d);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, len, 12), mat), tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.26, 16), mat);
+    shaft.position.copy(d).multiplyScalar(len / 2); tip.position.copy(d).multiplyScalar(len + 0.13);
+    shaft.quaternion.copy(q); tip.quaternion.copy(q); g.add(shaft, tip);
+    const sp = textSprite(a[2], a[3]); sp.position.copy(d).multiplyScalar(len + 0.45); g.add(sp);
+  });
+  return g;
+}
+function initThree() {
+  const box = $('#l1-canvas'); disposeThree();
+  if (!box) return;
+  if (typeof THREE === 'undefined' || !THREE.OrbitControls) { box.innerHTML = '<p class="small" style="padding:14px">La vue 3D demande une connexion internet (bibliothèque three.js). Les torseurs restent utilisables.</p>'; return; }
+  try {
+    const w = box.clientWidth || 560, hh = box.clientHeight || 400;
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(themeBg());
+    const camera = new THREE.PerspectiveCamera(45, w / hh, 0.1, 100); camera.position.set(5, 3.5, 6);
+    const renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(w, hh); renderer.setPixelRatio(window.devicePixelRatio || 1);
+    box.innerHTML = ''; box.appendChild(renderer.domElement);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6)); const dir = new THREE.DirectionalLight(0xffffff, 0.8); dir.position.set(5, 10, 7); scene.add(dir);
+    scene.add(axesGroup(2.2));
+    L1.T = { scene, camera, renderer, controls, base: scene.children.length, mobile: null };
+  } catch (e) { box.innerHTML = '<p class="small" style="padding:14px">WebGL n’est pas disponible sur cet appareil. Les torseurs restent utilisables.</p>'; L1.T = null; }
+}
+window.addEventListener('resize', () => {
+  const T = L1.T, b = $('#l1-canvas'); if (!T || !b) return;
+  const w = b.clientWidth, hh = b.clientHeight; if (!w || !hh) return;
+  T.camera.aspect = w / hh; T.camera.updateProjectionMatrix(); T.renderer.setSize(w, hh);
+});
+function tex(draw, w, hh, rep) {
+  const c = document.createElement('canvas'); c.width = w; c.height = hh; draw(c.getContext('2d'));
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; if (rep) t.repeat.set(rep[0], rep[1]); return t;
+}
+function buildScene(key) {
+  const T = L1.T; if (!T) return;
+  while (T.scene.children.length > T.base) T.scene.remove(T.scene.children[T.scene.children.length - 1]);
+  T.mobile = null;
+  const BLUE = '#2e6da4', DARK = '#1b4a76';
+  const matFix = new THREE.MeshStandardMaterial({ color: 0x8a9bb0 }), matMob = new THREE.MeshStandardMaterial({ color: 0x2e6da4 });
+  const matStripe = new THREE.MeshStandardMaterial({ map: tex(x => { x.fillStyle = BLUE; x.fillRect(0, 0, 64, 64); x.fillStyle = DARK; for (let i = 0; i < 4; i++) x.fillRect(i * 16, 0, 8, 64); }, 64, 64, [2, 1]) });
+  const matHelix = new THREE.MeshStandardMaterial({ map: tex(x => { x.fillStyle = BLUE; x.fillRect(0, 0, 128, 128); x.strokeStyle = DARK; x.lineWidth = 14; for (let i = -1; i < 4; i++) { x.beginPath(); x.moveTo(0, i * 48); x.lineTo(128, i * 48 + 80); x.stroke(); } }, 128, 128, [1.5, 3]) });
+  const matSphere = new THREE.MeshStandardMaterial({ map: tex(x => { x.fillStyle = BLUE; x.fillRect(0, 0, 128, 128); x.strokeStyle = '#9cc4e8'; x.lineWidth = 3; for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(64, 64, 12 + i * 9, 0, Math.PI * 2); x.stroke(); } x.beginPath(); x.moveTo(0, 64); x.lineTo(128, 64); x.moveTo(64, 0); x.lineTo(64, 128); x.stroke(); }, 128, 128) });
+  const matCyl = new THREE.MeshStandardMaterial({ color: 0x8a9bb0, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+  const add = (...o) => o.forEach(m => T.scene.add(m));
+  const M = (g, m) => new THREE.Mesh(g, m);
+  if (key === 'encastrement') { const b1 = M(new THREE.BoxGeometry(1.1, 0.7, 0.7), matFix), b2 = M(new THREE.BoxGeometry(1.1, 0.7, 0.7), matMob); b1.position.x = -1; b2.position.x = 1; add(b1, b2); T.mobile = b2; }
+  else if (key === 'pivot') { const base = M(new THREE.CylinderGeometry(0.12, 0.12, 2.4, 16), matFix); T.mobile = new THREE.Group(); const arm = M(new THREE.BoxGeometry(1.6, 0.22, 0.35), matStripe); arm.position.x = 0.8; T.mobile.add(arm); add(base, T.mobile); }
+  else if (key === 'glissiere') { const rail = M(new THREE.BoxGeometry(0.35, 3.6, 0.35), matFix); T.mobile = M(new THREE.BoxGeometry(0.5, 0.6, 0.5), matMob); add(rail, T.mobile); }
+  else if (key === 'helicoidale') { const axe = M(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix); T.mobile = M(new THREE.CylinderGeometry(0.36, 0.36, 0.6, 24), matHelix); add(axe, T.mobile); }
+  else if (key === 'pivotglissant') { const axe = M(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix); T.mobile = M(new THREE.CylinderGeometry(0.3, 0.3, 0.7, 24), matStripe); add(axe, T.mobile); }
+  else if (key === 'spherique') { const socket = M(new THREE.SphereGeometry(0.5, 24, 16), matFix); T.mobile = new THREE.Group(); const ball = M(new THREE.SphereGeometry(0.32, 20, 14), matSphere), stick = M(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 12), matMob); stick.position.y = 0.65; T.mobile.add(ball, stick); add(socket, T.mobile); }
+  else if (key === 'sphereplan') { const plane = M(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix); plane.position.y = -0.035; T.mobile = M(new THREE.SphereGeometry(0.45, 24, 16), matSphere); T.mobile.position.y = 0.45; add(plane, T.mobile); }
+  else if (key === 'spherecylindre') { const cyl = M(new THREE.CylinderGeometry(0.68, 0.68, 2.8, 32, 1, true), matCyl); T.mobile = M(new THREE.SphereGeometry(0.32, 24, 16), matSphere); add(cyl, T.mobile); }
+  else if (key === 'cylindreplan') { const plane = M(new THREE.BoxGeometry(3.8, 0.07, 2.8), matFix); plane.position.y = -0.035; T.mobile = M(new THREE.CylinderGeometry(0.32, 0.32, 2.6, 32), matStripe); T.mobile.position.y = 0.32; add(plane, T.mobile); }
+  else if (key === 'appuiplan') { const plane = M(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix); plane.position.y = -0.035; T.mobile = M(new THREE.BoxGeometry(1.4, 0.25, 1.1), matStripe); T.mobile.position.y = 0.125; add(plane, T.mobile); }
+}
+/* les curseurs imposent la position (angles en rad, translations en mm) ; z⃗ est vers le bas, y⃗ vers l'observateur */
+function applyParams() {
+  const T = L1.T; if (!T || !T.mobile) return;
+  const key = L1.key, v = L1.P, m = T.mobile, g = id => v[id] || 0;
+  const ax = (x, y, z, a) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(x, y, z), a);
+  const qrot = (rx, ry, rz) => m.quaternion.copy(ax(0, -1, 0, rz)).multiply(ax(0, 0, 1, ry)).multiply(ax(1, 0, 0, rx));
+  if (key === 'pivot') qrot(0, 0, g('rz'));
+  else if (key === 'glissiere') m.position.y = -g('tz') * MM;
+  else if (key === 'helicoidale') { qrot(0, 0, g('th')); m.position.y = -(v.p * g('th') / TAU) * MM; }
+  else if (key === 'pivotglissant') { qrot(0, 0, g('rz')); m.position.y = -g('tz') * MM; }
+  else if (key === 'spherique') qrot(g('rx'), g('ry'), g('rz'));
+  else if (key === 'sphereplan') { qrot(g('rx'), g('ry'), g('rz')); m.position.x = g('tx') * MM; m.position.z = g('ty') * MM; m.position.y = 0.45; }
+  else if (key === 'spherecylindre') { qrot(g('rx'), g('ry'), g('rz')); m.position.y = -g('tz') * MM; }
+  else if (key === 'cylindreplan') {
+    const base = ax(0, 0, 1, Math.PI / 2), spin = ax(0, 1, 0, -g('rx')), rotZ = ax(0, -1, 0, g('rz'));
+    m.quaternion.copy(rotZ).multiply(base).multiply(spin); m.position.x = g('tx') * MM; m.position.z = g('ty') * MM; m.position.y = 0.32;
+  }
+  else if (key === 'appuiplan') { qrot(0, 0, g('rz')); m.position.x = g('tx') * MM; m.position.z = g('ty') * MM; }
+}
+function mountL1(root) {
+  root.innerHTML =
+    '<h2>Liaisons usuelles et torseurs</h2>' +
+    '<p>Choisissez une liaison, manœuvrez la pièce mobile (bleue) avec les curseurs, puis <b>cliquez sur les composantes non nulles</b> des deux torseurs. Les composantes laissées à 0 sont les composantes nulles. Le bouton « Vérifier » corrige.</p>' +
+    '<div id="l1-chips"></div>' +
+    '<div class="two"><div>' +
+    '<h3 id="l1-name" style="margin-top:6px"></h3><div id="l1-badge"></div><p class="small" id="l1-geo" style="margin-top:6px"></p>' +
+    '<div class="torsrow" id="l1-tors"></div>' +
+    '<div class="axl"><span><i style="background:#ef4444"></i>rouge : x⃗</span><span><i style="background:#3b82f6"></i>bleu : y⃗ (vers l’observateur)</span><span><i style="background:#22c55e"></i>vert : z⃗ (vers le bas)</span></div>' +
+    '<div class="files" style="margin:8px 0"><button class="btn pri" id="l1-ck" type="button">Vérifier</button><button class="btn" id="l1-sol" type="button">Voir la solution</button><button class="btn" id="l1-rs" type="button">Réinitialiser</button></div>' +
+    '<div class="verdict" id="l1-msg" aria-live="polite" hidden></div>' +
+    '<div id="l1-hel"></div>' +
+    '</div><div>' +
+    '<p class="viewlbl">Mouvement de la pièce mobile (souris : tourner la vue ; molette : zoom)</p>' +
+    '<div class="canvas3d" id="l1-canvas" role="img" aria-label="Vue 3D de la liaison"></div>' +
+    '<p class="small" style="margin-top:8px">Les curseurs imposent la position : angles en rad, translations en mm. Les composantes du torseur cinématique sont leurs dérivées.</p>' +
+    '<div id="l1-sl"></div><p class="scoreline" id="l1-live"></p>' +
+    '</div></div>';
+  $('#l1-ck').addEventListener('click', l1Check); $('#l1-sol').addEventListener('click', l1Solution); $('#l1-rs').addEventListener('click', l1Reset);
+  initThree(); selL1(L1.key);
+  ANIM.fn = () => { const T = L1.T; if (!T) return; try { T.controls.update(); T.renderer.render(T.scene, T.camera); } catch (e) { L1.T = null; } };
+}
+function selL1(id) {
+  L1.key = id; L1.cine.clear(); L1.stat.clear(); L1.checked = false; L1.shown = false;
+  const L = LBY(id); L1.P = {}; L.params.forEach(p => { L1.P[p.id] = p.value; });
+  const ch = $('#l1-chips'); ch.innerHTML = ''; ch.append(chipsRow(LIAISONS.map(l => [l.id, l.name]), id, selL1, 'Liaison'));
+  $('#l1-name').textContent = L.name; $('#l1-badge').innerHTML = '<span class="stat" style="display:inline-flex;flex-direction:row;gap:6px;padding:3px 10px"><span>Degrés de liberté</span><b>' + L.dof + '</b></span>';
+  $('#l1-geo').innerHTML = L.geo;
+  renderTors(); buildScene(id); applyParams();
+  const sl = $('#l1-sl'); sl.innerHTML = '';
+  if (!L.params.length) sl.append(h('p', { class: 'small' }, 'Aucun degré de liberté : la pièce ne bouge pas.'));
+  L.params.forEach(p => sl.append(rng(p.label + (p.unit ? ' (' + p.unit + ')' : ''), p.min, p.max, p.step, () => L1.P[p.id], v => { L1.P[p.id] = v; applyParams(); l1Live(); helInfo(); }, v => fx(v, 2))));
+  l1Live(); renderHel(); l1Msg('', '');
+}
+function renderTors() {
+  const L = LBY(L1.key), box = $('#l1-tors'); box.innerHTML = '';
+  ['cine', 'stat'].forEach(kind => {
+    const cells = h('div', { class: 'tg' });
+    [0, 3, 1, 4, 2, 5].forEach(i => {
+      const d = h('div', { class: 'comp', role: 'button', tabindex: '0', 'aria-label': (kind === 'cine' ? CS_SYM[i] : ST_SYM[i]) + ' : composante nulle' }, '0'); d.dataset.idx = i; d.dataset.kind = kind;
+      const act = () => l1Toggle(kind, i, d);
+      d.addEventListener('click', act); d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+      cells.append(d);
+    });
+    box.append(h('div', { class: 'tbox' }, h('div', { class: 'ttl', html: kind === 'cine' ? '{𝒱<sub>1/0</sub>} torseur cinématique' : '{𝒯<sub>0→1</sub>} actions transmissibles' }), h('div', { class: 'tm' }, h('span', { class: 'tb' }, '{'), cells, h('span', { class: 'tb' }, '}')), h('div', { class: 'tpt' }, '(' + L.point + ', x⃗, y⃗, z⃗)')));
+  });
+}
+function l1Toggle(kind, i, d) {
+  if (L1.checked) return;
+  const set = kind === 'cine' ? L1.cine : L1.stat, sy = kind === 'cine' ? CS_SYM : ST_SYM;
+  if (set.has(i)) { set.delete(i); d.classList.remove('selected'); d.textContent = '0'; } else { set.add(i); d.classList.add('selected'); d.textContent = sy[i]; }
+}
+function l1Msg(html, kind) { const m = $('#l1-msg'); if (!m) return; m.hidden = !html; m.innerHTML = html; m.className = 'verdict' + (kind ? ' ' + kind : ''); }
+function l1Mark(reveal) {
+  const L = LBY(L1.key); let all = true;
+  document.querySelectorAll('#l1-tors .comp').forEach(d => {
+    const i = +d.dataset.idx, kind = d.dataset.kind, should = (kind === 'cine' ? L.cine : L.stat).includes(i), sel = (kind === 'cine' ? L1.cine : L1.stat).has(i);
+    d.classList.remove('selected', 'correct', 'wrong');
+    if (reveal) { d.textContent = should ? (kind === 'cine' ? CS_SYM[i] : ST_SYM[i]) : '0'; d.classList.add('correct'); return; }
+    if (should === sel) d.classList.add('correct'); else { d.classList.add('wrong'); all = false; }
+  });
+  return all;
+}
+function l1Check() {
+  const L = LBY(L1.key); L1.checked = true; const ok = l1Mark(false);
+  const extra = L.id === 'helicoidale' ? ' Rappel : les composantes Ω<sub>z</sub> et V<sub>z</sub> sont liées (V = (p/2π)·ω), et N est lié à Z (N = (p/2π)·Z).' : '';
+  l1Msg(ok ? '<b>Bravo !</b> Toutes les composantes sont correctes.' + extra : '<b>Certaines composantes sont fausses</b> (en rouge). Pensez à la dualité : un mouvement libre impose une action transmissible nulle sur le même rang.' + extra, ok ? 'yes' : 'no');
+}
+function l1Solution() {
+  const L = LBY(L1.key); L1.checked = true; L1.shown = true; l1Mark(true);
+  l1Msg('<b>Solution.</b> Cinématique : ' + listH('cine', L.cine) + '. Actions transmissibles : ' + listH('stat', L.stat) + '. ' + L.dof + ' degré' + (L.dof > 1 ? 's' : '') + ' de liberté.' + (L.id === 'helicoidale' ? ' V = (p/2π)·ω et N = (p/2π)·Z.' : ''), '');
+}
+function l1Reset() { const id = L1.key; selL1(id); }
+function l1Live() {
+  const p = $('#l1-live'); if (!p) return;
+  if (L1.key === 'helicoidale') { const th = L1.P.th || 0, z = L1.P.p * th / TAU; p.innerHTML = 'θ = ' + fx(th, 2) + ' rad = ' + fx(th / TAU, 2) + ' tr ⇒ z = (p/2π)·θ = ' + fx(z, 2) + ' mm'; } else p.textContent = '';
+}
+/* relations de la liaison hélicoïdale */
+function renderHel() {
+  const box = $('#l1-hel'); if (!box) return; box.innerHTML = '';
+  if (L1.key !== 'helicoidale') return;
+  box.append(h('h3', null, 'Relations de la liaison hélicoïdale'),
+    h('div', { class: 'formula sm', html: '<b>Cinématique :</b> V = (p/2π)·ω &nbsp; (p en mm/tour, ω en rad/s, V en mm/s)<br><b>Statique :</b> N = (p/2π)·Z' }),
+    rng('Vitesse de rotation ω (rad/s)', -20, 20, 0.5, () => L1.H.w, v => { L1.H.w = v; helInfo(); }, v => fx(v, 1)),
+    rng('Effort axial Z (N)', -500, 500, 10, () => L1.H.Z, v => { L1.H.Z = v; helInfo(); }, v => fx(v, 0)),
+    h('div', { id: 'l1-hres' }));
+  helInfo();
+}
+function helInfo() {
+  const r = $('#l1-hres'); if (!r || L1.key !== 'helicoidale') return;
+  const p = L1.P.p, k = p / TAU, w = L1.H.w, Z = L1.H.Z, V = k * w, N = k * Z;
+  r.innerHTML = ''; r.append(stats([['p/2π', fx(k, 3) + ' mm/rad'], ['V = (p/2π)·ω', fx(V, 2) + ' mm/s'], ['N = (p/2π)·Z', fx(N, 1) + ' N·mm'], ['Tours par seconde', fx(w / TAU, 2) + ' tr/s']]),
+    h('div', { class: 'formula sm', html: 'V = ' + fx(p, 1) + '/(2π) × ' + fx(w, 1) + ' = <b>' + fx(V, 2) + ' mm/s</b> &nbsp;;&nbsp; N = ' + fx(p, 1) + '/(2π) × ' + fx(Z, 0) + ' = <b>' + fx(N, 1) + ' N·mm</b>' }));
+}
+WORKSHOPS.push({ id: 'g1', title: 'Liaisons et torseurs', hint: 'Choisissez une liaison, manœuvrez la pièce mobile et cliquez sur les composantes non nulles des torseurs cinématique et statique.', mount: mountL1, reset: () => { L1.key = 'pivot'; L1.H = { w: 2, Z: 100 }; } });
+
+/* ================= Exercices ================= */
+const EXS = {};
+function torsFig(L) {
+  return h('div', { class: 'exs' }, h('div', { class: 'torsrow', html: tbox('cine', L) + tbox('stat', L) }), h('p', { class: 'small', html: 'Seules les composantes non nulles sont écrites avec leur nom ; les autres valent 0.' }));
+}
+const GROUPS = { axe: ['pivot', 'glissiere', 'helicoidale', 'pivotglissant'], autre: ['encastrement', 'spherique', 'sphereplan', 'spherecylindre', 'cylindreplan', 'appuiplan'] };
+function genId(flt) {
+  const ids = flt === 'axe' ? GROUPS.axe : flt === 'autre' ? GROUPS.autre : LIAISONS.map(l => l.id), L = LBY(pick(ids));
+  const help = L.id === 'helicoidale' ? ' Dans le torseur cinématique, V<sub>z</sub> et Ω<sub>z</sub> sont liés par le pas.' : '';
+  return {
+    tag: 'Identifier une liaison', fig: () => torsFig(L),
+    text: 'Une liaison parfaite entre un solide 1 et un solide 0 est caractérisée par <b>' + L.hint + '</b>. Ses torseurs, écrits au point <b>' + L.point + '</b> dans la base (x⃗, y⃗, z⃗), sont donnés ci-dessous.' + help + ' Identifier la liaison et donner son nombre de degrés de liberté.',
+    choice: { options: LIAISONS.map(l => [l.id, l.name]), ans: L.id }, fields: [{ id: 'ddl', label: 'Nombre de degrés de liberté', val: L.dof }],
+    solNode: () => liaisonCard(L),
+    sol: '<p>Mouvements possibles (torseur cinématique) : <b>' + listH('cine', L.cine) + '</b>. Actions transmissibles : <b>' + listH('stat', L.stat) + '</b>.</p><p>La liaison est une <b>' + L.name + '</b>, avec <b>' + L.dof + '</b> degré' + (L.dof > 1 ? 's' : '') + ' de liberté.</p>' + (L.id === 'helicoidale' ? '<p>Même torseur cinématique qu’un pivot glissant, mais ici N ≠ 0 : le couple autour de l’axe et l’effort axial sont liés (N = (p/2π)·Z), donc un seul ddl.</p>' : L.id === 'pivotglissant' ? '<p>Même torseur cinématique qu’une hélicoïdale, mais N = 0 : rotation et translation sont indépendantes, donc deux ddl.</p>' : '')
+  };
+}
+function genHel(flt) {
+  const kinds = flt === 'vit' ? ['a', 'b', 'c', 'e'] : flt === 'eff' ? ['d', 'f'] : ['a', 'b', 'c', 'd', 'e', 'f'], kind = pick(kinds), p = pick([2, 4, 5, 8, 10, 12]), k = p / TAU;
+  const rel = '<p>Relations de la liaison hélicoïdale : V = (p/2π)·ω et N = (p/2π)·Z.</p>';
+  let ex;
+  if (kind === 'a') {
+    const w = pick([2, 3, 5, 10, 20]);
+    ex = { tag: 'Vitesse de translation', text: 'Une vis à pas p = <b>' + p + ' mm/tour</b> tourne à <b>ω = ' + w + ' rad/s</b>. Déterminer la vitesse de translation V de l’écrou.', fields: [{ id: 'V', label: 'V (mm/s)', val: k * w }], sol: rel + '<p>V = (p/2π)·ω = ' + p + '/(2π) × ' + w + ' = <b>' + fx(k * w, 3) + ' mm/s</b>.</p>' };
+  } else if (kind === 'b') {
+    const V = pick([5, 10, 12, 20, 30]);
+    ex = { tag: 'Vitesse de rotation', text: 'Un écrou avance à <b>V = ' + V + ' mm/s</b> sur une vis de pas <b>p = ' + p + ' mm/tour</b>. Déterminer la vitesse de rotation ω de la vis.', fields: [{ id: 'w', label: 'ω (rad/s)', val: V / k }], sol: rel + '<p>ω = 2π·V/p = 2π × ' + V + '/' + p + ' = <b>' + fx(V / k, 3) + ' rad/s</b>.</p>' };
+  } else if (kind === 'c') {
+    const N = pick([30, 60, 120, 300, 600]), w = TAU * N / 60;
+    ex = { tag: 'Vitesse de translation', text: 'Une vis de pas <b>p = ' + p + ' mm/tour</b> tourne à <b>' + N + ' tr/min</b>. Déterminer la vitesse de translation V (en mm/s).', fields: [{ id: 'V', label: 'V (mm/s)', val: p * N / 60 }], sol: rel + '<p>ω = 2π·' + N + '/60 = ' + fx(w, 3) + ' rad/s, puis V = (p/2π)·ω = <b>' + fx(p * N / 60, 3) + ' mm/s</b> (c’est aussi p × nombre de tours par seconde).</p>' };
+  } else if (kind === 'd') {
+    const Z = pick([50, 100, 200, 500]);
+    ex = { tag: 'Moment transmis', text: 'Une liaison hélicoïdale de pas <b>p = ' + p + ' mm/tour</b> transmet un effort axial <b>Z = ' + Z + ' N</b>. Déterminer le moment N autour de l’axe (en N·mm).', fields: [{ id: 'N', label: 'N (N·mm)', val: k * Z }], sol: rel + '<p>N = (p/2π)·Z = ' + p + '/(2π) × ' + Z + ' = <b>' + fx(k * Z, 2) + ' N·mm</b>.</p>' };
+  } else if (kind === 'e') {
+    const pp = pick([1.5, 2, 2.5, 4, 5]), n = pick([3, 4, 5, 8]), d = pp * n;
+    ex = { tag: 'Pas et vitesse', text: 'Pour avancer de <b>' + fx(d, 1) + ' mm</b>, une vis doit faire <b>' + n + ' tours</b>. Déterminer son pas p (en mm/tour), puis la vitesse V de l’écrou quand la vis tourne à <b>120 tr/min</b> (en mm/s).', fields: [{ id: 'p', label: 'p (mm/tour)', val: pp }, { id: 'V', label: 'V (mm/s)', val: pp * 2 }], sol: '<p>Le pas est l’avance par tour : p = ' + fx(d, 1) + '/' + n + ' = <b>' + fx(pp, 2) + ' mm/tour</b>.</p><p>120 tr/min = 2 tr/s, donc V = p × 2 = <b>' + fx(pp * 2, 2) + ' mm/s</b>.</p>' };
+  } else {
+    const Z = pick([100, 200, 300]), w = pick([2, 4, 5, 10]);
+    ex = { tag: 'Vitesse et moment', text: 'Une liaison hélicoïdale de pas <b>p = ' + p + ' mm/tour</b> tourne à <b>ω = ' + w + ' rad/s</b> en transmettant un effort axial <b>Z = ' + Z + ' N</b>. Déterminer V (mm/s) et N (N·mm).', fields: [{ id: 'V', label: 'V (mm/s)', val: k * w }, { id: 'N', label: 'N (N·mm)', val: k * Z }], sol: rel + '<p>V = (p/2π)·ω = ' + fx(k, 4) + ' × ' + w + ' = <b>' + fx(k * w, 3) + ' mm/s</b>.</p><p>N = (p/2π)·Z = ' + fx(k, 4) + ' × ' + Z + ' = <b>' + fx(k * Z, 2) + ' N·mm</b>.</p>' };
+  }
+  ex.kind = kind; return ex;
+}
+function mountEx(root, cfg) {
+  const S = EXS[cfg.key] || (EXS[cfg.key] = { flt: 'all', ex: null, pick: null, counted: false, shown: false, score: { ok: 0, tot: 0 } });
+  if (!S.ex) S.ex = cfg.gen(S.flt);
+  const ex = S.ex; root.innerHTML = '';
+  root.append(h('h2', null, cfg.title), h('p', null, cfg.intro));
+  root.append(chipsRow(cfg.filters, S.flt, v => { S.flt = v; S.ex = cfg.gen(v); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); }, 'Type d’exercice'));
+  root.append(h('p', { class: 'scoreline', id: 'ex-score' }, 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot));
+  root.append(h('div', { class: 'exs' }, h('p', { class: 'small' }, ex.tag), h('p', { html: ex.text })));
+  if (ex.fig) root.append(ex.fig());
+  const cho = h('div', { id: 'ex-cho' });
+  const drawCho = () => { cho.innerHTML = ''; if (ex.choice) cho.append(h('p', { class: 'small' }, 'Quelle est cette liaison ?'), chipsRow(ex.choice.options, S.pick, v => { S.pick = v; drawCho(); }, 'Choix de la liaison')); };
+  root.append(cho); drawCho();
+  const row = h('div', { class: 'fieldrow' }), ins = {};
+  ex.fields.forEach(f => {
+    const inp = h('input', { type: 'text', inputmode: 'decimal', id: 'ex-' + cfg.key + '-' + f.id, autocomplete: 'off', 'aria-label': f.label, placeholder: 'ex. 12,5' });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    ins[f.id] = inp; row.append(h('label', { class: 'fld' }, h('span', { html: subz(f.label) }), inp));
+  });
+  root.append(row);
+  const res = h('div', { class: 'verdict', hidden: true, 'aria-live': 'polite' }), sol = h('div', { class: 'solbox', hidden: !S.shown });
+  const count = ok => { if (!S.counted) { S.counted = true; S.score.tot++; if (ok) S.score.ok++; $('#ex-score').textContent = 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot; } };
+  function check() {
+    const marks = ex.fields.map(f => { const v = parseAns(ins[f.id].value), ok = okAns(v, f.val, 0.02, 0.01); ins[f.id].className = ok ? 'okk' : 'nok'; return { ok, v }; });
+    const chOk = !ex.choice || S.pick === ex.choice.ans, all = marks.every(m => m.ok) && chOk;
+    res.hidden = false; res.className = 'verdict ' + (all ? 'yes' : 'no');
+    res.textContent = all ? 'Correct.' : ex.choice && !S.pick ? 'Choisissez d’abord une liaison.' : marks.some(m => !isFinite(m.v)) ? 'Une réponse est vide ou illisible. Écrivez un nombre (virgule ou point).' : !chOk ? 'La liaison n’est pas la bonne : comparez les deux torseurs aux liaisons du cours.' : 'Pas encore. Reprenez le calcul ou affichez la solution.';
+    count(all);
+  }
+  sol.innerHTML = '<b>Solution</b>' + ex.sol + (ex.fields.length ? '<p class="small">Réponses attendues : ' + ex.fields.map(f => subz(f.label) + ' = ' + fx(f.val, 3)).join(' ; ') + '</p>' : '');
+  if (ex.solNode) sol.append(ex.solNode());
+  root.append(h('div', { class: 'files', style: 'margin:8px 0' },
+    h('button', { class: 'btn pri', type: 'button', onclick: check }, 'Vérifier'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.shown = true; sol.hidden = false; count(false); } }, 'Voir la solution'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.ex = cfg.gen(S.flt); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); $('#scroller').scrollTop = 0; } }, 'Nouvel exercice')), res, sol);
+  root.append(h('p', { class: 'small' }, 'Les réponses numériques sont acceptées à ± 2 %.'));
+  ANIM.fn = null;
+}
+WORKSHOPS.push({ id: 'g2', title: 'Exercices : liaisons', hint: 'À partir des deux torseurs, identifiez la liaison et son nombre de degrés de liberté.', mount: r => mountEx(r, { key: 'g2', title: 'Exercices : identifier une liaison', intro: 'Les torseurs sont générés au hasard. Comptez les composantes cinématiques non nulles pour le nombre de degrés de liberté, puis comparez avec les liaisons du cours. Attention aux liaisons qui ont le même torseur cinématique.', filters: [['all', 'Toutes'], ['axe', 'Liaisons à axe'], ['autre', 'Autres liaisons']], gen: genId }), reset: () => { delete EXS.g2; } });
+WORKSHOPS.push({ id: 'g3', title: 'Exercices : hélicoïdale', hint: 'Appliquez V = (p/2π)·ω et N = (p/2π)·Z à des vis et des écrous.', mount: r => mountEx(r, { key: 'g3', title: 'Exercices : liaison hélicoïdale', intro: 'Pas p en mm/tour, vitesse V en mm/s, vitesse de rotation ω en rad/s, effort Z en N, moment N en N·mm. Pensez à convertir les tr/min en rad/s (ω = 2π·N/60).', filters: [['all', 'Tous'], ['vit', 'Vitesses'], ['eff', 'Efforts']], gen: genHel }), reset: () => { delete EXS.g3; } });
+WORKSHOPS.sort((a, b) => a.id.localeCompare(b.id));
+
+/* ---------- activités (consignes, défi, QCM) ---------- */
+const ACT = {
+  g1: {
+    title: 'Liaisons et torseurs', level: 'Premier contact', time: '25 min',
+    goal: 'Associer à chaque liaison usuelle ses mouvements possibles et les actions qu’elle transmet, et retrouver les relations de la liaison hélicoïdale.',
+    steps: [
+      'Choisissez la <b>pivot</b>. Tournez la vue à la souris, repérez l’axe, déplacez le curseur θ<sub>z</sub>. Cliquez les composantes non nulles des deux torseurs puis vérifiez.',
+      'Passez à la <b>glissière</b>, puis au <b>pivot glissant</b>. Comparez les torseurs : quelle composante statique est nulle quand le mouvement associé est libre ?',
+      'Choisissez l’<b>hélicoïdale</b>. Le torseur cinématique est le même que pour le pivot glissant : que constatez-vous sur les curseurs θ et pas p ? Réglez ω et Z dans le calculateur et relevez V et N.',
+      'Étudiez les liaisons à contact : <b>sphère/plan</b>, <b>sphère/cylindre</b>, <b>cylindre/plan</b>. Combien de composantes statiques sont non nulles dans chaque cas ?',
+      'Terminez par l’<b>appui plan</b>, la <b>sphérique</b> et l’<b>encastrement</b>. Pour chaque liaison, vérifiez que (nombre de ddl) + (nombre d’actions transmissibles) = 6, sauf pour une liaison : laquelle ?'
+    ],
+    defi: { q: 'Sans regarder le cours, retrouvez le torseur des actions transmissibles d’une glissière d’axe z⃗ à partir de son seul torseur cinématique.', a: 'Le torseur cinématique ne contient que V<sub>z</sub>. Par dualité (P = X·V<sub>x</sub> + Y·V<sub>y</sub> + Z·V<sub>z</sub> + L·Ω<sub>x</sub> + M·Ω<sub>y</sub> + N·Ω<sub>z</sub> = 0), la composante Z est nulle et toutes les autres sont libres : X, Y, L, M, N.' },
+    course: 'dualite',
+    qcm: [
+      { q: 'Le torseur cinématique d’un pivot d’axe (A, z⃗), écrit en A sur l’axe, ne contient que :', o: ['Ω<sub>z</sub>', 'V<sub>z</sub>', 'Ω<sub>z</sub> et V<sub>z</sub>', 'Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub>'], a: 0, w: 'Seule la rotation autour de l’axe est possible, et V(A) est nulle pour un point A de l’axe.' },
+      { q: 'Quelles actions une glissière d’axe z⃗ transmet-elle ?', o: ['X, Y, L, M, N', 'Z seulement', 'X, Y, Z', 'Aucune'], a: 0, w: 'V<sub>z</sub> est libre, donc Z = 0 ; les cinq autres composantes sont transmissibles.' },
+      { q: 'Une liaison a 4 degrés de liberté. Combien de composantes statiques indépendantes transmet-elle (hors hélicoïdale) ?', o: ['2', '4', '6', '1'], a: 0, w: '6 − 4 = 2 : par exemple la sphère/cylindre (X, Y) ou le cylindre/plan (Z, M).' },
+      { q: 'Pourquoi une composante cinématique libre impose-t-elle une composante statique nulle ?', o: ['Parce que la puissance P = {𝒯}⊗{𝒱} d’une liaison parfaite est nulle', 'Parce que la liaison est toujours encastrée', 'Parce que le module est constant', 'Ce n’est pas vrai'], a: 0, w: 'Sans frottement, la liaison ne dissipe rien : chaque terme de P ne peut être non nul que si l’autre du couple est nul.' },
+      { q: 'Quel est le nombre de ddl du pivot glissant et de l’hélicoïdale ?', o: ['2 et 1', '1 et 1', '2 et 2', '1 et 2'], a: 0, w: 'Pivot glissant : rotation et translation indépendantes (2 ddl). Hélicoïdale : elles sont liées par le pas (1 ddl).' },
+      { q: 'Hélicoïdale de pas p = 6 mm/tour tournant à ω = 2π rad/s (1 tr/s). V vaut :', o: ['6 mm/s', '1 mm/s', '37,7 mm/s', '0,95 mm/s'], a: 0, w: 'V = (p/2π)·ω = 6/(2π) × 2π = 6 mm/s.' },
+      { q: 'Hélicoïdale de pas p = 10 mm/tour transmettant Z = 100 N. Le moment N vaut :', o: ['159,2 N·mm', '1 000 N·mm', '15,9 N·mm', '628 N·mm'], a: 0, w: 'N = (p/2π)·Z = 10/(2π) × 100 ≈ 159,2 N·mm.' },
+      { q: 'Appui plan de normale z⃗ : les mouvements possibles sont :', o: ['Ω<sub>z</sub>, V<sub>x</sub>, V<sub>y</sub>', 'Ω<sub>x</sub>, Ω<sub>y</sub>, V<sub>z</sub>', 'V<sub>x</sub>, V<sub>y</sub>, V<sub>z</sub>', 'Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub>'], a: 0, w: 'Le solide glisse dans le plan et tourne autour de la normale. Les actions transmissibles sont donc Z, L et M.' }
     ]
   },
-  spherique: {
-    name: "Sphérique", dof: "3 ddl",
-    geo: "Caractérisée par son <strong>centre C</strong>.",
-    point: "C",
-    cineFree: [0,1,2],
-    statFree: [0,1,2],
-    params: [
-      { id: "rx", label: "Ωx", min: -1.3, max: 1.3, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy", min: -1.3, max: 1.3, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.3, max: 1.3, step: 0.01, value: 0 }
+  g2: {
+    title: 'Exercices : liaisons', level: 'Entraînement', time: '20 min',
+    goal: 'Identifier une liaison à partir de ses deux torseurs et en déduire son nombre de degrés de liberté.',
+    steps: [
+      'Lisez les éléments géométriques donnés dans l’énoncé (axe, plan, centre).',
+      'Comptez les composantes non nulles du torseur cinématique : c’est le nombre de ddl (sauf si une relation lie deux composantes).',
+      'Utilisez le torseur statique pour départager : le pivot glissant et l’hélicoïdale ont le même torseur cinématique.',
+      'Choisissez la liaison, saisissez le nombre de ddl, puis cliquez sur « Vérifier ».'
+    ],
+    defi: { q: 'Deux liaisons ont le même torseur cinématique. Comment les distinguer avec le torseur statique ?', a: 'Par N : si N = 0, le couple autour de l’axe est nul et la rotation est indépendante de la translation (pivot glissant) ; si N ≠ 0 avec N = (p/2π)·Z, rotation et translation sont liées (hélicoïdale).' },
+    course: 'recap',
+    qcm: [
+      { q: 'Torseur cinématique : Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub>, V<sub>z</sub>. Torseur statique : X, Y. La liaison est :', o: ['Sphère / cylindre', 'Sphérique', 'Pivot glissant', 'Appui plan'], a: 0, w: '4 ddl avec une translation le long de l’axe du cylindre : liaison linéaire annulaire.' },
+      { q: 'Torseur statique : Z seulement. La liaison est :', o: ['Sphère / plan', 'Glissière', 'Encastrement', 'Pivot'], a: 0, w: 'Une seule action transmissible, la force normale au plan : contact ponctuel, 5 ddl.' },
+      { q: 'Torseur statique : Z, L, M. La liaison est :', o: ['Appui plan', 'Cylindre / plan', 'Pivot', 'Sphérique'], a: 0, w: 'Appui plan : 3 ddl, l’effort normal Z et deux moments dans le plan (L, M).' },
+      { q: 'Torseur cinématique vide, torseur statique complet :', o: ['Encastrement', 'Sphérique', 'Pivot', 'Aucune liaison'], a: 0, w: 'Aucun mouvement possible, toutes les actions sont transmissibles.' }
     ]
   },
-  sphereplan: {
-    name: "Sphère / Plan", dof: "5 ddl",
-    geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗) et le point de contact.",
-    point: "I",
-    cineFree: [0,1,2,3,4],
-    statFree: [2],
-    params: [
-      { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "rx", label: "Ωx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.5, max: 1.5, step: 0.01, value: 0 }
-    ]
-  },
-  spherecylindre: {
-    name: "Sphère / Cylindre", dof: "4 ddl",
-    geo: "Caractérisée par l’<strong>axe du cylindre</strong> (z⃗).",
-    point: "A ∈ axe",
-    cineFree: [0,1,2,5],
-    statFree: [0,1],
-    params: [
-      { id: "tz", label: "Vz", min: -1.4, max: 1.4, step: 0.01, value: 0 },
-      { id: "rx", label: "Ωx", min: -1.6, max: 1.6, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy", min: -1.6, max: 1.6, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.6, max: 1.6, step: 0.01, value: 0 }
-    ]
-  },
-  cylindreplan: {
-    name: "Cylindre / Plan", dof: "4 ddl",
-    geo: "Caractérisée par la <strong>direction des génératrices</strong> (x⃗) et le plan (normal z⃗).",
-    point: "A",
-    cineFree: [1,2,3,5],
-    statFree: [1,4],
-    params: [
-      { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "tz", label: "Vz", min: -1.2, max: 1.2, step: 0.01, value: 0 },
-      { id: "ry", label: "Ωy (axe cylindre)", min: -3.14, max: 3.14, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz (fixe)", min: -1.5, max: 1.5, step: 0.01, value: 0 }
-    ]
-  },
-  appuiplan: {
-    name: "Appui plan", dof: "3 ddl",
-    geo: "Caractérisée par le <strong>plan de contact</strong> (normal z⃗).",
-    point: "A",
-    cineFree: [2,3,4],
-    statFree: [2,5],
-    params: [
-      { id: "tx", label: "Vx", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "ty", label: "Vy", min: -1.5, max: 1.5, step: 0.01, value: 0 },
-      { id: "rz", label: "Ωz", min: -1.8, max: 1.8, step: 0.01, value: 0 }
+  g3: {
+    title: 'Exercices : hélicoïdale', level: 'Entraînement', time: '15 min',
+    goal: 'Maîtriser les relations V = (p/2π)·ω et N = (p/2π)·Z, avec les bonnes unités.',
+    steps: [
+      'Repérez l’inconnue : V, ω, p, Z ou N.',
+      'Mettez les données dans les bonnes unités : p en mm/tour, ω en rad/s (ω = 2π·N<sub>tr/min</sub>/60), V en mm/s.',
+      'Appliquez V = (p/2π)·ω ou N = (p/2π)·Z.',
+      'Vérifiez l’ordre de grandeur : un tour de vis avance de p, donc à 1 tr/s on a V = p (en mm/s).'
+    ],
+    defi: { q: 'Une vis de pas 5 mm/tour tourne à 600 tr/min. Quelle est la vitesse de l’écrou en mm/s ? En m/min ?', a: '600 tr/min = 10 tr/s donc V = 5 × 10 = 50 mm/s = 3 m/min.' },
+    course: 'helico',
+    qcm: [
+      { q: 'p = 6 mm/tour, ω = 2π rad/s. V vaut :', o: ['6 mm/s', '1 mm/s', '37,7 mm/s', '12 mm/s'], a: 0, w: 'V = (p/2π)·ω = 6 mm/s (un tour par seconde, l’écrou avance de 6 mm).' },
+      { q: 'p = 5 mm/tour, ω = 4 rad/s. V vaut environ :', o: ['3,18 mm/s', '20 mm/s', '0,8 mm/s', '31,4 mm/s'], a: 0, w: 'V = 5/(2π) × 4 ≈ 3,18 mm/s.' },
+      { q: 'V = 6 mm/s, p = 3 mm/tour. ω vaut environ :', o: ['12,6 rad/s', '2 rad/s', '1 rad/s', '0,32 rad/s'], a: 0, w: 'ω = 2π·V/p = 2π × 6/3 ≈ 12,6 rad/s.' },
+      { q: 'p = 8 mm/tour, Z = 50 N. N vaut environ :', o: ['63,7 N·mm', '400 N·mm', '6,25 N·mm', '314 N·mm'], a: 0, w: 'N = (p/2π)·Z = 8/(2π) × 50 ≈ 63,7 N·mm.' },
+      { q: 'Combien de ddl a la liaison hélicoïdale ?', o: ['1', '2', '0', '6'], a: 0, w: 'Rotation et translation sont liées par le pas : un seul paramètre libre.' }
     ]
   }
 };
 
-const CINE_SYMBOLS = ["Ωx","Ωy","Ωz","Vx","Vy","Vz"];
-const STAT_SYMBOLS = ["X","Y","Z","L","M","N"];
+/* ---------- cours ---------- */
+const COURSE = [];
+const ph = n => '<div class="fig" data-fig="' + n + '"></div>';
+COURSE.push({ id: 'torseurs', t: 'Les deux torseurs d’une liaison', h: `
+<p>Une liaison parfaite entre un solide 1 et un solide 0 se décrit par deux torseurs, écrits au <b>même point A</b> et dans la <b>même base</b> (x⃗, y⃗, z⃗) :</p>
+<ul><li>le <b>torseur cinématique</b> {𝒱<sub>1/0</sub>} donne les mouvements que la liaison <i>autorise</i> (les degrés de liberté) ;</li><li>le <b>torseur des actions mécaniques transmissibles</b> {𝒯<sub>0→1</sub>} donne les efforts que la liaison <i>peut transmettre</i>.</li></ul>` + ph('torsorGen') + `
+<p>Chaque torseur s’écrit sur deux colonnes de trois lignes. Une composante <b>nulle</b> est notée 0 ; une composante <b>non nulle</b> est notée par son nom.</p>
+<ul><li>Cinématique : une composante nulle est un mouvement <b>impossible</b>.</li><li>Statique : une composante nulle est un effort <b>non transmissible</b>.</li></ul>
+<p>Le nombre de <b>degrés de liberté</b> (ddl) est le nombre de mouvements indépendants autorisés.</p>
+<div class="retain"><b>À retenir.</b> Cinématique : ce que la liaison laisse faire. Statique : ce qu’elle transmet. Les deux se lisent au même point et dans la même base.</div>` });
+COURSE.push({ id: 'dualite', t: 'Dualité cinématique / statique', h: `
+<p>Dans une liaison parfaite (sans frottement), la puissance échangée est nulle :</p>
+<div class="formula">P = {𝒯<sub>0→1</sub>} ⊗ {𝒱<sub>1/0</sub>} = X·V<sub>x</sub> + Y·V<sub>y</sub> + Z·V<sub>z</sub> + L·Ω<sub>x</sub> + M·Ω<sub>y</sub> + N·Ω<sub>z</sub> = 0</div>
+<p>Cette somme est nulle pour tous les mouvements autorisés. Les composantes se retrouvent donc <b>par paires</b> :</p>
+<table class="ctable"><tr><th>Mouvement</th><th>Ω<sub>x</sub></th><th>Ω<sub>y</sub></th><th>Ω<sub>z</sub></th><th>V<sub>x</sub></th><th>V<sub>y</sub></th><th>V<sub>z</sub></th></tr><tr><td>Action associée</td><td>L</td><td>M</td><td>N</td><td>X</td><td>Y</td><td>Z</td></tr></table>
+<p><b>Règle de dualité.</b> Si un mouvement est libre (composante cinématique non nulle), l’action associée est <b>nulle</b>. Si un mouvement est bloqué, l’action associée peut être non nulle.</p>` + ph('dual') + `
+<p>Ainsi, pour une liaison parfaite : nombre de ddl + nombre d’actions transmissibles = 6.</p>
+<p><b>Exception : la liaison hélicoïdale.</b> Ω<sub>z</sub> et V<sub>z</sub> sont tous deux non nuls mais liés par le pas : elle n’a qu’un ddl, et N et Z sont liés (voir la section sur l’hélicoïdale).</p>
+<div class="retain"><b>À retenir.</b> Mouvement libre ⇒ action associée nulle. On passe d’un torseur à l’autre en associant Ω<sub>x</sub>↔L, Ω<sub>y</sub>↔M, Ω<sub>z</sub>↔N, V<sub>x</sub>↔X, V<sub>y</sub>↔Y, V<sub>z</sub>↔Z.</div>` });
+COURSE.push({ id: 'repere', t: 'Repère, point et conventions', h: `
+<p>Dans cet atelier, les liaisons sont orientées par rapport au repère (A, x⃗, y⃗, z⃗) ci-dessous. L’axe d’une pivot, d’une glissière ou d’une hélicoïdale est l’axe z⃗, la normale d’un plan de contact est z⃗.</p>` + ph('axes') + `
+<ul><li>Le repère est <b>direct</b> : x⃗ ∧ y⃗ = z⃗.</li><li>Une rotation est positive quand elle tourne autour de l’axe dans le sens de la règle de la main droite.</li><li>La forme simple d’un torseur dépend du <b>point</b> où il est écrit. Pour une pivot, la vitesse est nulle <b>sur l’axe</b> ; hors de l’axe, V⃗(B) = V⃗(A) + Ω⃗ ∧ BA… n’est plus nulle. Pour une sphère/plan, le point est le point de contact I ; pour une sphérique, le centre C.</li></ul>
+<div class="retain"><b>À retenir.</b> Les formes simples données dans ce cours valent au point caractéristique de la liaison (point de l’axe, centre, point de contact) et dans la base (x⃗, y⃗, z⃗).</div>` });
+COURSE.push({ id: 'axe', t: 'Liaisons à axe : pivot, glissière, pivot glissant', h: `
+<p>Trois liaisons sont caractérisées par un axe (A, z⃗), ou une direction z⃗ :</p>
+<ul><li><b>Pivot</b> (1 ddl) : seule la rotation autour de l’axe est possible. Cinématique : Ω<sub>z</sub> ; actions transmissibles : X, Y, Z, L, M.</li><li><b>Glissière</b> (1 ddl) : seule la translation le long de la direction est possible. Cinématique : V<sub>z</sub> ; actions transmissibles : X, Y, L, M, N.</li><li><b>Pivot glissant</b> (2 ddl) : rotation et translation le long du même axe, <b>indépendantes</b>. Cinématique : Ω<sub>z</sub>, V<sub>z</sub> ; actions transmissibles : X, Y, L, M.</li></ul>` + ph('cardsAxe') + `
+<p>Le pivot glissant est une pivot et une glissière de même axe : on additionne les ddl et on retire les actions transmissibles correspondantes (Z et N).</p>
+<div class="retain"><b>À retenir.</b> Pivot : Ω<sub>z</sub>. Glissière : V<sub>z</sub>. Pivot glissant : Ω<sub>z</sub> et V<sub>z</sub> indépendants. L’action associée à un mouvement libre est nulle.</div>` });
+COURSE.push({ id: 'helico', t: 'Liaison hélicoïdale', h: `
+<p>La liaison hélicoïdale (vis et écrou) est caractérisée par son axe (A, z⃗) et son <b>pas p</b>, l’avance de l’écrou pour un tour de vis. Rotation et translation sont <b>liées</b> : un seul ddl.</p>
+<div class="formula">V = (p/2π)·ω &nbsp;&nbsp; avec p en mm/tour, ω en rad/s et V en mm/s</div>
+<div class="formula">N = (p/2π)·Z &nbsp;&nbsp; avec p en mm/tour, Z en N et N en N·mm</div>` + ph('helix') + `
+<p>Le torseur cinématique contient Ω<sub>z</sub> et V<sub>z</sub> (liés par V = (p/2π)·ω). Le torseur statique contient les six composantes, mais N n’est pas indépendante : N = (p/2π)·Z, donc seules X, Y, Z, L, M sont indépendantes.</p>` + ph('cardHel') + `
+<h3>Exemples</h3>
+<table class="ctable"><tr><th>Données</th><th>Calcul</th><th>Résultat</th></tr><tr><td>p = 5 mm/tour, ω = 2π rad/s (1 tr/s)</td><td>V = 5/(2π) × 2π</td><td>5 mm/s</td></tr><tr><td>p = 5 mm/tour, 600 tr/min</td><td>10 tr/s × 5 mm</td><td>50 mm/s</td></tr><tr><td>p = 10 mm/tour, Z = 100 N</td><td>N = 10/(2π) × 100</td><td>159,2 N·mm</td></tr></table>
+<p>Quand p tend vers 0, la vis n’avance plus : on retrouve une pivot. Quand p est très grand, la rotation est très faible devant la translation : on se rapproche d’une glissière.</p>
+<div class="retain"><b>À retenir.</b> Hélicoïdale : 1 ddl, V = (p/2π)·ω et N = (p/2π)·Z, avec p en mm/tour, V en mm/s et ω en rad/s.</div>` });
+COURSE.push({ id: 'contact', t: 'Contacts : sphère/plan, sphère/cylindre, cylindre/plan', h: `
+<p>Ces trois liaisons viennent de la forme des surfaces en contact.</p>
+<ul><li><b>Sphère / plan</b> (ponctuelle, 5 ddl) : un point de contact I, une normale z⃗. Cinématique en I : Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub>, V<sub>x</sub>, V<sub>y</sub> ; action transmissible : Z (la force normale).</li><li><b>Sphère / cylindre</b> (linéaire annulaire, 4 ddl) : la sphère glisse le long de l’axe du cylindre. Cinématique : Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub>, V<sub>z</sub> ; actions transmissibles : X, Y.</li><li><b>Cylindre / plan</b> (linéaire rectiligne, 4 ddl) : le contact est un segment de droite (génératrice x⃗), de normale z⃗. Cinématique : Ω<sub>x</sub>, Ω<sub>z</sub>, V<sub>x</sub>, V<sub>y</sub> ; actions transmissibles : Z et M.</li></ul>` + ph('cardsPonct') + `
+<p>Pour le cylindre/plan, la force normale peut être répartie le long du segment de contact : elle crée un moment M autour de y⃗, et c’est la raison pour laquelle Z et M sont tous les deux transmissibles.</p>
+<div class="retain"><b>À retenir.</b> Plus le contact est « petit », moins la liaison transmet d’efforts : sphère/plan 1 action, sphère/cylindre et cylindre/plan 2 actions.</div>` });
+COURSE.push({ id: 'autres', t: 'Encastrement, sphérique, appui plan', h: `
+<ul><li><b>Encastrement</b> (0 ddl) : aucun mouvement relatif ; les six actions sont transmissibles.</li><li><b>Sphérique</b> (3 ddl) : trois rotations autour du centre C ; cinématique Ω<sub>x</sub>, Ω<sub>y</sub>, Ω<sub>z</sub> ; actions transmissibles X, Y, Z (une force passant par C).</li><li><b>Appui plan</b> (3 ddl) : glissement dans le plan et rotation autour de la normale z⃗ ; cinématique Ω<sub>z</sub>, V<sub>x</sub>, V<sub>y</sub> ; actions transmissibles Z, L, M.</li></ul>` + ph('cardsAutres') + `
+<div class="retain"><b>À retenir.</b> Sphérique : 3 rotations, 3 forces. Appui plan : 1 rotation et 2 translations dans le plan, force normale et deux moments.</div>` });
+COURSE.push({ id: 'recap', t: 'Tableau récapitulatif', h: `<p>Les dix liaisons usuelles, avec leurs composantes non nulles.</p>` + ph('recap') + `
+<p>Contrôle rapide : en dehors de l’hélicoïdale, le nombre de ddl et le nombre d’actions transmissibles font toujours 6.</p>
+<div class="retain"><b>À retenir.</b> On retrouve le torseur statique à partir du torseur cinématique par dualité, et réciproquement.</div>` });
+COURSE.push({ id: 'methode', t: 'Méthode : écrire les torseurs d’une liaison', h: `
+<ol>
+<li><b>Repérer</b> les éléments géométriques : axe, plan, centre, point de contact, génératrices.</li>
+<li><b>Choisir le point</b> et la base : un point de l’axe, le centre, le point de contact ; la base (x⃗, y⃗, z⃗) liée à ces éléments.</li>
+<li><b>Lister les mouvements possibles</b> : quelles rotations et quelles translations la liaison autorise-t-elle ? Écrire le torseur cinématique.</li>
+<li><b>Appliquer la dualité</b> : pour chaque mouvement libre, l’action associée est nulle ; les autres sont transmissibles. Écrire le torseur statique.</li>
+<li><b>Chercher une relation</b> : si une rotation et une translation sont liées (hélicoïdale), écrire V = (p/2π)·ω et N = (p/2π)·Z.</li>
+<li><b>Vérifier</b> : nombre de ddl + nombre d’actions transmissibles = 6 (hors hélicoïdale).</li>
+</ol>
+<p><b>Exemple : le cylindre/plan.</b> Génératrices x⃗, normale z⃗. Mouvements possibles : glisser selon x⃗ et y⃗ (V<sub>x</sub>, V<sub>y</sub>), tourner autour de x⃗ (le cylindre roule : Ω<sub>x</sub>) et autour de z⃗ (Ω<sub>z</sub>). Les actions associées X, Y, L, N sont nulles ; restent Z et M.</p>
+<div class="retain"><b>À retenir.</b> Géométrie → mouvements libres → torseur cinématique → dualité → torseur statique → vérification.</div>` });
 
-let currentKey = "pivot";
-let userCine = new Set();
-let userStat = new Set();
-let checked = false;
-const paramValues = {};
-
-function initButtons() {
-  const cont = document.getElementById("liaison-buttons");
-  Object.keys(LIAISONS).forEach(key => {
-    const b = document.createElement("button");
-    b.textContent = LIAISONS[key].name;
-    b.dataset.key = key;
-    b.onclick = () => selectLiaison(key);
-    cont.appendChild(b);
-  });
+/* ---------- interface ---------- */
+const UI = { cur: 'g1' };
+const AS = { key: 'g1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'torseurs' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
 }
-
-function selectLiaison(key) {
-  currentKey = key;
-  document.querySelectorAll(".liaison-select button").forEach(b => {
-    b.classList.toggle("active", b.dataset.key === key);
-  });
-  userCine.clear();
-  userStat.clear();
-  checked = false;
-  renderInfo();
-  buildScene(key);
-  buildSliders(key);
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  ANIM.fn = null; disposeThree();
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
 }
-
-function renderInfo() {
-  const L = LIAISONS[currentKey];
-  document.getElementById("liaison-name").textContent = L.name;
-  document.getElementById("liaison-dof").innerHTML = `<span class="dof-badge">${L.dof}</span>`;
-  document.getElementById("liaison-geo").innerHTML = L.geo;
-
-  const torseurs = document.getElementById("torseurs");
-  torseurs.innerHTML = `
-    <div class="torseur-box">
-      <div class="torseur-title">{ 𝒱<sub>1/0</sub> } – Torseur cinématique</div>
-      <div class="bmatrix-wrapper">
-        <div class="bmatrix">
-          <div class="bm-brace">{</div>
-          <div class="bm-grid" id="cine-cells"></div>
-          <div class="bm-brace">}</div>
-        </div>
-        <div class="bm-bottom">(${L.point}, x⃗, y⃗, z⃗)</div>
-      </div>
-    </div>
-    <div class="torseur-box">
-      <div class="torseur-title">{ 𝒯<sub>0→1</sub> } – Torseur des actions mécaniques</div>
-      <div class="bmatrix-wrapper">
-        <div class="bmatrix">
-          <div class="bm-brace">{</div>
-          <div class="bm-grid" id="stat-cells"></div>
-          <div class="bm-brace">}</div>
-        </div>
-        <div class="bm-bottom">(${L.point}, x⃗, y⃗, z⃗)</div>
-      </div>
-    </div>
-  `;
-
-  const cineCells = document.getElementById("cine-cells");
-  const statCells = document.getElementById("stat-cells");
-
-  [0,3,1,4,2,5].forEach(i => {
-    const div = document.createElement("div");
-    div.className = "comp";
-    div.dataset.idx = i;
-    div.textContent = "0";
-    div.onclick = () => toggleComp("cine", i, div);
-    cineCells.appendChild(div);
-  });
-  [0,3,1,4,2,5].forEach(i => {
-    const div = document.createElement("div");
-    div.className = "comp";
-    div.dataset.idx = i;
-    div.textContent = "0";
-    div.onclick = () => toggleComp("stat", i, div);
-    statCells.appendChild(div);
-  });
-
-  document.getElementById("feedback").className = "feedback";
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
 }
-
-function toggleComp(type, idx, el) {
-  if (checked) return;
-  const set = type === "cine" ? userCine : userStat;
-  const symbols = type === "cine" ? CINE_SYMBOLS : STAT_SYMBOLS;
-
-  if (set.has(idx)) {
-    set.delete(idx);
-    el.classList.remove("selected");
-    el.textContent = "0";
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag; box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal', html: '<b>Objectif. </b>' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
   } else {
-    set.add(idx);
-    el.classList.add("selected");
-    el.textContent = symbols[idx];
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', { html: (i + 1) + '. ' + q.q }));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
   }
+  box.append(body); body.scrollTop = keep;
 }
+$('#bAct').addEventListener('click', () => { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); });
 
-function checkAnswer() {
-  checked = true;
-  const L = LIAISONS[currentKey];
-  let allOk = true;
-
-  document.querySelectorAll("#cine-cells .comp").forEach(el => {
-    const idx = +el.dataset.idx;
-    const should = L.cineFree.includes(idx);
-    const selected = userCine.has(idx);
-    el.classList.remove("selected", "correct", "wrong");
-    if ((should && selected) || (!should && !selected)) el.classList.add("correct");
-    else { el.classList.add("wrong"); allOk = false; }
-  });
-
-  document.querySelectorAll("#stat-cells .comp").forEach(el => {
-    const idx = +el.dataset.idx;
-    const should = L.statFree.includes(idx);
-    const selected = userStat.has(idx);
-    el.classList.remove("selected", "correct", "wrong");
-    if ((should && selected) || (!should && !selected)) el.classList.add("correct");
-    else { el.classList.add("wrong"); allOk = false; }
-  });
-
-  const fb = document.getElementById("feedback");
-  fb.className = "feedback show " + (allOk ? "ok" : "ko");
-  fb.textContent = allOk ? "✅ Bravo ! Toutes les composantes sont correctes." : "❌ Certaines composantes sont incorrectes (en rouge).";
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  hydrateFigs(art);
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : liaisons usuelles et torseurs'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
 }
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
 
-function resetSelection() {
-  userCine.clear();
-  userStat.clear();
-  checked = false;
-  document.querySelectorAll(".comp").forEach(el => {
-    el.classList.remove("selected", "correct", "wrong");
-    el.textContent = "0";
-  });
-  document.getElementById("feedback").className = "feedback";
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
 }
-
-let scene, camera, renderer, controls, mobile;
-
-function createCustomAxes(length = 2.2) {
-  const group = new THREE.Group();
-
-  // x⃗ = Rouge
-  group.add(new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(length,0,0)]),
-    new THREE.LineBasicMaterial({ color: 0xef4444 })
-  ));
-
-  // y⃗ = Bleu
-  group.add(new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,length)]),
-    new THREE.LineBasicMaterial({ color: 0x3b82f6 })
-  ));
-
-  // z⃗ = Vert (vers le bas)
-  group.add(new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,-length,0)]),
-    new THREE.LineBasicMaterial({ color: 0x22c55e })
-  ));
-
-  return group;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Trois ateliers sur les liaisons usuelles : une vue 3D avec les torseurs à compléter, des exercices d’identification de liaisons et des exercices sur la liaison hélicoïdale.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans l’atelier 1, choisissez une liaison, manœuvrez la pièce mobile avec les curseurs (souris : tourner la vue, molette : zoom) et cliquez sur les composantes non nulles des torseurs.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> rappelle les torseurs, la dualité, chaque liaison et la liaison hélicoïdale.</li><li>Dans les exercices, tapez un nombre (virgule ou point).</li></ul>' +
+    '<h3>Conventions</h3><p>Repère direct (x⃗ rouge à droite, y⃗ bleu vers l’observateur, z⃗ vert vers le bas). Liaison hélicoïdale : V = (p/2π)·ω et N = (p/2π)·Z avec p en mm/tour, V en mm/s et ω en rad/s.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM et le choix clair ou sombre sont mémorisés dans ce navigateur uniquement. La vue 3D demande une connexion internet.</p>' }));
+});
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  const b = $('#bTheme'); b.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre'; b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  if (L1.T) { try { L1.T.scene.background = new THREE.Color(themeBg()); } catch (e) { /* rien */ } }
 }
-
-function initThree() {
-  const container = document.getElementById("canvas-container");
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(
-    document.documentElement.getAttribute("data-theme") === "dark" ? 0x0a0a12 : 0xe2e8f0
-  );
-  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-  camera.position.set(5, 3.5, 6);
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(devicePixelRatio);
-  container.appendChild(renderer.domElement);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-  dir.position.set(5, 10, 7);
-  scene.add(dir);
-  scene.add(createCustomAxes(2.2));
-
-  window.addEventListener("resize", () => {
-    const w = container.clientWidth, h = container.clientHeight;
-    camera.aspect = w / h; camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  });
-  (function loop() {
-    requestAnimationFrame(loop);
-    controls.update();
-    renderer.render(scene, camera);
-  })();
+applyTheme(lsGet(KEYS.theme, 'light'));
+$('#bTheme').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; applyTheme(t); lsSet(KEYS.theme, t); });
+function loop(ts) {
+  const dt = Math.min(0.05, (ts - ANIM.last) / 1000 || 0); ANIM.last = ts;
+  if (ANIM.fn && !CS.open && !document.hidden) { try { ANIM.fn(dt); } catch (e) { ANIM.fn = null; } }
+  requestAnimationFrame(loop);
 }
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); requestAnimationFrame(loop); })();
 
-function clearScene() {
-  while (scene.children.length > 3) scene.remove(scene.children[3]);
-  mobile = null;
-}
-
-function createStripeTexture() {
-  const c = document.createElement("canvas");
-  c.width = 64; c.height = 64;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#3b82f6";
-  ctx.fillRect(0, 0, 64, 64);
-  ctx.fillStyle = "#1e3a8a";
-  for (let i = 0; i < 4; i++) ctx.fillRect(i*16, 0, 8, 64);
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(2, 1);
-  return tex;
-}
-
-function createHelixTexture() {
-  const c = document.createElement("canvas");
-  c.width = 128; c.height = 128;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#3b82f6";
-  ctx.fillRect(0, 0, 128, 128);
-  ctx.strokeStyle = "#1e3a8a";
-  ctx.lineWidth = 14;
-  for (let i = -1; i < 4; i++) {
-    ctx.beginPath();
-    ctx.moveTo(0, i * 48);
-    ctx.lineTo(128, i * 48 + 80);
-    ctx.stroke();
-  }
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1.5, 3);
-  return tex;
-}
-
-function createSphereTexture() {
-  const c = document.createElement("canvas");
-  c.width = 128; c.height = 128;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#3b82f6";
-  ctx.fillRect(0, 0, 128, 128);
-  ctx.strokeStyle = "#93c5fd";
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 6; i++) {
-    ctx.beginPath();
-    ctx.arc(64, 64, 12 + i*9, 0, Math.PI*2);
-    ctx.stroke();
-  }
-  ctx.beginPath();
-  ctx.moveTo(0, 64); ctx.lineTo(128, 64);
-  ctx.moveTo(64, 0); ctx.lineTo(64, 128);
-  ctx.stroke();
-  return new THREE.CanvasTexture(c);
-}
-
-function buildScene(key) {
-  clearScene();
-  const matFix = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
-  const matMob = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
-  const matStripe = new THREE.MeshStandardMaterial({ map: createStripeTexture() });
-  const matHelix  = new THREE.MeshStandardMaterial({ map: createHelixTexture() });
-  const matSphere = new THREE.MeshStandardMaterial({ map: createSphereTexture() });
-  const matCylTransparent = new THREE.MeshStandardMaterial({
-    color: 0x94a3b8, transparent: true, opacity: 0.5, side: THREE.DoubleSide
-  });
-
-  if (key === "encastrement") {
-    const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matFix);
-    const b2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.7), matMob);
-    b1.position.x = -1; b2.position.x = 1;
-    scene.add(b1, b2); mobile = b2;
-  }
-  else if (key === "pivot") {
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4, 16), matFix);
-    mobile = new THREE.Group();
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.35), matStripe);
-    arm.position.x = 0.8;
-    mobile.add(arm);
-    scene.add(base, mobile);
-  }
-  else if (key === "glissiere") {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.35, 3.6, 0.35), matFix);
-    mobile = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.5), matMob);
-    scene.add(rail, mobile);
-  }
-  else if (key === "helicoidale") {
-    const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.6, 24), matHelix);
-    scene.add(axe, mobile);
-  }
-  else if (key === "pivotglissant") {
-    const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 16), matFix);
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.7, 24), matStripe);
-    scene.add(axe, mobile);
-  }
-  else if (key === "spherique") {
-    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.5, 24, 16), matFix);
-    mobile = new THREE.Group();
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 14), matSphere);
-    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 12), matMob);
-    stick.position.y = 0.65;
-    mobile.add(ball, stick);
-    scene.add(socket, mobile);
-  }
-  else if (key === "sphereplan") {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
-    plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 16), matSphere);
-    mobile.position.y = 0.45;
-    scene.add(plane, mobile);
-  }
-  else if (key === "spherecylindre") {
-    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 2.8, 32, 1, true), matCylTransparent);
-    mobile = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), matSphere);
-    scene.add(cyl, mobile);
-  }
-  else if (key === "cylindreplan") {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.07, 2.8), matFix);
-    plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 2.6, 32), matStripe);
-    mobile.position.y = 0.32;
-    scene.add(plane, mobile);
-  }
-  else if (key === "appuiplan") {
-    const plane = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.07, 3.5), matFix);
-    plane.position.y = -0.035;
-    mobile = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 1.1), matStripe);
-    mobile.position.y = 0.125;
-    scene.add(plane, mobile);
-  }
-
-  LIAISONS[key].params.forEach(p => paramValues[p.id] = p.value);
-  applyParams(key);
-}
-
-function buildSliders(key) {
-  const cont = document.getElementById("sliders");
-  cont.innerHTML = "";
-  const params = LIAISONS[key].params;
-  if (!params.length) {
-    cont.innerHTML = "<p class='info'>Aucun degré de liberté.</p>";
-    return;
-  }
-  params.forEach(p => {
-    const row = document.createElement("div");
-    row.className = "slider-row";
-    row.innerHTML = `
-      <span>${p.label}</span>
-      <input type="range" id="sl-${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.value}">
-      <span id="val-${p.id}">${Number(p.value).toFixed(2)}</span>
-    `;
-    cont.appendChild(row);
-    document.getElementById(`sl-${p.id}`).oninput = e => {
-      const v = parseFloat(e.target.value);
-      paramValues[p.id] = v;
-      document.getElementById(`val-${p.id}`).textContent = v.toFixed(2);
-      applyParams(key);
-    };
-  });
-}
-
-function applyParams(key) {
-  if (!mobile) return;
-  const v = paramValues;
-
-  // Helper : rotations autour des axes FIXES
-  function setFixedRotations(rx = 0, ry = 0, rz = 0) {
-    const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), rx);
-    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), ry);
-    const qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rz);
-    mobile.quaternion.copy(qz).multiply(qy).multiply(qx);
-  }
-
-  if (key === "pivot") {
-    setFixedRotations(0, 0, v.rz || 0);
-  }
-  else if (key === "glissiere") {
-    mobile.position.y = v.tz || 0;
-  }
-  else if (key === "helicoidale") {
-    const t = v.hel || 0;
-    setFixedRotations(0, 0, t * 2.2);
-    mobile.position.y = t * 0.28;
-  }
-  else if (key === "pivotglissant") {
-    setFixedRotations(0, 0, v.rz || 0);
-    mobile.position.y = v.tz || 0;
-  }
-  else if (key === "spherique") {
-    setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
-  }
-  else if (key === "sphereplan") {
-    setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
-    mobile.position.x = v.tx || 0;
-    mobile.position.z = v.ty || 0;
-    mobile.position.y = 0.45;
-  }
-  else if (key === "spherecylindre") {
-    setFixedRotations(v.rx || 0, v.ry || 0, v.rz || 0);
-    mobile.position.y = v.tz || 0;
-  }
-else if (key === "cylindreplan") {
-  // 1. Orientation de base : cylindre allongé selon l'axe rouge (x)
-  const base = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(0, 0, 1),
-    Math.PI / 2
-  );
-
-  // 2. Rotation autour de l'axe de révolution LOCAL du cylindre
-  //    (l'axe Y original de CylinderGeometry)
-  const spin = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(0, 1, 0),          // ← axe local Y
-    v.ry || 0
-  );
-
-  // 3. Rotation autour de l'axe z FIXE (vert)
-  const rotZ = new THREE.Quaternion().setFromAxisAngle(
-    new THREE.Vector3(0, 1, 0),
-    v.rz || 0
-  );
-
-  // Ordre correct : rotZ * base * spin
-  mobile.quaternion.copy(rotZ).multiply(base).multiply(spin);
-
-  // Translations + contact
-  mobile.position.x = v.tx || 0;
-  mobile.position.z = v.tz || 0;
-  mobile.position.y = 0.32;
-}
-  else if (key === "appuiplan") {
-    setFixedRotations(0, 0, v.rz || 0);
-    mobile.position.x = v.tx || 0;
-    mobile.position.z = v.ty || 0;
-  }
-}
-
-initThree();
-initButtons();
-selectLiaison("pivot");
 </script>
 </body>
 </html>
