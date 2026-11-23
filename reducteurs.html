@@ -196,6 +196,12 @@ details.adv[open] summary{margin-bottom:8px}
   #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px var(--shadow);padding-bottom:env(safe-area-inset-bottom,0px)}
   .work{flex-direction:column;gap:8px}
 }
+/* illustrations du cours */
+.fig{margin:14px 0;max-width:100%}
+.fig .gwrap{background:var(--bg)}
+.fig figcaption{font-size:13px;line-height:1.5;color:var(--muted);margin:6px 2px 0}
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0;align-items:start}
+.figrow .fig{margin:0;min-width:0}
 @media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
 </style>
 <div id="app">
@@ -688,8 +694,8 @@ function buildEpi(svg, P, opt) {
   const aw = Math.max(10, Math.min(24, 0.45 * rP * sc));
   for (let j = 0; j < np; j++) {
     const ga = el('g', { transform: 'rotate(' + (360 * j / np) + ')' }, o.gPS);
-    el('rect', { class: 'arm', x: f1(-aw / 2), y: f1(-aw / 2), width: f1(a * sc + aw), height: f1(aw), rx: f1(aw / 2) }, ga);
-    if (P.fixed === 'PS') el('rect', { x: f1(-aw / 2), y: f1(-aw / 2), width: f1(a * sc + aw), height: f1(aw), rx: f1(aw / 2), fill: hat, stroke: 'none' }, ga);
+    const bd = beanD(a * sc, aw * 0.78, aw * 0.4); el('path', { class: 'arm', d: bd }, ga);
+    if (P.fixed === 'PS') el('path', { d: bd, fill: hat, stroke: 'none' }, ga);
     el('circle', { class: 'hub', cx: f1(a * sc), cy: 0, r: 3.6 }, ga);
   }
   el('circle', { class: 'hub', r: 5 }, o.gPS);
@@ -1221,11 +1227,325 @@ const ACT = {
   }
 };
 
+/* ---------- illustrations du cours ---------- */
+const FIGS = {};
+/* haricot du porte-satellites : deux lobes reliés par une taille plus étroite, longueur L entre les axes */
+function beanD(L, re, rm) {
+  const n = 16, f = v => v.toFixed(1), wd = t => rm + (re - rm) * Math.pow(Math.cos(Math.PI * t), 2);
+  let d = '';
+  for (let i = 0; i <= n; i++) { const t = i / n; d += (i ? 'L' : 'M') + f(L * t) + ' ' + f(-wd(t)); }
+  d += 'A' + f(re) + ' ' + f(re) + ' 0 0 1 ' + f(L) + ' ' + f(re);
+  for (let i = n - 1; i >= 0; i--) { const t = i / n; d += 'L' + f(L * t) + ' ' + f(wd(t)); }
+  return d + 'A' + f(re) + ' ' + f(re) + ' 0 0 1 0 ' + f(-re) + 'Z';
+}
+function mkSvg(vb, label) { return el('svg', { class: 'g', viewBox: vb, role: 'img', 'aria-label': label }); }
+function figEl(svg, cap, maxw) { return h('figure', { class: 'fig' }, h('div', { class: 'gwrap', style: maxw ? 'max-width:' + maxw + 'px' : null }, svg), h('figcaption', { html: cap })); }
+function figRow(list) { return h('div', { class: 'figrow' }, list); }
+function arrowMk(svg) {
+  const d = el('defs', {}, svg), id = 'am' + (++SVGN), m = el('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, d);
+  el('path', { d: 'M0 0L10 5L0 10Z', fill: 'var(--accent-ink)' }, m);
+  return 'url(#' + id + ')';
+}
+function dimH(svg, ar, x1, x2, y, label) {
+  el('line', { x1: x1.toFixed(1), x2: x2.toFixed(1), y1: y, y2: y, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: ((x1 + x2) / 2).toFixed(1), y: y - 5, style: 'font-size:11.5px' }, label);
+}
+function dimV(svg, ar, x, y1, y2, label, tx) {
+  el('line', { x1: x, x2: x, y1, y2, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: tx, y: (y1 + y2) / 2 + 4, style: 'font-size:11.5px;text-anchor:end' }, label);
+}
+function barEl(svg, x1, x2, y, cls, label, fill) {
+  const x = Math.min(x1, x2), w = Math.abs(x2 - x1), at = { class: 'rect ' + (cls || ''), x: x.toFixed(1), y, width: w.toFixed(1), height: 16 };
+  if (fill) at.style = 'fill:' + fill;
+  el('rect', at, svg);
+  svgTxt(svg, { class: 'gtxt', x: ((x1 + x2) / 2).toFixed(1), y: y + 12, style: 'font-size:11px' }, label);
+}
+/* une rangée de roues en prise (axes alignés horizontalement) */
+function gearRow(svg, zs, m, sc, x0, cy, th0, cls) {
+  let x = x0, th = th0; const out = [];
+  zs.forEach((z, i) => {
+    const r = m * z / 2;
+    if (i > 0) { x += m * zs[i - 1] / 2 * sc + r * sc; th = nextAngle(zs[i - 1], th, z); }
+    const g = el('g', { transform: 'translate(' + x.toFixed(1) + ',' + cy + ')' }, svg), rt = el('g', { transform: 'rotate(' + (th * DEG).toFixed(1) + ')' }, g);
+    el('path', { class: 'gear ' + cls[i], d: toothPath(z, (r + m) * sc, (r - 1.25 * m) * sc) }, rt);
+    el('circle', { class: 'pitch', r: (r * sc).toFixed(1) }, g);
+    el('circle', { class: 'hub', r: 6 }, g);
+    out.push({ x, r, th, z });
+  });
+  return out;
+}
+/* vue de face d'un train épicycloïdal, en position de montage (θ = 0) */
+function epiFig(P, opt, title) {
+  const svg = mkSvg('0 0 400 400', 'Vue de face du train épicycloïdal');
+  const o = buildEpi(svg, P, opt || {}), an = epiAngles(P.zs, P.zp, P.zc, P.np, 0, 0);
+  o.pose(0, an.C, 0, an.P);
+  if (title) svgTxt(svg, { class: 'gtxt', x: 200, y: 17, style: 'font-size:14px' + (opt && opt.tcol ? ';fill:' + opt.tcol : '') }, title);
+  return { svg, o, sc: o.sc, a: o.a, an };
+}
+function epiLegend() {
+  return h('div', { class: 'leg' }, h('span', { html: '<i class="sw" style="background:var(--g-s)"></i>planétaire intérieur S' }), h('span', { html: '<i class="sw" style="background:var(--g-p)"></i>satellites' }), h('span', { html: '<i class="sw" style="background:var(--g-c)"></i>couronne C' }), h('span', { html: '<i class="sw" style="background:var(--g-ps)"></i>porte-satellites PS (haricot)' }), h('span', null, 'hachures : pièce fixée au bâti'));
+}
+
+/* 1. moteur, réducteur, charge */
+FIGS.reducteur = () => {
+  const svg = mkSvg('0 0 720 190', 'Moteur, réducteur et sortie'), ar = arrowMk(svg);
+  const box = (x, cls, t1, t2, l1, l2, l3) => {
+    el('rect', { class: 'rect ' + cls, x, y: 40, width: 150, height: 56, rx: 8 }, svg);
+    svgTxt(svg, { class: 'gtxt', x: x + 75, y: 64, style: 'font-size:14px' }, t1);
+    svgTxt(svg, { class: 'gtxt sm', x: x + 75, y: 82 }, t2);
+    [l1, l2, l3].forEach((t, i) => { if (t) svgTxt(svg, { class: 'gtxt', x: x + 75, y: 124 + 18 * i, style: 'font-size:12px' }, t); });
+  };
+  box(20, 'in', 'Moteur', 'tourne vite', 'ω_e = 1000 tr/min', 'C_e = 2 N·m', 'P = 209 W');
+  box(285, 'm', 'Réducteur', 'k = 1/4 (η = 1)', 'ω_s = k·ω_e', 'C_s = C_e/|k|', '');
+  box(550, 'out', 'Sortie', 'tourne lentement', 'ω_s = 250 tr/min', 'C_s = 8 N·m', 'P = 209 W');
+  el('line', { x1: 170, x2: 285, y1: 68, y2: 68, stroke: 'var(--node-stroke)', 'stroke-width': 2, 'marker-end': ar }, svg);
+  el('line', { x1: 435, x2: 550, y1: 68, y2: 68, stroke: 'var(--node-stroke)', 'stroke-width': 6, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt sm', x: 227, y: 54 }, 'vite, C faible');
+  svgTxt(svg, { class: 'gtxt sm', x: 492, y: 54 }, 'lent, C fort');
+  svgTxt(svg, { class: 'gtxt', x: 360, y: 20, style: 'font-size:13px;fill:var(--accent-ink)' }, 'La puissance P = C·ω est la même à l’entrée et à la sortie');
+  return figEl(svg, 'Le réducteur divise la vitesse par 4 et multiplie le couple par 4 : le trait épais symbolise le couple élevé en sortie.', 720);
+};
+
+/* 2. module, diamètres, entraxe */
+FIGS.module = () => {
+  const svg = mkSvg('0 0 720 335', 'Deux roues dentées en prise'), ar = arrowMk(svg), m = 2, z1 = 16, z2 = 24, sc = 5;
+  const r1 = m * z1 / 2 * sc, r2 = m * z2 / 2 * sc, c1 = 130, c2 = c1 + r1 + r2, cy = 150, th2 = nextAngle(z1, 0, z2), xc = c1 + r1;
+  [[c1, z1, 0, 's'], [c2, z2, th2, 'c']].forEach(q => {
+    const g = el('g', { transform: 'translate(' + q[0] + ',' + cy + ')' }, svg), rt = el('g', { transform: 'rotate(' + (q[2] * DEG).toFixed(1) + ')' }, g), r = m * q[1] / 2 * sc;
+    el('path', { class: 'gear ' + q[3], d: toothPath(q[1], r + m * sc, r - 1.25 * m * sc) }, rt);
+    el('circle', { class: 'pitch', r }, g); el('circle', { class: 'hub', r: 8 }, g);
+  });
+  svgTxt(svg, { class: 'dirtxt', x: c1, y: 134 }, 'ω_1 ↻');
+  svgTxt(svg, { class: 'dirtxt', x: c2, y: 134 }, 'ω_2 ↺');
+  el('line', { x1: c1, x2: c2, y1: cy, y2: cy, stroke: 'var(--bad)', 'stroke-width': 1.2, 'stroke-dasharray': '6 3' }, svg);
+  el('circle', { class: 'mk', cx: xc, cy, r: 4 }, svg);
+  svgTxt(svg, { class: 'gtxt', x: xc + 10, y: cy - 8 }, 'I');
+  el('line', { x1: xc, x2: xc, y1: cy, y2: cy + 48, stroke: 'var(--bad)', 'stroke-width': 2.4, 'marker-end': 'url(#' + ar.slice(5, -1) + ')' }, svg);
+  svgTxt(svg, { class: 'gtxt', x: xc + 14, y: cy + 52, style: 'fill:var(--bad)' }, 'V');
+  dimH(svg, ar, c1 - r1, c1 + r1, 262, 'D_1 = m·Z_1 = 32 mm');
+  dimH(svg, ar, c1, c2, 292, 'a = (D_1 + D_2)/2 = 40 mm');
+  dimH(svg, ar, c2 - r2, c2 + r2, 322, 'D_2 = m·Z_2 = 48 mm');
+  [c1, c2].forEach(x => el('line', { class: 'plot-grid', x1: x, x2: x, y1: cy, y2: 292 }, svg));
+  const tx = ['Même module m = 2 mm', 'D_1 = m·Z_1 = 2 × 16 = 32 mm', 'D_2 = m·Z_2 = 2 × 24 = 48 mm', 'a = (32 + 48)/2 = 40 mm', 'Point de contact I : même vitesse V', 'V = ω_1·R_1 = |ω_2|·R_2', '|ω_2|/ω_1 = R_1/R_2 = Z_1/Z_2 = 2/3'];
+  tx.forEach((t, i) => svgTxt(svg, { class: 'gtxt l', x: 478, y: 50 + 30 * i, style: 'font-weight:500' + (i === 4 || i === 5 ? ';fill:var(--bad)' : '') }, t));
+  return figEl(svg, 'Deux roues de même module m. Les cercles en pointillés (cercles primitifs) roulent sans glisser l’un sur l’autre au point I : la vitesse de I est la même sur les deux roues.', 720);
+};
+
+/* 3. train de trois roues et signes */
+FIGS.rapport = () => {
+  const svg = mkSvg('0 0 720 310', 'Train de trois roues en ligne'), m = 2, sc = 3, zs = [20, 30, 40], ws = gearRow(svg, zs, m, sc, 100, 150, 0, ['in', 'm', 'out']), dir = ['↻', '↺', '↻'];
+  ws.forEach((w, i) => {
+    svgTxt(svg, { class: 'dirtxt', x: w.x, y: 138 }, 'ω_' + (i + 1) + ' ' + dir[i]);
+    svgTxt(svg, { class: 'gtxt', x: w.x, y: 176 }, 'Z_' + (i + 1) + ' = ' + zs[i]);
+  });
+  for (let i = 0; i < 2; i++) {
+    const xc = ws[i].x + ws[i].r * sc;
+    el('line', { class: 'plot-grid', x1: xc, x2: xc, y1: 150, y2: 282 }, svg);
+    el('circle', { class: 'mk', cx: xc, cy: 150, r: 4 }, svg);
+    svgTxt(svg, { class: 'gtxt', x: xc, y: 298 }, 'contact extérieur n°' + (i + 1));
+  }
+  svgTxt(svg, { class: 'gtxt l', x: 610, y: 120, style: 'font-weight:500' }, 'n = 2');
+  svgTxt(svg, { class: 'gtxt l', x: 610, y: 142, style: 'font-weight:500' }, 'k = +20/40');
+  svgTxt(svg, { class: 'gtxt l', x: 610, y: 164, style: 'font-weight:500' }, 'k = +1/2');
+  return figEl(svg, 'Chaque contact extérieur inverse le sens de rotation : 1 tourne dans le sens horaire, 2 dans le sens antihoraire, 3 de nouveau dans le sens horaire. Avec n = 2, k est positif ; la roue 2 (intermédiaire) n’intervient que par son signe.', 720);
+};
+
+/* 4. train simple : roue unique et solide à deux roues */
+FIGS.simple = () => figRow([
+  h('figure', { class: 'fig' }, schemaSVG({ shafts: 3, wheels: [{ sh: 0, lev: 0, z: 20, lab: 'Z1' }, { sh: 1, lev: 0, z: 30, lab: 'Z2' }, { sh: 2, lev: 0, z: 40, lab: 'Z3' }], links: [[0, 1], [1, 2]], inSh: 0, outSh: 2 }),
+    h('figcaption', { html: '<b>Roue unique</b> sur le solide 2 : roue intermédiaire. k = (−1)<sup>2</sup>·Z<sub>1</sub>/Z<sub>3</sub> = +1/2, Z<sub>2</sub> disparaît.' })),
+  h('figure', { class: 'fig' }, schemaSVG({ shafts: 3, wheels: [{ sh: 0, lev: 0, z: 18, lab: 'Z1' }, { sh: 1, lev: 0, z: 36, lab: 'Z2' }, { sh: 1, lev: 1, z: 18, lab: 'Z2′' }, { sh: 2, lev: 1, z: 36, lab: 'Z3' }], links: [[0, 1], [2, 3]], inSh: 0, outSh: 2 }),
+    h('figcaption', { html: '<b>Solide 2 à deux roues</b> Z<sub>2</sub> et Z<sub>2</sub>′ (même vitesse). k = (−1)<sup>2</sup>·(Z<sub>1</sub>·Z<sub>2</sub>′)/(Z<sub>2</sub>·Z<sub>3</sub>) = +1/4 : chaque étage réduit.' }))
+]);
+
+/* 5. constituants du train épicycloïdal */
+FIGS.epiParts = () => {
+  const P = { m: 2, zs: 20, zp: 20, zc: 60, np: 4, fixed: null }, f = epiFig(P, { labels: true }), svg = f.svg, sc = f.sc;
+  const xp = 200 + f.a * sc;
+  svgTxt(svg, { class: 'gtxt', x: xp, y: 200 - (P.m * P.zp / 2 + P.m) * sc - 6 }, 'satellite P');
+  svgTxt(svg, { class: 'gtxt', x: 200, y: 392, style: 'font-size:12px' }, 'S, C et PS tournent autour du même axe');
+  svg.setAttribute('viewBox', '0 0 400 405');
+  const tv = el('svg', { class: 'g', role: 'img', 'aria-label': 'Vue de dessus du train épicycloïdal' }), ot = buildEpiTop(tv, P);
+  ot.pose(0, f.an.C, 0, f.an.P);
+  const wrap = h('div', null, figRow([
+    figEl(svg, '<b>Vue de face.</b> Le planétaire intérieur S est au centre, la couronne C (denture intérieure) à l’extérieur, les satellites P engrènent avec les deux. Le porte-satellites PS relie les axes des satellites.', 380),
+    figEl(tv, '<b>Vue de dessus</b> (couronne en coupe). Les trois pièces S, C et PS tournent sur le même axe vertical ; les satellites tournent sur leur propre axe.', 420)]), epiLegend());
+  return wrap;
+};
+
+/* 6a. coaxialité : somme des rayons et des diamètres */
+FIGS.coax = () => {
+  const P = { m: 2, zs: 20, zp: 20, zc: 60, np: 4, fixed: null }, f = epiFig(P, { labels: true }), svg = f.svg, sc = f.sc, ar = arrowMk(svg), m = P.m;
+  const rS = m * P.zs / 2 * sc, rP = m * P.zp / 2 * sc, rC = m * P.zc / 2 * sc, cx = 200;
+  svg.setAttribute('viewBox', '0 0 400 472');
+  [cx - rC, cx - rS, cx, cx + rS, cx + rC].forEach(x => el('line', { class: 'plot-grid', x1: x.toFixed(1), x2: x.toFixed(1), y1: 200, y2: 462 }, svg));
+  el('line', { x1: (cx - rC).toFixed(1), x2: (cx + rC).toFixed(1), y1: 200, y2: 200, stroke: 'var(--bad)', 'stroke-width': 1.4, 'stroke-dasharray': '7 3' }, svg);
+  barEl(svg, cx, cx + rC, 384, 'c', 'R_C = R_S + 2·R_P');
+  barEl(svg, cx, cx + rS, 402, 's', 'R_S'); barEl(svg, cx + rS, cx + rC, 402, 'p', '2·R_P = D_P');
+  barEl(svg, cx - rC, cx + rC, 428, 'c', 'D_C = D_P + D_S + D_P');
+  barEl(svg, cx - rC, cx - rS, 446, 'p', 'D_P'); barEl(svg, cx - rS, cx + rS, 446, 's', 'D_S'); barEl(svg, cx + rS, cx + rC, 446, 'p', 'D_P');
+  return figEl(svg, '<b>Coaxialité.</b> Sur la droite rouge, de la couronne vers le centre, on rencontre un diamètre de satellite D<sub>P</sub>, puis le planétaire intérieur. Donc R<sub>C</sub> = R<sub>S</sub> + 2·R<sub>P</sub> (rayons : 60 = 20 + 2 × 20 mm) et D<sub>C</sub> = D<sub>S</sub> + 2·D<sub>P</sub> (diamètres : 120 = 40 + 40 + 40 mm), soit Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> = 20 + 40 = 60.', 440);
+};
+
+/* 6b. haricot du porte-satellites */
+FIGS.haricot = () => {
+  const P = { m: 2, zs: 20, zp: 20, zc: 60, np: 1, fixed: null }, f = epiFig(P, { labels: true }), svg = f.svg, sc = f.sc, ar = arrowMk(svg), m = P.m;
+  const rS = m * P.zs / 2 * sc, rP = m * P.zp / 2 * sc, xS = 200 + rS, xP = 200 + f.a * sc;
+  svg.setAttribute('viewBox', '0 0 400 428');
+  svgTxt(svg, { class: 'gtxt', x: xP, y: 200 - rP - m * sc - 6 }, 'satellite P');
+  el('line', { x1: 205, y1: 306, x2: 232, y2: 213, stroke: 'var(--muted)', 'stroke-width': 1 }, svg);
+  el('circle', { cx: 232, cy: 213, r: 2.5, fill: 'var(--muted)' }, svg);
+  svgTxt(svg, { class: 'gtxt', x: 200, y: 322 }, 'haricot (PS)');
+  [200, xS, xP].forEach(x => el('line', { class: 'plot-grid', x1: x.toFixed(1), x2: x.toFixed(1), y1: 200, y2: 422 }, svg));
+  barEl(svg, 200, xS, 384, 's', 'R_S'); barEl(svg, xS, xP, 384, 'p', 'R_P');
+  barEl(svg, 200, xP, 404, '', 'a = R_S + R_P', 'var(--g-ps)');
+  const tv = el('svg', { class: 'g', role: 'img', 'aria-label': 'Vue de dessus du train épicycloïdal, porte-satellites en haricot' }), ot = buildEpiTop(tv, P);
+  ot.pose(0, f.an.C, 0, f.an.P);
+  return figRow([
+    figEl(svg, '<b>Le haricot.</b> Le porte-satellites a la forme d’un haricot : un lobe sur l’axe central, un lobe sur l’axe du satellite, une taille étroite entre les deux pour ne pas toucher les dents. Sa longueur est l’entraxe a = R<sub>S</sub> + R<sub>P</sub> = (D<sub>S</sub> + D<sub>P</sub>)/2 = 40 mm.', 400),
+    figEl(tv, '<b>Dans un schéma cinématique</b> (vue de dessus), le haricot relie l’axe central à l’axe du satellite : sa longueur est a = R<sub>S</sub> + R<sub>P</sub>.', 420)]);
+};
+
+/* 6c. assemblage : (Zs + Zc)/N entier */
+FIGS.assemblage = () => {
+  const mk = np => {
+    const P = { m: 2, zs: 20, zp: 20, zc: 60, np, fixed: null }, s = P.zs + P.zc, ok = s % np === 0;
+    const f = epiFig(P, { tcol: ok ? 'var(--ok)' : 'var(--bad)' }, 'N = ' + np + ' : (Z_S + Z_C)/N = ' + s + '/' + np + ' = ' + fx(s / np, 2) + (ok ? '  ✓' : '  ✗'));
+    if (!ok) for (let j = 1; j < np; j++) if ((j * s / np) % 1 > 1e-9) {
+      const psi = TAU * j / np, rC = P.m * P.zc / 2 * f.sc;
+      el('circle', { cx: (200 + rC * Math.cos(psi)).toFixed(1), cy: (200 + rC * Math.sin(psi)).toFixed(1), r: 15, fill: 'none', stroke: 'var(--bad)', 'stroke-width': 2.6 }, f.svg);
+    }
+    return f.svg;
+  };
+  return figRow([
+    figEl(mk(4), '<b>Montage possible.</b> 80/4 = 20 est entier : les 4 satellites sont en prise avec S et C en même temps.', 330),
+    figEl(mk(3), '<b>Montage impossible.</b> 80/3 n’est pas entier : une fois le premier satellite engagé, les suivants arrivent sur des dents (cercles rouges) au lieu de tomber entre les dents.', 330)]);
+};
+
+/* 6d. non-interférence des satellites */
+FIGS.interf = () => {
+  const mk = (zs, zp, np) => {
+    const P = { m: 2, zs, zp, zc: zs + 2 * zp, np, fixed: null }, a = P.m * (zs + zp) / 2, d = 2 * a * Math.sin(Math.PI / np), tip = P.m * (zp + 2), ok = d > tip, col = ok ? 'var(--ok)' : 'var(--bad)';
+    const f = epiFig(P, {}), svg = f.svg, sc = f.sc;
+    svg.setAttribute('viewBox', '0 0 400 440');
+    const pts = [0, 1].map(j => { const psi = TAU * j / np; return [200 + a * sc * Math.cos(psi), 200 + a * sc * Math.sin(psi)]; });
+    pts.forEach(p => el('circle', { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: (tip / 2 * sc).toFixed(1), fill: 'none', stroke: col, 'stroke-width': 2, 'stroke-dasharray': '5 3' }, svg));
+    el('line', { x1: pts[0][0].toFixed(1), y1: pts[0][1].toFixed(1), x2: pts[1][0].toFixed(1), y2: pts[1][1].toFixed(1), stroke: col, 'stroke-width': 2.4 }, svg);
+    svgTxt(svg, { class: 'gtxt', x: 200, y: 396, style: 'font-size:12px' }, 'N = ' + np + ', Z_S = ' + zs + ', Z_P = ' + zp + ', m = 2 mm');
+    svgTxt(svg, { class: 'gtxt', x: 200, y: 414, style: 'font-size:12px;fill:' + col }, 'd = 2·a·sin(π/N) = ' + fx(d, 1) + ' mm  ' + (ok ? '>' : '<') + '  m·(Z_P + 2) = ' + fx(tip, 0) + ' mm');
+    svgTxt(svg, { class: 'gtxt', x: 200, y: 432, style: 'font-size:13px;fill:' + col }, ok ? 'les satellites ne se touchent pas ✓' : 'les satellites se touchent ✗');
+    return svg;
+  };
+  return figRow([
+    figEl(mk(20, 20, 4), '<b>Sans interférence.</b> La distance d entre deux axes voisins (trait plein) est plus grande que le diamètre de tête des satellites (cercles en pointillés).', 330),
+    figEl(mk(12, 30, 6), '<b>Avec interférence.</b> Les satellites sont grands et nombreux : (Z<sub>S</sub> + Z<sub>C</sub>)/N = 84/6 = 14 est entier, mais les cercles de tête se recouvrent. Il faut moins de satellites ou des satellites plus petits.', 330)]);
+};
+
+/* 7. Willis : repère du bâti / du porte-satellites, puis les quatre cas usuels */
+FIGS.willisPrinciple = () => {
+  const P = { m: 2, zs: 20, zp: 20, zc: 60, np: 4 };
+  const a = epiFig(Object.assign({ fixed: null }, P), {}, 'Repère du bâti'), b = epiFig(Object.assign({ fixed: 'PS' }, P), {}, 'Repère du porte-satellites');
+  return figRow([
+    figEl(a.svg, 'Vu du bâti, S, C et PS ont trois vitesses ω<sub>S/0</sub>, ω<sub>C/0</sub>, ω<sub>PS/0</sub> et les satellites orbitent.', 320),
+    figEl(b.svg, 'Vu du porte-satellites, PS est immobile (hachuré) : le train est un train simple et (ω<sub>C</sub> − ω<sub>PS</sub>)/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>.', 320)]);
+};
+FIGS.willis = () => {
+  const cases = [
+    ['C', 'S', 'PS', 'Couronne fixe', 'k = Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 20/80 = 1/4'],
+    ['S', 'C', 'PS', 'Planétaire intérieur fixe', 'k = Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>) = 60/80 = 3/4'],
+    ['PS', 'S', 'C', 'Porte-satellites fixe', 'k = −Z<sub>S</sub>/Z<sub>C</sub> = −20/60 = −1/3'],
+    ['S', 'PS', 'C', 'Planétaire intérieur fixe', 'k = (Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub> = 80/60 = 4/3']];
+  return figRow(cases.map(c => {
+    const f = epiFig({ m: 2, zs: 20, zp: 20, zc: 60, np: 4, fixed: c[0] }, {}, c[3]);
+    f.svg.setAttribute('viewBox', '0 0 400 408');
+    svgTxt(f.svg, { class: 'gtxt', x: 200, y: 394, style: 'font-size:13px;fill:var(--accent-ink)' }, 'Entrée : ' + c[1] + '   ·   Sortie : ' + c[2]);
+    return figEl(f.svg, c[4], 300);
+  }));
+};
+
+/* 8. encombrement : train simple et train épicycloïdal de même rapport */
+FIGS.avantage = () => {
+  const svg = mkSvg('0 0 720 345', 'Train simple et train épicycloïdal de même rapport'), ar = arrowMk(svg), m = 2, sc = 1.644, cy = 165;
+  const r1 = 20 * sc, r2 = 80 * sc, x1 = 48, x2 = x1 + r1 + r2, th2 = nextAngle(20, 0, 80);
+  [[x1, 20, 0, 's', r1], [x2, 80, th2, 'c', r2]].forEach(q => {
+    const g = el('g', { transform: 'translate(' + q[0].toFixed(1) + ',' + cy + ')' }, svg), rt = el('g', { transform: 'rotate(' + (q[2] * DEG).toFixed(1) + ')' }, g);
+    el('path', { class: 'gear ' + q[3], d: toothPath(q[1], q[4] + m * sc, q[4] - 1.25 * m * sc) }, rt);
+    el('circle', { class: 'pitch', r: q[4].toFixed(1) }, g); el('circle', { class: 'hub', r: 6 }, g);
+  });
+  const ns = el('svg', { x: 400, y: cy - 130, width: 260, height: 260 }, svg), P = { m, zs: 20, zp: 20, zc: 60, np: 4, fixed: null };
+  const o = buildEpi(ns, P, {}), an = epiAngles(20, 20, 60, 4, 0, 0);
+  o.pose(0, an.C, 0, an.P);
+  svgTxt(svg, { class: 'gtxt', x: 180, y: 18, style: 'font-size:13px' }, 'Train simple : |k| = 1/4');
+  svgTxt(svg, { class: 'gtxt', x: 530, y: 18, style: 'font-size:13px' }, 'Épicycloïdal : |k| = 1/4');
+  dimH(svg, ar, x1 - r1, x2 + r2, 322, 'D_1 + D_2 = 200 mm');
+  dimH(svg, ar, 530 - 60 * sc, 530 + 60 * sc, 322, 'D_C = 120 mm');
+  svgTxt(svg, { class: 'gtxt', x: 530, y: 340, style: 'fill:var(--ok)' }, '40 % d’encombrement en moins');
+  return figEl(svg, 'Mêmes échelles, même module m = 2 mm, même rapport 1/4. Train simple : Z = 20 et Z = 80. Épicycloïdal : Z<sub>S</sub> = 20, Z<sub>P</sub> = 20, Z<sub>C</sub> = 60. Le second est plus compact et son entrée et sa sortie sont coaxiales.', 720);
+};
+
+/* 9. profil trapézoïdal */
+FIGS.trapCurves = () => {
+  const P = profile(3, 1, 2, 2), svg = mkSvg('0 0 720 340', 'Accélération, vitesse et position'), L = 70, Wd = 630, TT = P.T * 1.04, X = t => L + t / TT * Wd;
+  const rows = [{ y: 34, h: 70, lo: -2.4, hi: 2.4, t: 'a(t) en m/s²' }, { y: 144, h: 70, lo: 0, hi: 1.25, t: 'v(t) en m/s' }, { y: 254, h: 58, lo: 0, hi: 3.3, t: 'x(t) en m' }];
+  const Y = (r, v) => r.y + r.h - (v - r.lo) / (r.hi - r.lo) * r.h;
+  [P.ta, P.ta + P.tc, P.T].forEach(t => el('line', { class: 'plot-grid', x1: X(t).toFixed(1), x2: X(t).toFixed(1), y1: 26, y2: 314 }, svg));
+  rows.forEach(r => {
+    el('line', { class: 'plot-ax', x1: L, x2: L + Wd, y1: Y(r, Math.max(r.lo, 0)).toFixed(1), y2: Y(r, Math.max(r.lo, 0)).toFixed(1) }, svg);
+    el('line', { class: 'plot-ax', x1: L, x2: L, y1: r.y, y2: r.y + r.h }, svg);
+    el('text', { class: 'plot-ttl', x: L + Wd, y: r.y - 8, 'text-anchor': 'end' }, svg).textContent = r.t;
+  });
+  const path = (r, pts) => pts.map((q, i) => (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(r, q[1]).toFixed(1)).join('');
+  el('path', { class: 'curve', d: path(rows[0], [[0, 0], [0, 2], [P.ta, 2], [P.ta, 0], [P.ta + P.tc, 0], [P.ta + P.tc, -2], [P.T, -2], [P.T, 0]]) }, svg);
+  const dv = path(rows[1], [[0, 0], [P.ta, 1], [P.ta + P.tc, 1], [P.T, 0]]);
+  el('path', { class: 'curve fill', d: dv + 'Z' }, svg); el('path', { class: 'curve', d: dv }, svg);
+  let dx = ''; for (let i = 0; i <= 120; i++) { const t = P.T * i / 120; dx += (i ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(rows[2], P.x(t)).toFixed(1); }
+  el('path', { class: 'curve', d: dx }, svg);
+  svgTxt(svg, { class: 'gtxt sm', x: X(P.ta / 2), y: Y(rows[0], 2) - 5 }, 'a');
+  svgTxt(svg, { class: 'gtxt sm', x: X(P.T - P.td / 2), y: Y(rows[0], -2) + 14 }, '−d');
+  svgTxt(svg, { class: 'gtxt sm', x: X(P.ta + P.tc / 2), y: Y(rows[1], 1) - 6 }, 'V_max');
+  svgTxt(svg, { class: 'gtxt sm', x: X(P.T), y: Y(rows[2], 3) - 6, style: 'text-anchor:end' }, 'D');
+  [[0, '0'], [P.ta, 't_a'], [P.ta + P.tc, 't_a + t_c'], [P.T, 'T']].forEach(q => svgTxt(svg, { class: 'plot-lbl', x: X(q[0]).toFixed(1), y: 330, style: 'text-anchor:' + (q[0] === 0 ? 'start' : 'middle') }, q[1]));
+  return figEl(svg, 'Les trois courbes d’un même mouvement (D = 3 m, V<sub>max</sub> = 1 m/s, a = d = 2 m/s²). L’accélération est constante par morceaux, la vitesse est un trapèze, la position est une parabole, une droite, puis une parabole.', 720);
+};
+FIGS.trapDecomp = () => {
+  const svg = mkSvg('0 0 720 250', 'Décomposition du trapèze en trois aires'), ar = arrowMk(svg), x0 = 80, x1 = 170, x2 = 500, x3 = 630, yb = 170, yt = 40;
+  const poly = (pts, fill) => el('polygon', { points: pts.map(p => p.join(',')).join(' '), fill, stroke: 'var(--node-stroke)', 'stroke-width': 1.2 }, svg);
+  poly([[x0, yb], [x1, yt], [x1, yb]], 'var(--g-s)'); poly([[x1, yb], [x1, yt], [x2, yt], [x2, yb]], 'var(--g-c)'); poly([[x2, yb], [x2, yt], [x3, yb]], 'var(--g-p)');
+  el('line', { class: 'plot-ax', x1: x0, x2: 680, y1: yb, y2: yb }, svg); el('line', { class: 'plot-ax', x1: x0, x2: x0, y1: 14, y2: yb }, svg);
+  el('text', { class: 'plot-ttl', x: x0 + 4, y: 14 }, svg).textContent = 'v(t)';
+  svgTxt(svg, { class: 'gtxt', x: 148, y: 140 }, 'A_1');
+  svgTxt(svg, { class: 'gtxt', x: (x1 + x2) / 2, y: 110 }, 'A_2 = V_max·t_c');
+  svgTxt(svg, { class: 'gtxt', x: 540, y: 140 }, 'A_3');
+  svgTxt(svg, { class: 'gtxt', x: 360, y: 28, style: 'font-size:12px;fill:var(--accent-ink)' }, 'D = A_1 + A_2 + A_3 = V_max·t_a/2 + V_max·t_c + V_max·t_d/2');
+  dimV(svg, ar, 64, yt, yb, 'V_max', 56);
+  dimH(svg, ar, x0, x1, 192, 't_a'); dimH(svg, ar, x1, x2, 192, 't_c'); dimH(svg, ar, x2, x3, 192, 't_d');
+  dimH(svg, ar, x0, x3, 226, 'T = t_a + t_c + t_d');
+  return figEl(svg, 'La distance parcourue est l’aire sous la courbe de vitesse : deux triangles (accélération, décélération) et un rectangle (vitesse constante). Ici t<sub>d</sub> &gt; t<sub>a</sub> (d &lt; a).', 720);
+};
+FIGS.trapTri = () => {
+  const svg = mkSvg('0 0 720 250', 'Profil triangulaire'), ar = arrowMk(svg), x0 = 80, xm = 330, x1 = 580, yb = 170, yt = 40;
+  el('polygon', { points: [[x0, yb], [xm, yt], [x1, yb]].map(p => p.join(',')).join(' '), fill: 'var(--g-p)', stroke: 'var(--node-stroke)', 'stroke-width': 1.2 }, svg);
+  el('line', { class: 'plot-ax', x1: x0, x2: 650, y1: yb, y2: yb }, svg); el('line', { class: 'plot-ax', x1: x0, x2: x0, y1: 14, y2: yb }, svg);
+  el('text', { class: 'plot-ttl', x: x0 + 4, y: 14 }, svg).textContent = 'v(t)';
+  svgTxt(svg, { class: 'gtxt', x: 330, y: 135 }, 'D = V_pic·T/2');
+  svgTxt(svg, { class: 'gtxt', x: 330, y: 24, style: 'font-size:12px;fill:var(--accent-ink)' }, 'Profil triangulaire : D < D_ad, V_max n’est pas atteinte (t_c = 0)');
+  dimV(svg, ar, 64, yt, yb, 'V_pic', 56);
+  dimH(svg, ar, x0, xm, 192, 't_a'); dimH(svg, ar, xm, x1, 192, 't_d'); dimH(svg, ar, x0, x1, 226, 'T = t_a + t_d');
+  return figEl(svg, 'Si la distance est trop courte, la vitesse monte jusqu’à V<sub>pic</sub> &lt; V<sub>max</sub> puis redescend aussitôt. Avec a = d : V<sub>pic</sub> = √(a·D) et T = 2·√(D/a).', 720);
+};
+function hydrateFigs(root) {
+  root.querySelectorAll('[data-fig]').forEach(ph => {
+    const f = FIGS[ph.getAttribute('data-fig')];
+    if (!f) { ph.remove(); return; }
+    try { ph.replaceWith(f()); } catch (e) { console.error('figure ' + ph.getAttribute('data-fig'), e); ph.remove(); }
+  });
+}
+
 /* ---------- cours ---------- */
 const COURSE = [];
 COURSE.push({ id: 'reducteur', t: 'À quoi sert un réducteur ?', h: `
 <p>Un moteur électrique tourne vite (de 1 000 à 6 000 tr/min) mais fournit un couple faible. La plupart des mécanismes ont besoin du contraire : une vitesse plus lente et un couple plus élevé. Le réducteur de vitesse fait cette adaptation.</p>
-<h3>La puissance se conserve</h3>
+<div class="fig" data-fig="reducteur"></div><h3>La puissance se conserve</h3>
 <div class="formula">P = C·ω &nbsp;;&nbsp; sans pertes : C<sub>e</sub>·ω<sub>e</sub> = C<sub>s</sub>·ω<sub>s</sub> &nbsp;⇒&nbsp; C<sub>s</sub> = C<sub>e</sub>·ω<sub>e</sub>/ω<sub>s</sub> = C<sub>e</sub>/|k|</div>
 <p>Avec des pertes, on introduit le rendement η : C<sub>s</sub>·ω<sub>s</sub> = η·C<sub>e</sub>·ω<sub>e</sub>. Le couple de sortie est alors un peu plus faible.</p>
 <table class="ctable"><tr><th>Réducteur 1/4</th><th>Entrée</th><th>Sortie (η = 1)</th></tr><tr><td>Vitesse</td><td>1 000 tr/min</td><td>250 tr/min</td></tr><tr><td>Couple</td><td>2 N·m</td><td>8 N·m</td></tr><tr><td>Puissance</td><td>209 W</td><td>209 W</td></tr></table>
@@ -1234,14 +1554,14 @@ COURSE.push({ id: 'reducteur', t: 'À quoi sert un réducteur ?', h: `
 COURSE.push({ id: 'module', t: 'Module et diamètre : D = m·Z', h: `
 <p>Une roue dentée est décrite par son nombre de dents <b>Z</b> et son <b>module</b> <b>m</b> (en mm), qui fixe la taille des dents. Le diamètre primitif D est le diamètre du cercle sur lequel deux roues « roulent sans glisser » l’une sur l’autre.</p>
 <div class="formula">D = m·Z &nbsp;&nbsp; (R = D/2 = m·Z/2) &nbsp;&nbsp; ; pas p = π·m</div>
-<ul><li>Deux roues qui engrènent ont <b>le même module</b>.</li><li>L’entraxe de deux roues en contact extérieur : a = (D<sub>1</sub> + D<sub>2</sub>)/2 = m·(Z<sub>1</sub> + Z<sub>2</sub>)/2.</li><li>Au point de contact, la vitesse est la même sur les deux roues : V = ω<sub>1</sub>·R<sub>1</sub> = |ω<sub>2</sub>|·R<sub>2</sub>.</li></ul>
+<div class="fig" data-fig="module"></div><ul><li>Deux roues qui engrènent ont <b>le même module</b>.</li><li>L’entraxe de deux roues en contact extérieur : a = (D<sub>1</sub> + D<sub>2</sub>)/2 = m·(Z<sub>1</sub> + Z<sub>2</sub>)/2.</li><li>Au point de contact, la vitesse est la même sur les deux roues : V = ω<sub>1</sub>·R<sub>1</sub> = |ω<sub>2</sub>|·R<sub>2</sub>.</li></ul>
 <table class="ctable"><tr><th>m (mm)</th><th>Z</th><th>D = m·Z (mm)</th></tr><tr><td>2</td><td>25</td><td>50</td></tr><tr><td>2</td><td>75</td><td>150</td></tr><tr><td>3</td><td>40</td><td>120</td></tr></table>
 <div class="retain"><b>À retenir.</b> D = m·Z. Comme ω<sub>1</sub>·R<sub>1</sub> = |ω<sub>2</sub>|·R<sub>2</sub>, le rapport des vitesses est le rapport inverse des rayons, des diamètres ou des nombres de dents.</div>` });
 COURSE.push({ id: 'rapport', t: 'Rapport de réduction d’un train', h: `
 <h3>Une paire de roues</h3>
 <div class="formula">ω<sub>2</sub>/ω<sub>1</sub> = ± R<sub>1</sub>/R<sub>2</sub> = ± D<sub>1</sub>/D<sub>2</sub> = ± Z<sub>1</sub>/Z<sub>2</sub></div>
 <p>Le signe est « − » pour un contact <b>extérieur</b> (les roues tournent en sens inverse) et « + » pour un contact <b>intérieur</b> (couronne). C’est le rapport de transmission de la paire.</p>
-<h3>Un train d’engrenages</h3>
+<div class="fig" data-fig="rapport"></div><h3>Un train d’engrenages</h3>
 <p>Le rapport de réduction du train est le produit des rapports de chaque paire :</p>
 <div class="formula">k = ω<sub>sortie</sub>/ω<sub>entrée</sub> = (−1)<sup>n</sup> × ∏ Z<sub>menantes</sub> / ∏ Z<sub>menées</sub></div>
 <p>où <b>n est le nombre de contacts extérieurs</b>. Un contact extérieur inverse le sens de rotation, donc le signe de k dit si l’entrée et la sortie tournent dans le même sens (k &gt; 0) ou en sens inverse (k &lt; 0).</p>
@@ -1255,23 +1575,23 @@ COURSE.push({ id: 'simple', t: 'Train simple : solides à une ou deux roues', h:
 <div class="formula">k = (−1)<sup>n</sup> × (produit des Z menantes)/(produit des Z menées)</div>
 <p>Avec des roues uniques, les nombres de dents intermédiaires se simplifient : k = (−1)<sup>N−1</sup> × Z<sub>1</sub>/Z<sub>N</sub>. Elles ne changent que le sens de rotation et servent à éloigner l’entrée de la sortie.</p>
 <p>Avec des solides à <b>deux roues</b>, rien ne se simplifie : chaque étage (paire Z<sub>menante</sub>/Z<sub>menée</sub>) multiplie le rapport. Deux étages de rapport 1/3 donnent 1/9 sans roue de plus de 3 fois le diamètre de la petite.</p>
-<h3>Les limites</h3>
+<div class="fig" data-fig="simple"></div><h3>Les limites</h3>
 <ul><li>Avec une seule paire, pour réduire beaucoup il faut une petite roue menante et une très grande roue menée : l’encombrement augmente vite (Z<sub>1</sub> = 10 et Z<sub>2</sub> = 80 donnent seulement |k| = 1/8).</li><li>Les solides à deux roues permettent de réduire par étages, mais ajoutent des arbres, des paliers et de la longueur. Pour aller plus loin à encombrement égal, on utilise un train épicycloïdal.</li></ul>
 <div class="retain"><b>À retenir.</b> Roue intermédiaire unique : elle inverse le sens, sans effet sur |k|. Solide à deux roues : les roues tournent à la même vitesse, et c’est ce qui permet de multiplier les rapports de plusieurs étages.</div>` });
 COURSE.push({ id: 'epi', t: 'Train épicycloïdal : constituants', h: `
 <p>Un train épicycloïdal est un train d’engrenages dont certains axes sont mobiles. Il comprend :</p>
 <ul><li>le <b>planétaire intérieur</b> (ou planétaire) S, au centre, à denture extérieure ;</li><li>la <b>couronne</b> C, à denture intérieure ;</li><li>des <b>satellites</b> qui engrènent à la fois avec S et avec C ;</li><li>le <b>porte-satellites</b> PS, qui porte les axes des satellites.</li></ul>
-<p>Le planétaire intérieur, la couronne et le porte-satellites tournent autour du <b>même axe</b>. Les satellites tournent sur leur propre axe et se déplacent autour de l’axe central.</p>
+<div class="fig" data-fig="epiParts"></div><p>Le planétaire intérieur, la couronne et le porte-satellites tournent autour du <b>même axe</b>. Les satellites tournent sur leur propre axe et se déplacent autour de l’axe central.</p>
 <p>Ce mécanisme a deux degrés de liberté : pour imposer un seul rapport de réduction, on <b>fixe une pièce au bâti</b> et l’on choisit l’entrée parmi les deux autres, la troisième est la sortie. Sinon, il faut imposer la vitesse de deux pièces (cas du différentiel).</p>
 <div class="retain"><b>À retenir.</b> Trois pièces coaxiales (S, C, PS) : une fixe, une en entrée, une en sortie. Les satellites ne sont jamais ni entrée ni sortie, ce sont des roues intermédiaires.</div>` });
 COURSE.push({ id: 'montage', t: 'Contraintes de montage', h: `
 <p>Pour qu’un train épicycloïdal soit réalisable, plusieurs conditions géométriques doivent être vérifiées.</p>
 <ol>
 <li><b>Coaxialité.</b> Les satellites engrènent à la fois avec le planétaire intérieur et avec la couronne, donc le rayon de la couronne est la somme du rayon du planétaire intérieur et du diamètre d’un satellite :
-<div class="formula">R<sub>C</sub> = R<sub>S</sub> + 2·R<sub>P</sub> &nbsp;⇔&nbsp; D<sub>C</sub> = D<sub>S</sub> + 2·D<sub>P</sub> &nbsp;⇔&nbsp; Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub></div></li>
-<li><b>Entraxe et porte-satellites.</b> L’axe d’un satellite est à la distance a = R<sub>S</sub> + R<sub>P</sub> de l’axe central. Dans un schéma cinématique, le porte-satellites se dessine en forme de <b>haricot</b> qui relie l’axe central à l’axe de chaque satellite.</li>
-<li><b>Assemblage.</b> Avec N satellites équirépartis, il faut que (Z<sub>S</sub> + Z<sub>C</sub>)/N soit un entier, sinon le dernier satellite ne peut pas s’engager entre les dents.</li>
-<li><b>Non-interférence.</b> Les satellites voisins ne doivent pas se toucher : 2·a·sin(π/N) &gt; m·(Z<sub>P</sub> + 2) (diamètre de tête d’un satellite).</li>
+<div class="formula">R<sub>C</sub> = R<sub>S</sub> + 2·R<sub>P</sub> &nbsp;⇔&nbsp; D<sub>C</sub> = D<sub>S</sub> + 2·D<sub>P</sub> &nbsp;⇔&nbsp; Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub></div><div class="fig" data-fig="coax"></div></li>
+<li><b>Entraxe et porte-satellites.</b> L’axe d’un satellite est à la distance a = R<sub>S</sub> + R<sub>P</sub> de l’axe central. Dans un schéma cinématique, le porte-satellites se dessine en forme de <b>haricot</b> qui relie l’axe central à l’axe de chaque satellite.<div class="fig" data-fig="haricot"></div></li>
+<li><b>Assemblage.</b> Avec N satellites équirépartis, il faut que (Z<sub>S</sub> + Z<sub>C</sub>)/N soit un entier, sinon le dernier satellite ne peut pas s’engager entre les dents.<div class="fig" data-fig="assemblage"></div></li>
+<li><b>Non-interférence.</b> Les satellites voisins ne doivent pas se toucher : 2·a·sin(π/N) &gt; m·(Z<sub>P</sub> + 2) (diamètre de tête d’un satellite).<div class="fig" data-fig="interf"></div></li>
 </ol>
 <table class="ctable"><tr><th>Z<sub>S</sub></th><th>Z<sub>P</sub></th><th>Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub></th><th>N possibles</th></tr><tr><td>20</td><td>20</td><td>60</td><td>2, 4, 5 (80/N entier)</td></tr><tr><td>24</td><td>18</td><td>60</td><td>2, 3, 4, 6 (84/N entier)</td></tr></table>
 <div class="retain"><b>À retenir.</b> Z<sub>C</sub> = Z<sub>S</sub> + 2·Z<sub>P</sub> (somme des rayons ou des diamètres), (Z<sub>S</sub> + Z<sub>C</sub>)/N entier, et porte-satellites en haricot de longueur a = R<sub>S</sub> + R<sub>P</sub>.</div>` });
@@ -1279,29 +1599,29 @@ COURSE.push({ id: 'willis', t: 'Formule de Willis', h: `
 <p>La formule de Willis relie les vitesses des trois pièces coaxiales, en utilisant le fait que, <b>dans le repère du porte-satellites</b>, le train se comporte comme un train simple.</p>
 <div class="formula">(ω<sub>C/0</sub> − ω<sub>PS/0</sub>) / (ω<sub>S/0</sub> − ω<sub>PS/0</sub>) = (−1)<sup>n</sup> × Z<sub>S</sub>/Z<sub>C</sub> = −Z<sub>S</sub>/Z<sub>C</sub></div>
 <p>Ici n = 1 : un contact extérieur (planétaire intérieur–satellite). Le satellite est une roue intermédiaire et le contact intérieur (satellite–couronne) ne compte pas dans n. Les vitesses sont mesurées par rapport au bâti (repère 0).</p>
-<h3>Les cas usuels</h3>
+<div class="fig" data-fig="willisPrinciple"></div><h3>Les cas usuels</h3>
 <table class="ctable"><tr><th>Pièce fixe</th><th>Entrée → sortie</th><th>k</th><th>Z<sub>S</sub> = 20, Z<sub>C</sub> = 60</th></tr>
 <tr><td>Couronne</td><td>S → PS</td><td>Z<sub>S</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>1/4</td></tr>
 <tr><td>Planétaire intérieur</td><td>C → PS</td><td>Z<sub>C</sub>/(Z<sub>S</sub> + Z<sub>C</sub>)</td><td>3/4</td></tr>
 <tr><td>Porte-satellites</td><td>S → C</td><td>−Z<sub>S</sub>/Z<sub>C</sub></td><td>−1/3</td></tr>
 <tr><td>Planétaire intérieur</td><td>PS → C</td><td>(Z<sub>S</sub> + Z<sub>C</sub>)/Z<sub>C</sub></td><td>4/3</td></tr></table>
-<p><b>Exemple.</b> Couronne fixe (ω<sub>C</sub> = 0) : −ω<sub>PS</sub>/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>, d’où ω<sub>PS</sub>·(Z<sub>C</sub> + Z<sub>S</sub>) = Z<sub>S</sub>·ω<sub>S</sub>.</p>
+<div class="fig" data-fig="willis"></div><p><b>Exemple.</b> Couronne fixe (ω<sub>C</sub> = 0) : −ω<sub>PS</sub>/(ω<sub>S</sub> − ω<sub>PS</sub>) = −Z<sub>S</sub>/Z<sub>C</sub>, d’où ω<sub>PS</sub>·(Z<sub>C</sub> + Z<sub>S</sub>) = Z<sub>S</sub>·ω<sub>S</sub>.</p>
 <div class="retain"><b>À retenir.</b> Écrire Willis, remplacer les deux vitesses connues (dont celle de la pièce fixe, nulle) et résoudre pour la troisième. Les vitesses sont toujours relatives au bâti.</div>` });
 COURSE.push({ id: 'avantage', t: 'Pourquoi un train épicycloïdal ?', h: `
 <p>À encombrement équivalent, un train épicycloïdal permet un <b>meilleur rapport de réduction</b> qu’un train simple à deux roues.</p>
 <table class="ctable"><tr><th>Exemple, m = 2 mm</th><th>Train simple</th><th>Train épicycloïdal</th></tr><tr><td>Rapport |k|</td><td>1/4</td><td>1/4</td></tr><tr><td>Roues</td><td>Z = 20 et Z = 80</td><td>Z<sub>S</sub> = 20, Z<sub>P</sub> = 20, Z<sub>C</sub> = 60</td></tr><tr><td>Encombrement</td><td>D<sub>1</sub> + D<sub>2</sub> = 200 mm</td><td>D<sub>C</sub> = 120 mm</td></tr></table>
-<ul><li><b>Compacité :</b> l’encombrement est plus faible pour un même rapport.</li><li><b>Coaxialité :</b> l’entrée et la sortie sont sur le même axe.</li><li><b>Répartition de l’effort :</b> le couple passe par plusieurs satellites, ce qui permet de transmettre plus de couple avec des dents plus petites.</li><li><b>Plusieurs rapports :</b> selon la pièce fixée, un même mécanisme donne plusieurs rapports.</li></ul>
+<div class="fig" data-fig="avantage"></div><ul><li><b>Compacité :</b> l’encombrement est plus faible pour un même rapport.</li><li><b>Coaxialité :</b> l’entrée et la sortie sont sur le même axe.</li><li><b>Répartition de l’effort :</b> le couple passe par plusieurs satellites, ce qui permet de transmettre plus de couple avec des dents plus petites.</li><li><b>Plusieurs rapports :</b> selon la pièce fixée, un même mécanisme donne plusieurs rapports.</li></ul>
 <p>Inconvénients : montage plus complexe (contraintes de montage) et fabrication d’une denture intérieure.</p>
 <div class="retain"><b>À retenir.</b> À encombrement équivalent, le train épicycloïdal offre un plus grand rapport de réduction qu’un train simple. Il est aussi compact et coaxial. C’est pourquoi on le trouve dans les motoréducteurs et les boîtes automatiques.</div>` });
 COURSE.push({ id: 'trapeze', t: 'Commande trapézoïdale en vitesse', h: `
 <p>Pour éviter les à-coups (accélération infinie), on impose à un axe un profil de vitesse en trapèze : accélération constante <b>a</b> pendant t<sub>a</sub>, vitesse constante V<sub>max</sub> pendant t<sub>c</sub>, puis décélération constante <b>d</b> pendant t<sub>d</sub>.</p>
 <div class="formula">t<sub>a</sub> = V<sub>max</sub>/a &nbsp;;&nbsp; t<sub>d</sub> = V<sub>max</sub>/d &nbsp;;&nbsp; T = t<sub>a</sub> + t<sub>c</sub> + t<sub>d</sub></div>
-<h3>La distance est l’aire sous v(t)</h3>
+<div class="fig" data-fig="trapCurves"></div><h3>La distance est l’aire sous v(t)</h3>
 <div class="formula">D = V<sub>max</sub> × (T − (t<sub>a</sub> + t<sub>d</sub>)/2) &nbsp;;&nbsp; si t<sub>a</sub> = t<sub>d</sub> : D = V<sub>max</sub> × (T − t<sub>a</sub>)</div>
-<h3>Calcul des temps (a et V<sub>max</sub> connus)</h3>
+<div class="fig" data-fig="trapDecomp"></div><h3>Calcul des temps (a et V<sub>max</sub> connus)</h3>
 <p>Distance parcourue en accélération et décélération : D<sub>ad</sub> = V<sub>max</sub>²/(2a) + V<sub>max</sub>²/(2d).</p>
 <ul><li>Si D ≥ D<sub>ad</sub> (profil trapézoïdal) : t<sub>c</sub> = (D − D<sub>ad</sub>)/V<sub>max</sub>. Avec a = d : <b>T = D/V<sub>max</sub> + V<sub>max</sub>/a</b>.</li><li>Si D &lt; D<sub>ad</sub> (profil triangulaire) : V<sub>max</sub> n’est pas atteinte. Avec a = d : V<sub>pic</sub> = √(a·D) et T = 2·√(D/a).</li></ul>
-<h3>Calcul de a et V<sub>max</sub> (temps connus)</h3>
+<div class="fig" data-fig="trapTri"></div><h3>Calcul de a et V<sub>max</sub> (temps connus)</h3>
 <p>Avec T, t<sub>a</sub> et t<sub>d</sub> donnés : <b>V<sub>max</sub> = D/(T − (t<sub>a</sub> + t<sub>d</sub>)/2)</b>, puis a = V<sub>max</sub>/t<sub>a</sub> et d = V<sub>max</sub>/t<sub>d</sub>. Cas courant « trois tiers » (t<sub>a</sub> = t<sub>c</sub> = t<sub>d</sub> = T/3) : V<sub>max</sub> = 3D/(2T) et a = 9D/(2T²).</p>
 <p>Si on donne a, T et D, on résout V<sub>max</sub>²/a − T·V<sub>max</sub> + D = 0 et l’on garde la racine qui donne t<sub>c</sub> ≥ 0.</p>
 <h3>Unités</h3>
@@ -1397,7 +1717,7 @@ function renderCourse() {
   const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
   const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
   const art = h('article', { class: 'cbody' });
-  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h })); hydrateFigs(art);
   art.append(h('div', { class: 'cpn' },
     idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
     idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
