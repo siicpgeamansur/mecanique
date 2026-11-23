@@ -1,271 +1,699 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Équilibrage dynamique d'un rotor</title>
+<title>Atelier Équilibrage</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
 <style>
-/* Mise en page à la GeoGebra : volet « Algèbre » à gauche (solide, masselottes, résultats),
-   vues animées à droite sur fond blanc (vue de côté, vue de face, forces sur les paliers). */
-:root {
-  --bg: #ffffff;
-  --panel: #ffffff;
-  --head: #f4f4f6;
-  --fg: #212121;
-  --muted: #666b75;
-  --rule: #cfd1d6;
-  --grid-minor: #eceef1;
-  --ui: #6557d2;
-  --def: #e65100;
-  --cor: #2e7d32;
-  --fa: #d32f2f;
-  --fb: #1565c0;
-  --hot-bg: #ffe9d6;
-  --hot-fg: #a14400;
-  --ok-bg: #e6f4ea;
-  --ok-fg: #1e6b34;
-  --bad-bg: #fdecea;
-  --bad-fg: #a12622;
-  --font: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
-  color-scheme: light;
+/* Atelier à la manière de « Algorithmes de tri » : barre d'outils, onglets d'ateliers, zone de travail blanche, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. Page volontairement claire (projection en classe). */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --font-math:'STIX Two Text','Cambria Math',Cambria,'Times New Roman',serif;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  color-scheme:light;
 }
-* { box-sizing: border-box; }
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font);
-  font-size: 14px;
-  line-height: 1.5;
-  padding-block: 0 28px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn.big{font-size:17px;font-weight:600;padding:14px 26px;letter-spacing:.04em;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.btn.big.on{background:var(--bad);border-color:var(--bad);color:#fff}
+:is(button,input,select,textarea,summary,canvas):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted);min-width:0}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:rgba(30,122,46,.15)}.opt.bad{background:rgba(192,40,31,.15)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.65}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.remark{border-left:3px solid var(--warn);background:rgba(154,91,0,.08);padding:8px 12px;margin:12px 0;font-size:14px;border-radius:0 8px 8px 0}
+.proof{border:1px solid var(--line);border-radius:8px;padding:2px 14px 4px;margin:12px 0;background:var(--panel)}
+.proof>b:first-child{display:block;margin:8px 0 2px;font-size:13px;color:var(--accent-ink);letter-spacing:.02em}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:16px;overflow-x:auto;overflow-y:hidden}
+.formula.key{background:var(--accent-soft);border-left-color:var(--accent-ink)}
+pre.code{font:12.5px/1.55 var(--font-mono);margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.gloss{display:grid;grid-template-columns:max-content 1fr;gap:5px 18px;font-size:14px}.gloss dt{font-weight:600}.gloss dd{margin:0}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+.cfig{margin:12px 0;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff;overflow-x:auto}
+.cfig svg{display:block;max-width:100%;height:auto;margin:0 auto}
+.cfig figcaption{font-size:12.5px;color:var(--muted);padding:4px 6px 2px}
+/* maths */
+.m{font-family:var(--font-math);font-size:1.1em;white-space:nowrap}
+.m i{font-style:italic}
+.m .up{font-style:normal}
+.m .fn{font-style:normal}
+.m .rel{margin:0 .32em}
+.m .op{margin:0 .16em}
+.m sup,.m sub{font-size:.7em;line-height:0}
+.m .fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .14em;line-height:1.2}
+.m .fr>span:first-child{border-bottom:1px solid currentColor;padding:0 .25em .08em}
+.m .fr>span:last-child{padding:.08em .25em 0}
+.m .vec{position:relative;display:inline-block}
+.m .vec::after{content:'\2192';position:absolute;left:.08em;top:-.66em;font-size:.68em;font-style:normal;line-height:1}
+.m .ddot{position:relative;display:inline-block}
+.m .ddot::after{content:'\\00A8';position:absolute;left:.12em;top:-.5em;font-style:normal;line-height:1}
+.m .ov{border-top:1px solid currentColor;padding-top:1px;margin-left:1px}
+.m .ss{display:inline-flex;flex-direction:column;vertical-align:middle;line-height:1.05}
+.formula .m{font-size:1.2em}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1000px}
+#ws.wide{max-width:1300px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p,#ws li{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0;flex:1 1 190px;max-width:280px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center}
+.chips .lab{font-size:12.5px;color:var(--muted);margin-right:2px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line);min-height:40px}
+.verdict.yes{background:rgba(30,122,46,.15);border-color:var(--ok)}.verdict.no{background:rgba(192,40,31,.13);border-color:var(--bad)}.verdict.warn{background:rgba(154,91,0,.13);border-color:var(--warn)}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;margin:8px 0}
+canvas.cv{display:block;width:100%;height:auto;touch-action:none;cursor:grab;border-radius:6px;background:#fff}
+canvas.cv.grabbing{cursor:grabbing}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.pushrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.stars{font-size:15px;letter-spacing:2px;color:#c98a00}
+.stars.off{color:#c9ced4}
+.twocol{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.twocv{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start;margin:8px 0}
+.twocv.side{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+#s4-pv{max-width:560px;margin:0 auto}
+.note{font-size:12.5px;color:var(--muted);margin:4px 0 8px}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}.gloss{grid-template-columns:1fr}.gloss dd{margin-bottom:6px}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
 }
-.wrap { max-width: 1400px; margin: 0 auto; }
-header { display: flex; align-items: baseline; gap: 8px 18px; flex-wrap: wrap; padding: 14px 0 12px; border-bottom: 1px solid var(--rule); margin-bottom: 14px; }
-header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; }
-header p { margin: 0; color: var(--muted); font-style: italic; }
-
-.app { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 14px; align-items: start; }
-.view { background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; min-width: 0; }
-.view > h2, .sub {
-  margin: 0;
-  padding: 7px 12px;
-  background: var(--head);
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-.view > h2:first-child { border-top: 0; }
-figure.view { margin: 0; }
-.stage { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 14px; }
-
-.item { display: flex; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--grid-minor); }
-.dot { flex: none; width: 14px; height: 14px; border-radius: 50%; margin-top: 5px; background: var(--ui); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--ui); }
-.dot.def { background: var(--def); box-shadow: 0 0 0 1px var(--def); }
-.dot.cor { background: var(--cor); box-shadow: 0 0 0 1px var(--cor); }
-.dot.fa { background: var(--fa); box-shadow: 0 0 0 1px var(--fa); }
-.dot.fb { background: var(--fb); box-shadow: 0 0 0 1px var(--fb); }
-.dot.grey { background: var(--muted); box-shadow: 0 0 0 1px var(--muted); }
-.item .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.head-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
-.head-row .ttl { font-weight: 600; }
-.del { width: 26px; height: 26px; line-height: 1; font-size: 1.2rem; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 4px; cursor: pointer; }
-.del:hover { background: var(--head); color: var(--fa); }
-
-.prm { display: grid; grid-template-columns: 3.9rem 4.8rem minmax(0, 1fr); gap: 8px; align-items: center; }
-.prm label { font-style: italic; text-align: right; white-space: nowrap; }
-.prm label .u { font-style: normal; color: var(--muted); font-size: 0.78rem; }
-input[type="number"] { width: 100%; font: inherit; color: var(--fg); background: var(--panel); border: 0; border-bottom: 1px solid var(--rule); border-radius: 0; padding: 2px 4px; font-variant-numeric: tabular-nums; }
-input[type="number"]:focus { border-bottom: 2px solid var(--ui); outline: none; padding-bottom: 1px; }
-input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer; }
-input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: var(--ui); border-radius: 2px; }
-input[type="range"]::-moz-range-track { height: 3px; background: var(--ui); border-radius: 2px; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6.5px; border-radius: 50%; background: var(--ui); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--ui); }
-input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--ui); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--ui); }
-input:focus-visible, button:focus-visible { outline: 2px solid var(--ui); outline-offset: 2px; }
-
-.btns { display: flex; flex-wrap: wrap; gap: 6px; }
-.btn { font: inherit; font-size: 0.82rem; color: var(--fg); background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 3px 10px; cursor: pointer; }
-.btn:hover { background: var(--head); }
-.btn[aria-pressed="true"] { background: var(--ui); border-color: var(--ui); color: #fff; }
-.btn.primary { background: var(--ui); border-color: var(--ui); color: #fff; font-weight: 600; }
-.btn.primary:hover { filter: brightness(1.08); }
-.k { color: var(--muted); font-size: 0.82rem; }
-.sol { margin: 0; font-size: 0.85rem; line-height: 1.6; }
-.line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
-.line .v { font-weight: 600; font-variant-numeric: tabular-nums; }
-.pill { display: inline-block; padding: 1px 10px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; }
-.pill.ok { background: var(--ok-bg); color: var(--ok-fg); }
-.pill.bad { background: var(--bad-bg); color: var(--bad-fg); }
-.note { margin: 0; padding: 12px 14px; color: var(--muted); font-size: 0.8rem; }
-
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 10px 12px; }
-.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
-.seg label { padding: 3px 12px; cursor: pointer; font-size: 0.85rem; border-right: 1px solid var(--rule); }
-.seg label:last-child { border-right: 0; }
-.seg input { position: absolute; opacity: 0; pointer-events: none; }
-.seg label:has(input:checked) { background: var(--ui); color: #fff; }
-.seg label:has(input:focus-visible) { outline: 2px solid var(--ui); outline-offset: -2px; }
-.gain { display: flex; align-items: center; gap: 8px; }
-.checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
-.chk { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; }
-.chk input { accent-color: var(--ui); width: 15px; height: 15px; margin: 0; }
-.gain input { width: 130px; }
-.gain output { font-variant-numeric: tabular-nums; min-width: 3rem; }
-
-canvas { display: block; width: 100%; background: #fff; }
-#cvSide { height: 360px; }
-#cvEnd { height: 300px; }
-#cvGraph { height: 300px; }
-figcaption { color: var(--muted); font-size: 0.8rem; padding: 6px 12px 10px; }
-figcaption .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 10px; vertical-align: -1px; }
-figcaption .sw:first-child { margin-left: 0; }
-
-.top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; margin-bottom: 14px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); }
-.matwrap { overflow-x: auto; }
-.mat { display: inline-grid; grid-template-columns: repeat(3, minmax(4.4rem, auto)); gap: 4px 14px; padding: 8px 14px; border-left: 2px solid var(--fg); border-right: 2px solid var(--fg); border-radius: 8px; font-variant-numeric: tabular-nums; text-align: right; }
-.mat span { padding: 1px 6px; border-radius: 3px; }
-.mat span.hot { background: var(--hot-bg); color: var(--hot-fg); font-weight: 600; }
-@media (max-width: 900px) { .top { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 1100px) { .app { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 800px) { .pair { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 440px) { .prm { grid-template-columns: 3.4rem 4.4rem minmax(0, 1fr); } }
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+/* ---- rotor à masselottes (atelier 3 et 4), style « volets » ---- */
+.rt{--rule:#cfd1d6;--head:#f4f4f6;--grid-minor:#eceef1;--ui:#2e6da4;--def:#e65100;--cor:#2e7d32;--fa:#d32f2f;--fb:#1565c0;--hot-bg:#ffe9d6;--hot-fg:#a14400;--ok-bg:#e6f4ea;--ok-fg:#1e6b34;--bad-bg:#fdecea;--bad-fg:#a12622}
+.rt .hide,.rt.ch .only-free{display:none!important}
+.rt:not(.ch) .ch-only{display:none!important}
+.rt .top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start;margin-bottom:14px}
+.rt .app{display:grid;grid-template-columns:370px minmax(0,1fr);gap:14px;align-items:start}
+.rt .view{background:#fff;border:1px solid var(--rule);border-radius:6px;overflow:hidden;min-width:0}
+.rt .view>h2,.rt .sub{margin:0;padding:7px 12px;background:var(--head);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);font-size:13px;font-weight:600}
+.rt .view>h2:first-child{border-top:0}
+.rt figure.view{margin:0}
+.rt .stage{display:flex;flex-direction:column;gap:14px;min-width:0}
+.rt .pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px}
+.rt .item{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--grid-minor)}
+.rt .dot{flex:none;width:13px;height:13px;border-radius:50%;margin-top:5px;background:var(--ui);border:2px solid #fff;box-shadow:0 0 0 1px var(--ui)}
+.rt .dot.def{background:var(--def);box-shadow:0 0 0 1px var(--def)}.rt .dot.cor{background:var(--cor);box-shadow:0 0 0 1px var(--cor)}
+.rt .dot.fa{background:var(--fa);box-shadow:0 0 0 1px var(--fa)}.rt .dot.fb{background:var(--fb);box-shadow:0 0 0 1px var(--fb)}
+.rt .dot.grey{background:var(--muted);box-shadow:0 0 0 1px var(--muted)}
+.rt .item .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.rt .head-row{display:flex;align-items:center;gap:8px;justify-content:space-between}.rt .ttl{font-weight:600}
+.rt .del{width:26px;height:26px;line-height:1;font-size:1.2rem;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:4px;cursor:pointer}
+.rt .del:hover{background:var(--head);color:var(--fa)}
+.rt .prm{display:grid;grid-template-columns:3.9rem 4.8rem minmax(0,1fr);gap:8px;align-items:center}
+.rt .prm label{font-style:italic;text-align:right;white-space:nowrap}.rt .prm label .u{font-style:normal;color:var(--muted);font-size:12px}
+.rt .prm input[type=number]{width:100%;border:0;border-bottom:1px solid var(--rule);border-radius:0;background:#fff;padding:2px 4px;font-variant-numeric:tabular-nums}
+.rt .prm input[type=range]{width:100%;margin:0;height:22px;accent-color:var(--ui)}
+.rt .btns{display:flex;flex-wrap:wrap;gap:6px}
+.rt .btn[aria-pressed="true"]{background:var(--ui);border-color:var(--ui);color:#fff}
+.rt .k{color:var(--muted);font-size:12.5px}
+.rt .sol{margin:0;font-size:13px;line-height:1.6}
+.rt .line{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}.rt .line .v{font-weight:600;font-variant-numeric:tabular-nums}
+.rt .pill{display:inline-block;padding:1px 10px;border-radius:999px;font-weight:600;font-size:13px}
+.rt .pill.ok{background:var(--ok-bg);color:var(--ok-fg)}.rt .pill.bad{background:var(--bad-bg);color:var(--bad-fg)}
+.rt .note{margin:0;padding:11px 14px;color:var(--muted);font-size:12.5px}
+.rt .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:10px 12px}
+.rt .seg label{padding:3px 12px;cursor:pointer;font-size:13px;border-right:1px solid var(--line)}.rt .seg label:last-child{border-right:0}
+.rt .seg input{position:absolute;opacity:0;pointer-events:none}
+.rt .seg label:has(input:checked){background:var(--accent);color:#fff}
+.rt .checks{display:flex;flex-wrap:wrap;gap:6px 16px}.rt .chk{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.rt .chk input{accent-color:var(--accent);width:15px;height:15px;margin:0}
+.rt .gain{display:flex;align-items:center;gap:8px}.rt .gain input{width:130px}.rt .gain output{min-width:3rem;font-variant-numeric:tabular-nums}
+.rt canvas{display:block;width:100%;background:#fff}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:10px 0}.card{border:1px solid var(--line,#d5dbe2);border-radius:8px;padding:8px 12px;background:#fff}.card h4{margin:0 0 4px;font-size:14px}.card p{margin:0;font-size:13px}
+canvas.viz{display:block;width:100%;height:250px;background:#fff;border:1px solid var(--line,#d5dbe2);border-radius:6px}
+#vb-cv2{height:270px}
+#cd-cv{height:290px}
+.rt #cvSide{height:360px}.rt #cvEnd{height:300px}.rt #cvGraph{height:300px}
+.rt figcaption{color:var(--muted);font-size:12.5px;padding:6px 12px 10px}
+.rt figcaption .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 10px;vertical-align:-1px}.rt figcaption .sw:first-child{margin-left:0}
+.rt .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0;margin:0}
+.rt .matwrap{overflow-x:auto}
+.rt .mat{display:inline-grid;grid-template-columns:repeat(3,minmax(4.4rem,auto));gap:4px 14px;padding:8px 14px;border-left:2px solid var(--fg);border-right:2px solid var(--fg);border-radius:8px;font-variant-numeric:tabular-nums;text-align:right}
+.rt .mat span{padding:1px 6px;border-radius:3px}.rt .mat span.hot{background:var(--hot-bg);color:var(--hot-fg);font-weight:600}
+@media (max-width:900px){.rt .top{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1100px){.rt .app{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:800px){.rt .pair{grid-template-columns:minmax(0,1fr)}.rt #cvSide{height:300px}}
+@media (max-width:440px){.rt .prm{grid-template-columns:3.4rem 4.4rem minmax(0,1fr)}}
 </style>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="30" height="26" viewBox="0 0 30 26" aria-hidden="true"><circle cx="13" cy="13" r="10" fill="none" stroke="#2e6da4" stroke-width="1.6"/><circle cx="13" cy="13" r="2" fill="#2e6da4"/><circle cx="19" cy="8" r="2.2" fill="#c0281f"/><path d="M22 13A9 9 0 0 1 13 22" fill="none" stroke="#9a5b00" stroke-width="1.6"/></svg><span>Atelier Équilibrage <small>PSI* · Sciences de l’ingénieur</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
 
-<div class="wrap">
-  <header>
-    <h1>Équilibrage dynamique d'un rotor</h1>
-    <p>Solide rigide sur deux paliers, en rotation à vitesse constante autour de l'axe z</p>
-  </header>
+<script>
 
-  <div class="top">
-    <section class="view" aria-label="Solide en rotation">
-      <h2>Solide en rotation</h2>
-      <div class="item"><span class="dot grey" aria-hidden="true"></span><div class="body">
-        <span class="k">Charger un solide</span>
-        <div class="btns" id="presets">
-          <button type="button" class="btn" data-preset="dyn" aria-pressed="false">Équilibré dynamiquement</button>
-          <button type="button" class="btn" data-preset="stat" aria-pressed="false">Équilibré statiquement</button>
-          <button type="button" class="btn" data-preset="none" aria-pressed="false">Non équilibré</button>
-        </div>
-        <div id="rows-L"></div>
-        <div id="rows-rpm"></div>
-        <span class="k">Cylindre homogène centré entre les paliers (longueur 0,92·L), auquel s'ajoutent les masses</span>
-        <div id="rows-M"></div>
-        <div id="rows-Rc"></div>
-      </div></div>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-equilibrage-v1', stars: 'atelier-equilibrage-etoiles-v1' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const RAD = Math.PI / 180, DEG = 180 / Math.PI;
+const fmtN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const f1 = (x, d) => (+x).toFixed(d == null ? 1 : d).replace('.', ',');
+function sig2(v) { if (v <= 0) return 0; const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / p) * p; }
+function fForce(v) { return fmtN(v) + ' N'; }
+function fSig(v) { v = +v; if (v >= 100) return fmtN(sig2(v)); if (v >= 10) return f1(v, 0); return f1(v, 1); }
 
-      <div id="defects" class="cards"></div>
-      <div class="item"><span class="dot def" aria-hidden="true"></span><div class="body">
-        <div class="btns"><button type="button" class="btn" id="addDef">+ Ajouter une masse perturbatrice</button></div>
-      </div></div>
+/* ---------- mini-LaTeX : convertit une formule en HTML (sans dépendance externe) ---------- */
+const TSYM = { mu: 'μ', varphi: 'φ', phi: 'φ', alpha: 'α', beta: 'β', theta: 'θ', eta: 'η', gamma: 'γ', psi: 'ψ', pi: 'π', lambda: 'λ', Delta: 'Δ', leq: '≤', geq: '≥', neq: '≠', Rightarrow: '⇒', Leftrightarrow: '⇔', rightarrow: '→', cdot: '·', times: '×', approx: '≈', infty: '∞', pm: '±', in: '∈', ldots: '…', circ: '°', quad: ' ', ',': ' ', ';': ' ', ll: '≪', gg: '≫', sim: '∼', equiv: '≡', partial: '∂', sum: 'Σ', ge: '≥', le: '≤', forall: '∀', exists: '∃', perp: '⊥', ell: 'ℓ', omega: 'ω', Omega: 'Ω', sigma: 'σ', Sigma: 'Σ', rho: 'ρ', delta: 'δ', varepsilon: 'ε', epsilon: 'ε', tau: 'τ', xi: 'ξ', wedge: '∧', to: '→', Longrightarrow: '⇒', int: '∫', cdots: '⋯', mp: '∓', nabla: '∇', ne: '≠', gtrsim: '≳', lesssim: '≲', '|': '‖' };
+const TFN = new Set(['sin', 'cos', 'tan', 'arctan', 'arcsin', 'max', 'min', 'ln', 'log', 'lim', 'arg']);
+const TREL = new Set(['=', '<', '>', '≤', '≥', '≠', '⇒', '⇔', '→', '≈', '≪', '≫', '∈', '≡', '∼']);
+function tex(src) {
+  let i = 0;
+  const esc = c => c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : c;
+  function rawgroup() { let s = ''; if (src[i] === '{') { i++; let d = 1; while (i < src.length) { const c = src[i++]; if (c === '{') d++; else if (c === '}') { d--; if (!d) break; } s += c; } } return s.replace(/[&<>]/g, esc); }
+  function atom() {
+    const c = src[i];
+    if (c === '{') { i++; const r = seq('}'); i++; return r; }
+    if (c === '\\') {
+      i++; let n = '';
+      if (/[a-zA-Z]/.test(src[i])) { while (i < src.length && /[a-zA-Z]/.test(src[i])) n += src[i++]; } else n = src[i++];
+      if (n === 'frac' || n === 'dfrac') { const a = atom(), b = atom(); return '<span class="fr"><span>' + a + '</span><span>' + b + '</span></span>'; }
+      if (n === 'ddot') { const a = atom(); return '<span class="ddot">' + a + '</span>'; }
+      if (n === 'underline') { const a = atom(); return '<span style="text-decoration:underline">' + a + '</span>'; }
+      if (n === 'vec') { const a = atom(); return '<span class="vec">' + a + '</span>'; }
+      if (n === 'sqrt') { const a = atom(); return '√<span class="ov">' + a + '</span>'; }
+      if (n === 'text' || n === 'mathrm') return '<span class="up">' + rawgroup() + '</span>';
+      if (n === 'left' || n === 'right' || n === 'big' || n === 'Big') return '';
+      if (TFN.has(n)) return '<span class="fn">' + n + '</span>';
+      if (n in TSYM) { const s = TSYM[n]; return TREL.has(s) ? '<span class="rel">' + s + '</span>' : s; }
+      return n;
+    }
+    i++;
+    if (/[A-Za-z]/.test(c)) return '<i>' + c + '</i>';
+    if (TREL.has(c)) return '<span class="rel">' + esc(c) + '</span>';
+    if (c === '-') return '−';
+    if (c === ' ' || c === '\n') return '';
+    if (c === '+') return '<span class="op">+</span>';
+    if (c === '~') return ' ';
+    return esc(c);
+  }
+  function seq(stop) {
+    let out = '';
+    while (i < src.length && src[i] !== stop) {
+      let a = atom(), sub = null, sup = null;
+      if (src[i] === '^' && src.startsWith('\\circ', i + 1)) { i += 6; out += a + '°'; continue; }
+      while (src[i] === '_' || src[i] === '^') { const t = src[i++]; const s = atom(); if (t === '_') sub = s; else sup = s; }
+      if (sub != null && sup != null) a += '<span class="ss"><sup>' + sup + '</sup><sub>' + sub + '</sub></span>';
+      else if (sub != null) a += '<sub>' + sub + '</sub>';
+      else if (sup != null) a += '<sup>' + sup + '</sup>';
+      out += a;
+    }
+    return out;
+  }
+  return seq(null);
+}
+function mathify(html) {
+  return html.replace(/\$\$\$([\s\S]+?)\$\$\$/g, (_, t) => '<div class="formula key"><span class="m">' + tex(t) + '</span></div>')
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => '<div class="formula"><span class="m">' + tex(t) + '</span></div>')
+    .replace(/\$([^$]+?)\$/g, (_, t) => '<span class="m">' + tex(t) + '</span>');
+}
+function M(t) { return '<span class="m">' + tex(t) + '</span>'; }
 
-    </section>
+/* ---------- boucle d'animation partagée ---------- */
+const LOOP = { fn: null, last: 0 };
+function frame(t) {
+  const dt = Math.min(0.05, (t - LOOP.last) / 1000 || 0); LOOP.last = t;
+  if (LOOP.fn && !CS.open && !document.hidden) { try { LOOP.fn(dt); } catch (e) { console.error(e); } }
+  requestAnimationFrame(frame);
+}
 
-    <section class="view" aria-label="Équilibrage par masselottes">
-      <h2>Équilibrage par masselottes</h2>
-      <div class="item"><span class="dot cor" aria-hidden="true"></span><div class="body">
-        <span class="k">Rayon imposé des masselottes</span>
-        <div id="rows-R"></div>
-        <span class="k">Une masse négative correspond à un retrait de matière (perçage). Elle équivaut à une masse positive placée 180° plus loin.</span>
-      </div></div>
-      <div id="corr" class="cards"></div>
-      <div class="item"><span class="dot cor" aria-hidden="true"></span><div class="body">
-        <div class="btns">
-          <button type="button" class="btn primary" id="solve">Donner la solution d'équilibrage</button>
-          <button type="button" class="btn" id="clear">Retirer les masselottes</button>
-        </div>
-        <p class="sol" id="sol" aria-live="polite"></p>
-      </div></div>
+/* ---------- aides de dessin (coordonnées « monde » 900 × H, texte en pixels écran) ---------- */
+const COL = { ink: '#111111', muted: '#5a6068', line: '#b9bfc7', accent: '#2e6da4', soft: '#dcebf8', ink2: '#1b4a76', ok: '#1e7a2e', warn: '#9a5b00', orange: '#d9822b', bad: '#c0281f', violet: '#7b4fc2', node: '#33475b', steel: '#9fb4ca', steelD: '#6f8aa6' };
+function fitCv(cv, W, H) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), cssW = cv.clientWidth || W, k = cssW / W;
+  const pw = Math.round(cssW * dpr), ph = Math.round(cssW * H / W * dpr);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  const ctx = cv.getContext('2d'); ctx.setTransform(pw / W, 0, 0, pw / W, 0, 0);
+  return { ctx, k };
+}
+function cvPoint(cv, e, W, H) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
+function lineC(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+function arrowC(ctx, k, x1, y1, x2, y2, col, w) {
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy); if (L < 1.5) return;
+  const ux = dx / L, uy = dy / L, hl = Math.min(L * 0.7, (10 + w * 1.6) / k), hw = hl * 0.42;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w / k; ctx.lineCap = 'round'; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - ux * hl * 0.7, y2 - uy * hl * 0.7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 - ux * hl + uy * hw, y2 - uy * hl - ux * hw); ctx.lineTo(x2 - ux * hl - uy * hw, y2 - uy * hl + ux * hw); ctx.closePath(); ctx.fill();
+}
+function textC(ctx, k, s, x, y, col, size, align, bold) {
+  ctx.font = (bold ? '600 ' : '400 ') + ((size || 12) / k) + 'px "IBM Plex Sans",system-ui,sans-serif';
+  ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round'; ctx.lineWidth = 3.5 / k; ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.strokeText(s, x, y);
+  ctx.fillStyle = col || COL.ink; ctx.fillText(s, x, y);
+}
+const lenF = v => 26 + 26 * Math.log10(Math.max(1, v));            // longueur d'une flèche (px monde), échelle logarithmique
+const lenR = v => Math.min(150, 8 + 1.15 * Math.sqrt(Math.max(0, v))); // échelle en racine carrée
+function chipSet(items, isOn, cb) {
+  const box = h('span', { class: 'chips', style: 'margin:0' });
+  items.forEach(it => box.append(h('button', { type: 'button', class: 'chip' + (isOn(it) ? ' on' : ''), onclick: () => cb(it) }, it[0])));
+  return box;
+}
+const MATS = [['Acier lubrifié · 0,10', 0.10], ['Acier sec · 0,20', 0.20], ['Bois · 0,40', 0.40], ['Caoutchouc · 0,80', 0.80]];
+function setMsg(sel, text, kind) { const m = $(sel); if (!m) return; if (m.textContent !== text) m.textContent = text; const c = 'verdict' + (kind ? ' ' + kind : ''); if (m.className !== c) m.className = c; }
+function setTxt(sel, text) { const m = $(sel); if (m && m.textContent !== text) m.textContent = text; }
+function stat(id, label) { return h('div', { class: 'stat' }, h('span', null, label), h('b', { id }, '—')); }
+const STARS = lsGet(KEYS.stars, {});
+function starsHtml(n) { return '<span class="stars">' + '★'.repeat(n) + '</span><span class="stars off">' + '★'.repeat(3 - n) + '</span>'; }
+function giveStars(key, n) { if (n > (STARS[key] || 0)) { STARS[key] = n; lsSet(KEYS.stars, STARS); } }
 
-    </section>
-  </div>
 
-  <div class="app">
-    <aside class="view" aria-label="Résultats">
-      <h2>Résultats</h2>
-      <div aria-live="polite">
-        <div class="item"><span class="dot def" aria-hidden="true"></span><div class="body">
-          <div class="line"><span class="k">Balourd statique |U| = |Σ m·r|</span><span class="v" id="o-U"></span></div>
-          <div class="line"><span class="k">Balourd dynamique |C|</span><span class="v" id="o-C"></span></div>
-        </div></div>
-        <div class="item"><span class="dot fa" aria-hidden="true"></span><div class="body">
-          <div class="line"><span class="k">Force sur le palier A</span><span class="v" id="o-FA"></span></div>
-          <div class="line"><span class="k">Force sur le palier B</span><span class="v" id="o-FB"></span></div>
-        </div></div>
-        <div class="item"><span class="dot fb" aria-hidden="true"></span><div class="body">
-          <div class="line"><span class="k">Vibration linéaire : force résultante</span><span class="v" id="o-lin"></span></div>
-          <div class="line"><span class="k">Vibration angulaire : couple</span><span class="v" id="o-ang"></span></div>
-        </div></div>
-        <div class="item"><span class="dot grey" aria-hidden="true"></span><div class="body">
-          <div class="line"><span class="k">Équilibre statique</span><span id="o-stat"></span></div>
-          <div class="line"><span class="k">Équilibre dynamique</span><span id="o-dyn"></span></div>
-        </div></div>
+/* =========================================================================
+   Outils communs aux ateliers 1, 2 et 5
+   Convention : repère lié au rotor (x, y, z), z = axe (A, z) avec A en z = 0 et B en z = L.
+   Un effort dans le plan xy est noté comme un complexe a + ib.
+   Forces exercées sur les paliers (G sur x, produits d'inertie D = ∫yz dm, E = ∫xz dm pris en A) :
+        F_B = ω² (E + iD) / L ,   F_A = ω² (M r − E/L − iD/L)
+   Dans le repère fixe, on multiplie par e^{iθ}.
+   ========================================================================= */
+function cvSize(cv) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return null;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+  c.font = '12px "IBM Plex Sans",system-ui,sans-serif'; c.lineJoin = 'round'; c.lineCap = 'round';
+  return { c, W, H };
+}
+function cArrow(c, x0, y0, x1, y1, col, w) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 2) return;
+  const ux = dx / L, uy = dy / L, hl = Math.min(10, L * .6);
+  c.strokeStyle = col; c.fillStyle = col; c.lineWidth = w || 2.4; c.setLineDash([]);
+  c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1 - ux * hl * .6, y1 - uy * hl * .6); c.stroke();
+  c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1 - ux * hl - uy * hl * .45, y1 - uy * hl + ux * hl * .45); c.lineTo(x1 - ux * hl + uy * hl * .45, y1 - uy * hl - ux * hl * .45); c.closePath(); c.fill();
+}
+function cTxt(c, s, x, y, col, al, bold, size) { c.fillStyle = col || '#111'; c.textAlign = al || 'left'; c.font = (bold ? '600 ' : '400 ') + (size || 12) + 'px "IBM Plex Sans",system-ui,sans-serif'; c.fillText(s, x, y); }
+function cBearing(c, x, y) {
+  c.fillStyle = '#e6eaee'; c.strokeStyle = '#8a929c'; c.lineWidth = 1.2;
+  c.beginPath(); c.moveTo(x - 13, y + 14); c.lineTo(x + 13, y + 14); c.lineTo(x, y + 34); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = '#d0d5da'; c.strokeStyle = '#5a6068'; c.lineWidth = 1.5; c.fillRect(x - 10, y - 10, 20, 20); c.strokeRect(x - 10, y - 10, 20, 20);
+}
+const cplx = { re: z => z[0], im: z => z[1], abs: z => Math.hypot(z[0], z[1]), rot: (z, t) => [z[0] * Math.cos(t) - z[1] * Math.sin(t), z[0] * Math.sin(t) + z[1] * Math.cos(t)] };
+const f2 = (x, d) => (+x).toFixed(d == null ? 2 : d).replace('.', ',').replace('-', '−');
+function slider(id, label, unit, min, max, step, val, fmtOut) {
+  const out = h('b', { id: id + '-o' }, fmtOut(val));
+  const inp = h('input', { type: 'range', id, min, max, step, value: val });
+  return { el: h('label', { class: 'fld' }, h('span', null, label + ' = ', out, ' ' + unit), inp), inp, out };
+}
+
+/* ============ ATELIER 1 : SOURCE DES VIBRATIONS ============ */
+const CYL = { M: 10, R: 0.05, Lc: 0.1, L: 0.1 };           // cylindre homogène sur deux paliers distants de L
+const VB = { a: 0.05, al: 0, N: 6000, th: 0.6, play: true };
+function vbForces() {
+  const w = VB.N * 2 * Math.PI / 60, r = VB.a * 1e-3, al = VB.al * RAD;
+  const Iax = CYL.M * CYL.R * CYL.R / 2, Ip = CYL.M * (3 * CYL.R * CYL.R + CYL.Lc * CYL.Lc) / 12;
+  const EG = (Ip - Iax) * Math.sin(al) * Math.cos(al), DG = 0;     // produits d'inertie en G (inclinaison dans le plan xz)
+  const E = EG + CYL.M * r * CYL.L / 2;                           // produit d'inertie en A
+  const w2 = w * w;
+  return { w, r, EG, DG, E, FB: [w2 * E / CYL.L, w2 * DG / CYL.L], FA: [w2 * (CYL.M * r - E / CYL.L), -w2 * DG / CYL.L], U: CYL.M * r };
+}
+function mountVib(root) {
+  root.innerHTML = '';
+  root.append(h('h2', null, '1. Origine des vibrations'),
+    h('p', { html: 'Un cylindre de 10 kg est monté sur un arbre guidé par deux roulements A et B (pivot d’axe (A, z)). Deux défauts de montage suffisent à créer des efforts tournants : une <b>translation</b> de G par rapport à l’axe (balourd statique, r ≠ 0) et une <b>inclinaison</b> de l’axe du cylindre (produit d’inertie E ≠ 0, balourd dynamique).' }));
+  const sa = slider('vb-a', 'Décalage r de G', 'mm', 0, 0.2, 0.005, VB.a, v => f2(v, 3)),
+    sl = slider('vb-al', 'Inclinaison α', '°', -2, 2, 0.05, VB.al, v => f2(v, 2)),
+    sn = slider('vb-n', 'Vitesse N', 'tr/min', 500, 30000, 500, VB.N, v => String(v));
+  root.append(h('div', { class: 'opts' }, sa.el, sl.el, sn.el));
+  root.append(h('div', { class: 'gstats', id: 'vb-st' }));
+  const play = h('button', { class: 'btn pri', type: 'button', id: 'vb-play' }, 'Pause');
+  root.append(h('div', { class: 'files', style: 'margin:4px 0 10px' }, play, h('button', { class: 'btn', type: 'button', id: 'vb-z', onclick: () => { VB.al = 0; sl.inp.value = 0; upd(); } }, 'α = 0'), h('button', { class: 'btn', type: 'button', onclick: () => { VB.a = 0; sa.inp.value = 0; upd(); } }, 'r = 0')));
+  root.append(h('canvas', { class: 'viz', id: 'vb-cv1' }), h('canvas', { class: 'viz', id: 'vb-cv2', style: 'margin-top:10px' }));
+  root.append(h('p', { class: 'small', html: '<span style="color:#2e6da4;font-weight:600">X<sub>A</sub></span> · <span style="color:#1e7a2e;font-weight:600">Y<sub>A</sub></span> · <span style="color:#c0281f;font-weight:600">X<sub>B</sub></span> · <span style="color:#9a5b00;font-weight:600">Y<sub>B</sub></span> : composantes des efforts exercés sur les roulements dans le repère fixe, pour un tour de rotor. On ne représente que la partie variable : la pesanteur ajoute une constante.' }));
+  root.append(h('div', { class: 'verdict', id: 'vb-msg' }));
+  sa.inp.addEventListener('input', () => { VB.a = +sa.inp.value; upd(); });
+  sl.inp.addEventListener('input', () => { VB.al = +sl.inp.value; upd(); });
+  sn.inp.addEventListener('input', () => { VB.N = +sn.inp.value; upd(); });
+  play.addEventListener('click', () => { VB.play = !VB.play; play.textContent = VB.play ? 'Pause' : 'Lecture'; draw(); });
+  function upd() {
+    sa.out.textContent = f2(VB.a, 3); sl.out.textContent = f2(VB.al, 2); sn.out.textContent = VB.N;
+    const F = vbForces(), st = $('#vb-st'); st.innerHTML = '';
+    const mk = (l, v, col) => h('div', { class: 'stat' }, h('span', null, l), h('b', { style: col ? 'color:' + col : '' }, v));
+    st.append(mk('r = |OG|', f2(F.r * 1000, 3) + ' mm', F.r > 1e-9 ? 'var(--bad)' : 'var(--ok)'), mk('E (en G)', f2(F.EG * 1e5, 2) + ' ×10⁻⁵ kg·m²', Math.abs(F.EG) > 1e-9 ? 'var(--bad)' : 'var(--ok)'),
+      mk('|F_A| (amplitude)', fmtN(cplx.abs(F.FA)) + ' N'), mk('|F_B| (amplitude)', fmtN(cplx.abs(F.FB)) + ' N'), mk('Fréquence de rotation', f1(VB.N / 60, 1) + ' Hz'));
+    const sOK = F.r < 1e-9, dOK = Math.abs(F.EG) < 1e-9 && Math.abs(F.DG) < 1e-9, m = $('#vb-msg');
+    if (sOK && dOK) { m.className = 'verdict yes'; m.innerHTML = '<b>Rotor équilibré.</b> Les efforts sur les roulements sont constants : aucune vibration.'; }
+    else if (!sOK && dOK) { m.className = 'verdict warn'; m.innerHTML = '<b>Balourd statique seul.</b> G tourne autour de l’axe : F<sub>A</sub> et F<sub>B</sub> sont en phase, chacune égale à la moitié de M·r·ω² (' + fmtN(cplx.abs(F.FA)) + ' N).'; }
+    else if (sOK && !dOK) { m.className = 'verdict warn'; m.innerHTML = '<b>Balourd dynamique seul.</b> G est sur l’axe mais le produit d’inertie ne s’annule pas : F<sub>A</sub> et F<sub>B</sub> sont <b>opposées</b> et forment un couple tournant de ' + fmtN(cplx.abs(F.FB) * CYL.L) + ' N·m.'; }
+    else { m.className = 'verdict no'; m.innerHTML = '<b>Les deux défauts.</b> Les efforts se composent : en A ils s’ajoutent, en B ils se retranchent (ou inversement selon le sens de l’inclinaison).'; }
+    draw();
+  }
+  function draw() { drawSide(); drawPlot(); }
+  function drawSide() {
+    const o = cvSize($('#vb-cv1')); if (!o) return; const { c, W, H } = o, F = vbForces(), th = VB.th, half = W / 2;
+    const aPix = Math.min(F.r * 1000 * 130, 40), yG = aPix * Math.sin(th), tilt = -VB.al * RAD * Math.sin(th) * 12;
+    cTxt(c, 'Vue de côté', half / 2, 18, '#5a6068', 'center'); cTxt(c, 'Vue de face (selon z)', half + half / 2, 18, '#5a6068', 'center');
+    const cx = half / 2, cy = H / 2;
+    c.strokeStyle = '#8a929c'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx - half * .42, cy); c.lineTo(cx + half * .42, cy); c.stroke();
+    cBearing(c, cx - half * .32, cy); cBearing(c, cx + half * .32, cy); cTxt(c, 'A', cx - half * .32, cy + 52, '#d32f2f', 'center', true); cTxt(c, 'B', cx + half * .32, cy + 52, '#1565c0', 'center', true);
+    c.save(); c.translate(cx, cy - yG); c.rotate(tilt); c.fillStyle = 'rgba(46,109,164,.15)'; c.strokeStyle = '#2e6da4'; c.lineWidth = 1.5; c.fillRect(-half * .25, -22, half * .5, 44); c.strokeRect(-half * .25, -22, half * .5, 44);
+    c.setLineDash([4, 3]); c.beginPath(); c.moveTo(-half * .25 - 12, 0); c.lineTo(half * .25 + 12, 0); c.stroke(); c.setLineDash([]); c.restore();
+    c.beginPath(); c.arc(cx, cy - yG, 6, 0, 7); c.fillStyle = '#c0281f'; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); cTxt(c, 'G', cx + 10, cy - yG + 4, '#c0281f', 'left', true);
+    const sc = 70 / Math.max(1, cplx.abs(F.FA), cplx.abs(F.FB)), fa = cplx.rot(F.FA, th), fb = cplx.rot(F.FB, th);
+    cArrow(c, cx - half * .32, cy - 14, cx - half * .32, cy - 14 - fa[1] * sc, '#d32f2f', 3); cArrow(c, cx + half * .32, cy - 14, cx + half * .32, cy - 14 - fb[1] * sc, '#1565c0', 3);
+    cTxt(c, 'Seules les composantes verticales Fᵧ sont tracées', cx, H - 10, '#5a6068', 'center', false, 11);
+    // vue de face
+    const fx = half + half / 2, fy = H / 2, R = Math.min(half, H) * .24, aV = Math.min(F.r * 1000 * 260, R * .7);
+    c.strokeStyle = '#d6d8dd'; c.setLineDash([2, 3]); c.lineWidth = 1; c.beginPath(); c.moveTo(fx - R * 1.8, fy); c.lineTo(fx + R * 1.8, fy); c.moveTo(fx, fy - R * 1.6); c.lineTo(fx, fy + R * 1.6); c.stroke(); c.setLineDash([]);
+    if (aV > 1.5) { c.strokeStyle = '#c0281f'; c.setLineDash([3, 4]); c.beginPath(); c.arc(fx, fy, aV, 0, 7); c.stroke(); c.setLineDash([]); }
+    const gx = fx + aV * Math.cos(th), gy = fy - aV * Math.sin(th);
+    c.beginPath(); c.arc(gx, gy, R, 0, 7); c.fillStyle = 'rgba(46,109,164,.1)'; c.fill(); c.strokeStyle = '#2e6da4'; c.lineWidth = 1.2; c.stroke();
+    c.beginPath(); c.arc(fx, fy, 3, 0, 7); c.fillStyle = '#5a6068'; c.fill();
+    if (F.r > 1e-9) cArrow(c, gx, gy, gx + Math.cos(th) * 55 * Math.min(1, F.r * 1000 * 6 + .25), gy - Math.sin(th) * 55 * Math.min(1, F.r * 1000 * 6 + .25), '#c0281f', 2.6);
+    if (Math.abs(VB.al) > .02) cArrow(c, gx, gy, gx - Math.sin(th) * R * .9, gy - Math.cos(th) * R * .9, '#7b4fc2', 2.4);
+    c.beginPath(); c.arc(gx, gy, 6, 0, 7); c.fillStyle = '#c0281f'; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke();
+    cTxt(c, 'θ = ' + Math.round(((th * DEG) % 360 + 360) % 360) + '°', fx, H - 10, '#9a5b00', 'center', true);
+    cTxt(c, 'x', fx + R * 1.8 + 4, fy + 4, '#8a929c'); cTxt(c, 'y', fx + 4, fy - R * 1.6 - 3, '#8a929c');
+    cTxt(c, 'flèche rouge : M·r·ω² en G ; flèche violette : sens d’inclinaison', fx, 36, '#5a6068', 'center', false, 11);
+  }
+  function drawPlot() {
+    const o = cvSize($('#vb-cv2')); if (!o) return; const { c, W, H } = o, F = vbForces();
+    const m = { l: 56, r: 14, t: 24, b: 34 }, pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const amp = Math.max(cplx.abs(F.FA), cplx.abs(F.FB), 1), ym = amp * 1.15, X = a => m.l + a / (2 * Math.PI) * pw, Y = v => m.t + (1 - (v + ym) / (2 * ym)) * ph;
+    c.strokeStyle = '#e6eaee'; c.lineWidth = 1; for (let i = 0; i <= 4; i++) { c.beginPath(); c.moveTo(X(i * Math.PI / 2), m.t); c.lineTo(X(i * Math.PI / 2), m.t + ph); c.stroke(); }
+    c.strokeStyle = '#5a6068'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(m.l, Y(0)); c.lineTo(m.l + pw, Y(0)); c.moveTo(m.l, m.t); c.lineTo(m.l, m.t + ph); c.stroke();
+    for (let i = 0; i <= 4; i++) cTxt(c, (i * 90) + '°', X(i * Math.PI / 2), m.t + ph + 18, '#5a6068', 'center', false, 11);
+    [-1, -.5, 0, .5, 1].forEach(k => cTxt(c, fmtN(k * ym), m.l - 6, Y(k * ym) + 4, '#5a6068', 'right', false, 11));
+    cTxt(c, 'efforts sur les roulements (N)', m.l, 14, '#111', 'left', true, 12); cTxt(c, 'angle de rotation θ', m.l + pw, H - 6, '#5a6068', 'right', false, 11);
+    const cs = [['A', 0, '#2e6da4'], ['A', 1, '#1e7a2e'], ['B', 0, '#c0281f'], ['B', 1, '#9a5b00']];
+    cs.forEach(k => { c.strokeStyle = k[2]; c.lineWidth = 2.2; c.beginPath(); for (let i = 0; i <= 160; i++) { const a = i / 160 * 2 * Math.PI, z = cplx.rot(k[0] === 'A' ? F.FA : F.FB, a), y = Y(z[k[1]]); i ? c.lineTo(X(a), y) : c.moveTo(X(a), y); } c.stroke(); });
+    const t = ((VB.th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); c.strokeStyle = '#111'; c.setLineDash([3, 3]); c.lineWidth = 1; c.beginPath(); c.moveTo(X(t), m.t); c.lineTo(X(t), m.t + ph); c.stroke(); c.setLineDash([]);
+    cs.forEach(k => { const z = cplx.rot(k[0] === 'A' ? F.FA : F.FB, t); c.beginPath(); c.arc(X(t), Y(z[k[1]]), 4.5, 0, 7); c.fillStyle = k[2]; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); });
+  }
+  LOOP.fn = dt => { if (!VB.play) return; VB.th = (VB.th + dt * 1.6) % (2 * Math.PI); draw(); };
+  upd();
+}
+WORKSHOPS.push({ id: 'vib', title: 'Origine des vibrations', hint: 'Efforts tournants dans les roulements : translation de G et inclinaison de l’axe.', mount: mountVib, reset: () => { VB.a = 0.05; VB.al = 0; VB.N = 6000; VB.th = 0.6; VB.play = true; } });
+
+/* ============ ATELIER 2 : CONDITIONS D'ÉQUILIBRAGE ============ */
+const CD = { r: 0.05, D: 0, E: 3, N: 6000, th: 0.6 };
+const CD_PRE = [['Parfaitement équilibré', 0, 0, 0, 'r = 0 et D = E = 0 : aucun effort variable.'], ['Vibrations linéaires', 0.05, 0, 0, 'G hors de l’axe, matrice d’inertie diagonale : une force tournante, pas de couple.'], ['Vibrations angulaires', 0, 0, 4, 'G sur l’axe, mais D ou E non nul : un couple tournant, pas de force résultante.'], ['Les deux défauts', 0.05, 0, 4, 'Force et couple tournants se superposent.']];
+function cdForces() {
+  const w = CD.N * 2 * Math.PI / 60, w2 = w * w, M = CYL.M, L = CYL.L, r = CD.r * 1e-3, E = CD.E * 1e-5 + M * r * L / 2, D = CD.D * 1e-5;
+  return { w, FB: [w2 * E / L, w2 * D / L], FA: [w2 * (M * r - E / L), -w2 * D / L], U: [w2 * M * r, 0], couple: w2 * Math.hypot(CD.E * 1e-5, D) };
+}
+function mountCond(root) {
+  root.innerHTML = '';
+  root.append(h('h2', null, '2. Conditions d’équilibrage'),
+    h('p', { html: 'Les efforts sur les roulements deviennent indépendants de l’angle de rotation θ si et seulement si trois paramètres sont nuls : le décalage <b>r</b> du centre de masse et les produits d’inertie <b>D</b> et <b>E</b>, pris en G dans le repère du rotor.' }),
+    h('div', { class: 'formula' }, 'r = 0   et   D = 0   et   E = 0'),
+    h('p', { html: '<b>Équilibrage statique</b> : G est sur l’axe (r = 0). <b>Équilibrage dynamique</b> : de plus l’axe de rotation est axe principal d’inertie (D = E = 0). Choisissez un cas, ou réglez les paramètres.' }));
+  const pre = h('div', { class: 'chips' });
+  CD_PRE.forEach((p, i) => pre.append(h('button', { type: 'button', class: 'chip', onclick: () => { CD.r = p[1]; CD.D = p[2]; CD.E = p[3]; sr.inp.value = CD.r; sD.inp.value = CD.D; sE.inp.value = CD.E; upd(i); } }, p[0])));
+  const sr = slider('cd-r', 'r', 'mm', 0, 0.2, 0.005, CD.r, v => f2(v, 3)), sD = slider('cd-D', 'D', '×10⁻⁵ kg·m²', 0, 10, 0.1, CD.D, v => f2(v, 1)), sE = slider('cd-E', 'E', '×10⁻⁵ kg·m²', 0, 10, 0.1, CD.E, v => f2(v, 1)), sN = slider('cd-N', 'Vitesse', 'tr/min', 500, 30000, 500, CD.N, v => String(v));
+  root.append(pre, h('div', { class: 'opts' }, sr.el, sD.el, sE.el, sN.el), h('div', { class: 'gstats', id: 'cd-st' }), h('div', { class: 'cards', id: 'cd-cards' }), h('canvas', { class: 'viz', id: 'cd-cv' }), h('p', { class: 'small', html: '<b>Lecture.</b> <span style="color:#c0281f;font-weight:600">Flèche rouge</span> : force centrifuge M·r·ω² appliquée en G. <span style="color:#d32f2f;font-weight:600">Flèches en A</span> et <span style="color:#1565c0;font-weight:600">en B</span> : forces exercées sur les roulements (leur longueur est proportionnelle à l’intensité). Deux forces de même sens traduisent une vibration <b>linéaire</b>, deux forces de sens opposés une vibration <b>angulaire</b>.' }), h('div', { class: 'verdict', id: 'cd-msg' }));
+  [sr, sD, sE, sN].forEach((s, k) => s.inp.addEventListener('input', () => { CD[['r', 'D', 'E', 'N'][k]] = +s.inp.value; upd(-1); }));
+  let cur = 0;
+  function upd(i) {
+    if (i >= 0) cur = i; else cur = -1;
+    Array.prototype.forEach.call(pre.children, (b, k) => b.classList.toggle('on', k === cur));
+    sr.out.textContent = f2(CD.r, 3); sD.out.textContent = f2(CD.D, 1); sE.out.textContent = f2(CD.E, 1); sN.out.textContent = CD.N;
+    const F = cdForces(), sOK = CD.r < 1e-9, dOK = CD.D < 1e-9 && CD.E < 1e-9;
+    const st = $('#cd-st'); st.innerHTML = '';
+    const mk = (l, v, ok) => h('div', { class: 'stat', style: 'border-color:' + (ok ? 'var(--ok)' : 'var(--bad)') }, h('span', null, l), h('b', { style: 'color:' + (ok ? 'var(--ok)' : 'var(--bad)') }, v));
+    st.append(mk('Condition statique : r = 0', sOK ? '✓ vérifiée' : '✗ r = ' + f2(CD.r, 3) + ' mm', sOK), mk('Condition dynamique : D = E = 0', dOK ? '✓ vérifiée' : '✗ D = ' + f2(CD.D, 1) + ' ; E = ' + f2(CD.E, 1), dOK), mk('Équilibrage complet', sOK && dOK ? '✓ oui' : '— non', sOK && dOK));
+    const cards = $('#cd-cards'); cards.innerHTML = '';
+    cards.append(h('div', { class: 'card', style: sOK ? 'border-color:var(--ok)' : '' }, h('h4', null, sOK ? '✓ Statique : vérifié' : '✗ Statique : non vérifié'), h('p', null, sOK ? 'Posé sur deux couteaux horizontaux, le rotor reste en équilibre indifférent dans n’importe quelle position.' : 'Posé sur deux couteaux, le rotor tourne jusqu’à placer G sous l’axe : G n’est pas sur l’axe.')),
+      h('div', { class: 'card', style: dOK ? 'border-color:var(--ok)' : '' }, h('h4', null, dOK ? '✓ Axe principal d’inertie' : '✗ Axe non principal'), h('p', null, dOK ? 'La matrice d’inertie est diagonale dans le repère lié : pas de couple tournant.' : 'Le moment dynamique tourne avec le rotor : ' + f2(F.couple, 1) + ' N·m à ' + f1(CD.N / 60, 1) + ' Hz.')));
+    const m = $('#cd-msg');
+    if (sOK && dOK) { m.className = 'verdict yes'; m.innerHTML = '<b>Équilibrage dynamique complet.</b> Les efforts sur les roulements sont constants.'; }
+    else if (sOK) { m.className = 'verdict warn'; m.innerHTML = '<b>Équilibrage statique seul.</b> Le rotor reste en place sur des couteaux, mais il vibre en rotation : le couple tournant subsiste. Insuffisant en pratique.'; }
+    else if (dOK) { m.className = 'verdict warn'; m.innerHTML = '<b>Axe principal, mais G décalé.</b> D = E = 0 ne suffit pas : la force centrifuge ' + fmtN(cplx.abs(F.U)) + ' N tourne avec le rotor.'; }
+    else { m.className = 'verdict no'; m.innerHTML = '<b>Aucune condition vérifiée</b> pour ce réglage : il faut à la fois r = 0 et D = E = 0.'; }
+    draw();
+  }
+  function draw() {
+    const o = cvSize($('#cd-cv')); if (!o) return; const { c, W, H } = o, F = cdForces(), th = CD.th, half = W / 2, hasLin = CD.r > 1e-9, hasAng = CD.D > 1e-9 || CD.E > 1e-9;
+    cTxt(c, 'Défaut statique : G est-il sur l’axe ?', half / 2, 20, '#111', 'center', true, 13); cTxt(c, 'Défaut dynamique : axe principal ?', half + half / 2, 20, '#111', 'center', true, 13);
+    c.strokeStyle = '#e6eaee'; c.lineWidth = 1; c.beginPath(); c.moveTo(half, 34); c.lineTo(half, H - 20); c.stroke();
+    const cx = half / 2, cy = H / 2 + 6, R = Math.min(half * .3, H * .28), a = hasLin ? Math.min(CD.r * 260, R * .75) : 0;
+    c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fillStyle = 'rgba(46,109,164,.12)'; c.fill(); c.strokeStyle = '#2e6da4'; c.lineWidth = 1.4; c.stroke();
+    c.strokeStyle = '#d6d8dd'; c.lineWidth = 1; c.beginPath(); c.moveTo(cx - R * 1.3, cy); c.lineTo(cx + R * 1.3, cy); c.moveTo(cx, cy - R * 1.3); c.lineTo(cx, cy + R * 1.3); c.stroke();
+    const gx = cx + a * Math.cos(th), gy = cy - a * Math.sin(th);
+    if (hasLin) { c.strokeStyle = '#c0281f'; c.setLineDash([3, 4]); c.beginPath(); c.arc(cx, cy, a, 0, 7); c.stroke(); c.setLineDash([]); cArrow(c, gx, gy, gx + 58 * Math.cos(th), gy - 58 * Math.sin(th), '#c0281f', 2.8); cTxt(c, 'M·r·ω² = ' + fmtN(cplx.abs(F.U)) + ' N', cx, cy + R + 26, '#c0281f', 'center', true); }
+    c.beginPath(); c.arc(gx, gy, 5.5, 0, 7); c.fillStyle = '#c0281f'; c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); cTxt(c, 'G', gx + 9, gy - 8, '#c0281f', 'left', true);
+    c.beginPath(); c.arc(cx, cy, 3, 0, 7); c.fillStyle = '#5a6068'; c.fill();
+    cTxt(c, hasLin ? 'G hors de l’axe → vibration linéaire' : 'G sur l’axe → pas de force résultante', cx, H - 8, hasLin ? '#c0281f' : '#1e7a2e', 'center', true);
+    const x2 = half + half / 2, bl = x2 - half * .28, br = x2 + half * .28;
+    c.strokeStyle = '#5a6068'; c.lineWidth = 2; c.beginPath(); c.moveTo(x2 - half * .4, cy); c.lineTo(x2 + half * .4, cy); c.stroke();
+    cBearing(c, bl, cy); cBearing(c, br, cy); cTxt(c, 'A', bl, cy + 52, '#d32f2f', 'center', true); cTxt(c, 'B', br, cy + 52, '#1565c0', 'center', true);
+    c.save(); c.translate(x2, cy); c.rotate(hasAng ? -Math.min(.22, CD.E * .03 + CD.D * .03) : 0); c.fillStyle = 'rgba(46,109,164,.15)'; c.strokeStyle = '#2e6da4'; c.lineWidth = 1.5; c.fillRect(-half * .22, -16, half * .44, 32); c.strokeRect(-half * .22, -16, half * .44, 32); c.setLineDash([3, 3]); c.beginPath(); c.moveTo(-half * .3, 0); c.lineTo(half * .3, 0); c.stroke(); c.setLineDash([]); c.restore();
+    const sc = 52 / Math.max(1, cplx.abs(F.FA), cplx.abs(F.FB)), fa = cplx.rot(F.FA, th), fb = cplx.rot(F.FB, th);
+    if (hasLin || hasAng) { cArrow(c, bl, cy - 14, bl, cy - 14 - fa[1] * sc * 1.6, '#d32f2f', 3); cArrow(c, br, cy - 14, br, cy - 14 - fb[1] * sc * 1.6, '#1565c0', 3); }
+    cTxt(c, hasAng ? 'D, E ≠ 0 → couple tournant, vibration angulaire' : 'D = E = 0 → pas de couple tournant', x2, H - 8, hasAng ? '#c0281f' : '#1e7a2e', 'center', true);
+  }
+  LOOP.fn = dt => { CD.th = (CD.th + dt * 1.6) % (2 * Math.PI); draw(); };
+  upd(-1);
+}
+WORKSHOPS.push({ id: 'cond', title: 'Conditions d’équilibrage', hint: 'Équilibrage statique (r = 0) et dynamique (r = 0 et D = E = 0).', mount: mountCond, reset: () => { CD.r = 0.05; CD.D = 0; CD.E = 3; CD.N = 6000; } });
+
+/* ============ ATELIER 3 : ROTOR ET MASSELOTTES ; ATELIER 4 : DÉFI ============ */
+function mountRotor(root, CH) {
+  root.classList.add('wide');
+  var RT = document.createElement('div'); RT.className = 'rt' + (CH ? ' ch' : ''); root.appendChild(RT);
+  RT.innerHTML = `
+<div class="top">
+  <section class="view" aria-label="Solide en rotation">
+    <h2>${CH ? 'Rotor à équilibrer (défauts inconnus)' : 'Solide en rotation'}</h2>
+    ${CH ? `<div class="item"><span class="dot grey" aria-hidden="true"></span><div class="body">
+      <span class="k">Choisir un rotor</span><div class="btns" id="scs"></div>
+      <p class="sol" id="sc-txt"></p>
+      <span class="k">Les masses perturbatrices sont cachées : on ne dispose que des mesures aux paliers. Le diagramme « vue de face » est lié au rotor : les angles se lisent par rapport au repère x (θ = 0).</span>
+    </div></div>` : `<div class="item"><span class="dot grey" aria-hidden="true"></span><div class="body">
+      <span class="k">Charger un solide</span>
+      <div class="btns" id="presets">
+        <button type="button" class="btn" data-preset="dyn" aria-pressed="false">Équilibré dynamiquement</button>
+        <button type="button" class="btn" data-preset="stat" aria-pressed="false">Équilibré statiquement</button>
+        <button type="button" class="btn" data-preset="none" aria-pressed="false">Non équilibré</button>
+      </div></div></div>`}
+    <div class="item"><span class="dot grey" aria-hidden="true"></span><div class="body">
+      <div id="rows-L" class="${CH ? 'hide' : ''}"></div>
+      <div id="rows-rpm"></div>
+      <span class="k only-free">Cylindre homogène centré entre les paliers (longueur 0,92·L), auquel s’ajoutent les masses</span>
+      <div id="rows-M" class="hide"></div>
+      <div id="rows-Rc" class="${CH ? 'hide' : ''}"></div>
+    </div></div>
+    <div id="defects" class="cards ${CH ? 'hide' : ''}"></div>
+    <div class="item only-free"><span class="dot def" aria-hidden="true"></span><div class="body">
+      <div class="btns"><button type="button" class="btn" id="addDef">+ Ajouter une masse perturbatrice</button></div>
+    </div></div>
+  </section>
+  <section class="view" aria-label="Équilibrage par masselottes">
+    <h2>Équilibrage par masselottes</h2>
+    <div class="item"><span class="dot cor" aria-hidden="true"></span><div class="body">
+      <span class="k">Rayon des masselottes</span>
+      <div id="rows-R"></div>
+      <span class="k">Une masse négative correspond à un retrait de matière (perçage). Elle équivaut à une masse positive placée 180° plus loin.</span>
+    </div></div>
+    <div id="corr" class="cards"></div>
+    <div class="item"><span class="dot cor" aria-hidden="true"></span><div class="body">
+      <div class="btns">
+        <button type="button" class="btn pri ${CH ? 'hide' : ''}" id="solve">Donner la solution d’équilibrage</button>
+        <button type="button" class="btn" id="clear">Retirer les masselottes</button>
+        ${CH ? '<button type="button" class="btn" id="hint">Indice</button>' : ''}
       </div>
+      <p class="sol" id="sol" aria-live="polite"></p>
+    </div></div>
+  </section>
+</div>
+<div class="app">
+  <aside class="view" aria-label="Résultats">
+    <h2>${CH ? 'Mesures aux paliers' : 'Résultats'}</h2>
+    <div aria-live="polite">
+      <div class="item only-free"><span class="dot def" aria-hidden="true"></span><div class="body">
+        <div class="line"><span class="k">Balourd statique |U| = |Σ m·r|</span><span class="v" id="o-U"></span></div>
+        <div class="line"><span class="k">Balourd dynamique |C|</span><span class="v" id="o-C"></span></div>
+      </div></div>
+      <div class="item"><span class="dot fa" aria-hidden="true"></span><div class="body">
+        <div class="line"><span class="k">Force sur le palier A</span><span class="v" id="o-FA"></span></div>
+        <div class="line"><span class="k">Force sur le palier B</span><span class="v" id="o-FB"></span></div>
+        <div class="line ch-only"><span class="k">Phase (repère lié au rotor)</span><span class="v" id="o-ph"></span></div>
+      </div></div>
+      <div class="item only-free"><span class="dot fb" aria-hidden="true"></span><div class="body">
+        <div class="line"><span class="k">Vibration linéaire : force résultante</span><span class="v" id="o-lin"></span></div>
+        <div class="line"><span class="k">Vibration angulaire : couple</span><span class="v" id="o-ang"></span></div>
+      </div></div>
+      <div class="item"><span class="dot grey" aria-hidden="true"></span><div class="body">
+        <div class="line ch-only"><span class="k">Résiduel (vs rotor non corrigé)</span><span class="v" id="o-rho"></span></div>
+        <div class="line"><span class="k">Équilibre statique</span><span id="o-stat"></span></div>
+        <div class="line"><span class="k">Équilibre dynamique</span><span id="o-dyn"></span></div>
+        <div class="ch-only" id="ch-msg"></div>
+      </div></div>
+    </div>
+    <div class="inertia">
       <div class="sub">Inertie et centre de gravité</div>
       <div class="item"><span class="dot" aria-hidden="true"></span><div class="body">
         <div class="line"><span class="k">Masse totale M<sub>t</sub></span><span class="v" id="o-Mt"></span></div>
         <div class="line"><span class="k">Centre de gravité G (x ; y ; z depuis A)</span><span class="v" id="o-G"></span></div>
-        <div class="line"><span class="k">Écart de G à l'axe (excentricité)</span><span class="v" id="o-e"></span></div>
+        <div class="line"><span class="k">Écart de G à l’axe (excentricité)</span><span class="v" id="o-e"></span></div>
       </div></div>
       <div class="item"><span class="dot" aria-hidden="true"></span><div class="body">
-        <span class="seg" role="radiogroup" aria-label="Point de réduction de la matrice d'inertie">
-          <label><input type="radio" name="ipt" value="O" checked> En O, milieu de l'axe</label>
+        <span class="seg" role="radiogroup" aria-label="Point de réduction de la matrice d’inertie">
+          <label><input type="radio" name="ipt" value="O" checked> En O, milieu de l’axe</label>
           <label><input type="radio" name="ipt" value="G"> En G</label>
         </span>
-        <div class="matwrap"><div class="mat" id="mat" aria-label="Matrice d'inertie"></div></div>
+        <div class="matwrap"><div class="mat" id="mat" aria-label="Matrice d’inertie"></div></div>
         <span class="k" id="mat-cap"></span>
       </div></div>
-      <p class="note">Avec U = Σ m·r·e<sup>iθ</sup> et C = Σ m·r·(z − L/2)·e<sup>iθ</sup>, les forces exercées sur les paliers valent ω²(U/2 ∓ C/L). La force résultante ω²|U| fait vibrer l'axe en translation. Le couple ω²|C| le fait basculer. Le solide est équilibré dynamiquement quand U et C sont nuls tous les deux. Il est équilibré à 1 % près quand les deux sont inférieurs à 1 % de Σ|m·r|, ou de Σ|m·r|·L/2 pour C.</p>
-    </aside>
-
-    <div class="stage">
-      <div class="view toolbar">
-        <button type="button" class="btn" id="play" aria-pressed="true">Pause</button>
-        <span class="seg" role="radiogroup" aria-label="Vibration affichée">
-          <label><input type="radio" name="mode" value="total" checked> Totale</label>
-          <label><input type="radio" name="mode" value="lin"> Linéaire</label>
-          <label><input type="radio" name="mode" value="ang"> Angulaire</label>
-        </span>
-        <span class="checks" role="group" aria-label="Forces affichées">
-          <label class="chk"><input type="checkbox" id="show-a" checked> Force palier A</label>
-          <label class="chk"><input type="checkbox" id="show-b" checked> Force palier B</label>
-          <label class="chk"><input type="checkbox" id="show-m" checked> Forces d'accélération des masses</label>
-        </span>
-        <span class="gain"><label for="gain" class="k">Amplification</label><input type="range" id="gain" min="0.2" max="4" step="0.1" value="1"><output id="gain-o" for="gain">×1,0</output></span>
-      </div>
-
+    </div>
+    <p class="note only-free">Avec U = Σ m·r·e<sup>iθ</sup> et C = Σ m·r·(z − L/2)·e<sup>iθ</sup>, les forces exercées sur les paliers valent ω²(U/2 ∓ C/L). La force résultante ω²|U| fait vibrer l’axe en translation, le couple ω²|C| le fait basculer. Le solide est équilibré dynamiquement quand U et C sont nuls tous les deux (à 1 % près : moins de 1 % de Σ|m·r|, ou de Σ|m·r|·L/2 pour C).</p>
+    <p class="note ch-only">Un équilibrage industriel vise un résiduel de quelques pour cent. Les phases sont données par rapport au repère x lié au rotor : elles ne changent pas quand le rotor tourne.</p>
+  </aside>
+  <div class="stage">
+    <div class="view toolbar">
+      <button type="button" class="btn" id="play" aria-pressed="true">Pause</button>
+      <span class="seg" role="radiogroup" aria-label="Vibration affichée">
+        <label><input type="radio" name="mode" value="total" checked> Totale</label>
+        <label><input type="radio" name="mode" value="lin"> Linéaire</label>
+        <label><input type="radio" name="mode" value="ang"> Angulaire</label>
+      </span>
+      <span class="checks" role="group" aria-label="Forces affichées">
+        <label class="chk"><input type="checkbox" id="show-a" checked> Force palier A</label>
+        <label class="chk"><input type="checkbox" id="show-b" checked> Force palier B</label>
+        <label class="chk"><input type="checkbox" id="show-m" checked> Forces d’accélération des masses</label>
+      </span>
+      <span class="gain"><label for="gain" class="k">Amplification</label><input type="range" id="gain" min="0.2" max="4" step="0.1" value="1"><output id="gain-o" for="gain">×1,0</output></span>
+    </div>
+    <figure class="view">
+      <h2>Vue de côté : rotor, paliers et vibrations</h2>
+      <canvas id="cvSide" role="img" aria-label="Vue de côté animée du rotor sur ses deux paliers élastiques"></canvas>
+      <figcaption><span class="sw" style="background:#e65100"></span>masse perturbatrice <span class="sw" style="background:#2e7d32"></span>masselotte (cercle creux : masse négative) <span class="sw" style="background:#d32f2f"></span>force sur le palier A <span class="sw" style="background:#1565c0"></span>force sur le palier B. Les flèches sombres sur les masses sont leurs forces d’accélération m·a, dirigées vers l’axe pour une masse positive. Les masses côté observateur sont pleines, celles de l’autre côté sont pâles. Les déplacements sont amplifiés et proportionnels aux forces.<span class="only-free"> Le losange violet est le centre de gravité G de l’ensemble, son écart à l’axe étant agrandi 50 fois.</span></figcaption>
+    </figure>
+    <div class="pair">
       <figure class="view">
-        <h2>Vue de côté : rotor, paliers et vibrations</h2>
-        <canvas id="cvSide" role="img" aria-label="Vue de côté animée du rotor sur ses deux paliers élastiques"></canvas>
-        <figcaption><span class="sw" style="background:var(--def)"></span>masse perturbatrice <span class="sw" style="background:var(--cor)"></span>masselotte (cercle creux : masse négative) <span class="sw" style="background:var(--fa)"></span>force sur le palier A <span class="sw" style="background:var(--fb)"></span>force sur le palier B. Les flèches sombres sur les masses sont leurs forces d'accélération m·a, dirigées vers l'axe pour une masse positive. Les masses côté observateur sont pleines, celles de l'autre côté sont pâles. Les déplacements sont amplifiés et proportionnels aux forces. Le losange violet est le centre de gravité G de l'ensemble, son écart à l'axe étant agrandi 50 fois.</figcaption>
+        <h2>Vue de face (plan xy)</h2>
+        <canvas id="cvEnd" role="img" aria-label="Vue de face animée avec les masses et les forces sur les paliers"></canvas>
+        <figcaption>Les forces sur les paliers tournent avec le rotor. Elles sont nulles quand le rotor est équilibré dynamiquement.</figcaption>
       </figure>
-
-      <div class="pair">
-        <figure class="view">
-          <h2>Vue de face (plan xy)</h2>
-          <canvas id="cvEnd" role="img" aria-label="Vue de face animée avec les masses et les forces sur les paliers"></canvas>
-          <figcaption>Les forces sur les paliers tournent avec le rotor. Elles sont nulles quand le rotor est équilibré dynamiquement. Le losange violet est le centre de gravité G de l'ensemble, son écart à l'axe étant agrandi 50 fois.</figcaption>
-        </figure>
-        <figure class="view">
-          <h2>Forces sur les paliers dans le repère fixe</h2>
-          <canvas id="cvGraph" role="img" aria-label="Composante verticale des forces sur les paliers A et B en fonction du temps"></canvas>
-          <figcaption>Composante verticale F<sub>y</sub> sur deux tours. L'échelle verticale est celle du solide sans masselottes à la vitesse choisie. Des courbes en phase indiquent une vibration linéaire, des courbes en opposition de phase une vibration angulaire.</figcaption>
-        </figure>
-      </div>
+      <figure class="view">
+        <h2>Forces sur les paliers dans le repère fixe</h2>
+        <canvas id="cvGraph" role="img" aria-label="Composante verticale des forces sur les paliers A et B en fonction du temps"></canvas>
+        <figcaption>Composante verticale F<sub>y</sub> sur deux tours. L’échelle verticale est celle du solide sans masselottes à la vitesse choisie. Des courbes en phase indiquent une vibration linéaire, des courbes en opposition de phase une vibration angulaire.</figcaption>
+      </figure>
     </div>
   </div>
 </div>
-
-<script>
-(function () {
-  var $ = function (id) { return document.getElementById(id); };
+`;
+  var HID = CH;
+  var $ = function (id) { return RT.querySelector('#' + id); };
   var TAU = 2 * Math.PI, RAD = Math.PI / 180, REF_RPM = 3000;
   var fmt = function (x, d) { return x.toFixed(d).replace('.', ',').replace('-', '−'); };
   var numStr = function (v) { return String(+v.toPrecision(4)); };
   var COL = { fg: '#212121', muted: '#666b75', grid: '#d6d8dd', minor: '#eceef1', ui: '#6557d2', fa: '#d32f2f', fb: '#1565c0', def: '#e65100', cor: '#2e7d32', defD: '#8d3a00', corD: '#14531a' };
-  var FONT = '12px "Open Sans", system-ui, sans-serif';
+  var FONT = '12px "IBM Plex Sans", system-ui, sans-serif';
   var KG = 50; /* agrandissement de l'écart de G à l'axe, pour l'affichage */
 
   /* ---------- État ---------- */
@@ -282,8 +710,8 @@ figcaption .sw:first-child { margin-left: 0; }
       z: { min: 0, max: function () { return S.L; }, step: 1, label: 'z', unit: 'mm', n: 'position axiale' }
     },
     c: {
-      m: { min: -200, max: 200, step: 0.1, label: 'm', unit: 'g', n: 'masse' },
-      th: { min: 0, max: 360, step: 1, label: 'θ', unit: '°', n: 'angle' }
+      m: { min: -200, max: 200, step: CH ? 0.01 : 0.1, label: 'm', unit: 'g', n: 'masse' },
+      th: { min: 0, max: 360, step: CH ? 0.1 : 1, label: 'θ', unit: '°', n: 'angle' }
     },
     g: {
       L: { min: 200, max: 1500, step: 10, label: 'L', unit: 'mm', n: 'distance entre paliers' },
@@ -327,7 +755,7 @@ figcaption .sw:first-child { margin-left: 0; }
     buildDefects(); syncInputs(); recompute();
   }
   function markPreset() {
-    Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function (b) {
+    Array.prototype.forEach.call(RT.querySelectorAll('[data-preset]'), function (b) {
       b.setAttribute('aria-pressed', b.dataset.preset === S.preset ? 'true' : 'false');
     });
   }
@@ -354,7 +782,7 @@ figcaption .sw:first-child { margin-left: 0; }
     }).join('');
   }
   function syncInputs() {
-    Array.prototype.forEach.call(document.querySelectorAll('input[data-scope]'), function (el) {
+    Array.prototype.forEach.call(RT.querySelectorAll('input[data-scope]'), function (el) {
       var o = ref(el.dataset.scope, el.dataset.id);
       if (!o) return;
       var v = o[el.dataset.key];
@@ -362,13 +790,13 @@ figcaption .sw:first-child { margin-left: 0; }
     });
   }
   function updateMax() {
-    Array.prototype.forEach.call(document.querySelectorAll('input[type="range"][data-scope]'), function (el) {
+    Array.prototype.forEach.call(RT.querySelectorAll('input[type="range"][data-scope]'), function (el) {
       var sp = SPEC[el.dataset.scope][el.dataset.key];
       el.max = specMax(sp);
     });
   }
 
-  document.addEventListener('input', function (e) {
+  RT.addEventListener('input', function (e) {
     var t = e.target;
     if (!t.dataset || !t.dataset.scope) return;
     var o = ref(t.dataset.scope, t.dataset.id);
@@ -383,7 +811,7 @@ figcaption .sw:first-child { margin-left: 0; }
     if (t.dataset.scope === 'd' || key === 'L') { S.preset = null; markPreset(); }
     recompute();
   });
-  document.addEventListener('change', function (e) {
+  RT.addEventListener('change', function (e) {
     var t = e.target;
     if (t.dataset && t.dataset.scope && t.type === 'number') {
       var o = ref(t.dataset.scope, t.dataset.id), v = parseFloat(t.value);
@@ -401,7 +829,7 @@ figcaption .sw:first-child { margin-left: 0; }
     S.defects.push({ id: S.nextId++, m: 10, r: 100, th: 0, z: Math.round(S.L / 2) });
     S.preset = null; buildDefects(); recompute();
   });
-  Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function (b) {
+  Array.prototype.forEach.call(RT.querySelectorAll('[data-preset]'), function (b) {
     b.addEventListener('click', function () { loadPreset(b.dataset.preset); });
   });
 
@@ -467,7 +895,7 @@ figcaption .sw:first-child { margin-left: 0; }
     var L = S.L / 1000;
     var tolU = 0.01 * cur.absMR, tolC = 0.01 * cur.absMR * L / 2;
     var okS = mag(cur.U) <= tolU + 1e-15, okD = okS && mag(cur.Cm) <= tolC + 1e-15;
-    R_ = { cur: cur, Fref: Fref, baseMax: Math.max(mag(baseNow.FA), mag(baseNow.FB)), all: all };
+    R_ = { cur: cur, Fref: Fref, baseMax: Math.max(mag(baseNow.FA), mag(baseNow.FB)), all: all, vis: all.filter(function (q) { return q.cor || !HID; }) };
     var f = function (x) { return fmt(x, x < 10 ? 2 : 1); };
     $('o-U').textContent = fmt(mag(cur.U) * 1e6, 1) + ' g·mm';
     $('o-C').textContent = fmt(mag(cur.Cm) * 1e9, 0) + ' g·mm²';
@@ -479,6 +907,7 @@ figcaption .sw:first-child { margin-left: 0; }
     ps.className = 'pill ' + (okS ? 'ok' : 'bad'); ps.textContent = okS ? 'Équilibré' : 'Non équilibré';
     pd.className = 'pill ' + (okD ? 'ok' : 'bad'); pd.textContent = okD ? 'Équilibré' : 'Non équilibré';
     R_.tolC = tolC; R_.I = inertia(); updateInertia();
+    if (CH) chUpdate();
     drawAll();
   }
 
@@ -517,7 +946,7 @@ figcaption .sw:first-child { margin-left: 0; }
     $('o-G').textContent = '(' + fmt(clean(G[0] * 1000, 3), 3) + ' ; ' + fmt(clean(G[1] * 1000, 3), 3) + ' ; ' + fmt(G[2] * 1000, 2) + ') mm';
     $('o-e').textContent = e < 0.05 ? '0 µm (G sur l\'axe)' : fmt(e, 1) + ' µm, à θ = ' + fmt(((Math.atan2(G[1], G[0]) / RAD) % 360 + 360) % 360, 0) + '°';
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="ipt"]'), function (r) {
+  Array.prototype.forEach.call(RT.querySelectorAll('input[name="ipt"]'), function (r) {
     r.addEventListener('change', function () { S.ipt = r.value; updateInertia(); });
   });
 
@@ -556,7 +985,7 @@ figcaption .sw:first-child { margin-left: 0; }
   function gMark(c, x, y, alpha) {
     c.globalAlpha = alpha; c.fillStyle = COL.ui; c.strokeStyle = '#fff'; c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + 8, y); c.lineTo(x, y + 8); c.lineTo(x - 8, y); c.closePath(); c.fill(); c.stroke();
-    c.font = '600 12px "Open Sans", system-ui, sans-serif'; c.textAlign = 'left'; c.fillText('G', x + 11, y - 7);
+    c.font = '600 12px "IBM Plex Sans", system-ui, sans-serif'; c.textAlign = 'left'; c.fillText('G', x + 11, y - 7);
     c.font = FONT; c.globalAlpha = 1;
   }
   function spring(c, x, yTop, yBot) {
@@ -599,7 +1028,7 @@ figcaption .sw:first-child { margin-left: 0; }
       spring(c, x, y + 17, ground);
       c.fillStyle = '#dfe3ec'; c.strokeStyle = '#7b8190'; c.lineWidth = 1.5;
       c.beginPath(); c.rect(x - 14, y - 16, 28, 32); c.fill(); c.stroke();
-      c.fillStyle = b[3]; c.font = '600 13px "Open Sans", system-ui, sans-serif'; c.textAlign = 'center';
+      c.fillStyle = b[3]; c.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; c.textAlign = 'center';
       c.fillText(b[2], x, ground + 24); c.font = FONT;
     });
 
@@ -626,7 +1055,7 @@ figcaption .sw:first-child { margin-left: 0; }
     });
 
     /* masses : le côté de l'observateur est celui des x < 0 */
-    var list = R_.all.filter(function (q) { return Math.abs(q.m) > 1e-9; }).map(function (q) {
+    var list = R_.vis.filter(function (q) { return Math.abs(q.m) > 1e-9; }).map(function (q) {
       var a = q.th + ph, zmm = q.z * 1000;
       return { q: q, a: a, depth: Math.cos(a), x: zp(zmm), y: yc - off(zmm) - q.r * 1000 * s * Math.sin(a), ax: yc - off(zmm) };
     });
@@ -645,7 +1074,7 @@ figcaption .sw:first-child { margin-left: 0; }
 
     /* centre de gravité de l'ensemble (écart à l'axe agrandi) */
     var Gc = R_.I.G, gxf = Gc[0] * Math.cos(ph) - Gc[1] * Math.sin(ph), gyf = Gc[0] * Math.sin(ph) + Gc[1] * Math.cos(ph), gzmm = Gc[2] * 1000;
-    gMark(c, zp(gzmm), yc - off(gzmm) - gyf * 1000 * KG * s, gxf > 0 ? 0.45 : 1);
+    if (!HID) gMark(c, zp(gzmm), yc - off(gzmm) - gyf * 1000 * KG * s, gxf > 0 ? 0.45 : 1);
 
     /* flèches de force sur les paliers */
     var ka = 52 / R_.Fref, aA = cl(uA * ka, 90), aB = cl(uB * ka, 90);
@@ -666,7 +1095,7 @@ figcaption .sw:first-child { margin-left: 0; }
     c.beginPath(); c.moveTo(cx - Rv * s, cy); c.lineTo(cx + Rv * s, cy); c.moveTo(cx, cy - Rv * s); c.lineTo(cx, cy + Rv * s); c.stroke();
     c.strokeStyle = COL.cor; c.globalAlpha = 0.5; c.setLineDash([4, 4]);
     c.beginPath(); c.arc(cx, cy, S.R * s, 0, TAU); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
-    R_.all.forEach(function (q) {
+    R_.vis.forEach(function (q) {
       if (Math.abs(q.m) < 1e-9) return;
       var a = q.th + ph, r = q.r * 1000 * s;
       massDot(c, cx + r * Math.cos(a), cy - r * Math.sin(a), q, 1);
@@ -682,13 +1111,13 @@ figcaption .sw:first-child { margin-left: 0; }
     }
     c.fillStyle = '#2b2b2b'; c.beginPath(); c.arc(cx, cy, 3, 0, TAU); c.fill();
     var Ge = R_.I.G, gR = Math.min(Math.hypot(Ge[0], Ge[1]) * 1000 * KG * s, Rv * s * 0.9), gA = Math.atan2(Ge[1], Ge[0]) + ph;
-    gMark(c, cx + gR * Math.cos(gA), cy - gR * Math.sin(gA), 1);
+    if (!HID) gMark(c, cx + gR * Math.cos(gA), cy - gR * Math.sin(gA), 1);
     var rot = function (F) { return [F[0] * Math.cos(ph) - F[1] * Math.sin(ph), F[0] * Math.sin(ph) + F[1] * Math.cos(ph)]; };
     var kk = Rv * s * 0.85 / R_.Fref;
     [['A', R_.cur.FA, COL.fa], ['B', R_.cur.FB, COL.fb]].filter(function (f) { return f[0] === 'A' ? S.show.a : S.show.b; }).forEach(function (f) {
       var v = rot(f[1]), lx = Math.max(-Rv * s * 1.1, Math.min(Rv * s * 1.1, v[0] * kk)), ly = Math.max(-Rv * s * 1.1, Math.min(Rv * s * 1.1, v[1] * kk));
       arrow(c, cx, cy, cx + lx, cy - ly, f[2], 3);
-      if (Math.hypot(lx, ly) > 12) { c.fillStyle = f[2]; c.font = '600 13px "Open Sans", system-ui, sans-serif'; c.textAlign = 'center'; c.fillText(f[0], cx + lx * 1.12 + (lx >= 0 ? 6 : -6), cy - ly * 1.12 + 4); c.font = FONT; }
+      if (Math.hypot(lx, ly) > 12) { c.fillStyle = f[2]; c.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; c.textAlign = 'center'; c.fillText(f[0], cx + lx * 1.12 + (lx >= 0 ? 6 : -6), cy - ly * 1.12 + 4); c.font = FONT; }
     });
     c.fillStyle = COL.muted; c.textAlign = 'left'; c.fillText('x', cx + Rv * s + 4 > W - 12 ? W - 12 : cx + Rv * s + 4, cy + 4);
     c.textAlign = 'center'; c.fillText('y', cx, cy - Rv * s - 6);
@@ -734,7 +1163,7 @@ figcaption .sw:first-child { margin-left: 0; }
       c.fillStyle = s[1]; c.strokeStyle = '#fff'; c.lineWidth = 2;
       c.beginPath(); c.arc(X(ac), Y(fy(s[0], ac)), 5, 0, TAU); c.fill(); c.stroke();
     });
-    c.textAlign = 'left'; c.font = '600 12px "Open Sans", system-ui, sans-serif';
+    c.textAlign = 'left'; c.font = '600 12px "IBM Plex Sans", system-ui, sans-serif';
     c.fillStyle = COL.fa; c.fillText('A', m.l + 8, m.t + 14);
     c.fillStyle = COL.fb; c.fillText('B', m.l + 24, m.t + 14); c.font = FONT;
   }
@@ -749,10 +1178,11 @@ figcaption .sw:first-child { margin-left: 0; }
   /* ---------- Animation ---------- */
   var last = null;
   function frame(ts) {
+    if (!RT.isConnected) return;
     requestAnimationFrame(frame);
     if (last === null) last = ts;
     var dt = Math.min(0.1, (ts - last) / 1000); last = ts;
-    if (S.running) { S.phi = (S.phi + dt * TAU * 0.5) % (2 * TAU); drawAll(); }
+    if (S.running && !CS.open && !document.hidden) { S.phi = (S.phi + dt * TAU * 0.5) % (2 * TAU); drawAll(); }
   }
   function setRunning(v) {
     S.running = v;
@@ -760,7 +1190,7 @@ figcaption .sw:first-child { margin-left: 0; }
     if (!v) drawAll();
   }
   $('play').addEventListener('click', function () { setRunning(!S.running); });
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="mode"]'), function (r) {
+  Array.prototype.forEach.call(RT.querySelectorAll('input[name="mode"]'), function (r) {
     r.addEventListener('change', function () { S.mode = r.value; drawAll(); });
   });
   [['show-a', 'a'], ['show-b', 'b'], ['show-m', 'm']].forEach(function (p) {
@@ -774,11 +1204,562 @@ figcaption .sw:first-child { margin-left: 0; }
     ['cvSide', 'cvEnd', 'cvGraph'].forEach(function (id) { ro.observe($(id)); });
   } else { window.addEventListener('resize', drawAll); }
 
+  /* ---------- défi : rotors à défauts cachés ---------- */
+  var SC = [
+    { n: '1. Un seul balourd', t: 'Un rotor de 600 mm porte un unique balourd au milieu de l’arbre. Deux plans de correction à 100 et 500 mm, masselottes à R = 100 mm.', L: 600, R: 100, z1: 100, z2: 500, d: [[18, 100, 65, 300]] },
+    { n: '2. Deux balourds', t: 'Deux balourds dans des plans différents : le déséquilibre est à la fois statique et dynamique. Plans de correction à 100 et 500 mm, R = 100 mm.', L: 600, R: 100, z1: 100, z2: 500, d: [[20, 100, 0, 150], [12, 100, 110, 420]] },
+    { n: '3. Trois balourds, plans imposés', t: 'Trois balourds. Les plans de correction sont à 60 et 540 mm et les masselottes à R = 80 mm : les masses à placer sont plus importantes.', L: 600, R: 80, z1: 60, z2: 540, d: [[15, 120, 30, 80], [10, 90, 200, 330], [22, 110, 290, 520]] }
+  ];
+  var SCI = 0, hintLvl = 0, revealed = false;
+  function loadScenario(i) {
+    var s = SC[i]; SCI = i; hintLvl = 0; revealed = false;
+    S.L = s.L; S.R = s.R; S.z1 = s.z1; S.z2 = s.z2; S.rpm = 3000;
+    S.defects = s.d.map(function (d) { return { id: S.nextId++, m: d[0], r: d[1], th: d[2], z: d[3] }; });
+    S.corr = [{ m: 0, th: 0 }, { m: 0, th: 0 }];
+    $('sol').innerHTML = ''; $('hint').textContent = 'Indice';
+    $('sc-txt').textContent = s.t;
+    Array.prototype.forEach.call(RT.querySelectorAll('#scs .btn'), function (b, k) { b.setAttribute('aria-pressed', k === i ? 'true' : 'false'); });
+    updateMax(); syncInputs(); recompute();
+  }
+  function chUpdate() {
+    var c = R_.cur, base = R_.baseMax || 1, rho = Math.max(mag(c.FA), mag(c.FB)) / base;
+    var ph = function (F) { return ((Math.atan2(F[1], F[0]) / RAD) % 360 + 360) % 360; };
+    $('o-ph').textContent = 'A : ' + (mag(c.FA) < 1e-6 ? '—' : fmt(ph(c.FA), 0) + '°') + '   B : ' + (mag(c.FB) < 1e-6 ? '—' : fmt(ph(c.FB), 0) + '°');
+    $('o-rho').textContent = fmt(rho * 100, rho < 0.1 ? 1 : 0) + ' %';
+    var n = rho <= 0.02 ? 3 : rho <= 0.05 ? 2 : rho <= 0.15 ? 1 : 0, box = $('ch-msg'), has = S.corr[0].m !== 0 || S.corr[1].m !== 0;
+    var txt = '', cls = 'verdict';
+    if (!has) txt = 'Aucune masselotte posée : le résiduel est de 100 %.';
+    else if (n === 3) { cls += ' yes'; txt = 'Rotor équilibré (≤ 2 %).'; }
+    else if (n === 2) { cls += ' yes'; txt = 'Très bien (≤ 5 %). Affinez pour passer sous 2 %.'; }
+    else if (n === 1) { cls += ' warn'; txt = 'Amélioration (≤ 15 %). Il reste un balourd : regardez la phase des mesures.'; }
+    else { cls += ' warn'; txt = rho > 1 ? 'Le résiduel dépasse l’état initial : les masselottes aggravent le défaut.' : 'Il reste beaucoup de balourd.'; }
+    var stars = n && !revealed ? ' ' + '★'.repeat(n) + '☆'.repeat(3 - n) : '';
+    box.className = cls; box.textContent = txt + stars + (revealed ? ' (solution affichée : pas d’étoile)' : '');
+    if (n && !revealed) giveStars('eq-ch' + (SCI + 1), n);
+    var tag = RT.querySelectorAll('#scs .btn');
+    Array.prototype.forEach.call(tag, function (b, k) { var st = STARS['eq-ch' + (k + 1)] || 0; b.innerHTML = SC[k].n + ' ' + starsHtml(st); });
+  }
+  function chSolve() {
+    var sol = solve(); if (!sol) return;
+    sol.forEach(function (c, i) { S.corr[i].m = +c.m.toFixed(2); S.corr[i].th = +c.th.toFixed(1); });
+    revealed = true; syncInputs(); recompute();
+  }
+  if (CH) {
+    var scs = $('scs');
+    SC.forEach(function (s, k) { var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.addEventListener('click', function () { loadScenario(k); }); scs.appendChild(b); });
+    $('hint').addEventListener('click', function () {
+      hintLvl++;
+      var T = [
+        'Indice 1 : si les forces en A et B sont en phase, le défaut est surtout statique ; en opposition de phase, surtout dynamique. Une masselotte de même masse en A et en B, au même angle, corrige un balourd statique.',
+        'Indice 2 : il faut que la somme des balourds des masselottes (masse × rayon, avec leur angle) soit opposée au balourd U et que leur moment par rapport au milieu de l’arbre soit opposé à C. Voir le cours, section « Équilibrage en deux plans ». Une masselotte test et deux mesures donnent les coefficients d’influence.',
+        'Indice 3 : la solution est calculée pour vous, mais elle ne rapporte pas d’étoile.'
+      ];
+      if (hintLvl <= 3) $('sol').textContent = T[hintLvl - 1];
+      if (hintLvl >= 3) { $('hint').textContent = 'Afficher la solution'; }
+      if (hintLvl >= 4) chSolve();
+    });
+  }
+
   buildStatic();
-  loadPreset('none');
+  if (CH) loadScenario(0); else loadPreset('none');
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { S.phi = 0.9; setRunning(false); }
   requestAnimationFrame(frame);
+}
+
+WORKSHOPS.push({ id: 'rotor', title: 'Rotor et masselottes', hint: 'Placer des masses sur un rotor, lire les forces sur les paliers, calculer la correction en deux plans.', mount: root => mountRotor(root, false), reset: () => { } });
+WORKSHOPS.push({ id: 'defi', title: 'Défi : équilibrer le rotor', hint: 'Défauts cachés : à partir des mesures aux paliers, placer deux masselottes pour équilibrer le rotor.', mount: root => mountRotor(root, true), reset: () => { } });
+
+/* ============ ATELIER 5 : FAMILLES DE PROBLÈMES ET RÉALISATION PRATIQUE ============ */
+const FAM = [
+  { t: 'Connaissant les efforts (moteur, pesanteur, vérin), trouver les lois de mouvement', a: 'eff', why: 'On connaît les efforts, on cherche le mouvement : théorème de la résultante ou de l’énergie cinétique.' },
+  { t: 'Imposer une loi de vitesse en trapèze et déterminer le couple moteur nécessaire', a: 'mvt', why: 'Le mouvement est imposé, on cherche l’effort : dimensionnement d’actionneur.' },
+  { t: 'Déterminer la répartition de masse pour éviter les vibrations à grande vitesse', a: 'rep', why: 'On agit sur les masses et leurs positions : équilibrage.' },
+  { t: 'Calculer l’effort dans un roulement connaissant la loi de vitesse imposée', a: 'mvt', why: 'Le mouvement est imposé, on cherche les efforts transmis par la liaison.' },
+  { t: 'Établir l’équation différentielle du mouvement d’un vérin soumis à une pression', a: 'eff', why: 'Les efforts sont connus, on cherche la loi de mouvement.' },
+  { t: 'Placer des masselottes sur une jante pour supprimer les vibrations', a: 'rep', why: 'On modifie la répartition des masses pour annuler les efforts tournants.' }
+];
+const FAM_L = { eff: 'Des efforts aux mouvements', mvt: 'Du mouvement aux efforts', rep: 'Répartition des masses' };
+const PRA = [
+  { t: 'Masselottes sur une jante de voiture', a: 'add', why: 'On ajoute de la masse à l’endroit calculé.' },
+  { t: 'Perçage d’un rotor de moteur électrique', a: 'rem', why: 'On retire de la matière : équivalent à une masse négative, ou à une masse positive placée 180° plus loin.' },
+  { t: 'Meulage d’une zone du rotor', a: 'rem', why: 'Même principe que le perçage.' },
+  { t: 'Machine d’équilibrage de roue de voiture', a: 'mes', why: 'Elle mesure l’amplitude et la phase des efforts aux paliers, puis calcule la correction.' },
+  { t: 'Équilibreuse portative sur site', a: 'mes', why: 'Elle mesure sur place, sans démonter la machine.' },
+  { t: 'Masselottes sur le rotor arrière d’un hélicoptère', a: 'add', why: 'Ajout de masselottes sur le rotor.' }
+];
+const PRA_L = { add: 'Ajout de matière', rem: 'Enlèvement de matière', mes: 'Mesure et diagnostic' };
+const CL = { fam: { as: {}, ok: false }, pra: { as: {}, ok: false } };
+function classify(key, data, labels, title) {
+  const st = CL[key], box = h('div'), msg = h('div', { class: 'verdict' });
+  function render() {
+    box.innerHTML = '';
+    data.forEach((q, i) => {
+      const fb = h('div', { style: 'font-size:12.5px;margin-top:2px;color:var(--muted)' });
+      if (st.ok) { const ok = st.as[i] === q.a; fb.style.color = ok ? 'var(--ok)' : 'var(--bad)'; fb.innerHTML = (ok ? '✓ ' : '✗ Réponse : <b>' + labels[q.a] + '</b>. ') + q.why; }
+      const chips = h('div', { class: 'chips' });
+      Object.entries(labels).forEach(([k, l]) => chips.append(h('button', { type: 'button', class: 'chip' + (st.as[i] === k ? ' on' : ''), onclick: () => { if (st.ok) return; st.as[i] = st.as[i] === k ? null : k; render(); } }, l)));
+      box.append(h('div', { class: 'task-row' }, h('div', null, h('span', null, (i + 1) + '. ' + q.t), fb), chips));
+    });
+    const n = data.filter((q, i) => st.as[i] === q.a).length, done = Object.values(st.as).filter(v => v).length;
+    msg.className = 'verdict' + (st.ok ? (n === data.length ? ' yes' : ' warn') : ''); msg.textContent = st.ok ? 'Score : ' + n + ' / ' + data.length + '.' : done + ' / ' + data.length + ' attribuée(s).';
+  }
+  render();
+  return h('div', null, h('h3', null, title), box, h('div', { class: 'files', style: 'margin-top:8px' }, h('button', { class: 'btn pri', type: 'button', onclick: () => { st.ok = true; render(); } }, 'Vérifier'), h('button', { class: 'btn', type: 'button', onclick: () => { st.as = {}; st.ok = false; render(); } }, 'Recommencer')), msg);
+}
+function mountFam(root) {
+  root.innerHTML = '';
+  root.append(h('h2', null, '5. Familles de problèmes et réalisation pratique'),
+    h('p', { html: 'En sciences de l’ingénieur, on distingue <b>trois familles</b> d’études selon ce qui est connu et ce que l’on cherche. L’équilibrage appartient à la troisième : on agit sur la <b>répartition des masses</b> pour supprimer les efforts tournants, y compris à vitesse constante.' }),
+    classify('fam', FAM, FAM_L, 'Quelle famille de problème ?'),
+    h('p', { html: 'Une fois le balourd calculé, la correction se fait par <b>ajout</b> ou <b>enlèvement</b> de matière ; les valeurs sont fournies par une <b>machine d’équilibrage</b> qui mesure les vibrations.' }),
+    classify('pra', PRA, PRA_L, 'Quelle méthode ?'),
+    h('h3', null, 'Exemples industriels'),
+    h('div', { class: 'cards' },
+      h('div', { class: 'card' }, h('h4', null, 'Masselottes (ajout)'), h('p', null, 'Jante de voiture, rotor d’hélicoptère : on colle ou on visse une masse à l’angle calculé.')),
+      h('div', { class: 'card' }, h('h4', null, 'Perçage et meulage (retrait)'), h('p', null, 'Rotors de moteur électrique, aubes de turbine, vilebrequins.')),
+      h('div', { class: 'card' }, h('h4', null, 'Machines d’équilibrage'), h('p', null, 'Mesurent amplitude et phase des efforts aux paliers à une vitesse donnée, puis calculent les corrections dans deux plans.')),
+      h('div', { class: 'card' }, h('h4', null, 'Équilibreuses portatives'), h('p', null, 'Interventions sur site : éoliennes, turbines, ventilateurs industriels.'))));
+}
+WORKSHOPS.push({ id: 'fam', title: 'Familles et pratique', hint: 'Classer les problèmes, puis les méthodes de correction.', mount: mountFam, reset: () => { CL.fam = { as: {}, ok: false }; CL.pra = { as: {}, ok: false }; } });
+
+/* ---------- schémas du cours (SVG générés, géométrie calculée) ---------- */
+const FIGS = (() => {
+  const C = { F: '#1b4a76', N: '#c0281f', T: '#d9822b', G: '#1e7a2e', K: '#33475b', M: '#5a6068', L: '#dcebf8', S: '#9fb4ca', B: '#6f8aa6', R: '#7a3fa0', D: '#7b8794', GL: 'rgba(30,122,46,.13)', RL: 'rgba(192,40,31,.10)' };
+  const rad = d => d * Math.PI / 180, f = n => +n.toFixed(1);
+  const P = (x, y, l, a) => [x + l * Math.cos(rad(a)), y - l * Math.sin(rad(a))];
+  const lab = s => s.replace(/_([A-Za-z0-9]+)/g, '<tspan baseline-shift="sub" font-size="72%" font-style="normal">$1</tspan>');
+  const base = (w, h, lbl, body) => `<svg viewBox="0 0 ${w} ${h}" width="${w}" role="img" aria-label="${lbl}" font-family="IBM Plex Sans,sans-serif" font-size="13">${body}</svg>`;
+  const ln = (x1, y1, x2, y2, c = C.K, w = 1.6, d = '') => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${c}" stroke-width="${w}"${d ? ` stroke-dasharray="${d}"` : ''}/>`;
+  const ar = (x1, y1, x2, y2, c, w = 2.6) => {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, hs = Math.min(10, L * .45), bx = x2 - ux * hs, by = y2 - uy * hs;
+    return ln(x1, y1, bx, by, c, w) + `<polygon points="${f(x2)},${f(y2)} ${f(bx - uy * hs * .38)},${f(by + ux * hs * .38)} ${f(bx + uy * hs * .38)},${f(by - ux * hs * .38)}" fill="${c}"/>`;
+  };
+  const dot = (x, y, r = 3.5, c = C.K) => `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${c}"/>`;
+  const circ = (x, y, r, fill, stroke, w = 1.6) => `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${w}"/>`;
+  const poly = (pts, fill, stroke, w = 1.6, d = '') => `<polygon points="${pts.map(p => f(p[0]) + ',' + f(p[1])).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" stroke-linejoin="round"${d ? ` stroke-dasharray="${d}"` : ''}/>`;
+  const rect = (x, y, w, h, fill, stroke, sw = 1.4, rx = 0) => `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+  const arc = (cx, cy, r, a1, a2, c = C.K, w = 1.4) => { const p1 = P(cx, cy, r, a1), p2 = P(cx, cy, r, a2); return `<path d="M${f(p1[0])} ${f(p1[1])}A${r} ${r} 0 0 ${a2 > a1 ? 0 : 1} ${f(p2[0])} ${f(p2[1])}" fill="none" stroke="${c}" stroke-width="${w}"/>`; };
+  const hatch = (x1, x2, y, dir = 1, step = 10, l = 8) => { let s = ''; for (let x = x1; x <= x2; x += step) s += ln(x, y, x - 6, y + dir * l, C.D, 1); return s; };
+  const hatchV = (x, y1, y2, dir = 1, step = 10, l = 8) => { let s = ''; for (let y = y1; y <= y2; y += step) s += ln(x, y, x + dir * l, y + 6, C.D, 1); return s; };
+  const m = (x, y, s, o = {}) => `<text x="${f(x)}" y="${f(y)}" fill="${o.c || C.K}" font-size="${o.sz || 15}" font-weight="${o.w || 400}" text-anchor="${o.a || 'middle'}" font-family="'STIX Two Text',serif" font-style="${o.i === false ? 'normal' : 'italic'}">${lab(s)}</text>`;
+  const t = (x, y, s, o = {}) => `<text x="${f(x)}" y="${f(y)}" fill="${o.c || C.M}" font-size="${o.sz || 13}" font-weight="${o.w || 400}" text-anchor="${o.a || 'middle'}">${lab(s)}</text>`;
+  const v = (x, y, s, o = {}) => {
+    const sz = o.sz || 15, c = o.c || C.K, i = s.indexOf('_'), main = i < 0 ? s : s.slice(0, i), subw = i < 0 ? 0 : (s.length - i - 1) * sz * .5, mw = main.length * sz * .6, tot = mw + subw;
+    const x0 = o.a === 'start' ? x : o.a === 'end' ? x - tot : x - tot / 2, yy = y - sz * .88;
+    return m(x0, y, s, { ...o, a: 'start' }) + ln(x0 + 1, yy, x0 + mw, yy, c, 1.2) + `<polygon points="${f(x0 + mw + 1.5)},${f(yy)} ${f(x0 + mw - 3.5)},${f(yy - 2.6)} ${f(x0 + mw - 3.5)},${f(yy + 2.6)}" fill="${c}"/>`;
+  };
+  const title = (x, y, s) => t(x, y, s, { c: C.K, w: 600, sz: 13.5 });
+  const dimH = (x1, x2, y, s, c = C.M, up = 14) => ln(x1, y, x2, y, c, 1) + ln(x1, y - 5, x1, y + 5, c, 1) + ln(x2, y - 5, x2, y + 5, c, 1) + (s ? m((x1 + x2) / 2, y + up, s, { c, sz: 14 }) : '');
+  const dimV = (x, y1, y2, s, c = C.M, off = 12) => ln(x, y1, x, y2, c, 1) + ln(x - 5, y1, x + 5, y1, c, 1) + ln(x - 5, y2, x + 5, y2, c, 1) + (s ? m(x + off, (y1 + y2) / 2 + 5, s, { c, sz: 14, a: 'start' }) : '');
+  const axisSym = (x1, x2, y) => ln(x1, y, x2, y, C.K, 1.1, '10 3 2 3');
+  const F = {};
+
+  /* palette complémentaire */
+  const bear = (x, y) => poly([[x - 14, y + 16], [x + 14, y + 16], [x, y + 38]], '#e6eaee', C.B, 1.3) + rect(x - 10, y - 12, 20, 28, '#d0d5da', C.M, 1.4);
+  const box = (x, y, w, h, s1, s2, fill, stroke) => rect(x, y, w, h, fill || C.L, stroke || C.F, 1.6, 8) + t(x + w / 2, y + h / 2 - (s2 ? 4 : -4), s1, { c: C.K, w: 600, sz: 13.5 }) + (s2 ? t(x + w / 2, y + h / 2 + 14, s2, { sz: 12 }) : '');
+
+  /* ---------- 1. Problème ---------- */
+  F.familles = (() => {
+    let s = '';
+    const col = (x, name, a, b, c, col) => `<g>${rect(x, 8, 170, 150, '#fbfcfd', col, 1.6, 8)}${t(x + 85, 30, name, { c: col, w: 600, sz: 13.5 })}${box(x + 14, 44, 142, 32, a, '', C.L, C.B)}${ar(x + 85, 78, x + 85, 98, col)}${box(x + 14, 100, 142, 32, b, '', '#fff', col)}${t(x + 85, 148, c, { sz: 12 })}</g>`;
+    s += col(0, 'Famille 1', 'Efforts connus', 'Lois de mouvement', 'théorèmes généraux', C.F);
+    s += col(185, 'Famille 2', 'Mouvement imposé', 'Efforts nécessaires', 'dimensionner', C.T);
+    s += col(370, 'Famille 3', 'Masses à répartir', 'Vibrations nulles', 'équilibrage', C.N);
+    return base(550, 166, 'Trois familles de problèmes de dynamique', s);
+  })();
+
+  /* ---------- 2. Rotor : modélisation ---------- */
+  const rotorSide = (opts = {}) => {
+    const x0 = 70, x1 = 410, y = 100;
+    let s = ln(x0 - 30, y, x1 + 40, y, C.K, 1.1, '10 3 2 3') + bear(x0, y) + bear(x1, y);
+    s += rect(x0 + 60, y - 38, 220, 76, C.L, C.F, 1.8, 3);
+    s += m(x0, y + 62, 'A', { c: C.N, sz: 17, w: 600 }) + m(x1, y + 62, 'B', { c: '#1565c0', sz: 17, w: 600 });
+    s += ar(x1 + 40, y, x1 + 80, y, C.K, 1.6) + m(x1 + 90, y + 5, 'z', { sz: 16 });
+    s += dimH(x0, x1, 172, 'L', C.M, 16);
+    return s;
+  };
+  F.rotor = (() => {
+    let s = rotorSide();
+    s += ar(250, 100, 250, 30, C.K, 1.4) + m(260, 36, 'x', { sz: 16 });
+    s += dot(250, 100, 3.5, C.K) + m(236, 116, 'O', { sz: 14 });
+    s += ar(300, 62, 320, 40, C.G, 2) + t(334, 38, 'G', { c: C.G, w: 600, sz: 14 });
+    s += t(240, 18, 'Repère (A, x, y, z) lié au rotor ; rotation à ω constant autour de (A, z)', { sz: 12.5 });
+    return base(540, 192, 'Rotor sur deux paliers A et B', s);
+  })();
+
+  F.faces = (() => {
+    const face = (cx, name, gOff, tilt) => {
+      let s = circ(cx, 100, 56, C.L, C.F, 1.8) + ln(cx - 76, 100, cx + 76, 100, C.D, 1, '4 3') + ln(cx, 24, cx, 176, C.D, 1, '4 3');
+      s += ar(cx + 76, 100, cx + 88, 100, C.K, 1.2) + m(cx + 82, 96, 'x', { sz: 13 }) + m(cx + 6, 22, 'y', { sz: 13 });
+      s += dot(cx, 100, 4, C.K) + m(cx - 12, 116, 'O', { sz: 13 });
+      if (gOff) { const gx = cx + 26, gy = 100 - 15; s += ar(cx, 100, gx, gy, C.G, 2) + dot(gx, gy, 5, C.G) + t(gx + 10, gy - 6, 'G', { c: C.G, w: 600, sz: 14 }); s += ar(gx, gy, gx + 40, gy - 23, C.N, 2.6) + t(gx + 44, gy - 28, 'M r ω²', { c: C.N, w: 600, sz: 12.5, a: 'start' }); }
+      else s += circ(cx, 100, 8, 'none', C.G, 2) + t(cx + 14, 88, 'G = O', { c: C.G, w: 600, sz: 13, a: 'start' });
+      return s + t(cx, 196, name, { c: C.K, w: 600 });
+    };
+    return base(520, 208, 'Vue de face : G sur l’axe ou hors de l’axe', face(130, 'G sur l’axe : r = 0', false) + face(390, 'G hors de l’axe : r ≠ 0', true));
+  })();
+
+  /* ---------- 3. Équilibrages ---------- */
+  F.statique = (() => {
+    let s = ln(20, 118, 500, 118, C.M, 3) + hatch(30, 500, 118, 1);
+    s += poly([[120, 118], [150, 118], [135, 94]], '#e6eaee', C.B, 1.3) + poly([[370, 118], [400, 118], [385, 94]], '#e6eaee', C.B, 1.3);
+    s += circ(260, 62, 36, C.L, C.F, 1.8) + dot(260, 62, 3.5, C.K) + t(260, 12, 'Rotor sur deux couteaux horizontaux', { w: 600, c: C.K });
+    s += rect(130, 58, 260, 8, C.L, C.F, 1.2);
+    s += dot(260, 76, 5, C.G) + t(272, 82, 'G', { c: C.G, w: 600, sz: 14, a: 'start' }) + ar(260, 76, 260, 108, C.N, 2.6) + t(272, 106, 'P', { c: C.N, sz: 14, a: 'start' });
+    s += t(330, 150, 'Le rotor tourne jusqu’à placer G sous l’axe', { sz: 12.5, c: C.T, a: 'middle' });
+    return base(520, 162, 'Test d’équilibrage statique sur couteaux', s);
+  })();
+
+  F.dynamique = (() => {
+    let s = ln(30, 100, 490, 100, C.K, 1.1, '10 3 2 3') + bear(90, 100) + bear(430, 100);
+    s += rect(150, 74, 220, 52, C.L, C.F, 1.6, 3);
+    s += dot(190, 74, 6, C.N) + dot(330, 126, 6, C.N);
+    s += ar(190, 74, 190, 48, C.N, 2.8) + m(204, 66, 'm', { c: C.N, sz: 14, a: 'start' }) + ar(330, 126, 330, 152, C.N, 2.8) + m(344, 144, 'm', { c: C.N, sz: 14, a: 'start' });
+    s += t(190, 40, 'force centrifuge', { c: C.N, sz: 12 }) + t(330, 170, 'force centrifuge', { c: C.N, sz: 12 });
+    s += ar(90, 90, 90, 130, '#c0281f', 2.4) + ar(430, 110, 430, 70, '#1565c0', 2.4);
+    s += t(90, 60, 'A', { c: C.N, w: 600, sz: 15 }) + t(430, 60, 'B', { c: '#1565c0', w: 600, sz: 15 });
+    s += t(260, 16, 'G sur l’axe, mais un couple tournant', { c: C.K, w: 600 }) + t(260, 204, 'résultante nulle · moment non nul · réactions en A et B opposées', { sz: 12.5 });
+    return base(520, 214, 'Balourd dynamique : deux masses opposées dans deux plans', s);
+  })();
+
+  F.phases = (() => {
+    const pl = (ox, title, k, col1, col2, note) => {
+      let s = ln(ox, 90, ox + 220, 90, C.D, 1) + ln(ox, 30, ox, 150, C.D, 1) + t(ox + 110, 20, title, { w: 600, c: C.K });
+      let a = '', b = '';
+      for (let i = 0; i <= 80; i++) { const x = ox + i * 2.6, y1 = 90 - 44 * Math.sin(i / 80 * 2 * Math.PI), y2 = 90 - 44 * k * Math.sin(i / 80 * 2 * Math.PI); a += (i ? 'L' : 'M') + f(x) + ' ' + f(y1); b += (i ? 'L' : 'M') + f(x) + ' ' + f(y2); }
+      s += `<path d="${a}" fill="none" stroke="${col1}" stroke-width="2.4"/><path d="${b}" fill="none" stroke="${col2}" stroke-width="2.4" stroke-dasharray="6 3"/>`;
+      s += t(ox + 110, 172, note, { sz: 12.5 }) + t(ox + 214, 108, 'θ', { sz: 13 });
+      s += t(ox + 6, 40, 'F_A', { c: col1, w: 600, a: 'start' }) + t(ox + 40, 40, 'F_B', { c: col2, w: 600, a: 'start' });
+      return s;
+    };
+    return base(520, 184, 'Forces en phase (balourd statique) ou en opposition (balourd dynamique)', pl(10, 'Vibration linéaire', 1, C.N, '#1565c0', 'F_A et F_B en phase') + pl(280, 'Vibration angulaire', -1, C.N, '#1565c0', 'F_A et F_B en opposition').replace(/(?=<text[^>]*>F_B)/, ''));
+  })();
+
+  /* ---------- 4. Correction en deux plans ---------- */
+  F.deuxPlans = (() => {
+    let s = ln(20, 100, 500, 100, C.K, 1.1, '10 3 2 3') + bear(70, 100) + bear(450, 100) + rect(140, 68, 240, 64, C.L, C.F, 1.6, 3);
+    s += ln(180, 40, 180, 170, C.T, 1.4, '5 3') + ln(340, 40, 340, 170, C.T, 1.4, '5 3');
+    s += t(180, 34, 'plan P₁', { c: C.T, w: 600 }) + t(340, 34, 'plan P₂', { c: C.T, w: 600 });
+    s += circ(180, 68, 6, C.G, '#fff', 1.5) + circ(340, 132, 6, C.G, '#fff', 1.5);
+    s += t(196, 62, 'm₁ à R', { c: C.G, w: 600, sz: 12.5, a: 'start' }) + t(354, 150, 'm₂ à R', { c: C.G, w: 600, sz: 12.5, a: 'start' });
+    s += dimH(180, 340, 192, 'z₂ − z₁', C.M, 14);
+    s += t(70, 66, 'A', { c: C.N, w: 600, sz: 15 }) + t(450, 66, 'B', { c: '#1565c0', w: 600, sz: 15 });
+    return base(520, 210, 'Deux masselottes dans deux plans de correction', s);
+  })();
+
+  F.polygone = (() => {
+    const o = [190, 100], U = [120, -30], c1 = [-20, 90], c2 = [-(U[0] + c1[0]), -(U[1] + c1[1])];
+    let s = ar(o[0], o[1], o[0] + U[0], o[1] + U[1], C.N, 2.8) + m(o[0] + U[0] / 2 + 12, o[1] + U[1] / 2 + 22, 'U', { c: C.N, sz: 16 });
+    const p1 = [o[0] + U[0], o[1] + U[1]];
+    s += ar(p1[0], p1[1], p1[0] + c1[0], p1[1] + c1[1], C.G, 2.8) + m(p1[0] + c1[0] / 2 + 18, p1[1] + c1[1] / 2 - 6, 'c₁', { c: C.G, sz: 16 });
+    const p2 = [p1[0] + c1[0], p1[1] + c1[1]];
+    s += ar(p2[0], p2[1], p2[0] + c2[0], p2[1] + c2[1], '#1565c0', 2.8) + m(p2[0] + c2[0] / 2 - 18, p2[1] + c2[1] / 2 - 4, 'c₂', { c: '#1565c0', sz: 16 });
+    s += dot(o[0], o[1], 4, C.K) + t(o[0] + 8, o[1] + 14, 'départ = arrivée', { sz: 12.5, a: 'start' });
+    s += t(340, 80, 'Polygone fermé :', { w: 600, a: 'start', c: C.K }) + m(340, 106, 'U + c₁ + c₂ = 0', { a: 'start', sz: 16 });
+    return base(520, 186, 'Fermeture du polygone des balourds', s.replace(/<text[^>]*>départ = arrivée<\/text>/, ''));
+  })();
+
+  /* ---------- 5. Pratique ---------- */
+  F.pratique = (() => {
+    let s = '';
+    s += circ(120, 100, 64, '#eef1f4', C.K, 2.2) + circ(120, 100, 40, '#fff', C.D, 1.4) + dot(120, 100, 4, C.K);
+    s += rect(176, 80, 14, 14, C.G, '#0e5a1a', 1.4) + t(120, 190, 'Ajout : masselotte sur la jante', { w: 600 }) + t(120, 20, 'Roue de voiture', { c: C.M });
+    s += circ(390, 100, 64, '#e8edf2', C.K, 2.2) + circ(390, 100, 24, '#fff', C.D, 1.4) + dot(390, 100, 4, C.K);
+    s += circ(342, 72, 9, '#fff', C.N, 2.2) + t(390, 190, 'Retrait : perçage côté du balourd', { w: 600 }) + t(390, 20, 'Rotor de moteur', { c: C.M });
+    s += ar(250, 100, 278, 100, C.D, 1.6) + ar(250, 100, 222, 100, C.D, 1.6);
+    return base(520, 200, 'Ajout ou retrait de matière', s);
+  })();
+
+  F.methode = (() => {
+    const w = 150, h = 54;
+    let s = box(10, 20, w, h, 'Mesurer', 'amplitude et phase', C.L, C.F) + box(185, 20, w, h, 'Calculer', 'c₁ et c₂', '#fff', C.F) + box(360, 20, w, h, 'Corriger', 'masse ou perçage', C.L, C.F);
+    s += ar(160, 47, 185, 47, C.K, 1.8) + ar(335, 47, 360, 47, C.K, 1.8);
+    s += ln(435, 74, 435, 120, C.K, 1.6) + ln(435, 120, 85, 120, C.K, 1.6) + ar(85, 120, 85, 76, C.K, 1.6) + t(260, 112, 'on vérifie : les efforts ont-ils disparu ?', { sz: 12.5, c: C.M });
+    return base(520, 134, 'Méthode d’équilibrage en trois étapes', s);
+  })();
+
+  return F;
 })();
+
+/* ---------- activités ---------- */
+const ACT = {
+  vib: {
+    title: 'Origine des vibrations', level: 'Niveau PSI*', time: '10 min',
+    goal: 'Relier les deux défauts géométriques (G décalé, axe incliné) aux efforts tournants sur les roulements.',
+    steps: ['Mettez r = 0 et α = 0 : les efforts sont constants, le rotor est équilibré.', 'Réglez seulement r : observez que F<sub>A</sub> et F<sub>B</sub> sont en phase (courbes superposées).', 'Revenez à r = 0 et réglez seulement α : les efforts sont maintenant en opposition de phase.', 'Doublez la vitesse N et relevez l’évolution de l’amplitude.'],
+    defi: { q: 'Quelle est l’amplitude de la force tournante pour r = 0,05 mm à 30 000 tr/min ?', a: 'M·r·ω² = 10 × 5·10⁻⁵ × 3141,6² ≈ 4 935 N, soit un demi pour chaque roulement si G est à mi-distance.' },
+    course: 'vibrations',
+    qcm: [
+      { q: 'Quand on double la vitesse de rotation, l’amplitude des efforts tournants…', o: ['double', 'est multipliée par 4', 'reste identique', 'est divisée par 2'], a: 1, w: 'Les efforts sont proportionnels à ω².' },
+      { q: 'Un décalage de G seul produit des efforts F_A et F_B…', o: ['en phase', 'en opposition de phase', 'nuls', 'constants'], a: 0, w: 'La force résultante tourne avec G : les deux roulements la reprennent dans le même sens.' },
+      { q: 'Une inclinaison de l’axe de symétrie (G sur l’axe) produit…', o: ['une force résultante tournante', 'un couple tournant', 'aucun effet', 'un effort axial'], a: 1, w: 'D ou E non nuls : le moment dynamique tourne, la résultante est nulle.' }
+    ]
+  },
+  cond: {
+    title: 'Conditions d’équilibrage', level: 'Niveau PSI*', time: '10 min',
+    goal: 'Distinguer équilibrage statique et dynamique et énoncer les conditions r = 0, D = 0, E = 0.',
+    steps: ['Choisissez « Vibrations linéaires » : quelle condition est violée ?', 'Choisissez « Vibrations angulaires » : le rotor est-il statiquement équilibré ?', 'Annulez r, D et E à la main et observez le verdict.'],
+    defi: { q: 'Un rotor posé sur deux couteaux reste immobile dans toutes les positions. Est-il équilibré dynamiquement ?', a: 'Pas nécessairement : il est équilibré statiquement (r = 0), mais D ou E peuvent être non nuls.' },
+    course: 'conditions',
+    qcm: [
+      { q: 'L’équilibrage dynamique impose…', o: ['r = 0 seulement', 'D = E = 0 seulement', 'r = 0 et D = E = 0', 'C = 0 seulement'], a: 2, w: 'Il inclut l’équilibrage statique.' },
+      { q: 'L’équilibrage statique est testé…', o: ['en rotation rapide', 'sur deux couteaux horizontaux', 'avec un accéléromètre', 'avec un chronomètre'], a: 1, w: 'G doit être sur l’axe : le rotor reste en équilibre indifférent.' },
+      { q: 'D = E = 0 signifie que l’axe de rotation est…', o: ['un axe de symétrie matérielle seulement', 'un axe principal d’inertie', 'perpendiculaire à G', 'un axe de masse nulle'], a: 1, w: 'La matrice d’inertie est diagonale dans le repère lié.' }
+    ]
+  },
+  rotor: {
+    title: 'Rotor et masselottes', level: 'Niveau PSI*', time: '20 min',
+    goal: 'Ajouter des défauts, lire les forces sur les paliers, puis corriger avec deux masselottes.',
+    steps: ['Choisissez « Non équilibré » et observez les forces en A et B.', 'Choisissez deux plans de correction distincts, puis demandez la solution calculée.', 'Retirez les masselottes, puis replacez-les à la main pour retrouver la solution.', 'Passez à « Équilibré statiquement » : que reste-t-il ?'],
+    defi: { q: 'Pourquoi deux plans de correction distincts sont-ils indispensables ?', a: 'Il y a deux équations vectorielles (résultante et moment). Avec z₁ = z₂, le moment ne peut pas être corrigé indépendamment.' },
+    course: 'correction',
+    qcm: [
+      { q: 'Combien de plans de correction faut-il en général ?', o: ['1', '2', '3', '4'], a: 1, w: 'Deux inconnues complexes c₁ et c₂.' },
+      { q: 'Une masselotte négative signifie…', o: ['impossible', 'un retrait de matière', 'une vitesse négative', 'une rotation inverse'], a: 1, w: 'Perçage, ou masse positive placée à 180°.' },
+      { q: 'Après correction parfaite, les efforts sur les paliers sont…', o: ['nuls en moyenne', 'constants', 'proportionnels à ω', 'maximaux'], a: 1, w: 'Il ne reste que les efforts de pesanteur.' }
+    ]
+  },
+  defi: {
+    title: 'Défi : équilibrer le rotor', level: 'Niveau PSI*', time: '20 min',
+    goal: 'Équilibrer un rotor dont les défauts sont cachés, à partir des seules mesures aux paliers.',
+    steps: ['Lisez amplitudes et phases des forces en A et B.', 'Choisissez deux plans, puis calculez c₁ et c₂.', 'Placez les masselottes et vérifiez le résidu. Trois étoiles : moins de 2 %.', 'Un indice est disponible ; la solution révélée ne donne pas d’étoiles.'],
+    defi: { q: 'Que mesure-t-on réellement sur une équilibreuse industrielle ?', a: 'L’amplitude et la phase des efforts (ou des déplacements) aux paliers, pas les défauts eux-mêmes.' },
+    course: 'pratique',
+    qcm: [
+      { q: 'Les mesures aux paliers permettent de retrouver…', o: ['U et C', 'seulement M', 'la vitesse critique', 'la raideur'], a: 0, w: 'Les deux forces donnent U et C.' },
+      { q: 'Si on place une masselotte au mauvais angle, l’effort résiduel…', o: ['diminue toujours', 'peut augmenter', 'est nul', 'est constant'], a: 1, w: 'Les effets s’ajoutent vectoriellement.' }
+    ]
+  },
+  fam: {
+    title: 'Familles et pratique', level: 'Niveau PSI*', time: '8 min',
+    goal: 'Situer l’équilibrage parmi les problèmes de dynamique et connaître les procédés pratiques.',
+    steps: ['Classez les six énoncés en trois familles.', 'Classez les méthodes de correction.'],
+    defi: { q: 'Un moteur vibre à haute vitesse. À quelle famille appartient le problème ?', a: 'À la troisième : répartition des masses.' },
+    course: 'pratique',
+    qcm: [
+      { q: 'Dimensionner un moteur pour un profil de vitesse imposé relève de…', o: ['efforts → mouvement', 'mouvement → efforts', 'répartition des masses', 'statique'], a: 1, w: 'Le mouvement est imposé, on cherche le couple.' },
+      { q: 'Retirer de la matière à un endroit équivaut à…', o: ['une masse positive au même point', 'une masse négative au même point', 'rien', 'un changement de vitesse'], a: 1, w: 'Ou à une masse positive diamétralement opposée.' }
+    ]
+  }
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+const fig = (svg, cap) => '<figure class="cfig">' + svg + '<figcaption>' + cap + '</figcaption></figure>';
+
+COURSE.push({ id: 'probleme', t: 'Le problème de l’équilibrage', h: String.raw`
+<p>Un rotor qui tourne vite peut vibrer fortement même si son mouvement est parfaitement uniforme : les vibrations ne viennent pas d’un couple moteur variable, mais de la <b>répartition des masses</b>. Ce sont des efforts tournants qui chargent les roulements, les usent, et rayonnent dans toute la structure.</p>
+${fig(FIGS.familles, 'Les trois familles de problèmes de dynamique. L’équilibrage appartient à la troisième.')}
+<h3>Ordre de grandeur</h3>
+<p>Un rotor de $M = 10\ \text{kg}$ dont le centre de masse est décalé de $r = 0{,}05\ \text{mm}$ tourne à $30\,000$ tr/min, soit $\omega = 3141{,}6\ \text{rad/s}$. La force centrifuge vaut
+$$Mr\omega^2 = 10 \times 5\cdot 10^{-5} \times 3141{,}6^2 \approx 4\,935\ \text{N}$$
+alors que le poids n’est que de $98\ \text{N}$. Cette force tourne à $500$ Hz : elle est répétée $30\,000$ fois par minute.</p>
+<p><b>Objectif.</b> Trouver les conditions sur la géométrie des masses pour que les efforts exercés sur les paliers soient <b>indépendants du temps</b>, puis les réaliser par ajout ou retrait de matière.</p>` });
+
+COURSE.push({ id: 'modele', t: 'Modèle et paramétrage', h: String.raw`
+<p>Le rotor $S$ est guidé par deux liaisons : un palier en $A$ ($z=0$) et un palier en $B$ ($z=L$). On le modélise par une liaison pivot d’axe $(A,z)$. Il tourne à vitesse constante : $\vec\Omega = \omega\,\vec z$ avec $\omega$ constant.</p>
+${fig(FIGS.rotor, 'Rotor sur deux paliers A (z = 0) et B (z = L), repère lié au rotor.')}
+<h3>Repère et grandeurs géométriques</h3>
+<p>On utilise le repère $(A,x,y,z)$ lié au rotor, avec $x$ choisi dans le plan contenant l’axe et le centre de masse $G$. Alors $\vec{AG} = r\,\vec x + z_G\,\vec z$ : le nombre $r \geq 0$ est la <b>distance de G à l’axe</b>.</p>
+${fig(FIGS.faces, 'Vue de face : à gauche G est sur l’axe (r = 0), à droite il en est écarté (r ≠ 0).')}
+<h3>Matrice d’inertie</h3>
+<p>En $A$, dans la base liée au rotor, la matrice d’inertie a pour composantes diagonales $A,B,C$ (moments d’inertie, $C$ autour de $z$) et pour termes croisés les <b>produits d’inertie</b> :
+$$D = \int yz\,dm \qquad E = \int xz\,dm \qquad F = \int xy\,dm$$
+Dans la convention française, la matrice s’écrit avec les signes $-D$, $-E$, $-F$ hors diagonale.</p>
+<p>Ces constantes sont indépendantes du temps parce que le repère est lié au rotor : c’est ce qui rend le calcul simple.</p>` });
+
+COURSE.push({ id: 'dynamique', t: 'Théorèmes généraux appliqués au rotor', h: String.raw`
+<h3>Résultante dynamique</h3>
+<p>$G$ décrit un cercle de rayon $r$ à vitesse $\omega$ constante : $\vec a_G = -\omega^2 r\,\vec x$. Le théorème de la résultante dynamique donne, en négligeant la pesanteur,
+$$\vec R_A + \vec R_B = -M r \omega^2\,\vec x$$
+où $\vec R_A$, $\vec R_B$ sont les actions des paliers sur le rotor.</p>
+<h3>Moment dynamique en A</h3>
+<p>Le point $A$ est fixe, donc le moment dynamique est la dérivée du moment cinétique. Avec $\vec\Omega=\omega\vec z$ :
+$$\vec\sigma_A = \omega\,(-E\,\vec x - D\,\vec y + C\,\vec z)$$
+Cette expression est constante dans le repère lié ; sa dérivée dans le repère fixe vaut donc $\vec\Omega\wedge\vec\sigma_A$ :
+$$\vec\delta_A = \omega^2\,(D\,\vec x - E\,\vec y)$$
+C’est un moment <b>perpendiculaire à l’axe</b> qui tourne avec le rotor.</p>
+<h3>Réactions des paliers</h3>
+<p>Le moment en $A$ des actions de liaison est $L\,\vec z\wedge\vec R_B = \vec\delta_A$ (la pivot parfaite n’exerce pas de moment transversal). En projetant, avec $\vec R_B$ dans le plan $(x,y)$ :
+$$X_B = -\frac{\omega^2 E}{L} \qquad Y_B = -\frac{\omega^2 D}{L}$$
+Les forces exercées <b>sur les paliers</b> sont les opposées. En notation complexe $X+iY$ :
+$$\underline F_B = \frac{\omega^2}{L}\,(E + iD) \qquad \underline F_A = \omega^2\left(Mr - \frac{E}{L} - i\,\frac{D}{L}\right)$$
+Dans le repère fixe, on multiplie par $e^{i\theta}$ avec $\theta = \omega t$. Les efforts tournent donc à la fréquence de rotation, avec une amplitude proportionnelle à $\omega^2$.</p>
+<p><i>Remarque.</i> La pesanteur ajoute à chaque palier une force constante : elle ne fait pas vibrer et n’intervient pas dans l’équilibrage.</p>` });
+
+COURSE.push({ id: 'vibrations', t: 'Vibrations linéaires et angulaires', h: String.raw`
+<h3>Deux contributions</h3>
+<p>Les formules précédentes se décomposent en un terme lié à la <b>force</b> ($Mr\omega^2$) et un terme lié au <b>couple</b> ($\omega^2\sqrt{D^2+E^2}$). Plus précisément :
+$$\underline F_A + \underline F_B = \omega^2 M r \qquad L\,\|\underline F_B\| = \omega^2 \sqrt{D^2 + E^2}$$</p>
+${fig(FIGS.statique, 'Rotor sur deux couteaux : il tourne jusqu’à placer G sous l’axe si r ≠ 0.')}
+<h3>Balourd statique</h3>
+<p>Si $D=E=0$ et $r\neq 0$, les deux forces sont égales et <b>en phase</b> : $F_A = F_B = Mr\omega^2/2$ si G est à mi-distance. C’est la <b>vibration linéaire</b>.</p>
+${fig(FIGS.dynamique, 'Balourd dynamique : deux masses égales opposées dans deux plans différents. G est sur l’axe, mais les forces en A et B sont opposées.')}
+<h3>Balourd dynamique</h3>
+<p>Si $r=0$ et $(D,E)\neq(0,0)$, la résultante est nulle : $\underline F_A = -\underline F_B$. Les forces sont <b>en opposition de phase</b> et forment un couple tournant : c’est la <b>vibration angulaire</b>.</p>
+${fig(FIGS.phases, 'Les forces sur les paliers en fonction de θ : en phase pour une vibration linéaire, en opposition pour une vibration angulaire.')}
+<p>Le cas général superpose les deux : les efforts s’ajoutent en A et se retranchent en B (ou inversement).</p>` });
+
+COURSE.push({ id: 'conditions', t: 'Conditions d’équilibrage', h: String.raw`
+<h3>Énoncé</h3>
+<p>Les efforts sur les paliers sont constants quel que soit $\omega$ si et seulement si
+$$r = 0 \quad\text{et}\quad D = 0 \quad\text{et}\quad E = 0$$
+En effet, $\underline F_B = 0$ impose $E = D = 0$, puis $\underline F_A = Mr\omega^2 = 0$ impose $r = 0$.</p>
+<ul><li><b>Équilibrage statique</b> : $r=0$, G est sur l’axe. Le rotor reste immobile sur deux couteaux horizontaux.</li>
+<li><b>Équilibrage dynamique</b> : $r=0$ et $D=E=0$. L’axe de rotation est un <b>axe principal d’inertie</b> et passe par G.</li></ul>
+<p>L’équilibrage dynamique <b>contient</b> l’équilibrage statique, la réciproque est fausse.</p>
+<h3>Pourquoi le test statique ne suffit pas</h3>
+<p>Un cylindre dont l’axe de symétrie est incliné par rapport à l’arbre a son centre de masse sur l’axe de rotation : il reste immobile sur les couteaux. Pourtant $E\neq 0$ et il vibre en tournant.</p>` });
+
+COURSE.push({ id: 'correction', t: 'Correction en deux plans', h: String.raw`
+<h3>Écriture en balourds</h3>
+<p>Le défaut est décrit par deux nombres complexes : le balourd résultant $U$ et le moment de balourd $C$, par rapport au point $A$ :
+$$U = \sum m_k r_k e^{i\theta_k} \qquad C = \sum m_k r_k z_k\,e^{i\theta_k}$$
+On ajoute deux masselottes de balourds $c_1 = m_1 R e^{i\varphi_1}$ et $c_2 = m_2 R e^{i\varphi_2}$ dans les plans $z_1$ et $z_2$. L’équilibre demande
+$$c_1 + c_2 = -U \qquad z_1 c_1 + z_2 c_2 = -C$$</p>
+${fig(FIGS.deuxPlans, 'Deux plans de correction P₁ et P₂ distincts, à distance z₂ − z₁.')}
+<h3>Solution</h3>
+<p>Si $z_1 \neq z_2$ :
+$$c_2 = \frac{z_1 U - C}{z_2 - z_1} \qquad c_1 = -U - c_2$$
+La masse de chaque masselotte est $m_k = |c_k|/R$ et son angle est $\arg c_k$. Si le module est trop grand ou si la masse est impossible à ajouter, on perce du côté du défaut : un retrait équivaut à une masse négative.</p>
+${fig(FIGS.polygone, 'Les trois balourds U, c₁ et c₂ forment un polygone fermé : leur somme est nulle.')}
+<p>Si $z_1 = z_2$ le système est impossible, sauf cas particulier : un seul plan ne permet pas de contrôler le moment.</p>` });
+
+COURSE.push({ id: 'pratique', t: 'Mise en œuvre industrielle', h: String.raw`
+${fig(FIGS.pratique, 'Ajout de masselotte sur une jante, ou perçage d’un rotor.')}
+<h3>Méthode</h3>
+${fig(FIGS.methode, 'Les trois étapes de l’équilibrage industriel.')}
+<p>On ne connaît pas les défauts : on les déduit de <b>mesures</b> aux paliers. Une équilibreuse mesure l’amplitude et la phase des efforts à une vitesse donnée, puis calcule $c_1$ et $c_2$ à partir de la relation linéaire entre balourds et efforts.</p>
+<h3>Méthode des coefficients d’influence</h3>
+<p>On mesure les efforts $\underline F^{(0)}$ du rotor brut, puis $\underline F^{(1)}$ après ajout d’une masse d’essai connue. Le rapport $(\underline F^{(1)} - \underline F^{(0)})/c_{essai}$ donne un coefficient d’influence. Comme la relation est linéaire, la correction se déduit sans connaître la géométrie du rotor.</p>
+<h3>Tolérance</h3>
+<p>La norme ISO 1940 définit des classes $G = e\,\omega$ où $e = |OG|$ est l’excentricité résiduelle admissible et $\omega$ la vitesse de rotation. Une classe G 2,5 convient aux turbines, G 6,3 aux rotors de moteurs électriques.</p>
+<h3>Exemple chiffré</h3>
+<p>Pour $M = 10$ kg et $\omega = 3141{,}6$ rad/s, la classe G 2,5 donne $e = 2{,}5/3141{,}6 \approx 0{,}8\ \mu\text{m}$ : un décalage de 0,05 mm est donc largement trop grand.</p>` });
+
+COURSE.push({ id: 'gloss', t: 'Glossaire', h: String.raw`
+<dl class="gloss">
+<dt>Balourd</dt><dd>Défaut de répartition des masses d’un rotor, à l’origine d’efforts tournants.</dd>
+<dt>Balourd statique</dt><dd>Centre de masse hors de l’axe de rotation ($r\neq 0$).</dd>
+<dt>Balourd dynamique</dt><dd>Axe de rotation non principal d’inertie ($D$ ou $E$ non nuls).</dd>
+<dt>Masselotte</dt><dd>Petite masse ajoutée pour corriger un balourd.</dd>
+<dt>Plan de correction</dt><dd>Plan perpendiculaire à l’axe où l’on ajoute ou retire de la matière.</dd>
+<dt>Axe principal d’inertie</dt><dd>Axe pour lequel les produits d’inertie sont nuls.</dd>
+<dt>Coefficient d’influence</dt><dd>Rapport entre l’effort mesuré et la masse d’essai ajoutée.</dd>
+</dl>` });
+
+const UI = { cur: 'vib' };
+const AS = { key: 'vib', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null };
+const CS = { open: false, id: 'probleme' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  LOOP.fn = null; $('#hint').textContent = w.hint; root.innerHTML = ''; root.className = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag;
+  box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal' }, h('b', null, 'Objectif. '), a.goal));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', null, (i + 1) + '. ' + q.q));
+      q.o.forEach((o, j) => {
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', null, o + (good ? '  ✓' : '') + (bad ? '  ✗' : ''))));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why' }, (miss ? 'Sans réponse. ' : '') + q.w)); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+function actToggle() { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); }
+$('#bAct').addEventListener('click', actToggle);
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: mathify(cur.h) }));
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : l’équilibrage dynamique'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur l’équilibrage dynamique d’un solide en rotation (PSI*) : origine des vibrations, conditions d’équilibrage, rotor et masselottes, défi à défauts cachés, familles de problèmes et pratique.</p><h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut ; le bouton <b>Activité</b> ouvre consignes, défi et QCM ; le bouton <b>Cours</b> ouvre le cours illustré.</li><li>Dans l’atelier rotor, ajoutez des défauts, placez deux masselottes ou demandez la solution calculée.</li><li>Dans le défi, les défauts sont cachés : seules les forces sur les paliers sont mesurables. Les étoiles dépendent du résidu.</li></ul><h3>Vos données</h3><p>Les réponses au QCM et les étoiles sont mémorisées dans ce navigateur uniquement.</p>' }));
+});
+requestAnimationFrame(frame);
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); })();
+
+
 </script>
 
 </body></html>
