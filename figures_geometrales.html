@@ -1,393 +1,360 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Changements de bases orientées successives — style GeoGebra</title>
-  
-  <!-- KaTeX CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-  
-  <!-- KaTeX JS & Auto-render extension -->
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-  
-  <!-- Three.js & Export tools -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-  <style>
-    :root {
-      --bg: #ffffff;
-      --panel: #f8f9fa;
-      --border: #dee2e6;
-      --accent: #0d6efd;
-      --text: #212529;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.45;
-    }
-    header {
-      background: #f1f3f5;
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-    .btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 500;
-    }
-    .btn:hover { background: #0b5ed7; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #5c636a; }
-    .btn-pdf { background: #dc3545; }
-    .btn-pdf:hover { background: #bb2d3b; }
-    main {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 0;
-      min-height: calc(100vh - 60px);
-    }
-    @media (max-width: 900px) {
-      main { grid-template-columns: 1fr; }
-    }
-    .controls {
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      padding: 16px;
-      overflow-y: auto;
-      max-height: calc(100vh - 60px);
-    }
-    .controls h2 {
-      margin: 0 0 12px 0;
-      font-size: 1rem;
-      color: #495057;
-    }
-    .step {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 14px;
-    }
-    .step h3 {
-      margin: 0 0 10px 0;
-      font-size: 0.95rem;
-      color: var(--accent);
-    }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-      color: #495057;
-    }
-    select, input[type="number"] {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 0.95rem;
-      margin-bottom: 10px;
-    }
-    input[type="range"] {
-      width: 100%;
-      margin-bottom: 6px;
-    }
-    .angle-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .angle-row input[type="number"] {
-      width: 80px;
-      margin-bottom: 0;
-    }
-    .content {
-      padding: 16px;
-      overflow-y: auto;
-      max-height: calc(100vh - 60px);
-    }
-    #canvas-container {
-      width: 100%;
-      height: 380px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #fafafa;
-      position: relative;
-    }
-    #canvas-container canvas {
-      display: block;
-      width: 100% !important;
-      height: 100% !important;
-      border-radius: 8px;
-    }
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin: 10px 0 16px;
-      font-size: 0.9rem;
-    }
-    .legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .section {
-      margin-top: 22px;
-    }
-    .section h2 {
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 6px;
-    }
-    .note {
-      font-size: 0.85rem;
-      color: #6c757d;
-      margin-top: 8px;
-    }
-    .combined-info {
-      background: #e7f1ff;
-      border: 1px solid #b6d4fe;
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 14px;
-      font-size: 0.9rem;
-    }
-    .fig2d-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      margin-top: 12px;
-    }
-    .fig2d {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      text-align: center;
-      min-width: 300px;
-    }
-    .fig2d svg {
-      display: block;
-      margin: 0 auto;
-    }
-    .fig2d-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #333;
-    }
-    .fig2d-caption {
-      font-size: 0.85rem;
-      color: #444;
-      margin-top: 8px;
-      line-height: 1.4;
-    }
-    .vec-selector {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-end;
-      background: #f8f9fa;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-    .vec-selector label {
-      margin-bottom: 4px;
-    }
-    .vec-selector select {
-      width: auto;
-      min-width: 120px;
-      margin-bottom: 0;
-    }
-    .vec-result {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      font-size: 1.15rem;
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .arrow-legend {
-      font-size: 0.85rem;
-      color: #555;
-      margin-left: 8px;
-    }
-    @media print {
-      .controls, header .btn { display: none !important; }
-      main { display: block; }
-      .content { max-height: none; overflow: visible; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier Bases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. Même gabarit que l'Atelier Récursivité. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  --ok-soft:rgba(30,122,46,.15);--warn-soft:rgba(154,91,0,.13);--bad-soft:rgba(192,40,31,.13);
+  --g-s:#cfe3f6;--g-p:#f6e2bf;--g-c:#d3ecd7;--g-ps:#dcd6ee;--g-m:#e4e8ee;
+  --overlay:rgba(10,16,22,.55);--shadow:rgba(0,0,0,.28);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#14181d;--bar:#1d232a;--panel:#191e24;--panel2:#212830;--field:#14181d;--line:#3b4551;
+  --fg:#e8ecf0;--muted:#9ba6b2;--accent:#5b9bd5;--accent-fg:#0b1620;--accent-soft:#203449;--accent-ink:#b3d4f2;--run:#62c673;
+  --node-stroke:#a7b8c9;
+  --ok:#62c673;--warn:#e3a94f;--bad:#f2766d;
+  --ok-soft:rgba(98,198,115,.18);--warn-soft:rgba(227,169,79,.17);--bad-soft:rgba(242,118,109,.17);
+  --g-s:#27425c;--g-p:#5b4420;--g-c:#25492d;--g-ps:#3d3760;--g-m:#2d3640;
+  --overlay:rgba(0,0,0,.65);--shadow:rgba(0,0,0,.6);color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+sub,sup{line-height:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1000px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.zsh{border:1px solid var(--line);border-radius:10px;padding:9px 12px 3px;background:var(--panel2)}.zsh-t{margin-bottom:6px}.zsh .chips{margin-bottom:8px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.opts input[type=number]{width:96px;font-family:var(--font-mono)}
+.zgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:6px 0 10px}
+.zgrid .fld{margin:0 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.two>div{min-width:0}
+.viewlbl{font-size:12.5px;color:var(--muted);margin:8px 0 2px!important}
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--bg)}
+svg.g{display:block;width:100%;height:auto}
+.formula.sm{font-size:13.5px;line-height:1.7}
+.calc{margin:6px 0 10px}.calc .formula{margin:4px 0}
+.chk{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+.chk div{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:13.5px}
+.chk .mk{flex:none;font-weight:700;width:1.2em;text-align:center}
+.chk .okk{background:var(--ok-soft);border-color:var(--ok)}.chk .okk .mk{color:var(--ok)}
+.chk .nok{background:var(--bad-soft);border-color:var(--bad)}.chk .nok .mk{color:var(--bad)}
+.tbl{overflow-x:auto;margin:8px 0}
+table.ctable{border-collapse:collapse;font-size:13px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.ctable td.n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+details.adv{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:12px 0;background:var(--panel)}
+details.adv summary{cursor:pointer;font-weight:600;color:var(--accent-ink)}
+details.adv[open] summary{margin-bottom:8px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--node-stroke);vertical-align:-1px;margin-right:5px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0}
+/* dessins d'engrenages */
+.gear{stroke:var(--node-stroke);stroke-width:1.2;stroke-linejoin:round}
+.gear.s{fill:var(--g-s)}.gear.p{fill:var(--g-p)}.gear.c{fill:var(--g-c)}.gear.m{fill:var(--g-m)}.gear.in{fill:var(--g-s)}.gear.out{fill:var(--g-c)}
+.pitch{fill:none;stroke:var(--muted);stroke-dasharray:4 3;stroke-width:.8;opacity:.75}
+.hub{fill:var(--bg);stroke:var(--node-stroke);stroke-width:1.2}
+.mk{fill:var(--bad)}
+.arm{fill:var(--g-ps);stroke:var(--node-stroke);stroke-width:1.2;opacity:.62}
+.shaft{stroke:var(--node-stroke);stroke-width:1.6}
+.gtxt{font:600 12px var(--font-mono);fill:var(--fg);text-anchor:middle}
+.gtxt.sm{font-size:10.5px;font-weight:500;fill:var(--muted)}
+.gtxt.l{text-anchor:start}
+.dirtxt{font:600 15px var(--font-ui);fill:var(--accent-ink);text-anchor:middle}
+.hatchln{stroke:var(--node-stroke);stroke-width:1.1}
+.fixlbl{font:600 11px var(--font-ui);fill:var(--bad);text-anchor:middle}
+.ground{stroke:var(--node-stroke);stroke-width:1}
+.rect{stroke:var(--node-stroke);stroke-width:1.2}
+.rect.in{fill:var(--g-s)}.rect.out{fill:var(--g-c)}.rect.s{fill:var(--g-s)}.rect.p{fill:var(--g-p)}.rect.c{fill:var(--g-c)}.rect.m{fill:var(--g-m)}
+.bean{stroke:var(--node-stroke);stroke-width:1;fill:none;opacity:.7}
+.plot-ax{stroke:var(--muted);stroke-width:1}
+.plot-grid{stroke:var(--line);stroke-width:.7;stroke-dasharray:3 3}
+.plot-lbl{font:11px var(--font-mono);fill:var(--muted)}
+.plot-ttl{font:600 12px var(--font-ui);fill:var(--fg)}
+.curve{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.curve.fill{fill:var(--accent-soft);stroke:none}
+.cursor{stroke:var(--bad);stroke-width:1.4}
+.cdot{fill:var(--bad)}
+.rail{position:relative;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);margin:8px 0}
+.rail .car{position:absolute;top:4px;width:34px;height:24px;margin-left:-17px;border-radius:5px;background:var(--accent);border:1px solid var(--accent-ink)}
+/* exercices */
+.exs{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel);margin:8px 0}
+.exs p{margin:4px 0}
+.fieldrow{display:flex;gap:10px 16px;flex-wrap:wrap;margin:10px 0}
+.fieldrow .fld{margin:0;min-width:150px;flex:1 1 150px}
+.fieldrow input{font-family:var(--font-mono)}
+.fieldrow input.okk{border-color:var(--ok);background:var(--ok-soft)}
+.fieldrow input.nok{border-color:var(--bad);background:var(--bad-soft)}
+.solbox{border-left:3px solid var(--accent);padding:2px 12px;margin:10px 0;background:var(--panel2);border-radius:0 8px 8px 0}
+.scoreline{font:500 12.5px var(--font-mono);color:var(--muted);margin:2px 0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px var(--shadow);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+}
+/* illustrations du cours */
+.fig{margin:14px 0;max-width:100%}
+.fig .gwrap{background:var(--bg)}
+.fig figcaption{font-size:13px;line-height:1.5;color:var(--muted);margin:6px 2px 0}
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0;align-items:start}
+.figrow .fig{margin:0;min-width:0}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+/* atelier bases orientées */
+#ws{max-width:1240px}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;min-width:0;margin-bottom:10px}
+.panel h3{margin:0 0 6px!important;font-size:15px!important}
+.angrow{display:flex;gap:10px;align-items:center;margin-top:6px}
+.angrow input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.angrow input[type=number]{width:84px}
+.angrow .lab{font-size:13px;white-space:nowrap}
+.canvas3d{width:100%;height:420px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2);touch-action:none;cursor:grab}
+.canvas3d canvas{display:block}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:8px 0}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.infob{background:var(--accent-soft);border-radius:8px;padding:8px 12px;font-size:13.5px;margin:8px 0}
+.figs2d{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0}
+.figs2d .fig{margin:0;flex:1 1 300px;max-width:340px}
+.vres{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 18px;display:flex;flex-direction:column;gap:10px;align-items:center;min-height:90px}
+.vm{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:15px;flex-wrap:wrap;justify-content:center}
+.vm .tb{font-size:3.2rem;line-height:1;color:var(--muted);font-weight:300}
+.vcol{display:flex;flex-direction:column;gap:4px;text-align:center}
+.vcol span{padding:2px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field);min-width:60px}
+.mat{display:inline-grid;grid-template-columns:repeat(3,auto);gap:2px 12px;font-family:var(--font-mono);font-size:13px;padding:4px 10px;border-left:2px solid var(--muted);border-right:2px solid var(--muted);border-radius:4px}
+@media (max-width:820px){.canvas3d{height:300px}}
+@media print{
+  header.band,#modes,#act,#hint,.noprint{display:none!important}
+  html,body,#app,#work,#stage,#scroller{height:auto!important;overflow:visible!important;display:block!important}
+  #course{display:none!important}
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Bases orientées successives (\(b_0 \to b_1 \to b_2 \to b_3\))</h1>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button class="btn btn-secondary" onclick="resetView()">Réinitialiser vue</button>
-      <button class="btn btn-pdf" onclick="exportPDF()">Exporter en PDF</button>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="9.5" cy="13" r="7" fill="none" stroke="var(--fg)" stroke-width="1.6" stroke-dasharray="3.2 1.6"/><circle cx="18.5" cy="13" r="5.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.6 1.4"/><circle cx="9.5" cy="13" r="1.8" fill="var(--warn)"/></svg><span>Atelier Bases <small>SI · CPGE</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bTheme" type="button" aria-pressed="false">Mode sombre</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
     </div>
-  </header>
-  
-  <main>
-    <aside class="controls">
-      <h2>Paramètres de rotation</h2>
-      <div class="step">
-        <h3>Passage \(b_0 \to b_1\)</h3>
-        <label>Axe de rotation (dans \(b_0\))</label>
-        <select id="axis10">
-          <option value="x">x₀</option>
-          <option value="y">y₀</option>
-          <option value="z" selected>z₀</option>
-        </select>
-        <label>Angle \(\theta_{10}\) (degrés)</label>
-        <div class="angle-row">
-          <input type="range" id="slider10" min="-180" max="180" value="30" step="1" />
-          <input type="number" id="angle10" value="30" step="0.1" />
-        </div>
-      </div>
-      
-      <div class="step">
-        <h3>Passage \(b_1 \to b_2\)</h3>
-        <label>Axe de rotation (dans \(b_1\))</label>
-        <select id="axis21">
-          <option value="x">x₁</option>
-          <option value="y" selected>y₁</option>
-          <option value="z">z₁</option>
-        </select>
-        <label>Angle \(\theta_{21}\) (degrés)</label>
-        <div class="angle-row">
-          <input type="range" id="slider21" min="-180" max="180" value="45" step="1" />
-          <input type="number" id="angle21" value="45" step="0.1" />
-        </div>
-      </div>
-      
-      <div class="step">
-        <h3>Passage \(b_2 \to b_3\)</h3>
-        <label>Axe de rotation (dans \(b_2\))</label>
-        <select id="axis32">
-          <option value="x" selected>x₂</option>
-          <option value="y">y₂</option>
-          <option value="z">z₂</option>
-        </select>
-        <label>Angle \(\theta_{32}\) (degrés)</label>
-        <div class="angle-row">
-          <input type="range" id="slider32" min="-180" max="180" value="20" step="1" />
-          <input type="number" id="angle32" value="20" step="0.1" />
-        </div>
-      </div>
-      
-      <div class="combined-info" id="combinedInfo"></div>
-      <button class="btn" style="width:100%;" onclick="updateAll()">Mettre à jour</button>
-      <p class="note">Les curseurs et champs sont synchronisés. Mise à jour en direct.</p>
-    </aside>
-
-    <div class="content">
-      <div id="canvas-container"></div>
-      <div class="legend">
-        <span><span class="dot" style="background:#333;"></span> \(b_0\)</span>
-        <span><span class="dot" style="background:#e74c3c;"></span> \(b_1\)</span>
-        <span><span class="dot" style="background:#27ae60;"></span> \(b_2\)</span>
-        <span><span class="dot" style="background:#3498db;"></span> \(b_3\)</span>
-        <span class="arrow-legend">Flèches : \(x \to\) &nbsp;|&nbsp; \(y \to\to\) &nbsp;|&nbsp; \(z \to\to\to\)</span>
-      </div>
-
-      <div class="section">
-        <h2>Figures géométriques 2D de changement de base</h2>
-        <p class="note">
-          Les figures 2D forment un trièdre direct où l'axe de rotation pointe vers l'observateur (sortant de l'écran).
-        </p>
-        <div class="fig2d-container" id="fig2dContainer"></div>
-      </div>
-
-      <div class="section">
-        <h2>Expression littérale d’un vecteur unitaire</h2>
-        <p class="note">Choisissez le vecteur et la base dans laquelle vous souhaitez l’exprimer. Notation : \(c_{ij}=\cos\theta_{ij}\), \(s_{ij}=\sin\theta_{ij}\).</p>
-        <div class="vec-selector">
-          <div>
-            <label>Vecteur</label>
-            <select id="selVec">
-              <option value="x0">x₀</option>
-              <option value="y0">y₀</option>
-              <option value="z0">z₀</option>
-              <option value="x1" selected>x₁</option>
-              <option value="y1">y₁</option>
-              <option value="z1">z₁</option>
-              <option value="x2">x₂</option>
-              <option value="y2">y₂</option>
-              <option value="z2">z₂</option>
-              <option value="x3">x₃</option>
-              <option value="y3">y₃</option>
-              <option value="z3">z₃</option>
-            </select>
-          </div>
-          <div>
-            <label>Exprimé dans la base</label>
-            <select id="selBase">
-              <option value="0" selected>b₀</option>
-              <option value="1">b₁</option>
-              <option value="2">b₂</option>
-              <option value="3">b₃</option>
-            </select>
-          </div>
-        </div>
-        <div class="vec-result" id="vecResult"></div>
-      </div>
-    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
   </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
 
-  <script>
-    function renderMath(element) {
-      if (window.renderMathInElement) {
-        renderMathInElement(element, {
-          delimiters: [
-            {left: "$$", right: "$$", display: true},
-            {left: "\\(", right: "\\)", display: false}
-          ],
-          throwOnError: false
-        });
-      }
-    }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+function reduced() { try { return window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-bases-v1', theme: 'atelier-bases-theme' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const ANIM = { fn: null, last: 0 };
+const TAU = 2 * Math.PI, DEG = 180 / Math.PI;
+const copy = o => JSON.parse(JSON.stringify(o));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function fx(v, d) {
+  if (d == null) d = 2;
+  if (!isFinite(v)) return '∞';
+  const f = Math.pow(10, d); let r = Math.round(v * f) / f; if (Object.is(r, -0)) r = 0;
+  let s = String(r); if (/e/.test(s)) s = r.toFixed(d);
+  return s.replace('.', ',').replace('-', '−');
+}
+const sg = (v, d) => (v > 0 ? '+' : '') + fx(v, d);
+function parseAns(s) {
+  s = String(s).trim().replace(/\s/g, '').replace(/[−–]/g, '-').replace(/,/g, '.');
+  if (/^[-+]?(\d+\.?\d*|\.\d+)\/[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) { const q = s.split('/'); return +q[0] / +q[1]; }
+  if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return +s;
+  return NaN;
+}
+function okAns(v, t, rel, abs) { rel = rel == null ? 0.02 : rel; abs = abs == null ? 0.005 : abs; return isFinite(v) && Math.abs(v - t) <= Math.max(abs, Math.abs(t) * rel); }
+const subz = s => String(s).replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+function svgTxt(parent, attrs, str) {
+  const t = el('text', attrs, parent), parts = String(str).split(/_([A-Za-z0-9]+)/);
+  parts.forEach((p, i) => {
+    if (i % 2 === 0) { if (p) { const sp = el('tspan', {}, t); sp.textContent = p; if (i > 0) sp.setAttribute('dy', '-3'); } }
+    else { const sp = el('tspan', { dy: '3', 'font-size': '0.78em' }, t); sp.textContent = p; }
+  });
+  return t;
+}
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', { html: k[0] }), h('b', { html: k[1] })))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', disabled: it[2] === true, html: subz(it[1]), onclick: () => cb(it[0]) })));
+}
+function rng(label, min, max, step, get, set, fmtFn) {
+  const out = h('b', null, fmtFn(get()));
+  const inp = h('input', { type: 'range', min, max, step, 'aria-label': label });
+  inp.value = get();
+  inp.addEventListener('input', () => { set(+inp.value); out.textContent = fmtFn(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', { html: subz(label) + ' = ' }, out), inp);
+}
+let SVGN = 0;
+function shuffled(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-    function formatAngleLabel(key) {
-      const map = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
-      return "θ" + String(key).split('').map(c => map[c] || c).join('');
-    }
+/* ---------- aides de dessin ---------- */
+function mkSvg(vb, label) { return el('svg', { class: 'g', viewBox: vb, role: 'img', 'aria-label': label }); }
+function figEl(node, cap, maxw) { return h('figure', { class: 'fig' }, h('div', { class: 'gwrap', style: maxw ? 'max-width:' + maxw + 'px' : null }, node), h('figcaption', { html: cap })); }
+function figRow(list) { return h('div', { class: 'figrow' }, list); }
+function arrowMk(svg) {
+  const d = el('defs', {}, svg), id = 'am' + (++SVGN), m = el('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, d);
+  el('path', { d: 'M0 0L10 5L0 10Z', fill: 'var(--accent-ink)' }, m);
+  return 'url(#' + id + ')';
+}
+function dimH(svg, ar, x1, x2, y, label) {
+  el('line', { x1: x1.toFixed(1), x2: x2.toFixed(1), y1: y, y2: y, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: ((x1 + x2) / 2).toFixed(1), y: y - 5, style: 'font-size:11.5px' }, label);
+}
+function dimV(svg, ar, x, y1, y2, label, tx) {
+  el('line', { x1: x, x2: x, y1, y2, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: tx, y: (y1 + y2) / 2 + 4, style: 'font-size:11.5px' }, label);
+}
+function hatchDefs(svg, id) {
+  const d = el('defs', {}, svg), p = el('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, d);
+  el('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'hatchln' }, p);
+}
+function hydrateFigs(root) {
+  root.querySelectorAll('[data-fig]').forEach(ph => {
+    const f = FIGS[ph.getAttribute('data-fig')];
+    if (!f) { ph.remove(); return; }
+    try { ph.replaceWith(f()); } catch (e) { console.error('figure ' + ph.getAttribute('data-fig'), e); ph.remove(); }
+  });
+}
+function shuffled(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+/* ===== maths ===== */
     // ===================== Symbolic helpers =====================
     function S(s) { return String(s); }
     function symAdd(a, b) {
@@ -467,429 +434,546 @@
       return Rz(th);
     }
 
-    let R01, R02, R03;
-    let S01, S02, S03;
-    let axes = { a10: 'z', a21: 'y', a32: 'x' };
-    let angles = { t10: 30, t21: 45, t32: 20 };
+/* ================= Atelier 1 : bases orientées successives ================= */
+const BS = { axes: { a10: 'z', a21: 'y', a32: 'x' }, ang: { t10: 30, t21: 45, t32: 20 }, vec: 'x1', base: 0 };
+let R01, R02, R03, S01, S02, S03;
+const COL = ['var(--fg)', '#e0483a', '#1f9d55', '#2f7fd1'];
+const matT = A => [[A[0][0], A[1][0], A[2][0]], [A[0][1], A[1][1], A[2][1]], [A[0][2], A[1][2], A[2][2]]];
+const matVec = (A, v) => [0, 1, 2].map(i => A[i][0] * v[0] + A[i][1] * v[1] + A[i][2] * v[2]);
+function computeMatrices() {
+  const th10 = deg2rad(BS.ang.t10), th21 = deg2rad(BS.ang.t21), th32 = deg2rad(BS.ang.t32);
+  R01 = rot(BS.axes.a10, th10); R02 = matMul(R01, rot(BS.axes.a21, th21)); R03 = matMul(R02, rot(BS.axes.a32, th32));
+  S01 = symRot(BS.axes.a10, 'c_{10}', 's_{10}');
+  const S12 = symRot(BS.axes.a21, 'c_{21}', 's_{21}'), S23 = symRot(BS.axes.a32, 'c_{32}', 's_{32}');
+  S02 = symMatMul(S01, S12); S03 = symMatMul(S02, S23);
+}
+const getSymR = j => j === 0 ? [['1', '0', '0'], ['0', '1', '0'], ['0', '0', '1']] : j === 1 ? S01 : j === 2 ? S02 : S03;
+const getNumR = j => j === 0 ? [[1, 0, 0], [0, 1, 0], [0, 0, 1]] : j === 1 ? R01 : j === 2 ? R02 : R03;
+function symVecInBase(j, i, e) { if (j === i) return e; return symMatVec(symMatMul(symMatT(getSymR(i)), getSymR(j)), e); }
+function stripOuter(s) {
+  if (s[0] === '(' && s[s.length - 1] === ')') { let d = 0; for (let i = 0; i < s.length; i++) { if (s[i] === '(') d++; else if (s[i] === ')') d--; if (d === 0 && i < s.length - 1) return s; } return s.slice(1, -1); }
+  return s;
+}
+function symHtml(s) {
+  s = stripOuter(String(s));
+  return s.replace(/([cs])_\{(\d+)\}/g, '$1<sub>$2</sub>').replace(/\*/g, '').replace(/\+/g, ' + ').replace(/-/g, '−');
+}
+function getRotationGroups() {
+  const steps = [{ from: 0, to: 1, axis: BS.axes.a10, angle: BS.ang.t10, key: '10' }, { from: 1, to: 2, axis: BS.axes.a21, angle: BS.ang.t21, key: '21' }, { from: 2, to: 3, axis: BS.axes.a32, angle: BS.ang.t32, key: '32' }];
+  const groups = []; let cur = null;
+  steps.forEach(st => {
+    if (cur && cur.axis === st.axis) { cur.keys.push(st.key); cur.to = st.to; cur.steps.push(st); }
+    else { if (cur) groups.push(cur); cur = { axis: st.axis, from: st.from, to: st.to, keys: [st.key], steps: [st] }; }
+  });
+  if (cur) groups.push(cur);
+  return groups;
+}
 
-    function computeMatrices() {
-      const th10 = deg2rad(angles.t10);
-      const th21 = deg2rad(angles.t21);
-      const th32 = deg2rad(angles.t32);
+/* ---- figures géométrales 2D ---- */
+function arrowhead(tx, ty, rad, color) {
+  const L = 10, A = 0.5, a = Math.atan2(-Math.sin(rad), Math.cos(rad));
+  const pts = [[tx, ty], [tx - L * Math.cos(a - A), ty - L * Math.sin(a - A)], [tx - L * Math.cos(a + A), ty - L * Math.sin(a + A)]].map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ');
+  return '<polygon points="' + pts + '" style="fill:' + color + '"/>';
+}
+function planeLetters(axis) { return axis === 'z' ? ['x', 'y'] : axis === 'x' ? ['y', 'z'] : ['z', 'x']; }
+/* disp : angles (en degrés) de chaque base dessinée ; keys : noms des angles entre bases successives */
+function fig2dSvg(axis, from, disp, keys, nameOverride) {
+  const size = 300, cx = 150, cy = 150, len = 100, lt = planeLetters(axis), n = disp.length - 1;
+  let g = '';
+  for (let i = 0; i <= n; i++) {
+    const b = from + i, col = COL[b] || COL[0], rad = deg2rad(disp[i]), rv = rad + Math.PI / 2;
+    const ux = cx + len * Math.cos(rad), uy = cy - len * Math.sin(rad), vx = cx + len * Math.cos(rv), vy = cy - len * Math.sin(rv);
+    const lab = (x, y, t) => '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" style="fill:' + col + ';font:600 13px var(--font-ui)">' + t + '<tspan dy="3" style="font-size:10px">' + b + '</tspan></text>';
+    g += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ux.toFixed(1) + '" y2="' + uy.toFixed(1) + '" style="stroke:' + col + ';stroke-width:2.2"/>' + arrowhead(ux, uy, rad, col) +
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + vx.toFixed(1) + '" y2="' + vy.toFixed(1) + '" style="stroke:' + col + ';stroke-width:2.2"/>' + arrowhead(vx, vy, rv, col) +
+      lab(ux + 10, uy + 5, lt[0]) + lab(vx + 6, vy - 6, lt[1]);
+  }
+  for (let i = 1; i <= n; i++) {
+    const r = 35 + (i - 1) * 16, a0 = deg2rad(disp[i - 1]), a1 = deg2rad(disp[i]), am = (a0 + a1) / 2;
+    const nm = (keys && keys[i - 1]) || '';
+    g += '<path d="M ' + (cx + r * Math.cos(a0)).toFixed(1) + ' ' + (cy - r * Math.sin(a0)).toFixed(1) + ' A ' + r + ' ' + r + ' 0 0 0 ' + (cx + r * Math.cos(a1)).toFixed(1) + ' ' + (cy - r * Math.sin(a1)).toFixed(1) + '" style="fill:none;stroke:var(--muted);stroke-width:1.8"/>' +
+      '<text x="' + (cx + (r + 14) * Math.cos(am)).toFixed(1) + '" y="' + (cy - (r + 14) * Math.sin(am) + 4).toFixed(1) + '" text-anchor="middle" style="fill:var(--fg);font:600 12px var(--font-ui)">' + (nm === '?' ? 'θ' : nm ? 'θ<tspan dy="3" style="font-size:9px">' + nm + '</tspan>' : '') + '</text>';
+  }
+  return '<svg class="g" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="Figure géométrale : rotation autour de la direction ' + axis + '"><line x1="0" y1="' + cy + '" x2="' + size + '" y2="' + cy + '" style="stroke:var(--line)"/><line x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + size + '" style="stroke:var(--line)"/>' + g + '<circle cx="' + cx + '" cy="' + cy + '" r="3" style="fill:var(--fg)"/></svg>';
+}
+function fig2dNode(axis, from, disp, keys, title, cap) {
+  return h('figure', { class: 'fig' }, h('div', { class: 'fig-t', style: 'font-weight:600;font-size:13px;margin-bottom:4px', html: title }), h('div', { class: 'gwrap', style: 'max-width:320px', html: fig2dSvg(axis, from, disp, keys) }), h('figcaption', { html: cap }));
+}
+function groupFig(g) {
+  const n = g.steps.length, step = 30 / n, disp = []; for (let i = 0; i <= n; i++) disp.push(i * step);
+  const title = n > 1 ? 'Rotations successives autour de <b>' + g.axis + '</b> (b_' + g.from + ' → b_' + g.to + ')' : 'Rotation autour de <b>' + g.axis + '_' + g.from + '</b> (b_' + g.from + ' → b_' + g.to + ')';
+  return fig2dNode(g.axis, g.from, disp, g.keys, subz(title), 'Axe de rotation (O, <b>' + g.axis + '</b>) sortant de l’écran. Les angles sont dessinés de façon schématique.');
+}
 
-      R01 = rot(axes.a10, th10);
-      const R12_local = rot(axes.a21, th21);
-      const R23_local = rot(axes.a32, th32);
+/* ---- vue 3D ---- */
+const T3 = { on: false };
+function fgHex() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 0xdde3ee : 0x222222; }
+function bgHex() { try { const n = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--panel2').trim().replace('#', ''), 16); return isNaN(n) ? 0xf1f3f6 : n; } catch (e) { return 0xf1f3f6; } }
+function arrow3(dir, color, nHeads, length) {
+  const g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ color }), hl = 0.16, tot = nHeads * hl + (nHeads - 1) * 0.02, sh = length - tot - 0.02;
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, Math.max(0.1, sh), 8), mat); shaft.position.y = sh / 2; g.add(shaft);
+  for (let k = 0; k < nHeads; k++) { const hd = new THREE.Mesh(new THREE.ConeGeometry(0.075, hl, 12), mat); hd.position.y = length - 0.01 - hl / 2 - k * (hl + 0.02); g.add(hd); }
+  g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+  return g;
+}
+function frame3(R, cols, scale) {
+  const g = new THREE.Group();
+  [0, 1, 2].forEach(j => g.add(arrow3(new THREE.Vector3(R[0][j], R[1][j], R[2][j]), cols[j], j + 1, 1.32 * (scale || 1))));
+  return g;
+}
+function updateCam() {
+  const c = T3.camera, d = T3.dist; c.position.set(d * Math.sin(T3.ry) * Math.cos(T3.rx), d * Math.sin(T3.rx), d * Math.cos(T3.ry) * Math.cos(T3.rx)); c.lookAt(0, 0, 0);
+}
+function stopSim() {
+  ANIM.fn = null;
+  if (T3.on) {
+    try { window.removeEventListener('pointerup', T3.up); window.removeEventListener('pointermove', T3.mv); T3.renderer.dispose(); if (T3.renderer.forceContextLoss) T3.renderer.forceContextLoss(); } catch (e) { /* rien */ }
+    T3.on = false;
+  }
+}
+function refreshThreeTheme() { if (T3.on) { try { T3.scene.background = new THREE.Color(bgHex()); updateFrames(); } catch (e) { /* rien */ } } }
+function initThree() {
+  const box = $('#b-canvas'); if (!box) return;
+  if (typeof THREE === 'undefined') { box.innerHTML = '<p class="small" style="padding:14px">La vue 3D demande une connexion internet (bibliothèque three.js). Les figures 2D et les expressions restent utilisables.</p>'; return; }
+  try {
+    const w = box.clientWidth || 560, hh = box.clientHeight || 420;
+    T3.scene = new THREE.Scene(); T3.scene.background = new THREE.Color(bgHex());
+    T3.camera = new THREE.PerspectiveCamera(45, w / hh, 0.1, 100);
+    T3.renderer = new THREE.WebGLRenderer({ antialias: true }); T3.renderer.setSize(w, hh); T3.renderer.setPixelRatio(window.devicePixelRatio || 1);
+    box.innerHTML = ''; box.appendChild(T3.renderer.domElement);
+    T3.scene.add(new THREE.GridHelper(4, 10, 0xbbbbbb, 0xd5d8de));
+    T3.scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 16), new THREE.MeshBasicMaterial({ color: fgHex() })));
+    T3.base = T3.scene.children.length; T3.rx = 0.4; T3.ry = 0.6; T3.dist = 5.7; T3.drag = false; T3.frames = [];
+    updateCam();
+    const cv = T3.renderer.domElement;
+    cv.addEventListener('pointerdown', e => { T3.drag = true; T3.px = e.clientX; T3.py = e.clientY; });
+    T3.up = () => { T3.drag = false; };
+    T3.mv = e => { if (!T3.drag) return; T3.ry += (e.clientX - T3.px) * 0.008; T3.rx = Math.max(-1.4, Math.min(1.4, T3.rx + (e.clientY - T3.py) * 0.008)); T3.px = e.clientX; T3.py = e.clientY; updateCam(); };
+    window.addEventListener('pointerup', T3.up); window.addEventListener('pointermove', T3.mv);
+    cv.addEventListener('wheel', e => { e.preventDefault(); T3.dist = Math.max(2.5, Math.min(12, T3.dist + e.deltaY * 0.01)); updateCam(); }, { passive: false });
+    T3.on = true;
+    ANIM.fn = () => { if (T3.on) { try { T3.renderer.render(T3.scene, T3.camera); } catch (e) { T3.on = false; } } };
+  } catch (e) { box.innerHTML = '<p class="small" style="padding:14px">WebGL n’est pas disponible sur cet appareil. Les figures 2D et les expressions restent utilisables.</p>'; T3.on = false; }
+}
+window.addEventListener('resize', () => { const b = $('#b-canvas'); if (!T3.on || !b) return; const w = b.clientWidth, hh = b.clientHeight; if (!w || !hh) return; T3.camera.aspect = w / hh; T3.camera.updateProjectionMatrix(); T3.renderer.setSize(w, hh); });
+function updateFrames() {
+  if (!T3.on) return;
+  while (T3.scene.children.length > T3.base) T3.scene.remove(T3.scene.children[T3.scene.children.length - 1]);
+  const f = fgHex(), I = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  T3.scene.add(frame3(I, [f, f, f], 1.06), frame3(R01, [0xe74c3c, 0xc0392b, 0xa93226]), frame3(R02, [0x27ae60, 0x1e8449, 0x196f3d]), frame3(R03, [0x3498db, 0x2980b9, 0x1a5276]));
+}
+function resetView() { if (T3.on) { T3.rx = 0.4; T3.ry = 0.6; T3.dist = 5.7; updateCam(); } }
 
-      R02 = matMul(R01, R12_local);
-      R03 = matMul(R02, R23_local);
+/* ---- panneau de commandes ---- */
+const STEPS = [['10', 0, 1], ['21', 1, 2], ['32', 2, 3]];
+function buildCtl() {
+  const box = $('#b-ctl'); if (!box) return; box.innerHTML = '';
+  STEPS.forEach(s => {
+    const k = s[0], i = s[1], j = s[2], ak = 'a' + k, tk = 't' + k;
+    const rg = h('input', { type: 'range', min: -180, max: 180, step: 1, value: BS.ang[tk], 'aria-label': 'Angle θ' + k }), nb = h('input', { type: 'number', step: 0.1, value: BS.ang[tk], 'aria-label': 'Angle θ' + k + ' en degrés' });
+    const set = v => { BS.ang[tk] = v; updateAll(); };
+    rg.addEventListener('input', () => { nb.value = rg.value; set(parseFloat(rg.value) || 0); });
+    nb.addEventListener('input', () => { rg.value = nb.value; set(parseFloat(nb.value) || 0); });
+    box.append(h('div', { class: 'panel' }, h('h3', { html: subz('Passage b_' + i + ' → b_' + j) }),
+      h('p', { class: 'small', html: subz('Axe de rotation (dans b_' + i + ')') }),
+      chipsRow([['x', 'x_' + i], ['y', 'y_' + i], ['z', 'z_' + i]], BS.axes[ak], v => { BS.axes[ak] = v; buildCtl(); updateAll(); }, 'Direction de l’axe de rotation'),
+      h('div', { class: 'angrow' }, h('span', { class: 'lab', html: 'θ<sub>' + k + '</sub> (°)' }), rg, nb)));
+  });
+}
+function updateInfo() {
+  const g = getRotationGroups(), a = BS.axes;
+  $('#b-info').innerHTML = 'Rotations : θ<sub>10</sub> autour de <b>' + a.a10 + '<sub>0</sub></b>, θ<sub>21</sub> autour de <b>' + a.a21 + '<sub>1</sub></b>, θ<sub>32</sub> autour de <b>' + a.a32 + '<sub>2</sub></b>.<br>' +
+    (g.length < 3 ? '<span style="color:var(--accent-ink)">Des rotations consécutives partagent le même axe : les figures 2D sont fusionnées.</span>' : 'Tous les axes de rotation sont distincts : 3 figures 2D séparées.');
+}
+function update2D() { const c = $('#b-figs'); c.innerHTML = ''; getRotationGroups().forEach(g => c.append(groupFig(g))); }
+function vcolHtml(arr, fmtc) { return '<span class="vcol">' + arr.map(x => '<span>' + fmtc(x) + '</span>').join('') + '</span>'; }
+function updateVec() {
+  const v = BS.vec, L = v[0], j = +v[1], i = BS.base, e = { x: ['1', '0', '0'], y: ['0', '1', '0'], z: ['0', '0', '1'] }[L];
+  const comps = symVecInBase(j, i, e), en = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] }[L];
+  const num = matVec(matT(getNumR(i)), matVec(getNumR(j), en));
+  const lhs = '<b>' + L + '<sub>' + j + '</sub></b> = ';
+  $('#b-vec').innerHTML = '<div class="vm">' + lhs + '<span class="tb">(</span>' + vcolHtml(comps, symHtml) + '<span class="tb">)</span><span>b<sub>' + i + '</sub></span></div>' +
+    '<div class="vm small" style="font-size:13px">Valeurs numériques : <span class="tb" style="font-size:2.2rem">(</span>' + vcolHtml(num, x => fx(Math.abs(x) < 1e-12 ? 0 : x, 3)) + '<span class="tb" style="font-size:2.2rem">)</span><span>b<sub>' + i + '</sub></span></div>';
+}
+function updateAll() {
+  computeMatrices(); updateFrames(); updateInfo(); update2D(); updateVec();
+}
+function drawVecChips() {
+  const a = $('#b-vsel'); if (!a) return; a.innerHTML = '';
+  const vs = []; for (let j = 0; j < 4; j++) ['x', 'y', 'z'].forEach(L => vs.push([L + j, L + '_' + j]));
+  a.append(h('p', { class: 'small' }, 'Vecteur'), chipsRow(vs, BS.vec, v => { BS.vec = v; drawVecChips(); updateVec(); }, 'Vecteur'),
+    h('p', { class: 'small', style: 'margin-top:8px' }, 'Exprimé dans la base'), chipsRow([[0, 'b_0'], [1, 'b_1'], [2, 'b_2'], [3, 'b_3']], BS.base, v => { BS.base = v; drawVecChips(); updateVec(); }, 'Base d’expression'));
+}
+function mountBases(root) {
+  root.innerHTML =
+    '<h2>Bases orientées successives</h2>' +
+    '<p>Trois rotations successives b<sub>0</sub> → b<sub>1</sub> → b<sub>2</sub> → b<sub>3</sub>, chacune autour d’un axe de la base précédente. Réglez les axes et les angles : la vue 3D, les figures géométrales et l’expression littérale des vecteurs se mettent à jour.</p>' +
+    '<div class="two"><div><div id="b-ctl"></div><div class="infob" id="b-info"></div></div><div>' +
+    '<p class="viewlbl">Les trois bases en 3D (souris : tourner la vue ; molette : zoom)</p><div class="canvas3d" id="b-canvas" role="img" aria-label="Vue 3D des bases b0 à b3"></div>' +
+    '<div class="leg"><span><i style="background:var(--fg)"></i>b<sub>0</sub></span><span><i style="background:#e0483a"></i>b<sub>1</sub></span><span><i style="background:#1f9d55"></i>b<sub>2</sub></span><span><i style="background:#2f7fd1"></i>b<sub>3</sub></span><span>Flèches : x → une tête · y → deux têtes · z → trois têtes</span></div>' +
+    '<div class="files noprint"><button class="btn" id="b-rv" type="button">Réinitialiser la vue</button><button class="btn" id="b-pdf" type="button">Exporter en PDF</button></div></div></div>' +
+    '<h3>Figures géométrales 2D</h3><p class="small">Chaque figure est vue avec l’axe de rotation sortant de l’écran (trièdre direct), le sens positif est le sens trigonométrique.</p><div class="figs2d" id="b-figs"></div>' +
+    '<h3>Expression littérale d’un vecteur unitaire</h3><p class="small">Notation : c<sub>ij</sub> = cos θ<sub>ij</sub>, s<sub>ij</sub> = sin θ<sub>ij</sub>. Choisissez le vecteur et la base dans laquelle l’exprimer.</p>' +
+    '<div class="panel"><div id="b-vsel"></div></div><div class="vres" id="b-vec" aria-live="polite"></div>';
+  $('#b-rv').addEventListener('click', resetView);
+  $('#b-pdf').addEventListener('click', () => { try { window.print(); } catch (e) { /* rien */ } });
+  buildCtl(); drawVecChips(); initThree(); updateAll();
+}
+WORKSHOPS.push({ id: 'g1', title: 'Bases et figures', hint: 'Choisissez les axes et les angles des trois rotations ; observez les bases en 3D, les figures géométrales et les composantes des vecteurs.', mount: mountBases, reset: () => { BS.axes = { a10: 'z', a21: 'y', a32: 'x' }; BS.ang = { t10: 30, t21: 45, t32: 20 }; BS.vec = 'x1'; BS.base = 0; } });
 
-      const c10 = 'c_{10}', s10 = 's_{10}';
-      const c21 = 'c_{21}', s21 = 's_{21}';
-      const c32 = 'c_{32}', s32 = 's_{32}';
-      S01 = symRot(axes.a10, c10, s10);
-      const S12 = symRot(axes.a21, c21, s21);
-      const S23 = symRot(axes.a32, c32, s32);
-      S02 = symMatMul(S01, S12);
-      S03 = symMatMul(S02, S23);
-    }
+const EXS = {};
+function mountEx(root, cfg) {
+  const S = EXS[cfg.key] || (EXS[cfg.key] = { flt: 'all', ex: null, pick: null, counted: false, shown: false, score: { ok: 0, tot: 0 } });
+  if (!S.ex) S.ex = cfg.gen(S.flt);
+  const ex = S.ex; root.innerHTML = '';
+  root.append(h('h2', null, cfg.title), h('p', { html: cfg.intro }));
+  root.append(chipsRow(cfg.filters, S.flt, v => { S.flt = v; S.ex = cfg.gen(v); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); }, 'Type d’exercice'));
+  root.append(h('p', { class: 'scoreline', id: 'ex-score' }, 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot));
+  root.append(h('div', { class: 'exs' }, h('p', { class: 'small' }, ex.tag), h('p', { html: ex.text })));
+  if (ex.fig) root.append(ex.fig());
+  const cho = h('div', { id: 'ex-cho' });
+  const drawCho = () => { cho.innerHTML = ''; if (ex.choice) cho.append(h('p', { class: 'small' }, (ex.choice.q || 'Quelle est cette liaison ?')), chipsRow(ex.choice.options, S.pick, v => { S.pick = v; drawCho(); }, 'Choix')); };
+  root.append(cho); drawCho();
+  const row = h('div', { class: 'fieldrow' }), ins = {};
+  ex.fields.forEach(f => {
+    const inp = h('input', { type: 'text', inputmode: 'decimal', id: 'ex-' + cfg.key + '-' + f.id, autocomplete: 'off', 'aria-label': f.label, placeholder: 'ex. 12,5' });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    ins[f.id] = inp; row.append(h('label', { class: 'fld' }, h('span', { html: subz(f.label) }), inp));
+  });
+  root.append(row);
+  const res = h('div', { class: 'verdict', hidden: true, 'aria-live': 'polite' }), sol = h('div', { class: 'solbox', hidden: !S.shown });
+  const count = ok => { if (!S.counted) { S.counted = true; S.score.tot++; if (ok) S.score.ok++; $('#ex-score').textContent = 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot; } };
+  function check() {
+    const marks = ex.fields.map(f => { const v = parseAns(ins[f.id].value), ok = okAns(v, f.val, 0.02, f.abs != null ? f.abs : 0.01); ins[f.id].className = ok ? 'okk' : 'nok'; return { ok, v }; });
+    const chOk = !ex.choice || S.pick === ex.choice.ans, all = marks.every(m => m.ok) && chOk;
+    res.hidden = false; res.className = 'verdict ' + (all ? 'yes' : 'no');
+    res.textContent = all ? 'Correct.' : ex.choice && !S.pick ? 'Choisissez d’abord une liaison.' : marks.some(m => !isFinite(m.v)) ? 'Une réponse est vide ou illisible. Écrivez un nombre (virgule ou point).' : !chOk ? 'La liaison n’est pas la bonne : comparez les deux torseurs aux liaisons du cours.' : 'Pas encore. Reprenez le calcul ou affichez la solution.';
+    count(all);
+  }
+  sol.innerHTML = '<b>Solution</b>' + ex.sol + (ex.fields.length ? '<p class="small">Réponses attendues : ' + ex.fields.map(f => subz(f.label) + ' = ' + fx(f.val, 3)).join(' ; ') + '</p>' : '');
+  if (ex.solNode) sol.append(ex.solNode());
+  root.append(h('div', { class: 'files', style: 'margin:8px 0' },
+    h('button', { class: 'btn pri', type: 'button', onclick: check }, 'Vérifier'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.shown = true; sol.hidden = false; count(false); } }, 'Voir la solution'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.ex = cfg.gen(S.flt); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); $('#scroller').scrollTop = 0; } }, 'Nouvel exercice')), res, sol);
+  root.append(h('p', { class: 'small' }, 'Les réponses numériques sont acceptées à ± 2 %.'));
+  ANIM.fn = null;
+}
 
-    function getSymR(j) {
-      if (j === 0) return [['1','0','0'],['0','1','0'],['0','0','1']];
-      if (j === 1) return S01;
-      if (j === 2) return S02;
-      return S03;
-    }
 
-    // Si la base du vecteur (j) est égale à la base d'expression (i), on simplifie directement à l'expression canonique la plus simple
-    function symVecInBase(j, i, e) {
-      if (j === i) return e; 
-      const Rj = getSymR(j);
-      const Ri = getSymR(i);
-      const Rij = symMatMul(symMatT(Ri), Rj);
-      return symMatVec(Rij, e);
-    }
+/* ================= Exercices ================= */
+const F = (id, label, val, abs) => ({ id, label, val, abs: abs == null ? 0.01 : abs });
+const AX = ['x', 'y', 'z'], ANGS = [30, 45, 60, 90, -30, -60, 120];
+const colOf = (R, L) => [0, 1, 2].map(i => R[i][{ x: 0, y: 1, z: 2 }[L]]);
+const fv = v => '(' + v.map(x => fx(Math.abs(x) < 1e-12 ? 0 : x, 3)).join(' ; ') + ')';
+const matTxt = (axis, th) => axis === 'x' ? 'R<sub>x</sub>(θ) = [[1, 0, 0], [0, cosθ, −sinθ], [0, sinθ, cosθ]]' : axis === 'y' ? 'R<sub>y</sub>(θ) = [[cosθ, 0, sinθ], [0, 1, 0], [−sinθ, 0, cosθ]]' : 'R<sub>z</sub>(θ) = [[cosθ, −sinθ, 0], [sinθ, cosθ, 0], [0, 0, 1]]';
+function genFig(flt) {
+  const kind = pick(flt === 'axe' ? ['axis'] : flt === 'comp' ? ['comp'] : ['axis', 'comp']);
+  const axis = pick(AX), th = kind === 'axis' ? pick([30, 45, 60, 90]) : pick([30, 45, 60, 90, -30, -60]), lt = planeLetters(axis), rad = deg2rad(th), c = Math.cos(rad), s = Math.sin(rad);
+  if (kind === 'axis') {
+    return { tag: 'Lire une figure géométrale', fig: () => fig2dNode(axis, 0, [0, th], ['?'], 'Passage b_0 → b_1'.replace(/_(\d)/g, '<sub>$1</sub>'), 'Figure vue avec la direction de l’axe de rotation sortant de l’écran. Angle de rotation θ = ' + th + '°.'),
+      text: 'La figure géométrale ci-dessous décrit le passage de b<sub>0</sub> à b<sub>1</sub> (rotation d’angle <b>θ = ' + th + '°</b>). Retrouver la direction de l’axe de rotation, puis écrire le premier vecteur de la figure <b>' + lt[0] + '<sub>1</sub> = a·' + lt[0] + '<sub>0</sub> + b·' + lt[1] + '<sub>0</sub></b>.',
+      choice: { q: 'Quelle est la direction de l’axe de rotation ?', options: AX.map(a => [a, a + '_0']), ans: axis }, fields: [F('a', 'a', c), F('b', 'b', s)],
+      sol: '<p>Les lettres dans le plan de la figure sont <b>' + lt[0] + '</b> (vers la droite) et <b>' + lt[1] + '</b> (vers le haut) : la direction de l’axe de rotation est la lettre manquante, <b>' + axis + '<sub>0</sub></b>. Ordre cyclique : (x, y, z) → direction z, (y, z, x) → direction x, (z, x, y) → direction y.</p><p>' + lt[0] + '<sub>1</sub> = cosθ·' + lt[0] + '<sub>0</sub> + sinθ·' + lt[1] + '<sub>0</sub>, donc a = cos(' + th + '°) = <b>' + fx(c, 3) + '</b> et b = sin(' + th + '°) = <b>' + fx(s, 3) + '</b>.</p>' };
+  }
+  const L = pick(AX), v = colOf(rot(axis, rad), L);
+  return { tag: 'Composantes d’un vecteur', fig: () => h('div', { class: 'exs', html: '<p class="small">' + matTxt(axis) + '</p>' }),
+    text: 'La base b<sub>1</sub> se déduit de b<sub>0</sub> par une rotation d’angle <b>θ = ' + th + '°</b> autour de <b>' + axis + '<sub>0</sub></b>. Déterminer les composantes du vecteur <b>' + L + '<sub>1</sub></b> exprimé dans la base b<sub>0</sub> (selon x<sub>0</sub>, y<sub>0</sub>, z<sub>0</sub>).',
+    fields: [F('cx', 'composante selon x_0', v[0]), F('cy', 'composante selon y_0', v[1]), F('cz', 'composante selon z_0', v[2])],
+    sol: '<p>Les colonnes de la matrice de rotation donnent les vecteurs de b<sub>1</sub> dans b<sub>0</sub>.</p><p>' + L + '<sub>1</sub> = <b>' + fv(v) + '</b> dans b<sub>0</sub>' + (L === axis ? ' : le vecteur porté par l’axe de rotation ne change pas.' : '.') + '</p>' };
+}
+function genChain(flt) {
+  const kind = pick(flt === 'same' ? ['same'] : flt === 'back' ? ['back'] : flt === 'chain' ? ['chain'] : ['chain', 'back', 'same']);
+  const a1 = pick(AX), a2 = pick(AX.filter(a => a !== a1)), t1 = pick(ANGS), t2 = pick(ANGS), r1 = rot(a1, deg2rad(t1)), r2 = rot(a2, deg2rad(t2)), r02 = matMul(r1, r2), L = pick(AX);
+  if (kind === 'chain') {
+    const v1 = colOf(r2, L), v = colOf(r02, L);
+    return { tag: 'Deux rotations successives', text: 'b<sub>1</sub> se déduit de b<sub>0</sub> par une rotation de <b>' + t1 + '°</b> autour de <b>' + a1 + '<sub>0</sub></b>, puis b<sub>2</sub> de b<sub>1</sub> par une rotation de <b>' + t2 + '°</b> autour de <b>' + a2 + '<sub>1</sub></b>. Déterminer les composantes de <b>' + L + '<sub>2</sub></b> dans la base b<sub>0</sub>.',
+      fields: [F('cx', 'composante selon x_0', v[0]), F('cy', 'composante selon y_0', v[1]), F('cz', 'composante selon z_0', v[2])],
+      sol: '<p>On exprime d’abord ' + L + '<sub>2</sub> dans b<sub>1</sub> avec R<sub>12</sub> = R<sub>' + a2 + '</sub>(' + t2 + '°) : ' + L + '<sub>2</sub> = <b>' + fv(v1) + '</b><sub>b1</sub>.</p><p>Puis on passe dans b<sub>0</sub> avec R<sub>01</sub> = R<sub>' + a1 + '</sub>(' + t1 + '°) : R<sub>02</sub> = R<sub>01</sub>·R<sub>12</sub>, donc ' + L + '<sub>2</sub> = <b>' + fv(v) + '</b><sub>b0</sub>.</p>' };
+  }
+  if (kind === 'back') {
+    const v = matVec(matT(r1), { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] }[L]);
+    return { tag: 'Sens inverse', text: 'b<sub>1</sub> se déduit de b<sub>0</sub> par une rotation de <b>' + t1 + '°</b> autour de <b>' + a1 + '<sub>0</sub></b>. Déterminer les composantes du vecteur <b>' + L + '<sub>0</sub></b> exprimé dans la base b<sub>1</sub>.',
+      fields: [F('cx', 'composante selon x_1', v[0]), F('cy', 'composante selon y_1', v[1]), F('cz', 'composante selon z_1', v[2])],
+      sol: '<p>R<sub>01</sub> est orthogonale : son inverse est sa transposée. Les composantes de ' + L + '<sub>0</sub> dans b<sub>1</sub> sont celles de la ligne de R<sub>01</sub> correspondante : ' + L + '<sub>0</sub> = R<sub>01</sub><sup>T</sup>·' + L + '<sub>0</sub> = <b>' + fv(v) + '</b><sub>b1</sub> (équivalent à une rotation de −' + t1 + '°).</p>' };
+  }
+  const ax = pick(AX), tA = pick([10, 20, 30, 40, 50]), tB = pick([15, 25, 35, 45, 60]), tot = tA + tB;
+  return { tag: 'Rotations de même axe', text: 'b<sub>1</sub> se déduit de b<sub>0</sub> par une rotation de <b>' + tA + '°</b> autour de <b>' + ax + '<sub>0</sub></b>, puis b<sub>2</sub> de b<sub>1</sub> par une rotation de <b>' + tB + '°</b> autour de <b>' + ax + '<sub>1</sub></b> (même axe). Déterminer l’angle total θ<sub>20</sub> (en degrés) et cos θ<sub>20</sub>.',
+    fields: [F('t', 'θ_20 (°)', tot, 0.01), F('c', 'cos θ_20', Math.cos(deg2rad(tot)), 0.005)],
+    sol: '<p>Comme ' + ax + '<sub>1</sub> = ' + ax + '<sub>0</sub>, les rotations s’ajoutent : θ<sub>20</sub> = ' + tA + ' + ' + tB + ' = <b>' + tot + '°</b>.</p><p>cos(' + tot + '°) = <b>' + fx(Math.cos(deg2rad(tot)), 3) + '</b>. Une seule figure géométrale suffit pour les deux rotations.</p>' };
+}
+WORKSHOPS.push({ id: 'g2', title: 'Exercices : figures', hint: 'Lisez une figure géométrale, retrouvez la direction de l’axe et les composantes des vecteurs.', mount: r => mountEx(r, { key: 'g2', title: 'Exercices : figures géométrales', intro: 'Une figure géométrale est une vue 2D avec l’axe de rotation sortant de l’écran. Retrouvez l’axe avec l’ordre cyclique (x, y, z), puis écrivez les composantes avec cosθ et sinθ.', filters: [['all', 'Tous'], ['axe', 'Lire la figure'], ['comp', 'Composantes']], gen: genFig }), reset: () => { delete EXS.g2; } });
+WORKSHOPS.push({ id: 'g3', title: 'Exercices : composition', hint: 'Composez des rotations successives, passez d’une base à l’autre, additionnez les angles de même axe.', mount: r => mountEx(r, { key: 'g3', title: 'Exercices : rotations successives', intro: 'La matrice de passage de b<sub>0</sub> à b<sub>2</sub> est R<sub>02</sub> = R<sub>01</sub>·R<sub>12</sub> : on exprime le vecteur dans b<sub>1</sub>, puis dans b<sub>0</sub>. Les réponses numériques sont à ± 0,01 près.', filters: [['all', 'Tous'], ['chain', 'Deux rotations'], ['back', 'Sens inverse'], ['same', 'Même axe']], gen: genChain }), reset: () => { delete EXS.g3; } });
+WORKSHOPS.sort((a, b) => a.id.localeCompare(b.id));
 
-    function getRotationGroups() {
-      const steps = [
-        { from: 0, to: 1, axis: axes.a10, angle: angles.t10, key: '10' },
-        { from: 1, to: 2, axis: axes.a21, angle: angles.t21, key: '21' },
-        { from: 2, to: 3, axis: axes.a32, angle: angles.t32, key: '32' }
-      ];
-      const groups = [];
-      let current = null;
-      steps.forEach(step => {
-        if (current && current.axis === step.axis) {
-          current.angles.push(step.angle);
-          current.keys.push(step.key);
-          current.to = step.to;
-          current.steps.push(step);
-        } else {
-          if (current) groups.push(current);
-          current = {
-            axis: step.axis,
-            from: step.from,
-            to: step.to,
-            angles: [step.angle],
-            keys: [step.key],
-            steps: [step]
-          };
-        }
+
+/* ---------- activités ---------- */
+const ACT = {
+  g1: {
+    title: 'Bases et figures', level: 'Découverte', time: '30 min',
+    goal: 'Relier une suite de rotations aux figures géométrales, aux bases en 3D et aux composantes des vecteurs.',
+    steps: [
+      'Laissez les réglages par défaut (θ<sub>10</sub> autour de z<sub>0</sub>, θ<sub>21</sub> autour de y<sub>1</sub>, θ<sub>32</sub> autour de x<sub>2</sub>). Tournez la vue 3D et repérez les trois bases : les vecteurs x, y, z ont une, deux et trois pointes de flèche.',
+      'Regardez les trois figures 2D. Pour chacune, quelle est la direction de l’axe de rotation et quelles lettres sont dans le plan ?',
+      'Mettez θ<sub>10</sub> à 90° et θ<sub>21</sub> et θ<sub>32</sub> à 0°. Quel vecteur de b<sub>1</sub> est confondu avec y<sub>0</sub> ? Vérifiez avec l’expression de x<sub>1</sub> dans b<sub>0</sub>.',
+      'Choisissez le <b>même axe</b> pour deux rotations consécutives : que deviennent les figures 2D ? Comparez avec la somme des angles.',
+      'Exprimez z<sub>3</sub> dans b<sub>0</sub>, puis dans b<sub>1</sub>. Quelles lignes de la matrice de passage utilisez-vous ?',
+      'Changez la base d’expression : comment varie la complexité des expressions quand on exprime un vecteur dans sa propre base ?'
+    ],
+    defi: { q: 'Trouvez des axes et des angles pour que z<sub>3</sub> soit confondu avec x<sub>0</sub>. Y a-t-il plusieurs solutions ?', a: 'Oui. Par exemple : θ<sub>10</sub> = 90° autour de z<sub>0</sub> ne suffit pas ; avec θ<sub>10</sub> = 90° autour de z<sub>0</sub> puis θ<sub>21</sub> = 90° autour de x<sub>1</sub>, on obtient z<sub>2</sub> = x<sub>0</sub> (θ<sub>32</sub> = 0°). Plusieurs combinaisons existent : le résultat d’une composition ne détermine pas la suite de rotations.' },
+    course: 'rotation',
+    qcm: [
+      { q: 'Rotation d’angle θ autour de z<sub>0</sub> (b<sub>0</sub> → b<sub>1</sub>). Les composantes de x<sub>1</sub> dans b<sub>0</sub> sont :', o: ['(cosθ, sinθ, 0)', '(−sinθ, cosθ, 0)', '(cosθ, 0, sinθ)', '(cosθ, −sinθ, 0)'], a: 0, w: 'La première colonne de R<sub>z</sub>(θ) est (cosθ, sinθ, 0).' },
+      { q: 'Même rotation. Les composantes de y<sub>1</sub> dans b<sub>0</sub> sont :', o: ['(−sinθ, cosθ, 0)', '(sinθ, cosθ, 0)', '(0, cosθ, sinθ)', '(cosθ, sinθ, 0)'], a: 0, w: 'La deuxième colonne de R<sub>z</sub>(θ) est (−sinθ, cosθ, 0).' },
+      { q: 'Dans la figure géométrale d’une rotation autour de y, le premier vecteur dessiné (vers la droite) est :', o: ['z', 'x', 'y', 'aucun'], a: 0, w: 'Ordre cyclique (z, x, y) : le plan de la figure contient z puis x.' },
+      { q: 'Rotation d’angle θ autour de x<sub>0</sub>. Les composantes de y<sub>1</sub> dans b<sub>0</sub> sont :', o: ['(0, cosθ, sinθ)', '(0, −sinθ, cosθ)', '(cosθ, sinθ, 0)', '(1, 0, 0)'], a: 0, w: 'La deuxième colonne de R<sub>x</sub>(θ) est (0, cosθ, sinθ).' },
+      { q: 'La matrice de passage de b<sub>0</sub> à b<sub>2</sub> est :', o: ['R<sub>01</sub>·R<sub>12</sub>', 'R<sub>12</sub>·R<sub>01</sub>', 'R<sub>01</sub><sup>T</sup>·R<sub>12</sub>', 'R<sub>01</sub> + R<sub>12</sub>'], a: 0, w: 'On exprime d’abord le vecteur dans b<sub>1</sub> (R<sub>12</sub>), puis dans b<sub>0</sub> (R<sub>01</sub>) : R<sub>02</sub> = R<sub>01</sub>·R<sub>12</sub>.' },
+      { q: 'Deux rotations de 20° puis 40° autour du même axe donnent un angle total de :', o: ['60°', '20°', '800°', '40°'], a: 0, w: 'Les rotations de même axe s’additionnent : 20° + 40° = 60°.' },
+      { q: 'L’inverse d’une matrice de rotation R est :', o: ['sa transposée R<sup>T</sup>', 'son opposée −R', 'elle-même', 'sa diagonale'], a: 0, w: 'Les colonnes de R sont orthonormées : R<sup>T</sup>·R = I, donc R<sup>−1</sup> = R<sup>T</sup>.' },
+      { q: 'Dans la vue 3D, les trois pointes de flèche repèrent :', o: ['Le vecteur z', 'Le vecteur x', 'Le vecteur y', 'La base b<sub>3</sub>'], a: 0, w: 'x : une pointe, y : deux pointes, z : trois pointes. La couleur donne la base.' }
+    ]
+  },
+  g2: {
+    title: 'Exercices : figures', level: 'Entraînement', time: '20 min',
+    goal: 'Lire une figure géométrale et écrire les vecteurs d’une base dans l’autre.',
+    steps: [
+      'Repérez les deux lettres dessinées dans le plan de la figure.',
+      'La direction de l’axe de rotation est la lettre manquante (vecteur sortant de l’écran).',
+      'Vérifiez l’ordre cyclique : (x, y) → z, (y, z) → x, (z, x) → y.',
+      'Le premier vecteur de la figure s’écrit cosθ·u<sub>0</sub> + sinθ·v<sub>0</sub> ; le second −sinθ·u<sub>0</sub> + cosθ·v<sub>0</sub>.'
+    ],
+    defi: { q: 'Pourquoi la figure d’une rotation autour de y montre-t-elle z à droite et x en haut, et non x à droite ?', a: 'Pour que (u, v, axe) soit un trièdre direct, il faut respecter l’ordre cyclique : (z, x, y) pour l’axe y. Avec x à droite et z en haut, l’axe y rentrerait dans l’écran.' },
+    course: 'figure',
+    qcm: [
+      { q: 'Les lettres dessinées dans le plan sont x et y. La direction de l’axe de rotation est :', o: ['z', 'x', 'y', 'on ne peut pas savoir'], a: 0, w: 'Trièdre direct : (x, y, z), l’axe z sort de l’écran.' },
+      { q: 'Les lettres dessinées sont y et z. La direction de l’axe de rotation est :', o: ['x', 'y', 'z', 'x ou y'], a: 0, w: 'Ordre cyclique (y, z, x) : l’axe est x.' },
+      { q: 'Les lettres dessinées sont z et x. La direction de l’axe de rotation est :', o: ['y', 'x', 'z', 'x ou z'], a: 0, w: 'Ordre cyclique (z, x, y) : l’axe est y.' },
+      { q: 'Quand l’axe de rotation sort de l’écran, le sens positif des angles est :', o: ['Le sens trigonométrique', 'Le sens horaire', 'Selon le choix de l’axe', 'Aucun sens fixé'], a: 0, w: 'Règle de la main droite : le pouce suit l’axe sortant, les doigts donnent le sens trigonométrique.' }
+    ]
+  },
+  g3: {
+    title: 'Exercices : composition', level: 'Entraînement', time: '25 min',
+    goal: 'Composer des rotations successives et passer d’une base à l’autre sans erreur de sens.',
+    steps: [
+      'Écrivez la suite de rotations : axe, angle, base dans laquelle l’axe est exprimé.',
+      'Exprimez le vecteur voulu dans sa propre base : un vecteur de base a pour composantes (1, 0, 0), (0, 1, 0) ou (0, 0, 1).',
+      'Remontez d’une base à la fois : R<sub>12</sub> puis R<sub>01</sub>.',
+      'Pour descendre d’une base, utilisez la transposée : R<sub>10</sub> = R<sub>01</sub><sup>T</sup>.',
+      'Si deux rotations consécutives ont le même axe, additionnez les angles.'
+    ],
+    defi: { q: 'z<sub>2</sub> s’obtient par rotation de 90° autour de z<sub>0</sub> puis 90° autour de x<sub>1</sub>. Quelles sont ses composantes dans b<sub>0</sub> ?', a: 'R<sub>02</sub> = R<sub>z</sub>(90°)·R<sub>x</sub>(90°) : z<sub>2</sub> = (1, 0, 0). La troisième colonne de R<sub>x</sub>(90°) est (0, −1, 0) dans b<sub>1</sub> ; R<sub>z</sub>(90°) envoie (0, −1, 0) sur (1, 0, 0).' },
+    course: 'composition',
+    qcm: [
+      { q: 'Rotation de 90° autour de z<sub>0</sub> puis de 90° autour de x<sub>1</sub>. z<sub>2</sub> dans b<sub>0</sub> vaut :', o: ['(1, 0, 0)', '(0, 1, 0)', '(0, 0, 1)', '(0, 0, −1)'], a: 0, w: 'R<sub>02</sub> = R<sub>z</sub>(90°)·R<sub>x</sub>(90°) a pour troisième colonne (1, 0, 0).' },
+      { q: 'Même suite de rotations. x<sub>2</sub> dans b<sub>0</sub> vaut :', o: ['(0, 1, 0)', '(1, 0, 0)', '(0, 0, 1)', '(0, −1, 0)'], a: 0, w: 'La première colonne de R<sub>02</sub> est (0, 1, 0) : x<sub>2</sub> = y<sub>0</sub>.' },
+      { q: 'Rotation d’angle θ autour de z<sub>0</sub>. z<sub>0</sub> exprimé dans b<sub>1</sub> vaut :', o: ['(0, 0, 1)', '(cosθ, sinθ, 0)', '(0, cosθ, sinθ)', '(0, 0, cosθ)'], a: 0, w: 'Le vecteur porté par l’axe de rotation est le même dans les deux bases.' },
+      { q: 'Pour exprimer dans b<sub>1</sub> un vecteur connu dans b<sub>0</sub>, on multiplie ses composantes par :', o: ['R<sub>01</sub><sup>T</sup>', 'R<sub>01</sub>', 'R<sub>01</sub><sup>2</sup>', 'sinθ'], a: 0, w: 'R<sub>10</sub> = R<sub>01</sub><sup>−1</sup> = R<sub>01</sub><sup>T</sup>.' },
+      { q: 'Rotation de 30° autour de x<sub>0</sub>. y<sub>1</sub> dans b<sub>0</sub> vaut environ :', o: ['(0 ; 0,866 ; 0,5)', '(0 ; 0,5 ; 0,866)', '(0 ; −0,5 ; 0,866)', '(0,866 ; 0,5 ; 0)'], a: 0, w: 'y<sub>1</sub> = (0, cos30°, sin30°) = (0 ; 0,866 ; 0,5).' }
+    ]
+  }
+};
+
+/* ---------- figures du cours ---------- */
+const FIGS = {};
+const matHtml = (M, d) => '<span class="mat">' + M.flat().map(x => '<span>' + fx(Math.abs(x) < 1e-12 ? 0 : x, d == null ? 3 : d) + '</span>').join('') + '</span>';
+FIGS.plane = () => figRow([fig2dNode('z', 0, [0, 35], ['10'], 'Rotation autour de <b>z<sub>0</sub></b>', 'x<sub>1</sub> = cosθ·x<sub>0</sub> + sinθ·y<sub>0</sub> et y<sub>1</sub> = −sinθ·x<sub>0</sub> + cosθ·y<sub>0</sub>. Le vecteur z n’est pas dessiné : il sort de l’écran et reste commun aux deux bases.')]);
+FIGS.three = () => figRow([['z', 'Direction z : plan (x, y)'], ['x', 'Direction x : plan (y, z)'], ['y', 'Direction y : plan (z, x)']].map(q => fig2dNode(q[0], 0, [0, 30], ['10'], q[1], 'Axe de rotation (O, <b>' + q[0] + '</b>) sortant de l’écran. Ordre cyclique (x, y, z).')));
+FIGS.mats = () => {
+  const t = deg2rad(30), cap = 'Les trois matrices de rotation pour θ = 30° (c = 0,866 ; s = 0,5). Les colonnes sont x, y, z de la nouvelle base exprimés dans l’ancienne.';
+  return h('div', { class: 'fig' }, h('div', { class: 'figrow', style: 'align-items:center' }, [['x', Rx], ['y', Ry], ['z', Rz]].map(q => h('div', { style: 'text-align:center' }, h('div', { class: 'small', html: 'R<sub>' + q[0] + '</sub>(30°)' }), h('div', { html: matHtml(q[1](t)) })))), h('figcaption', { html: cap }));
+};
+FIGS.cascade = () => figRow([fig2dNode('z', 0, [0, 30], ['10'], 'Étape 1 : b_0 → b_1 autour de z'.replace(/_(\d)/g, '<sub>$1</sub>'), 'La rotation autour de z<sub>0</sub> fait passer de b<sub>0</sub> à b<sub>1</sub>.'), fig2dNode('x', 1, [0, 40], ['21'], 'Étape 2 : b_1 → b_2 autour de x'.replace(/_(\d)/g, '<sub>$1</sub>'), 'La seconde rotation a lieu autour de l’axe (O, x<sub>1</sub>), un vecteur de la base b<sub>1</sub>.')]);
+FIGS.same = () => figRow([fig2dNode('z', 0, [0, 25, 60], ['10', '21'], 'Rotations successives autour de <b>z</b>', 'Deux rotations autour du même axe : une seule figure. θ<sub>20</sub> = θ<sub>10</sub> + θ<sub>21</sub>.')]);
+FIGS.liveR = () => {
+  computeMatrices();
+  const n = (M, name) => h('div', { style: 'text-align:center' }, h('div', { class: 'small', html: name }), h('div', { html: matHtml(M) }));
+  return h('div', { class: 'fig' }, h('div', { class: 'figrow', style: 'align-items:center' }, n(R01, 'R<sub>01</sub>'), n(R02, 'R<sub>02</sub> = R<sub>01</sub>·R<sub>12</sub>'), n(R03, 'R<sub>03</sub> = R<sub>02</sub>·R<sub>23</sub>')),
+    h('figcaption', { html: 'Matrices numériques avec les réglages de l’atelier : axes ' + BS.axes.a10 + '<sub>0</sub>, ' + BS.axes.a21 + '<sub>1</sub>, ' + BS.axes.a32 + '<sub>2</sub> et angles ' + BS.ang.t10 + '°, ' + BS.ang.t21 + '°, ' + BS.ang.t32 + '°.' }));
+};
+FIGS.heads = () => {
+  const svg = mkSvg('0 0 520 130', 'Convention des pointes de flèche'), col = 'var(--fg)';
+  [[1, 'x : une pointe'], [2, 'y : deux pointes'], [3, 'z : trois pointes']].forEach((q, i) => {
+    const x0 = 30 + i * 170, y = 60;
+    el('line', { x1: x0, y1: y, x2: x0 + 110, y2: y, style: 'stroke:' + col + ';stroke-width:3' }, svg);
+    for (let k = 0; k < q[0]; k++) el('polygon', { points: [x0 + 110 - k * 12, y, x0 + 98 - k * 12, y - 7, x0 + 98 - k * 12, y + 7].join(' '), style: 'fill:' + col }, svg);
+    svgTxt(svg, { class: 'gtxt', x: x0 + 55, y: 100 }, q[1]);
+  });
+  return figEl(svg, 'Dans la vue 3D, le nombre de pointes distingue les trois vecteurs de chaque base ; la couleur distingue les bases (b<sub>0</sub> sombre, b<sub>1</sub> rouge, b<sub>2</sub> vert, b<sub>3</sub> bleu).', 520);
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+const ph = n => '<div class="fig" data-fig="' + n + '"></div>';
+COURSE.push({ id: 'rotation', t: 'Base orthonormée directe et rotation plane', h: `
+<p>Une base <b>orthonormée directe</b> b = (x, y, z) est formée de trois vecteurs unitaires, orthogonaux deux à deux, avec x ∧ y = z. Passer d’une base b<sub>0</sub> à une base b<sub>1</sub> par une rotation, c’est tourner les trois vecteurs autour d’un axe d’un angle θ. L’un des vecteurs, porté par l’axe, ne change pas.</p>` + ph('plane') + `
+<p>Pour une rotation autour de z<sub>0</sub> d’angle θ<sub>10</sub> :</p>
+<div class="formula"><div>x<sub>1</sub> = cosθ<sub>10</sub>·x<sub>0</sub> + sinθ<sub>10</sub>·y<sub>0</sub></div><div>y<sub>1</sub> = −sinθ<sub>10</sub>·x<sub>0</sub> + cosθ<sub>10</sub>·y<sub>0</sub></div><div>z<sub>1</sub> = z<sub>0</sub></div></div>
+<p>On note c<sub>10</sub> = cosθ<sub>10</sub> et s<sub>10</sub> = sinθ<sub>10</sub>. L’angle θ<sub>10</sub> est l’angle <b>de b<sub>0</sub> vers b<sub>1</sub></b>, mesuré positivement dans le sens trigonométrique quand l’axe sort de l’écran.</p>
+<div class="retain"><b>À retenir.</b> Une rotation de base laisse invariant le vecteur porté par l’axe, et tourne les deux autres dans le plan perpendiculaire.</div>` });
+COURSE.push({ id: 'figure', t: 'Figures géométrales', h: `
+<p>Une <b>figure géométrale</b> représente en 2D la rotation d’une base autour d’un axe, vue avec cet axe <b>sortant de l’écran</b>. On y dessine les deux vecteurs perpendiculaires à l’axe, avant et après rotation, et l’angle θ entre eux.</p>` + ph('three') + `
+<ul><li>La direction de l’axe de rotation n’est pas dessinée : c’est la lettre <b>qui manque</b> dans le plan.</li><li>Le trièdre est direct : on lit les lettres dans l’ordre cyclique (x, y, z), (y, z, x), (z, x, y). Direction z : plan (x, y) ; direction x : plan (y, z) ; direction y : plan (z, x).</li><li>Le premier vecteur est dessiné vers la droite, le second vers le haut.</li><li>Un angle positif tourne dans le sens trigonométrique.</li></ul>
+<p>Les angles sont souvent dessinés petits (30° environ) pour que la figure reste lisible, quelle que soit la valeur de θ.</p>` + ph('heads') + `
+<div class="retain"><b>À retenir.</b> Figure géométrale : axe sortant, lettres dans l’ordre cyclique, angle positif trigonométrique. La direction de l’axe est la lettre manquante.</div>` });
+COURSE.push({ id: 'matrices', t: 'Matrices de rotation élémentaires', h: `
+<p>Les composantes de x<sub>1</sub>, y<sub>1</sub>, z<sub>1</sub> dans b<sub>0</sub> sont rangées en colonnes dans la <b>matrice de passage</b> R<sub>01</sub>. Pour les trois directions d’axe de rotation :</p>
+<div class="formula"><div>R<sub>x</sub>(θ) = ( 1 0 0 ; 0 c −s ; 0 s c )</div><div>R<sub>y</sub>(θ) = ( c 0 s ; 0 1 0 ; −s 0 c )</div><div>R<sub>z</sub>(θ) = ( c −s 0 ; s c 0 ; 0 0 1 )</div></div>` + ph('mats') + `
+<p>Pour une rotation autour de y, le signe des sinus est inversé par rapport à une lecture « naïve » : c’est la conséquence de l’ordre cyclique (z, x, y), la matrice reste cohérente avec la figure géométrale.</p>
+<p>La matrice R est <b>orthogonale</b> : R<sup>T</sup>·R = I. Son inverse est sa transposée, donc R<sub>10</sub> = R<sub>01</sub><sup>T</sup>.</p>
+<div class="retain"><b>À retenir.</b> Colonnes de R<sub>01</sub> = vecteurs de b<sub>1</sub> écrits dans b<sub>0</sub>. Lignes de R<sub>01</sub> = vecteurs de b<sub>0</sub> écrits dans b<sub>1</sub>.</div>` });
+COURSE.push({ id: 'composition', t: 'Rotations successives', h: `
+<p>On enchaîne des rotations : b<sub>0</sub> → b<sub>1</sub> autour d’un axe de b<sub>0</sub>, puis b<sub>1</sub> → b<sub>2</sub> autour d’un axe de b<sub>1</sub>, etc. Chaque rotation a sa figure géométrale.</p>` + ph('cascade') + `
+<p>Pour exprimer un vecteur de b<sub>2</sub> dans b<sub>0</sub>, on remonte une base à la fois :</p>
+<div class="formula"><div>R<sub>02</sub> = R<sub>01</sub> · R<sub>12</sub></div><div>R<sub>03</sub> = R<sub>01</sub> · R<sub>12</sub> · R<sub>23</sub></div></div>
+<p><b>Exemple.</b> Rotation autour de z<sub>0</sub> (θ<sub>10</sub>) puis autour de y<sub>1</sub> (θ<sub>21</sub>) :</p>
+<div class="formula"><div>R<sub>02</sub> = R<sub>z</sub>(θ<sub>10</sub>)·R<sub>y</sub>(θ<sub>21</sub>) = ( c<sub>10</sub>c<sub>21</sub> −s<sub>10</sub> c<sub>10</sub>s<sub>21</sub> ; s<sub>10</sub>c<sub>21</sub> c<sub>10</sub> s<sub>10</sub>s<sub>21</sub> ; −s<sub>21</sub> 0 c<sub>21</sub> )</div></div>
+<p><b>Exemple numérique.</b> Rotation de 90° autour de z<sub>0</sub> puis de 90° autour de x<sub>1</sub> : x<sub>2</sub> = (0, 1, 0), y<sub>2</sub> = (0, 0, 1) et z<sub>2</sub> = (1, 0, 0) dans b<sub>0</sub>.</p>` + ph('liveR') + `
+<div class="retain"><b>À retenir.</b> L’ordre des produits est celui des rotations : R<sub>01</sub>·R<sub>12</sub>·R<sub>23</sub>. On ne peut pas permuter les rotations.</div>` });
+COURSE.push({ id: 'meme', t: 'Rotations de même axe', h: `
+<p>Si deux rotations consécutives ont le <b>même axe</b>, par exemple z<sub>0</sub> puis z<sub>1</sub> = z<sub>0</sub>, les figures géométrales se fusionnent et les angles s’ajoutent :</p>
+<div class="formula"><div>θ<sub>20</sub> = θ<sub>10</sub> + θ<sub>21</sub></div><div>R<sub>z</sub>(θ<sub>10</sub>)·R<sub>z</sub>(θ<sub>21</sub>) = R<sub>z</sub>(θ<sub>10</sub> + θ<sub>21</sub>)</div></div>` + ph('same') + `
+<p>Dans l’atelier, choisissez le même axe pour deux étapes consécutives : les figures 2D sont fusionnées. Les expressions des vecteurs restent exactes mais s’écrivent avec les angles séparés, sans simplification trigonométrique automatique.</p>
+<div class="retain"><b>À retenir.</b> Même axe, angles qui s’additionnent. Axes différents, il faut composer les matrices.</div>` });
+COURSE.push({ id: 'methode', t: 'Méthode : exprimer un vecteur dans une base', h: `
+<ol>
+<li><b>Écrire la chaîne de rotations</b> : pour chaque étape, l’axe, l’angle et la base dans laquelle l’axe est exprimé.</li>
+<li><b>Dessiner les figures géométrales</b> : axe sortant, lettres dans l’ordre cyclique.</li>
+<li><b>Écrire le vecteur dans sa propre base</b> : (1, 0, 0), (0, 1, 0) ou (0, 0, 1).</li>
+<li><b>Remonter ou descendre</b> : pour aller vers b<sub>0</sub>, multiplier par R<sub>i−1,i</sub> successivement ; pour aller vers une base plus loin, utiliser les transposées.</li>
+<li><b>Simplifier</b> : les produits avec 0 et 1 disparaissent, les rotations de même axe s’additionnent.</li>
+<li><b>Contrôler</b> : la norme vaut 1, et un vecteur porté par l’axe de la dernière rotation ne change pas.</li>
+</ol>
+<p><b>Cas général.</b> Pour exprimer un vecteur v<sub>j</sub> dans la base b<sub>i</sub> : v = R<sub>ij</sub>·(composantes de v<sub>j</sub> dans b<sub>j</sub>) avec R<sub>ij</sub> = R<sub>0i</sub><sup>T</sup>·R<sub>0j</sub>.</p>
+<div class="retain"><b>À retenir.</b> Figure → matrice → produit dans l’ordre des rotations → simplification → contrôle de la norme.</div>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'g1' };
+const AS = { key: 'g1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null, perm: {} };
+const CS = { open: false, id: 'torseurs' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  stopSim();
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag; box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal', html: '<b>Objectif. </b>' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    const perm = AS.perm[AS.key] || (AS.perm[AS.key] = a.qcm.map(q => shuffled(q.o.length)));
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', { html: (i + 1) + '. ' + q.q }));
+      perm[i].forEach(j => {
+        const o = q.o[j];
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
       });
-      if (current) groups.push(current);
-      return groups;
-    }
-
-    function getArrowhead(tx, ty, rad, color) {
-      const headLen = 10;
-      const headAngle = 0.5;
-      const vdx = Math.cos(rad);
-      const vdy = -Math.sin(rad);
-      const angleSvg = Math.atan2(vdy, vdx);
-      
-      const p1x = tx - headLen * Math.cos(angleSvg - headAngle);
-      const p1y = ty - headLen * Math.sin(angleSvg - headAngle);
-      const p2x = tx - headLen * Math.cos(angleSvg + headAngle);
-      const p2y = ty - headLen * Math.sin(angleSvg + headAngle);
-      
-      return `<polygon points="${tx},${ty} ${p1x},${p1y} ${p2x},${p2y}" fill="${color}" />`;
-    }
-
-    function draw2DFigure(group) {
-      const size = 300;
-      const cx = size / 2, cy = size / 2;
-      const len = 100;
-      
-      let labelU, labelV;
-      if (group.axis === 'z') { labelU = 'x'; labelV = 'y'; }
-      else if (group.axis === 'x') { labelU = 'y'; labelV = 'z'; }
-      else { labelU = 'z'; labelV = 'x'; }
-
-      const numSteps = group.steps.length;
-      const stepAngle = 30 / numSteps;
-
-      const displayAngles = [];
-      for (let i = 0; i <= numSteps; i++) {
-        displayAngles.push(i * stepAngle);
-      }
-
-      function toSvg(mx, my) { return [cx + mx, cy - my]; }
-
-      const baseElementsSvg = [];
-      const colors = ['#333', '#e74c3c', '#27ae60', '#3498db'];
-
-      for (let i = 0; i <= numSteps; i++) {
-        const bIdx = group.from + i;
-        const col = colors[bIdx] || '#333';
-        const rad = deg2rad(displayAngles[i]);
-        
-        const sux = cx + len * Math.cos(rad);
-        const suy = cy - len * Math.sin(rad);
-        const svx = cx + len * Math.cos(rad + Math.PI / 2);
-        const svy = cy - len * Math.sin(rad + Math.PI / 2);
-
-        const radU = rad;
-        const radV = rad + Math.PI / 2;
-
-        baseElementsSvg.push(`
-          <line x1="${cx}" y1="${cy}" x2="${sux}" y2="${suy}" stroke="${col}" stroke-width="2.2"/>
-          ${getArrowhead(sux, suy, radU, col)}
-          <line x1="${cx}" y1="${cy}" x2="${svx}" y2="${svy}" stroke="${col}" stroke-width="2.2"/>
-          ${getArrowhead(svx, svy, radV, col)}
-          <text x="${sux + 10}" y="${suy + 5}" fill="${col}" font-size="13" font-weight="600">${labelU}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
-          <text x="${svx + 6}" y="${svy - 6}" fill="${col}" font-size="13" font-weight="600">${labelV}<tspan baseline-shift="sub" font-size="10">${bIdx}</tspan></text>
-        `);
-      }
-
-      for (let i = 1; i <= numSteps; i++) {
-        const rArc = 35 + (i - 1) * 16;
-        const radStart = deg2rad(displayAngles[i - 1]);
-        const radEnd = deg2rad(displayAngles[i]);
-        
-        const x0 = cx + rArc * Math.cos(radStart);
-        const y0 = cy - rArc * Math.sin(radStart);
-        const x1 = cx + rArc * Math.cos(radEnd);
-        const y1 = cy - rArc * Math.sin(radEnd);
-        
-        const arcPath = `M ${x0} ${y0} A ${rArc} ${rArc} 0 0 0 ${x1} ${y1}`;
-        
-        const radMid = (radStart + radEnd) / 2;
-        const lx = cx + (rArc + 14) * Math.cos(radMid);
-        const ly = cy - (rArc + 14) * Math.sin(radMid);
-        
-        const key = group.keys[i - 1];
-        const angleName = formatAngleLabel(key);
-
-        baseElementsSvg.push(`
-          <path d="${arcPath}" fill="none" stroke="#555" stroke-width="1.8"/>
-          <text x="${lx}" y="${ly}" fill="#333" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="central">${angleName}</text>
-        `);
-      }
-
-      const title = numSteps > 1
-        ? `Rotations successives autour de \\(${group.axis}\\) (\\(b_{${group.from}} \\to b_{${group.to}}\\))`
-        : `Rotation autour de \\(${group.axis}_${group.from}\\) (\\(b_{${group.from}} \\to b_{${group.to}}\\))`;
-
-      return `
-        <div class="fig2d">
-          <div class="fig2d-title">${title}</div>
-          <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-            <line x1="0" y1="${cy}" x2="${size}" y2="${cy}" stroke="#eee" stroke-width="1"/>
-            <line x1="${cx}" y1="0" x2="${cx}" y2="${size}" stroke="#eee" stroke-width="1"/>
-            ${baseElementsSvg.join('')}
-            <circle cx="${cx}" cy="${cy}" r="3" fill="#222"/>
-          </svg>
-          <div class="fig2d-caption">
-            Axe (sortant de l'écran) : <strong>${group.axis}</strong>
-          </div>
-        </div>
-      `;
-    }
-
-    function update2DFigures() {
-      const container = document.getElementById('fig2dContainer');
-      const groups = getRotationGroups();
-      container.innerHTML = groups.map(g => draw2DFigure(g)).join('');
-      renderMath(container);
-    }
-
-    function updateSelectedVector() {
-      const vecStr = document.getElementById('selVec').value;
-      const baseI  = parseInt(document.getElementById('selBase').value);
-      const axisLetter = vecStr[0];
-      const baseJ      = parseInt(vecStr[1]);
-      const eMap = { x: ['1','0','0'], y: ['0','1','0'], z: ['0','0','1'] };
-      const e = eMap[axisLetter];
-      const comps = symVecInBase(baseJ, baseI, e);
-      
-      const tex = `\\vec{${axisLetter}}_{${baseJ}} = \\begin{pmatrix} ${comps[0]} \\\\ ${comps[1]} \\\\ ${comps[2]} \\end{pmatrix}_{b_{${baseI}}}`;
-      const el = document.getElementById('vecResult');
-      
-      if (window.katex) {
-        try {
-          el.innerHTML = katex.renderToString(tex, { throwOnError: false, displayMode: true });
-        } catch (err) {
-          el.textContent = tex;
-        }
-      } else {
-        el.textContent = tex;
-      }
-    }
-
-    function syncSlider(numId, sliderId) {
-      const num = document.getElementById(numId);
-      const sl  = document.getElementById(sliderId);
-      num.addEventListener('input', () => {
-        sl.value = num.value;
-        angles['t' + numId.slice(-2)] = parseFloat(num.value) || 0;
-        updateAll();
-      });
-      sl.addEventListener('input', () => {
-        num.value = sl.value;
-        angles['t' + sliderId.slice(-2)] = parseFloat(sl.value) || 0;
-        updateAll();
-      });
-    }
-
-    syncSlider('angle10', 'slider10');
-    syncSlider('angle21', 'slider21');
-    syncSlider('angle32', 'slider32');
-
-    document.getElementById('axis10').addEventListener('change', e => { axes.a10 = e.target.value; updateAll(); });
-    document.getElementById('axis21').addEventListener('change', e => { axes.a21 = e.target.value; updateAll(); });
-    document.getElementById('axis32').addEventListener('change', e => { axes.a32 = e.target.value; updateAll(); });
-    document.getElementById('selVec').addEventListener('change', updateSelectedVector);
-    document.getElementById('selBase').addEventListener('change', updateSelectedVector);
-
-    // Three.js setup
-    let scene, camera, renderer, axesGroups = {};
-    let isDragging = false, prevX, prevY;
-    let rotY = 0.6, rotX = 0.4;
-
-    function createArrow(dir, color, nHeads = 1, length = 1.35) {
-      const group = new THREE.Group();
-      const mat = new THREE.MeshBasicMaterial({ color });
-      const headLen = 0.16;
-      const totalHeadsLen = nHeads * headLen + (nHeads - 1) * 0.02;
-      const shaftLen = length - totalHeadsLen - 0.02;
-      const shaft = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.028, 0.028, Math.max(0.1, shaftLen), 8),
-        mat
-      );
-      shaft.position.y = shaftLen / 2;
-      group.add(shaft);
-      for (let h = 0; h < nHeads; h++) {
-        const head = new THREE.Mesh(new THREE.ConeGeometry(0.075, headLen, 12), mat);
-        const tipY = length - 0.01;
-        head.position.y = tipY - headLen / 2 - h * (headLen + 0.02);
-        group.add(head);
-      }
-      group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-      return group;
-    }
-
-    function createFrame(R, colors, scale = 1) {
-      const group = new THREE.Group();
-      const dirs = [
-        new THREE.Vector3(R[0][0], R[1][0], R[2][0]),
-        new THREE.Vector3(R[0][1], R[1][1], R[2][1]),
-        new THREE.Vector3(R[0][2], R[1][2], R[2][2])
-      ];
-      group.add(createArrow(dirs[0], colors[0], 1, 1.32 * scale));
-      group.add(createArrow(dirs[1], colors[1], 2, 1.32 * scale));
-      group.add(createArrow(dirs[2], colors[2], 3, 1.32 * scale));
-      return group;
-    }
-
-    function initThree() {
-      const container = document.getElementById('canvas-container');
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xfafafa);
-      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-      camera.position.set(3.5, 2.8, 3.5);
-      camera.lookAt(0, 0, 0);
-      
-      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      container.appendChild(renderer.domElement);
-
-      scene.add(new THREE.GridHelper(4, 10, 0xbbbbbb, 0xe8e8e8));
-      scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 16), new THREE.MeshBasicMaterial({ color: 0x222222 })));
-
-      renderer.domElement.addEventListener('pointerdown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
-      window.addEventListener('pointerup', () => isDragging = false);
-      window.addEventListener('pointermove', e => {
-        if (!isDragging) return;
-        rotY += (e.clientX - prevX) * 0.008;
-        rotX += (e.clientY - prevY) * 0.008;
-        rotX = Math.max(-1.4, Math.min(1.4, rotX));
-        prevX = e.clientX; prevY = e.clientY;
-        updateCamera();
-      });
-      renderer.domElement.addEventListener('wheel', e => {
-        e.preventDefault();
-        const dist = camera.position.length();
-        camera.position.normalize().multiplyScalar(Math.max(2, Math.min(12, dist + e.deltaY * 0.01)));
-      }, { passive: false });
-
-      window.addEventListener('resize', () => {
-        const w = container.clientWidth, h = container.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      });
-      animate();
-    }
-
-    function updateCamera() {
-      const dist = camera.position.length();
-      camera.position.x = dist * Math.sin(rotY) * Math.cos(rotX);
-      camera.position.y = dist * Math.sin(rotX);
-      camera.position.z = dist * Math.cos(rotY) * Math.cos(rotX);
-      camera.lookAt(0, 0, 0);
-    }
-
-    function clearFrames() {
-      Object.values(axesGroups).forEach(g => scene.remove(g));
-      axesGroups = {};
-    }
-
-    function updateFrames() {
-      clearFrames();
-      const I = [[1,0,0],[0,1,0],[0,0,1]];
-      axesGroups.b0 = createFrame(I, [0x222222, 0x444444, 0x555555], 1.06);
-      scene.add(axesGroups.b0);
-      axesGroups.b1 = createFrame(R01, [0xe74c3c, 0xc0392b, 0xa93226]);
-      scene.add(axesGroups.b1);
-      axesGroups.b2 = createFrame(R02, [0x27ae60, 0x1e8449, 0x196f3d]);
-      scene.add(axesGroups.b2);
-      axesGroups.b3 = createFrame(R03, [0x3498db, 0x2980b9, 0x1a5276]);
-      scene.add(axesGroups.b3);
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    }
-
-    function resetView() {
-      rotY = 0.6; rotX = 0.4;
-      camera.position.set(3.5, 2.8, 3.5);
-      camera.lookAt(0, 0, 0);
-    }
-
-    function updateCombinedInfo() {
-      const el = document.getElementById('combinedInfo');
-      const groups = getRotationGroups();
-      let html = `Rotations : \\(\\theta_{10}\\) autour de <b>\\(${axes.a10}_0\\)</b>, \\(\\theta_{21}\\) autour de <b>\\(${axes.a21}_1\\)</b>, \\(\\theta_{32}\\) autour de <b>\\(${axes.a32}_2\\)</b>.<br>`;
-      if (groups.length < 3) {
-        html += `<span style="color:#0a58ca;">Certaines rotations partagent le même axe physique → figures 2D fusionnées.</span>`;
-      } else {
-        html += `Tous les axes de rotation sont distincts → 3 figures 2D séparées.`;
-      }
-      el.innerHTML = html;
-      renderMath(el);
-    }
-
-    function updateAll() {
-      angles.t10 = parseFloat(document.getElementById('angle10').value) || 0;
-      angles.t21 = parseFloat(document.getElementById('angle21').value) || 0;
-      angles.t32 = parseFloat(document.getElementById('angle32').value) || 0;
-      axes.a10 = document.getElementById('axis10').value;
-      axes.a21 = document.getElementById('axis21').value;
-      axes.a32 = document.getElementById('axis32').value;
-
-      computeMatrices();
-      updateFrames();
-      updateCombinedInfo();
-      update2DFigures();
-      updateSelectedVector();
-    }
-
-    async function exportPDF() {
-      const btn = document.querySelector('.btn-pdf');
-      const old = btn.textContent;
-      btn.textContent = 'Génération PDF…';
-      btn.disabled = true;
-      try {
-        const content = document.querySelector('.content');
-        const canvas = await html2canvas(content, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
-        const imgData = canvas.toDataURL('image/png');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 10;
-        const imgWidth = pageWidth - 2 * margin;
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        let heightLeft = imgHeight;
-        let position = margin;
-        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-        heightLeft -= (pageHeight - 2 * margin);
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight + margin;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-          heightLeft -= (pageHeight - 2 * margin);
-        }
-        pdf.setFontSize(9);
-        pdf.text('Bases orientées — ' + new Date().toLocaleString('fr-FR'), margin, pageHeight - 5);
-        pdf.save('bases_orientees.pdf');
-      } catch (err) {
-        console.error(err);
-        alert('Erreur PDF. Essayez Ctrl+P → Enregistrer au format PDF.');
-      } finally {
-        btn.textContent = old;
-        btn.disabled = false;
-      }
-    }
-
-    window.addEventListener('load', () => {
-      initThree();
-      updateAll();
-      renderMath(document.body);
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      body.append(fs);
     });
-  </script>
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+$('#bAct').addEventListener('click', () => { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); });
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  hydrateFigs(art);
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : bases orientées et figures géométrales'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Trois ateliers sur les bases orientées successives : une vue 3D avec figures géométrales et expression des vecteurs, des exercices de lecture de figures et des exercices de composition de rotations.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans l’atelier 1, choisissez l’axe et l’angle de chaque rotation, puis tournez la vue 3D à la souris. Le bouton « PDF » imprime la page.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> donne les rappels et la méthode.</li><li>Dans les exercices, tapez un nombre (virgule ou point) ; les réponses sont acceptées à ± 2 %.</li></ul>' +
+    '<h3>Conventions</h3><p>Axes colorés : x une pointe, y deux pointes, z trois pointes. Bases : b<sub>0</sub> sombre, b<sub>1</sub> rouge, b<sub>2</sub> vert, b<sub>3</sub> bleu.</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM et le choix clair ou sombre sont mémorisés dans ce navigateur uniquement.</p>' }));
+});
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  const b = $('#bTheme'); b.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre'; b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  refreshThreeTheme();
+}
+applyTheme(lsGet(KEYS.theme, 'light'));
+$('#bTheme').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; applyTheme(t); lsSet(KEYS.theme, t); });
+function loop(ts) {
+  const dt = Math.min(0.05, (ts - ANIM.last) / 1000 || 0); ANIM.last = ts;
+  if (ANIM.fn && !CS.open && !document.hidden) { try { ANIM.fn(dt); } catch (e) { ANIM.fn = null; } }
+  requestAnimationFrame(loop);
+}
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); requestAnimationFrame(loop); })();
+
+</script>
 </body>
 </html>
