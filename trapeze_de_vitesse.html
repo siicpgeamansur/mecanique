@@ -1,539 +1,462 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Trapèze de vitesse</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier Trapèze</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
-/* Mise en page : en-tête, simulateur (animation | réglages), courbes, puis cours en une colonne avec valeurs calculées en direct.
-   Palette claire : couleurs de l'image du TD (carter bleu marine, poignée rouge, télécommande jaune, schéma rouge/bleu/vert/gris).
-   Palette sombre : mêmes teintes éclaircies sur fond bleu nuit.
-   Statique = couleur 'st' (bleu), dynamique = couleur 'dy' (jaune).
-   Typo : Barlow Condensed (titres), IBM Plex Sans (texte), IBM Plex Mono (valeurs), STIX Two (formules). */
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. Même gabarit que l'Atelier Récursivité. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
 :root{
-  --bg:#F3F5F9; --surface:#FFFFFF; --surface2:#E7EBF2; --fg:#0D1A33; --muted:#53627A; --line:#C9D2DF;
-  --accent:#0A3178; --accent-soft:#DCE5F6;
-  --c2:#E4161B; --c3:#2F5BD6; --c4:#0A9A48; --c5:#6B7480; --on-c:#FFFFFF;
-  --sv:#2F5BD6; --sa:#0A9A48; --sc:#E4161B; --sp:#D18A00;
-  --st:#0A3178; --st-soft:#E1E8F6; --on-st:#FFFFFF;
-  --dy:#F6A700; --dy-soft:#FDF0CF; --on-dy:#2A1B00;
-  --ok:#1B7F46; --warn:#A66300; --ko:#C22B2B;
-  --ok-soft:#DDF1E5; --warn-soft:#FBEBCF; --ko-soft:#FBDEDE;
-  --env-max:#E3EAF8; --env-n:#D5ECDD;
-  --f-title:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
-  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
-  --f-math:'STIX Two Text','Times New Roman',Times,serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-  --bg:#0F151B; --surface:#172029; --surface2:#1F2A35; --fg:#E7EDF3; --muted:#9AA8B7; --line:#2D3A47;
-  --accent:#6EA6FF; --accent-soft:#1E3250;
-  --c2:#FF6F61; --c3:#6F9BFF; --c4:#55C46C; --c5:#9DA8B5; --on-c:#0F151B;
-  --sv:#6EA6FF; --sa:#45C8CA; --sc:#FF7A6A; --sp:#E3AE4A;
-  --st:#6EA6FF; --st-soft:#1B2B44; --on-st:#0A1326;
-  --dy:#E3AE4A; --dy-soft:#3A2E14; --on-dy:#241800;
-  --ok:#4CC37F; --warn:#E0A53E; --ko:#FF7B7B;
-  --ok-soft:#17382A; --warn-soft:#3A2E14; --ko-soft:#40191B;
-  --env-max:#1A2A3D; --env-n:#1B3A2B;
-    color-scheme:dark;
-  }
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  --ok-soft:rgba(30,122,46,.15);--warn-soft:rgba(154,91,0,.13);--bad-soft:rgba(192,40,31,.13);
+  --g-s:#cfe3f6;--g-p:#f6e2bf;--g-c:#d3ecd7;--g-ps:#dcd6ee;--g-m:#e4e8ee;
+  --overlay:rgba(10,16,22,.55);--shadow:rgba(0,0,0,.28);
+  color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --bg:#0F151B; --surface:#172029; --surface2:#1F2A35; --fg:#E7EDF3; --muted:#9AA8B7; --line:#2D3A47;
-  --accent:#6EA6FF; --accent-soft:#1E3250;
-  --c2:#FF6F61; --c3:#6F9BFF; --c4:#55C46C; --c5:#9DA8B5; --on-c:#0F151B;
-  --sv:#6EA6FF; --sa:#45C8CA; --sc:#FF7A6A; --sp:#E3AE4A;
-  --st:#6EA6FF; --st-soft:#1B2B44; --on-st:#0A1326;
-  --dy:#E3AE4A; --dy-soft:#3A2E14; --on-dy:#241800;
-  --ok:#4CC37F; --warn:#E0A53E; --ko:#FF7B7B;
-  --ok-soft:#17382A; --warn-soft:#3A2E14; --ko-soft:#40191B;
-  --env-max:#1A2A3D; --env-n:#1B3A2B;
-  color-scheme:dark;
+  --bg:#14181d;--bar:#1d232a;--panel:#191e24;--panel2:#212830;--field:#14181d;--line:#3b4551;
+  --fg:#e8ecf0;--muted:#9ba6b2;--accent:#5b9bd5;--accent-fg:#0b1620;--accent-soft:#203449;--accent-ink:#b3d4f2;--run:#62c673;
+  --node-stroke:#a7b8c9;
+  --ok:#62c673;--warn:#e3a94f;--bad:#f2766d;
+  --ok-soft:rgba(98,198,115,.18);--warn-soft:rgba(227,169,79,.17);--bad-soft:rgba(242,118,109,.17);
+  --g-s:#27425c;--g-p:#5b4420;--g-c:#25492d;--g-ps:#3d3760;--g-m:#2d3640;
+  --overlay:rgba(0,0,0,.65);--shadow:rgba(0,0,0,.6);color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+sub,sup{line-height:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1000px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.zsh{border:1px solid var(--line);border-radius:10px;padding:9px 12px 3px;background:var(--panel2)}.zsh-t{margin-bottom:6px}.zsh .chips{margin-bottom:8px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.opts input[type=number]{width:96px;font-family:var(--font-mono)}
+.zgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:6px 0 10px}
+.zgrid .fld{margin:0 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.two>div{min-width:0}
+.viewlbl{font-size:12.5px;color:var(--muted);margin:8px 0 2px!important}
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--bg)}
+svg.g{display:block;width:100%;height:auto}
+.formula.sm{font-size:13.5px;line-height:1.7}
+.calc{margin:6px 0 10px}.calc .formula{margin:4px 0}
+.chk{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+.chk div{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:13.5px}
+.chk .mk{flex:none;font-weight:700;width:1.2em;text-align:center}
+.chk .okk{background:var(--ok-soft);border-color:var(--ok)}.chk .okk .mk{color:var(--ok)}
+.chk .nok{background:var(--bad-soft);border-color:var(--bad)}.chk .nok .mk{color:var(--bad)}
+.tbl{overflow-x:auto;margin:8px 0}
+table.ctable{border-collapse:collapse;font-size:13px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.ctable td.n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+details.adv{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:12px 0;background:var(--panel)}
+details.adv summary{cursor:pointer;font-weight:600;color:var(--accent-ink)}
+details.adv[open] summary{margin-bottom:8px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--node-stroke);vertical-align:-1px;margin-right:5px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0}
+/* dessins d'engrenages */
+.gear{stroke:var(--node-stroke);stroke-width:1.2;stroke-linejoin:round}
+.gear.s{fill:var(--g-s)}.gear.p{fill:var(--g-p)}.gear.c{fill:var(--g-c)}.gear.m{fill:var(--g-m)}.gear.in{fill:var(--g-s)}.gear.out{fill:var(--g-c)}
+.pitch{fill:none;stroke:var(--muted);stroke-dasharray:4 3;stroke-width:.8;opacity:.75}
+.hub{fill:var(--bg);stroke:var(--node-stroke);stroke-width:1.2}
+.mk{fill:var(--bad)}
+.arm{fill:var(--g-ps);stroke:var(--node-stroke);stroke-width:1.2;opacity:.62}
+.shaft{stroke:var(--node-stroke);stroke-width:1.6}
+.gtxt{font:600 12px var(--font-mono);fill:var(--fg);text-anchor:middle}
+.gtxt.sm{font-size:10.5px;font-weight:500;fill:var(--muted)}
+.gtxt.l{text-anchor:start}
+.dirtxt{font:600 15px var(--font-ui);fill:var(--accent-ink);text-anchor:middle}
+.hatchln{stroke:var(--node-stroke);stroke-width:1.1}
+.fixlbl{font:600 11px var(--font-ui);fill:var(--bad);text-anchor:middle}
+.ground{stroke:var(--node-stroke);stroke-width:1}
+.rect{stroke:var(--node-stroke);stroke-width:1.2}
+.rect.in{fill:var(--g-s)}.rect.out{fill:var(--g-c)}.rect.s{fill:var(--g-s)}.rect.p{fill:var(--g-p)}.rect.c{fill:var(--g-c)}.rect.m{fill:var(--g-m)}
+.bean{stroke:var(--node-stroke);stroke-width:1;fill:none;opacity:.7}
+.plot-ax{stroke:var(--muted);stroke-width:1}
+.plot-grid{stroke:var(--line);stroke-width:.7;stroke-dasharray:3 3}
+.plot-lbl{font:11px var(--font-mono);fill:var(--muted)}
+.plot-ttl{font:600 12px var(--font-ui);fill:var(--fg)}
+.curve{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.curve.fill{fill:var(--accent-soft);stroke:none}
+.cursor{stroke:var(--bad);stroke-width:1.4}
+.cdot{fill:var(--bad)}
+.rail{position:relative;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);margin:8px 0}
+.rail .car{position:absolute;top:4px;width:34px;height:24px;margin-left:-17px;border-radius:5px;background:var(--accent);border:1px solid var(--accent-ink)}
+/* exercices */
+.exs{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel);margin:8px 0}
+.exs p{margin:4px 0}
+.fieldrow{display:flex;gap:10px 16px;flex-wrap:wrap;margin:10px 0}
+.fieldrow .fld{margin:0;min-width:150px;flex:1 1 150px}
+.fieldrow input{font-family:var(--font-mono)}
+.fieldrow input.okk{border-color:var(--ok);background:var(--ok-soft)}
+.fieldrow input.nok{border-color:var(--bad);background:var(--bad-soft)}
+.solbox{border-left:3px solid var(--accent);padding:2px 12px;margin:10px 0;background:var(--panel2);border-radius:0 8px 8px 0}
+.scoreline{font:500 12.5px var(--font-mono);color:var(--muted);margin:2px 0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px var(--shadow);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
 }
-*,*::before,*::after{box-sizing:border-box}
-body{
-  background:var(--bg); color:var(--fg);
-  font-family:var(--f-body); font-size:15px; line-height:1.6;
-  padding-block:28px 64px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));
-  padding-right:max(16px,env(safe-area-inset-right,0px));
+/* illustrations du cours */
+.fig{margin:14px 0;max-width:100%}
+.fig .gwrap{background:var(--bg)}
+.fig figcaption{font-size:13px;line-height:1.5;color:var(--muted);margin:6px 2px 0}
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0;align-items:start}
+.figrow .fig{margin:0;min-width:0}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+/* atelier trapèze : couleurs propres au palan (roues 2/3/4, charge) et au dimensionnement */
+:root{
+  --surface:var(--panel);--surface2:var(--panel2);--ko:var(--bad);--ko-soft:var(--bad-soft);
+  --f-body:var(--font-ui);--f-mono:var(--font-mono);--f-math:'STIX Two Text','Times New Roman',Times,serif;
+  --c2:#E4161B;--c3:#2F5BD6;--c4:#0A9A48;--c5:#6B7480;
+  --sv:#2F5BD6;--sa:#0A9A48;--sc:#E4161B;--sp:#D18A00;
+  --st:#0A3178;--st-soft:#E1E8F6;--on-st:#FFFFFF;
+  --dy:#F6A700;--dy-soft:#FDF0CF;--on-dy:#2A1B00;
+  --env-max:#E3EAF8;--env-n:#D5ECDD;
 }
-.wrap{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
-h1,h2,h3{font-family:var(--f-title);font-weight:700;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:.005em}
-h1{font-size:clamp(40px,7vw,68px)}
-h2{font-size:clamp(28px,4vw,38px)}
-h3{font-size:22px;font-weight:600}
-p{margin:0}
-.lead{max-width:66ch;font-size:17px;color:var(--fg)}
-.muted{color:var(--muted)}
-a{color:var(--accent)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-/* En-tête */
-.top{display:flex;flex-direction:column;gap:18px}
-.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 24px;max-width:980px}
-.parts li{display:flex;gap:10px;align-items:baseline;font-size:14px;min-width:0}
-.parts .n{flex:none;width:22px;height:22px;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;color:var(--on-c);border-radius:3px}
-.n1{background:var(--fg);color:var(--bg)!important}.n2{background:var(--c2)}.n3{background:var(--c3)}.n4{background:var(--c4)}.n5{background:var(--c5)}
-
-/* Simulateur */
-.sim{display:grid;grid-template-columns:minmax(300px,440px) minmax(0,1fr);gap:20px;align-items:start}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
-.panel h3{margin-bottom:10px}
-.modebar{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
-.note{font-size:13.5px;padding:8px 10px;border-radius:4px;background:var(--surface2);min-height:2.6em}
+:root[data-theme="dark"]{
+  --c2:#FF6F61;--c3:#6F9BFF;--c4:#55C46C;--c5:#9DA8B5;
+  --sv:#6EA6FF;--sa:#45C8CA;--sc:#FF7A6A;--sp:#E3AE4A;
+  --st:#6EA6FF;--st-soft:#1B2B44;--on-st:#0A1326;
+  --dy:#E3AE4A;--dy-soft:#3A2E14;--on-dy:#241800;
+  --env-max:#1A2A3D;--env-n:#1B3A2B;
+}
+#ws{max-width:1240px}
+var{font-family:var(--f-math);font-style:italic}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;min-width:0}
+.panel h3{margin:0 0 8px!important}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.note{font-size:13.5px;padding:8px 10px;border-radius:6px;background:var(--panel2);min-height:2.6em;margin:8px 0}
 .note.warn{background:var(--warn-soft)}
-.keyline{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;color:var(--muted)}
-.keyline span{display:flex;align-items:center;gap:8px}
-.keyline line{stroke:var(--fg)}
-.th{stroke-dasharray:6 4;opacity:.6}
-.ghost{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 3}
-.ghostmk{fill:none;stroke:var(--muted);stroke-width:1.4}
-.stage-host svg{display:block;width:100%;height:auto;max-height:600px;margin:0 auto}
 .transport{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:10px}
-.transport input[type=range]{flex:1 1 100%;min-width:0}
-button,select,input[type=number]{font:inherit;color:var(--fg);background:var(--surface2);border:1px solid var(--line);border-radius:4px;padding:5px 10px}
-button{cursor:pointer;font-weight:500}
-button:hover{border-color:var(--accent)}
-.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;margin:14px 0 0}
+.transport input[type=range]{flex:1 1 100%;min-width:0;accent-color:var(--accent)}
+.transport select{width:auto}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;margin:12px 0 0}
 .readout div{min-width:0}
 .readout dt{font-size:12px;color:var(--muted)}
-.readout dd{margin:0;font-family:var(--f-mono);font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.side{display:flex;flex-direction:column;gap:16px;min-width:0}
-.ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px 28px}
-.grp{display:flex;flex-direction:column;gap:10px;min-width:0}
-.grp-t{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline}
-.row label{font-size:14px}
-.row output{font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums}
-.row input[type=range]{grid-column:1/-1;width:100%;margin:2px 0 0;accent-color:var(--accent)}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;align-self:flex-start}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{padding:5px 14px;cursor:pointer;font-size:14px;background:var(--surface2)}
-.seg input:checked+label{background:var(--accent);color:var(--bg);font-weight:600}
-.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
-details.adv summary{cursor:pointer;font-weight:500}
-.adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px;margin-top:12px}
-.adv-grid label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
-.adv-grid input{width:100%;font-family:var(--f-mono)}
-
-/* Vérifications */
-.check{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line)}
-.check:first-of-type{border-top:0}
-.check .nm{font-size:14px}
-.check .val{grid-column:1/-1;display:flex;justify-content:space-between;gap:10px;font-family:var(--f-mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.badge{font-size:12px;font-weight:600;padding:2px 9px;border-radius:3px}
-.badge.ok{background:var(--ok-soft);color:var(--ok)}
-.badge.warn{background:var(--warn-soft);color:var(--warn)}
-.badge.ko{background:var(--ko-soft);color:var(--ko)}
-.gauge{grid-column:1/-1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.readout dd{margin:0;font-family:var(--font-mono);font-size:14px;white-space:nowrap}
+.ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 24px}
+.grp{display:flex;flex-direction:column;gap:6px;min-width:0}
+.grp-t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sub{font-size:13px;font-weight:600}
+.srow{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline}
+.srow label{font-size:13.5px}
+.srow output{font-family:var(--font-mono);font-size:13.5px}
+.srow input[type=range]{grid-column:1/-1;width:100%;margin:2px 0 0}
+.adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px;margin-top:10px}
+.adv-grid label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+.adv-grid input{font-family:var(--font-mono)}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:4px;line-height:1.5}
+.tag-st{background:var(--st);color:var(--on-st)}.tag-dy{background:var(--dy);color:var(--on-dy)}
+.blk{padding:9px 12px 7px;border-radius:8px;display:flex;flex-direction:column;gap:4px}
+.blk+.blk{margin-top:10px}
+.blk-st{background:var(--st-soft)}.blk-dy{background:var(--dy-soft)}
+.blk-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:2px}
+.check{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.check:first-child{border-top:0}
+.check .nm{font-size:13.5px}
+.check .val{grid-column:1/-1;display:flex;justify-content:space-between;gap:10px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.badge{font-size:12px;font-weight:600;padding:2px 9px;border-radius:4px}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}.badge.warn{background:var(--warn-soft);color:var(--warn)}.badge.ko{background:var(--bad-soft);color:var(--bad)}
+.gauge{grid-column:1/-1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
 .gauge i{display:block;height:100%}
-.gauge i.ok{background:var(--ok)}.gauge i.warn{background:var(--warn)}.gauge i.ko{background:var(--ko)}
-.limits{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
-.limits b{color:var(--fg);font-family:var(--f-mono);font-weight:500}
-
-/* Courbes */
-.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
-.chart{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 14px 8px;min-width:0}
-.chart h3{font-size:19px;margin-bottom:4px}
+.gauge i.ok{background:var(--ok)}.gauge i.warn{background:var(--warn)}.gauge i.ko{background:var(--bad)}
+.limits{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.limits b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+.keyline{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;color:var(--muted);margin:6px 0}
+.keyline span{display:flex;align-items:center;gap:8px}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;margin-top:8px}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px 6px;min-width:0;margin:0}
+.chart h3{font-size:15px!important;margin:0 0 2px!important}
+.chart p{font-size:12.5px!important;color:var(--muted);margin:2px 0 4px!important}
 .chart svg{display:block;width:100%;height:auto}
-.chart p{font-size:13px;color:var(--muted)}
-svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
-.axl{stroke:var(--line);stroke-width:1}
-.grid{stroke:var(--line);stroke-width:.6;stroke-dasharray:2 3;opacity:.8}
-.zero{stroke:var(--muted);stroke-width:1}
-.band{fill:var(--accent);opacity:.08}
-.ser{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
-.ser-v{stroke:var(--sv)}.ser-a{stroke:var(--sa)}.ser-c{stroke:var(--sc)}.ser-p{stroke:var(--sp)}
-.cur{stroke:var(--fg);stroke-width:1.2;stroke-dasharray:4 3}
-.lim-n{stroke:var(--ok);stroke-width:1.3;stroke-dasharray:6 4}
-.lim-max{stroke:var(--ko);stroke-width:1.3}
-.t-n{fill:var(--ok)!important}.t-max{fill:var(--ko)!important}
-.env-max{fill:var(--env-max)}.env-n{fill:var(--env-n)}
-.traj{fill:none;stroke:var(--sc);stroke-width:2.2;stroke-linejoin:round}
-.dot{fill:var(--sc)}
-.hold{fill:var(--surface);stroke:var(--fg);stroke-width:1.6}
-.now{fill:var(--fg);stroke:var(--surface);stroke-width:2}
-.tx-s{fill:var(--fg)!important}
-
-/* Animation */
-.gear{stroke-width:1.4}
-.gear-2{fill:var(--c2);fill-opacity:.28;stroke:var(--c2)}
-.gear-3{fill:var(--c3);fill-opacity:.2;stroke:var(--c3)}
-.gear-3b{fill:var(--c3);fill-opacity:.45;stroke:var(--c3)}
-.gear-4{fill:var(--c4);fill-opacity:.18;stroke:var(--c4)}
-.drum{fill:var(--c4);fill-opacity:.35;stroke:var(--c4);stroke-width:1.6}
-.spoke{stroke-width:2;stroke-linecap:round}
-.sp2{stroke:var(--c2)}.sp3{stroke:var(--c3)}.sp4{stroke:var(--c4)}
-.hub{fill:var(--fg)}
-.cable{stroke:var(--c5);stroke-width:2.2}
-.load{fill:var(--surface2);stroke:var(--c5);stroke-width:1.8}
-.ruler{stroke:var(--muted);stroke-width:1.2}
-.lbl{font-family:var(--f-body)!important;font-size:12px!important;fill:var(--fg)!important;font-weight:600}
-.lbl tspan.sub{font-family:var(--f-mono);font-weight:400;fill:var(--muted)}
-
-/* Cours */
-.course{display:flex;flex-direction:column;gap:44px;max-width:860px}
-.sec{display:flex;flex-direction:column;gap:14px}
-.sec h2{margin-bottom:2px}
-.sec p,.sec li{max-width:70ch}
-.sec ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
-.eq{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px 16px;font-family:var(--f-math);font-size:19px;line-height:1.9;overflow-x:auto}
+/* dessins du simulateur (portée limitée à .tp pour ne pas toucher aux autres schémas) */
+.tp svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.tp .axl{stroke:var(--line);stroke-width:1}
+.tp .grid{stroke:var(--line);stroke-width:.6;stroke-dasharray:2 3;opacity:.8}
+.tp .zero{stroke:var(--muted);stroke-width:1}
+.tp .cband{fill:var(--accent);opacity:.08}
+.tp .ser{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.tp .ser-v{stroke:var(--sv)}.tp .ser-a{stroke:var(--sa)}.tp .ser-c{stroke:var(--sc)}.tp .ser-p{stroke:var(--sp)}
+.tp .th{stroke-dasharray:6 4;opacity:.6}
+.tp .cur{stroke:var(--fg);stroke-width:1.2;stroke-dasharray:4 3}
+.tp .lim-n{stroke:var(--ok);stroke-width:1.3;stroke-dasharray:6 4}
+.tp .lim-max{stroke:var(--bad);stroke-width:1.3}
+.tp .t-n{fill:var(--ok)!important}.tp .t-max{fill:var(--bad)!important}
+.tp .env-max{fill:var(--env-max)}.tp .env-n{fill:var(--env-n)}
+.tp .traj{fill:none;stroke:var(--sc);stroke-width:2.2;stroke-linejoin:round}
+.tp .dot{fill:var(--sc)}
+.tp .hold{fill:var(--panel);stroke:var(--fg);stroke-width:1.6}
+.tp .now{fill:var(--fg);stroke:var(--panel);stroke-width:2}
+.tp .tx-s{fill:var(--fg)!important}
+.stage-host svg{display:block;width:100%;height:auto;max-height:600px;margin:0 auto}
+.tp .gear{stroke-width:1.4}
+.tp .gear-2{fill:var(--c2);fill-opacity:.28;stroke:var(--c2)}
+.tp .gear-3{fill:var(--c3);fill-opacity:.2;stroke:var(--c3)}
+.tp .gear-3b{fill:var(--c3);fill-opacity:.45;stroke:var(--c3)}
+.tp .gear-4{fill:var(--c4);fill-opacity:.18;stroke:var(--c4)}
+.tp .drum{fill:var(--c4);fill-opacity:.35;stroke:var(--c4);stroke-width:1.6}
+.tp .spoke{stroke-width:2;stroke-linecap:round}
+.tp .sp2{stroke:var(--c2)}.tp .sp3{stroke:var(--c3)}.tp .sp4{stroke:var(--c4)}
+.tp .hub{fill:var(--fg);stroke:none}
+.tp .cable{stroke:var(--c5);stroke-width:2.2}
+.tp .load{fill:var(--panel2);stroke:var(--c5);stroke-width:1.8}
+.tp .ruler{stroke:var(--muted);stroke-width:1.2}
+.tp .ghost{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 3}
+.tp .ghostmk{fill:none;stroke:var(--muted);stroke-width:1.4}
+.tp .lbl{font-family:var(--f-body)!important;font-size:12px!important;fill:var(--fg)!important;font-weight:600}
+.tp .lbl tspan.sub{font-family:var(--f-mono);font-weight:400;fill:var(--muted)}
+/* cours */
+.eq{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 16px;font-family:var(--f-math);font-size:18.5px;line-height:1.9;overflow-x:auto;margin:10px 0}
 .eq div{white-space:nowrap}
 .eq .why{font-family:var(--f-body);font-size:13px;color:var(--muted);margin-left:10px}
-var{font-family:var(--f-math);font-style:italic}
-sub,sup{font-size:.7em;line-height:0}
-.live{border:1px dashed var(--muted);border-radius:4px;padding:12px 16px;font-size:14.5px}
-.live .hd{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
-.live b,.v{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
-.tbl{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:baseline}
-th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.inertia{display:flex;height:22px;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+.live{border:1px dashed var(--muted);border-radius:6px;padding:10px 14px;font-size:14px;margin:12px 0}
+.live .hd{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
+.live b,.v{font-family:var(--font-mono);font-weight:500}
+td.num{font-family:var(--font-mono);white-space:nowrap}
+.inertia{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line);margin:8px 0}
 .inertia i{display:block;min-width:2px}
-.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-size:13.5px;margin-top:8px}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-size:13px;margin-bottom:8px}
 .legend span{display:flex;gap:8px;align-items:baseline}
-.legend em{flex:none;width:10px;height:10px;border-radius:2px;display:inline-block;transform:translateY(1px)}
+.legend em{flex:none;width:10px;height:10px;border-radius:2px;display:inline-block}
 .keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.keys div{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:14.5px}
-.keys b{display:block;font-family:var(--f-title);font-size:19px;margin-bottom:2px}
-
-@media (max-width:900px){
-  .sim{grid-template-columns:minmax(0,1fr)}
-  .readout{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;transition:none!important}}
-
-.top{position:relative}
-.fig svg{display:block;width:100%;max-width:560px;height:auto}
-.fg-a{fill:var(--c3);fill-opacity:.28}.fg-b{fill:var(--c3);fill-opacity:.28}
-.fg-m{fill:var(--accent);fill-opacity:.12}
+.keys div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:14px}
+.keys b{display:block;font-size:16px;margin-bottom:2px}
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin:10px 0}
+.duo>div{border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.duo .st{background:var(--st-soft)}.duo .dy{background:var(--dy-soft)}
+.duo h3{display:flex!important;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 4px!important}
+.duo dl{margin:0;display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:6px 14px;font-size:13.5px}
+.duo dt{color:var(--muted)}.duo dd{margin:0;min-width:0}
+.kicker{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted);margin:0 0 4px}
+.fig .tp svg{display:block}
+.fg-a,.fg-b{fill:var(--c3);fill-opacity:.28}.fg-m{fill:var(--accent);fill-opacity:.12}
 .fg-ghost{fill:var(--c3);fill-opacity:.16;stroke:var(--c3);stroke-width:1.4;stroke-dasharray:4 3}
 .fg-rect{fill:none;stroke:var(--fg);stroke-width:1.2;stroke-dasharray:6 4}
-.fg-arrow{stroke:var(--muted);stroke-width:1.3}
-.fg-head{fill:var(--muted)}
-.themebtn{align-self:flex-end;font-size:13px;padding:4px 12px}
-/* Statique / dynamique */
-.tag{display:inline-block;font-family:var(--f-body);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:3px;line-height:1.5}
-.tag-st{background:var(--st);color:var(--on-st)}
-.tag-dy{background:var(--dy);color:var(--on-dy)}
-.blk{padding:10px 12px 8px;border-radius:4px;display:flex;flex-direction:column;gap:4px}
-.blk + .blk{margin-top:12px}
-.blk-st{background:var(--st-soft)}
-.blk-dy{background:var(--dy-soft)}
-.blk-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:2px}
-.blk .check{border-top-color:var(--line)}
-.sub{font-size:13px;font-weight:600;color:var(--fg)}
-.kicker{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
-.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
-.duo>div{border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.duo .st{background:var(--st-soft)}.duo .dy{background:var(--dy-soft)}
-.duo h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.duo dl{margin:0;display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:6px 14px;font-size:14px}
-.duo dt{color:var(--muted)}
-.duo dd{margin:0;min-width:0}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
-
-<div class="wrap">
-
-<header class="top">
-  <button id="themeBtn" class="themebtn" type="button" aria-label="Changer de thème">Mode sombre</button>
-  <h1>Trapèze de vitesse</h1>
-  <p class="lead">Comment imposer un mouvement à une charge, puis choisir le moteur qui le réalise. Deux dimensionnements distincts : en statique, le couple pour maintenir ou tenir une vitesse constante ; en dynamique, la vitesse maximale atteignable et le couple pour l'accélération du trapèze. Le système est le palan du TD : un moteur, un réducteur à deux étages, un tambour et une charge de masse <var>m</var>.</p>
-  <ul class="parts">
-    <li><span class="n n1">1</span><span>Bâti</span></li>
-    <li><span class="n n2">2</span><span>Arbre moteur, pignon de <var>Z</var><sub>2</sub> dents</span></li>
-    <li><span class="n n3">3</span><span>Roue double : <var>Z</var><sub>3a</sub> engrène avec 2, <var>Z</var><sub>3b</sub> avec 4</span></li>
-    <li><span class="n n4">4</span><span>Roue de <var>Z</var><sub>4</sub> dents et tambour de rayon <var>R</var></span></li>
-    <li><span class="n n5">5</span><span>Charge de masse <var>m</var>, centre de gravité <var>G</var><sub>5</sub></span></li>
-  </ul>
-</header>
-
-<section class="sim" aria-label="Simulateur du palan">
-  <div class="panel">
-    <div class="modebar">
-      <div class="seg" role="radiogroup" aria-label="Mode d'affichage">
-        <input type="radio" name="mode" id="mode-th" value="th"><label for="mode-th">Théorique</label>
-        <input type="radio" name="mode" id="mode-re" value="re" checked><label for="mode-re">Réel</label>
-      </div>
-      <p id="modeNote" class="note" aria-live="polite"></p>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="9.5" cy="13" r="7" fill="none" stroke="var(--fg)" stroke-width="1.6" stroke-dasharray="3.2 1.6"/><circle cx="18.5" cy="13" r="5.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.6 1.4"/><circle cx="9.5" cy="13" r="1.8" fill="var(--warn)"/></svg><span>Atelier Trapèze <small>SI · CPGE</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bTheme" type="button" aria-pressed="false">Mode sombre</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
     </div>
-    <div class="stage-host" id="stageHost"></div>
-    <div class="transport">
-      <button id="play" type="button">Pause</button>
-      <button id="reset" type="button">Début</button>
-      <label class="muted" for="rate" style="font-size:13px">Vitesse de lecture</label>
-      <select id="rate">
-        <option value="0.1">× 0,1</option>
-        <option value="0.25">× 0,25</option>
-        <option value="0.5" selected>× 0,5</option>
-        <option value="1">× 1 (temps réel)</option>
-        <option value="2">× 2</option>
-      </select>
-      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Instant du cycle">
-    </div>
-    <dl class="readout">
-      <div><dt>Instant</dt><dd id="ro-t">0,00 s</dd></div>
-      <div><dt>Phase</dt><dd id="ro-ph">–</dd></div>
-      <div><dt>Vitesse charge</dt><dd id="ro-v">0,00 m/s</dd></div>
-      <div><dt>Vitesse moteur</dt><dd id="ro-n">0 tr/min</dd></div>
-      <div><dt>Couple moteur</dt><dd id="ro-c">0,00 N·m</dd></div>
-      <div><dt>Puissance moteur</dt><dd id="ro-p">0 W</dd></div>
-    </dl>
-  </div>
-
-  <div class="side">
-    <div class="panel">
-      <h3>Réglages</h3>
-      <div class="ctl-grid">
-        <div class="grp" id="grpSt">
-          <div class="grp-t"><span class="tag tag-st">Statique</span> charge et couple permanent</div>
-          <div class="sub">Charge</div>
-          <div class="seg" role="radiogroup" aria-label="Sens du mouvement">
-            <input type="radio" name="dir" id="dir-up" value="1" checked><label for="dir-up">Montée</label>
-            <input type="radio" name="dir" id="dir-dn" value="-1"><label for="dir-dn">Descente</label>
-          </div>
-        </div>
-        <div class="grp" id="grpDy">
-          <div class="grp-t"><span class="tag tag-dy">Dynamique</span> trapèze demandé et limites du moteur</div>
-          <div class="sub">Consigne en trapèze</div>
-        </div>
-      </div>
-      <details class="adv" style="margin-top:14px">
-        <summary>Chaîne cinématique et inerties</summary>
-        <div class="adv-grid" id="advGrid"></div>
-      </details>
-    </div>
-    <div class="panel">
-      <h3>Le moteur convient-il ?</h3>
-      <div class="blk blk-st">
-        <div class="blk-h"><span class="tag tag-st">Statique</span><span>charge maintenue ou vitesse constante</span></div>
-        <div id="checksS"></div>
-        <div class="limits" id="limS"></div>
-      </div>
-      <div class="blk blk-dy">
-        <div class="blk-h"><span class="tag tag-dy">Dynamique</span><span id="chkMode"></span></div>
-        <div id="checksD"></div>
-        <div class="limits" id="limD"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" style="max-width:none">
-  <h2>Courbes du cycle</h2>
-  <p class="muted">Chaque courbe montre la consigne théorique (pointillés) et ce que le moteur réalise avec ses limites (trait plein). Les bandes colorées marquent les phases d'accélération et de décélération du mode affiché. Le trait vertical suit l'animation.</p>
-  <div class="keyline" aria-hidden="true">
-    <span><svg width="38" height="8"><line x1="0" y1="4" x2="38" y2="4" class="ser ser-v"/></svg>Réel, avec les limites du moteur</span>
-    <span><svg width="38" height="8"><line x1="0" y1="4" x2="38" y2="4" class="ser ser-v th"/></svg>Théorique, consigne demandée</span>
-  </div>
-  <div class="charts">
-    <figure class="chart" style="margin:0"><h3>Vitesse de la charge</h3><div id="ch-v"></div></figure>
-    <figure class="chart" style="margin:0"><h3>Accélération de la charge</h3><div id="ch-a"></div></figure>
-    <figure class="chart" style="margin:0"><h3>Couple moteur</h3><div id="ch-c"></div>
-      <p>Vert pointillé : couple permanent admissible. Rouge : couple maximal.</p></figure>
-    <figure class="chart" style="margin:0"><h3>Puissance mécanique du moteur</h3><div id="ch-p"></div>
-      <p>Positive : le moteur fournit. Négative : il freine et la charge entraîne.</p></figure>
-    <figure class="chart" style="margin:0;grid-column:1/-1"><h3>Plan couple – vitesse</h3><div id="ch-cw" style="max-width:640px;margin:0 auto"></div>
-      <p>Le trajet de fonctionnement doit rester dans la zone admissible du moteur : vert foncé en continu, bleu clair en pointe seulement.</p></figure>
-  </div>
-</section>
-
-<div class="course">
-
-<section class="sec">
-  <h2>1. Loi de vitesse en trapèze</h2>
-  <p>Pour déplacer la charge d'une course <var>h</var>, on envoie au variateur une consigne en trois temps : une rampe jusqu'à <var>V</var><sub>max</sub> à accélération constante <var>a</var>, un palier à <var>V</var><sub>max</sub>, puis une rampe symétrique jusqu'à l'arrêt. La vitesse dessine un trapèze, l'accélération un créneau.</p>
-  <div class="eq">
-    <div><var>t</var><sub>a</sub> = <var>V</var><sub>max</sub> / <var>a</var> <span class="why">durée de chaque rampe</span></div>
-    <div><var>d</var><sub>a</sub> = <var>V</var><sub>max</sub>² / (2<var>a</var>) <span class="why">distance parcourue pendant une rampe</span></div>
-    <div><var>t</var><sub>c</sub> = ( <var>h</var> − <var>V</var><sub>max</sub>² / <var>a</var> ) / <var>V</var><sub>max</sub> <span class="why">durée du palier</span></div>
-    <div><var>T</var> = 2<var>t</var><sub>a</sub> + <var>t</var><sub>c</sub> = <var>h</var> / <var>V</var><sub>max</sub> + <var>V</var><sub>max</sub> / <var>a</var></div>
-  </div>
-  <h3>Déplacement : l'aire sous la courbe de vitesse</h3>
-  <p>Le déplacement est l'intégrale de la vitesse, donc l'aire sous le trapèze. On note <var>t</var><sub>1</sub> la durée de montée en vitesse, égale à la durée de descente quand l'accélération et la décélération ont la même norme, et <var>t</var><sub>2</sub> la durée à vitesse constante (<var>t</var><sub>1</sub> = <var>t</var><sub>a</sub> et <var>t</var><sub>2</sub> = <var>t</var><sub>c</sub> plus haut). Les deux rampes sont deux triangles de même aire, qui se complètent en un rectangle de hauteur <var>V</var><sub>max</sub> et de largeur <var>t</var><sub>1</sub>.</p>
-  <figure class="fig" style="margin:0">
-    <svg viewBox="0 0 440 190" role="img" aria-label="Trapèze de vitesse : les deux triangles des rampes forment un rectangle de largeur t1, d'où une aire totale Vmax fois t1 plus t2">
-      <line class="axl" x1="60" y1="156" x2="420" y2="156"/><line class="axl" x1="60" y1="30" x2="60" y2="156"/>
-      <polygon class="fg-a" points="60,150 140,50 140,150"/>
-      <rect class="fg-m" x="140" y="50" width="120" height="100"/>
-      <polygon class="fg-b" points="260,50 340,150 260,150"/>
-      <polygon class="fg-ghost" points="60,50 140,50 60,150"/>
-      <path class="fg-arrow" d="M300 112 C 260 40, 160 20, 112 44" fill="none"/>
-      <polygon class="fg-head" points="112,44 123,41 119,51"/>
-      <polyline class="ser ser-v" points="60,150 140,50 260,50 340,150"/>
-      <rect class="fg-rect" x="60" y="50" width="200" height="100"/>
-      <text x="54" y="54" text-anchor="end">V max</text>
-      <text x="100" y="174" text-anchor="middle">t1</text><text x="200" y="174" text-anchor="middle">t2</text><text x="300" y="174" text-anchor="middle">t1</text>
-      <text x="410" y="174" text-anchor="end">t</text>
-      <text class="tx-s" x="430" y="22" text-anchor="end">Δx = V max · (t1 + t2)</text>
-    </svg>
-    <figcaption class="muted" style="font-size:13px;margin-top:4px">Le triangle de droite, retourné, comble le vide à gauche sous V max. Le rectangle en pointillés a pour largeur <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub>.</figcaption>
-  </figure>
-  <div class="eq">
-    <div>Δ<var>x</var> = ½ <var>V</var><sub>max</sub> <var>t</var><sub>1</sub> + <var>V</var><sub>max</sub> <var>t</var><sub>2</sub> + ½ <var>V</var><sub>max</sub> <var>t</var><sub>1</sub> = <var>V</var><sub>max</sub> ( <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub> )</div>
-    <div><var>t</var><sub>2</sub> = Δ<var>x</var> / <var>V</var><sub>max</sub> − <var>t</var><sub>1</sub> <span class="why">avec <var>t</var><sub>1</sub> = <var>V</var><sub>max</sub> / <var>a</var>, d'où <var>t</var><sub>c</sub> plus haut</span></div>
-    <div><var>T</var> = 2 <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub> = Δ<var>x</var> / <var>V</var><sub>max</sub> + <var>t</var><sub>1</sub></div>
-  </div>
-  <p>Ce raccourci suppose des normes d'accélération et de décélération égales. Sinon, avec <var>t</var><sub>1</sub> pour la montée et <var>t</var><sub>3</sub> pour la descente, Δ<var>x</var> = <var>V</var><sub>max</sub> ( <var>t</var><sub>1</sub> / 2 + <var>t</var><sub>2</sub> + <var>t</var><sub>3</sub> / 2 ).</p>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    <var>V</var><sub>max</sub> ( <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub> ) = <b data-v="vp"></b> × ( <b data-v="ta"></b> + <b data-v="tc"></b> ) = <b data-v="dx"></b> m, soit la course demandée Δ<var>x</var> = <b data-v="hSet"></b> m.</div>
-  <p>Si <var>h</var> &lt; <var>V</var><sub>max</sub>² / <var>a</var>, la vitesse maximale n'est jamais atteinte : le profil devient un triangle, de sommet <var>V</var><sub>p</sub> = √(<var>h a</var>) et de durée <var>T</var> = 2√(<var>h</var> / <var>a</var>).</p>
-  <p>Question classique de TD : quelle accélération pour parcourir <var>h</var> en un temps <var>T</var> imposé, avec <var>V</var><sub>max</sub> donnée ? On inverse l'expression de <var>T</var> :</p>
-  <div class="eq"><div><var>a</var> = <var>V</var><sub>max</sub>² / ( <var>V</var><sub>max</sub> <var>T</var> − <var>h</var> ) <span class="why">avec <var>V</var><sub>max</sub> <var>T</var> &gt; <var>h</var></span></div></div>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    Profil <b data-v="shape"></b> : <var>V</var><sub>p</sub> = <b data-v="vp"></b> m/s, <var>t</var><sub>a</sub> = <b data-v="ta"></b> s, <var>t</var><sub>c</sub> = <b data-v="tc"></b> s, durée totale <var>T</var> = <b data-v="T"></b> s.</div>
-  <p class="muted">Les quatre changements d'accélération sont des échelons : le à-coup (dérivée de l'accélération) est infini. La mécanique et la charge, qui se balance au bout du câble, le ressentent. Une loi en S lisse ces transitions, au prix d'un trajet un peu plus long.</p>
-</section>
-
-<section class="sec">
-  <h2>2. Ramener la charge sur l'arbre moteur</h2>
-  <p>Le variateur pilote la vitesse du moteur, pas celle de la charge. Il faut donc écrire le trapèze côté moteur. Le rapport de réduction vient des quatre roues, et le câble relie la vitesse de la charge à celle du tambour.</p>
-  <div class="eq">
-    <div><var>k</var> = <var>ω</var><sub>4</sub> / <var>ω</var><sub>m</sub> = ( <var>Z</var><sub>2</sub> / <var>Z</var><sub>3a</sub> ) · ( <var>Z</var><sub>3b</sub> / <var>Z</var><sub>4</sub> )</div>
-    <div><var>V</var> = <var>R</var> <var>ω</var><sub>4</sub> = <var>R</var> <var>k</var> <var>ω</var><sub>m</sub></div>
-    <div><var>ω</var><sub>m</sub> = <var>V</var> / (<var>R k</var>) <span class="why">et</span> <var>α</var><sub>m</sub> = <var>a</var> / (<var>R k</var>)</div>
-  </div>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    <var>k</var> = <b data-v="k"></b>. Au palier, <var>ω</var><sub>m</sub> = <b data-v="wp"></b> rad/s, soit <b data-v="Np"></b> tr/min. Pendant les rampes, <var>α</var><sub>m</sub> = <b data-v="alpha"></b> rad/s².</div>
-  <p>Les pièces tournantes ne tournent pas à la même vitesse, donc elles ne pèsent pas pareil vu du moteur. On les ramène par l'égalité des énergies cinétiques : ½ <var>J</var><sub>e</sub> <var>ω</var><sub>m</sub>² = Σ énergies.</p>
-  <div class="eq">
-    <div><var>J</var><sub>e</sub> = <var>J</var><sub>m</sub> + <var>J</var><sub>3</sub> ( <var>Z</var><sub>2</sub> / <var>Z</var><sub>3a</sub> )² + <var>J</var><sub>4</sub> <var>k</var>² + <var>m</var> <var>R</var>² <var>k</var>²</div>
-  </div>
-  <div>
-    <div class="inertia" id="inBar" role="img" aria-label="Répartition de l'inertie équivalente"></div>
-    <div class="legend" id="inLeg"></div>
-  </div>
-  <p>Terme dominant avec ces valeurs : <b class="v" data-v="dominant"></b>. Le réducteur divise l'inertie de la charge par le carré du rapport, donc elle pèse peu devant le rotor.</p>
-</section>
-
-<section class="sec">
-  <h2>3. Deux dimensionnements à ne pas mélanger</h2>
-  <p>Un même moteur doit satisfaire deux familles de conditions. Elles ne portent pas sur les mêmes situations ni sur les mêmes grandeurs du catalogue, donc on les traite séparément, puis on garde le moteur qui respecte les deux.</p>
-  <div class="duo">
-    <div class="st">
-      <h3><span class="tag tag-st">Statique</span> le couple</h3>
-      <dl>
-        <dt>Situation</dt><dd>Charge maintenue à l'arrêt, ou déplacée à vitesse constante : <var>a</var> = 0.</dd>
-        <dt>Équation</dt><dd>Somme des couples nulle sur l'arbre moteur.</dd>
-        <dt>Ce qui compte</dt><dd>Le poids, le rapport de réduction, le rendement.</dd>
-        <dt>Ce qui ne compte pas</dt><dd>L'inertie et la loi de vitesse.</dd>
-        <dt>À vérifier</dt><dd>Le couple permanent <var>C</var><sub>n</sub>, qui fixe l'échauffement.</dd>
-        <dt>Résultat</dt><dd>Le couple nominal minimal du moteur et le couple du frein de maintien.</dd>
-      </dl>
-    </div>
-    <div class="dy">
-      <h3><span class="tag tag-dy">Dynamique</span> la vitesse et l'accélération</h3>
-      <dl>
-        <dt>Situation</dt><dd>Accélération imposée par le trapèze : <var>a</var> ≠ 0.</dd>
-        <dt>Équation</dt><dd><var>J</var><sub>e</sub> <var>α</var><sub>m</sub> = <var>C</var><sub>m</sub> − <var>C</var><sub>r</sub>.</dd>
-        <dt>Ce qui compte</dt><dd>L'inertie équivalente, la loi de vitesse, puis le couple statique qui s'ajoute.</dd>
-        <dt>À vérifier</dt><dd>La vitesse maximale <var>N</var><sub>max</sub>, le couple maximal <var>C</var><sub>max</sub> pour l'accélération, le couple efficace.</dd>
-        <dt>Résultat</dt><dd>La vitesse maximale atteignable, l'accélération maximale atteignable, la puissance du variateur.</dd>
-      </dl>
-    </div>
-  </div>
-  <p class="muted">Pendant une rampe, le moteur fournit les deux à la fois : le couple statique pour porter la charge, et le couple dynamique pour la mettre en vitesse. Le dimensionnement statique ne suffit donc jamais quand on impose une accélération.</p>
-</section>
-
-<section class="sec">
-  <div class="kicker"><span class="tag tag-st">Statique</span><span>accélération nulle, on dimensionne en couple</span></div>
-  <h2>4. Dimensionnement statique</h2>
-  <p>Sans accélération, le théorème du moment dynamique se réduit à l'équilibre des couples. Le poids de la charge crée un couple sur le tambour, ramené ensuite sur l'arbre moteur.</p>
-  <div class="eq">
-    <div><var>C</var><sub>t</sub> = <var>m g R</var> <span class="why">couple de la charge sur le tambour</span></div>
-    <div><var>C</var><sub>maintien</sub> = <var>m g R k</var> <span class="why">à l'arrêt</span></div>
-    <div><var>C</var><sub>montée</sub> = <var>m g R k</var> / <var>η</var> <span class="why">vitesse constante, les pertes s'opposent au moteur</span></div>
-    <div><var>C</var><sub>descente</sub> = <var>m g R k</var> · <var>η</var> <span class="why">vitesse constante, les pertes aident le moteur à freiner</span></div>
-  </div>
-  <div class="tbl"><table>
-    <thead><tr><th>Situation</th><th>Couple moteur</th><th>Rapport à <var>C</var><sub>n</sub></th></tr></thead>
-    <tbody>
-      <tr><td>Couple de la charge sur le tambour</td><td class="num" data-v="Ct"></td><td class="num">–</td></tr>
-      <tr><td>Maintien à l'arrêt</td><td class="num" data-v="Chold"></td><td class="num" data-v="rHold"></td></tr>
-      <tr><td>Montée à vitesse constante</td><td class="num" data-v="ClUp"></td><td class="num" data-v="rUp"></td></tr>
-      <tr><td>Descente à vitesse constante</td><td class="num" data-v="ClDown"></td><td class="num" data-v="rDown"></td></tr>
-    </tbody></table></div>
-  <p>La condition de dimensionnement est <var>C</var><sub>statique</sub> ≤ <var>C</var><sub>n</sub>, le couple que le moteur fournit en permanence sans surchauffer. On retient le plus grand des couples statiques que le moteur doit tenir.</p>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    Couple statique à tenir : <b data-v="CsMax"></b> N·m, donc <var>C</var><sub>n</sub> ≥ <b data-v="CsMax"></b> N·m. Le moteur choisi a <var>C</var><sub>n</sub> = <b data-v="CnSet"></b> N·m : <span data-v="CnMsg"></span></div>
-  <p>En régime établi de montée, la puissance utile est <var>m g V</var> = <b class="v" data-v="Putile"></b> W, et le moteur fournit cette puissance divisée par <var>η</var>.</p>
-  <p>À l'arrêt, la charge entraînerait le moteur en sens inverse, car un train d'engrenages cylindriques est réversible. Un moteur bloqué sous tension chauffe, donc on tient la charge avec un frein à manque de courant. Le calcul de <var>C</var><sub>maintien</sub> sert alors à dimensionner ce frein, avec un coefficient de sécurité.</p>
-  <p class="muted">Si l'énoncé néglige les frottements, poser <var>η</var> = 1 : montée et descente donnent alors le même couple statique.</p>
-</section>
-
-<section class="sec">
-  <div class="kicker"><span class="tag tag-dy">Dynamique</span><span>accélération imposée, on dimensionne en vitesse et en couple de pointe</span></div>
-  <h2>5. Dimensionnement dynamique</h2>
-
-  <h3>5.1 Vitesse maximale atteignable</h3>
-  <p>La vitesse du palier se traduit en vitesse de rotation du moteur par le rapport de réduction. Elle ne doit pas dépasser la vitesse maximale du moteur <var>N</var><sub>max</sub>, d'où la vitesse maximale de la charge :</p>
-  <div class="eq"><div><var>V</var><sub>lim</sub> = <var>ω</var><sub>max</sub> <var>R k</var> <span class="why">avec <var>ω</var><sub>max</sub> = 2π <var>N</var><sub>max</sub> / 60</span></div></div>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    <var>V</var><sub>lim</sub> = <b data-v="Vlim"></b> m/s (<b data-v="VlimMin"></b> m/min). Vitesse demandée : <b data-v="VmaxSet"></b> m/s. <span data-v="VlimMsg"></span></div>
-  <p class="muted">Sur un moteur réel, le couple disponible baisse quand la vitesse monte. Le simulateur utilise une zone rectangulaire <var>C</var><sub>max</sub> × <var>N</var><sub>max</sub>, ce qui suffit pour un exercice.</p>
-
-  <h3>5.2 Couple pour l'accélération maximale du trapèze</h3>
-  <p>Imposer une accélération coûte un couple supplémentaire pour mettre en vitesse l'inertie équivalente. Le théorème du moment dynamique sur l'arbre moteur donne :</p>
-  <div class="eq">
-    <div><var>J</var><sub>e</sub> · d<var>ω</var><sub>m</sub>/d<var>t</var> = <var>C</var><sub>m</sub> − <var>C</var><sub>r</sub> <span class="why">donc</span> <var>C</var><sub>m</sub> = <var>C</var><sub>r</sub> + <var>J</var><sub>e</sub> <var>α</var><sub>m</sub></div>
-  </div>
-  <p>Ici <var>C</var><sub>r</sub> est le couple résistant du cas statique : <var>m g R k</var> / <var>η</var> en montée, <var>m g R k</var> · <var>η</var> en descente. Le trapèze de vitesse donne un couple constant par phase.</p>
-  <div class="tbl"><table>
-    <thead><tr><th>Phase</th><th>Durée</th><th>Couple moteur (montée)</th><th>Valeur pour le sens choisi</th></tr></thead>
-    <tbody>
-      <tr><td>Accélération</td><td class="num" data-v="ta2"></td><td><var>C</var><sub>r</sub> + <var>J</var><sub>e</sub> <var>a</var> / (<var>R k</var>)</td><td class="num" data-v="Ca"></td></tr>
-      <tr><td>Palier</td><td class="num" data-v="tc2"></td><td><var>C</var><sub>r</sub></td><td class="num" data-v="Cc"></td></tr>
-      <tr><td>Décélération</td><td class="num" data-v="ta3"></td><td><var>C</var><sub>r</sub> − <var>J</var><sub>e</sub> <var>a</var> / (<var>R k</var>)</td><td class="num" data-v="Cd"></td></tr>
-    </tbody></table></div>
-  <p>En descente, le signe de <var>α</var><sub>m</sub> s'inverse : la charge accélère toute seule et le moteur retient. Le pic de couple se produit alors au début de la décélération. Si <var>J</var><sub>e</sub> <var>α</var><sub>m</sub> dépasse <var>C</var><sub>r</sub>, le couple change de signe pendant une phase : le moteur doit pousser au lieu de retenir.</p>
-  <p>Le couple de pic doit rester sous <var>C</var><sub>max</sub>. On en tire l'accélération maximale que ce moteur peut imposer, en montée par exemple :</p>
-  <div class="eq">
-    <div><var>a</var><sub>max, acc</sub> = ( <var>C</var><sub>max</sub> − <var>C</var><sub>r</sub> ) <var>R k</var> / <var>J</var><sub>e</sub> <span class="why">phase d'accélération</span></div>
-    <div><var>a</var><sub>max, déc</sub> = ( <var>C</var><sub>max</sub> + <var>C</var><sub>r</sub> ) <var>R k</var> / <var>J</var><sub>e</sub> <span class="why">phase de décélération</span></div>
-  </div>
-  <p>En descente, les deux expressions sont échangées. L'accélération du trapèze doit être inférieure à la plus petite des deux.</p>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    Couple de pic demandé : <var>C</var><sub>pic</sub> = <b data-v="Cpk"></b> N·m pour <var>C</var><sub>max</sub> = <b data-v="CmaxSet"></b> N·m. Accélérations maximales : <b data-v="a1lim"></b> m/s² (mise en vitesse) et <b data-v="a2lim"></b> m/s² (décélération), pour <var>a</var> = <b data-v="aSet"></b> m/s² demandé. <span data-v="alimMsg"></span></div>
-
-  <h3>5.3 Échauffement et puissance</h3>
-  <p>Le pic de couple n'est supporté que brièvement. L'échauffement dépend de la moyenne quadratique du couple sur le cycle, qui doit rester sous <var>C</var><sub>n</sub> :</p>
-  <div class="eq"><div><var>C</var><sub>eff</sub> = √( Σ <var>C</var><sub>i</sub>² <var>t</var><sub>i</sub> / <var>T</var> ) ≤ <var>C</var><sub>n</sub></div></div>
-  <p>Ici <var>C</var><sub>eff</sub> = <b class="v" data-v="Crms"></b> N·m. La puissance instantanée est <var>P</var> = <var>C</var><sub>m</sub> <var>ω</var><sub>m</sub>, maximale en fin d'accélération, à <b class="v" data-v="Pmax"></b> W ici. Le variateur doit fournir cette pointe.</p>
-  <div class="live"><div class="hd">Moteur minimal pour la consigne demandée</div>
-    <var>C</var><sub>n</sub> ≥ <b data-v="CnNeed"></b> N·m (statique et couple efficace), <var>C</var><sub>max</sub> ≥ <b data-v="Cpk"></b> N·m (pic), <var>N</var><sub>max</sub> ≥ <b data-v="Np"></b> tr/min (palier).</div>
-
-  <h3>5.4 Ce que fait vraiment le moteur</h3>
-  <p>Quand la consigne demande plus que le moteur ne peut donner, le variateur limite le courant, donc le couple. Les rampes s'adoucissent et la vitesse plafonne. Le profil réalisable se calcule avec les mêmes formules, en remplaçant <var>a</var> et <var>V</var><sub>max</sub> par les valeurs que le moteur permet :</p>
-  <div class="eq">
-    <div><var>a</var><sub>1</sub> = min( <var>a</var> , <var>a</var><sub>max, acc</sub> ) <span class="why">accélération réelle</span></div>
-    <div><var>a</var><sub>2</sub> = min( <var>a</var> , <var>a</var><sub>max, déc</sub> ) <span class="why">décélération réelle</span></div>
-    <div><var>V</var><sub>réel</sub> = min( <var>V</var><sub>max</sub> , <var>V</var><sub>lim</sub> )</div>
-  </div>
-  <p>Si <var>C</var><sub>max</sub> est inférieur à <var>C</var><sub>r</sub>, le moteur ne lève pas la charge en montée, et ne la retient pas en descente.</p>
-  <div class="live"><div class="hd">Avec les valeurs du simulateur</div>
-    <span data-v="realMsg"></span></div>
-</section>
-
-<section class="sec">
-  <h2>À retenir</h2>
-  <div class="keys">
-    <div><b>Trapèze</b>Rampe, palier, rampe. Si la course est trop courte, le palier disparaît et le profil devient un triangle.</div>
-    <div><b><span class="tag tag-st">Statique</span></b>Le moteur tient <var>m g R k</var>, divisé par <var>η</var> en montée, multiplié par <var>η</var> en descente. On compare à <var>C</var><sub>n</sub> et on ajoute un frein pour le maintien.</div>
-    <div><b><span class="tag tag-dy">Dynamique</span></b>On ajoute <var>J</var><sub>e</sub> <var>α</var><sub>m</sub> pendant les rampes. On vérifie <var>C</var><sub>pic</sub> ≤ <var>C</var><sub>max</sub> et <var>N</var><sub>p</sub> ≤ <var>N</var><sub>max</sub>, puis <var>C</var><sub>eff</sub> ≤ <var>C</var><sub>n</sub>.</div>
-    <div><b>Choix du moteur</b>Il doit passer les deux : <var>C</var><sub>n</sub> pour le statique et l'échauffement, <var>C</var><sub>max</sub> et <var>N</var><sub>max</sub> pour l'accélération et la vitesse.</div>
-  </div>
-</section>
-
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
 </div>
-</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
 
 <script>
-(function(){
-//#MODEL-START
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+function reduced() { try { return window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-trapeze-v1', theme: 'atelier-trapeze-theme' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const ANIM = { fn: null, last: 0 };
+const TAU = 2 * Math.PI, DEG = 180 / Math.PI;
+const copy = o => JSON.parse(JSON.stringify(o));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function fx(v, d) {
+  if (d == null) d = 2;
+  if (!isFinite(v)) return '∞';
+  const f = Math.pow(10, d); let r = Math.round(v * f) / f; if (Object.is(r, -0)) r = 0;
+  let s = String(r); if (/e/.test(s)) s = r.toFixed(d);
+  return s.replace('.', ',').replace('-', '−');
+}
+const sg = (v, d) => (v > 0 ? '+' : '') + fx(v, d);
+function parseAns(s) {
+  s = String(s).trim().replace(/\s/g, '').replace(/[−–]/g, '-').replace(/,/g, '.');
+  if (/^[-+]?(\d+\.?\d*|\.\d+)\/[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) { const q = s.split('/'); return +q[0] / +q[1]; }
+  if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return +s;
+  return NaN;
+}
+function okAns(v, t, rel, abs) { rel = rel == null ? 0.02 : rel; abs = abs == null ? 0.005 : abs; return isFinite(v) && Math.abs(v - t) <= Math.max(abs, Math.abs(t) * rel); }
+const subz = s => String(s).replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+function svgTxt(parent, attrs, str) {
+  const t = el('text', attrs, parent), parts = String(str).split(/_([A-Za-z0-9]+)/);
+  parts.forEach((p, i) => {
+    if (i % 2 === 0) { if (p) { const sp = el('tspan', {}, t); sp.textContent = p; if (i > 0) sp.setAttribute('dy', '-3'); } }
+    else { const sp = el('tspan', { dy: '3', 'font-size': '0.78em' }, t); sp.textContent = p; }
+  });
+  return t;
+}
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', { html: k[0] }), h('b', { html: k[1] })))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', disabled: it[2] === true, html: subz(it[1]), onclick: () => cb(it[0]) })));
+}
+function rng(label, min, max, step, get, set, fmtFn) {
+  const out = h('b', null, fmtFn(get()));
+  const inp = h('input', { type: 'range', min, max, step, 'aria-label': label });
+  inp.value = get();
+  inp.addEventListener('input', () => { set(+inp.value); out.textContent = fmtFn(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', { html: subz(label) + ' = ' }, out), inp);
+}
+let SVGN = 0;
+
+/* ---------- aides de dessin ---------- */
+function mkSvg(vb, label) { return el('svg', { class: 'g', viewBox: vb, role: 'img', 'aria-label': label }); }
+function figEl(node, cap, maxw) { return h('figure', { class: 'fig' }, h('div', { class: 'gwrap', style: maxw ? 'max-width:' + maxw + 'px' : null }, node), h('figcaption', { html: cap })); }
+function figRow(list) { return h('div', { class: 'figrow' }, list); }
+function arrowMk(svg) {
+  const d = el('defs', {}, svg), id = 'am' + (++SVGN), m = el('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, d);
+  el('path', { d: 'M0 0L10 5L0 10Z', fill: 'var(--accent-ink)' }, m);
+  return 'url(#' + id + ')';
+}
+function dimH(svg, ar, x1, x2, y, label) {
+  el('line', { x1: x1.toFixed(1), x2: x2.toFixed(1), y1: y, y2: y, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: ((x1 + x2) / 2).toFixed(1), y: y - 5, style: 'font-size:11.5px' }, label);
+}
+function dimV(svg, ar, x, y1, y2, label, tx) {
+  el('line', { x1: x, x2: x, y1, y2, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: tx, y: (y1 + y2) / 2 + 4, style: 'font-size:11.5px' }, label);
+}
+function hatchDefs(svg, id) {
+  const d = el('defs', {}, svg), p = el('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, d);
+  el('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'hatchln' }, p);
+}
+
+function hydrateFigs(root) {
+  root.querySelectorAll('[data-fig]').forEach(ph => {
+    const f = FIGS[ph.getAttribute('data-fig')];
+    if (!f) { ph.remove(); return; }
+    try { ph.replaceWith(f()); } catch (e) { console.error('figure ' + ph.getAttribute('data-fig'), e); ph.remove(); }
+  });
+}
+function shuffled(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ===== modèle du palan ===== */
 const G=9.81;
 function buildModel(p,o){
   o=o||{};
@@ -578,62 +501,9 @@ function stateAt(M,t){
   const C=phase==='acc'?M.Ca:phase==='cst'?M.Cc:phase==='dec'?M.Cd:M.Chold;
   return {phase,d,v,w,wS,N:wS*60/(2*Math.PI),C,P:C*wS,height:s>0?d:M.h-d};
 }
-//#MODEL-END
+/* ===== simulateur ===== */
 
-const $=s=>document.querySelector(s);
-const fmt=(x,d=2)=>Number.isFinite(x)?x.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
-const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const P={m:125,h:1.0,vmax:0.17,a:1.5,eta:0.85,dir:1,Cn:1.0,Cmax:1.2,Nmax:2400,
-  Z2:12,Z3a:60,Z3b:12,Z4:120,Rmm:30,Jm:1.5,J3:5,J4:50};
-let Mth=buildModel(P), Mr=buildReal(P,Mth), mode='re', differs=false;
-const AM=()=>mode==='re'?Mr:Mth;
-
-/* ---------- Réglages ---------- */
-const SL=[
-  {k:'m',l:'Masse de la charge',u:'kg',min:5,max:250,step:1,d:0,g:'grpSt'},
-  {k:'h',l:'Course',u:'m',min:0.1,max:4,step:0.05,d:2,g:'grpDy'},
-  {k:'vmax',l:'Vitesse maximale demandée',u:'m/s',min:0.03,max:0.4,step:0.01,d:2,g:'grpDy'},
-  {k:'a',l:'Accélération demandée',u:'m/s²',min:0.05,max:4,step:0.05,d:2,g:'grpDy'},
-  {k:'eta',l:'Rendement de la chaîne',u:'',min:0.5,max:1,step:0.01,d:2,g:'grpSt'},
-  {k:'Cn',l:'Couple permanent Cn',u:'N·m',min:0.1,max:5,step:0.05,d:2,g:'grpSt',sub:'Moteur'},
-  {k:'Cmax',l:'Couple maximal Cmax',u:'N·m',min:0.2,max:10,step:0.05,d:2,g:'grpDy',sub:'Moteur'},
-  {k:'Nmax',l:'Vitesse maximale Nmax',u:'tr/min',min:500,max:6000,step:50,d:0,g:'grpDy'}
-];
-SL.forEach(c=>{
-  if(c.sub){const h=document.createElement('div');h.className='sub';h.textContent=c.sub;$('#'+c.g).appendChild(h);}
-  const r=document.createElement('div');r.className='row';
-  r.innerHTML=`<label for="in-${c.k}">${c.l}</label><output id="out-${c.k}" for="in-${c.k}"></output><input type="range" id="in-${c.k}" min="${c.min}" max="${c.max}" step="${c.step}" value="${P[c.k]}">`;
-  $('#'+c.g).appendChild(r);
-  const inp=r.querySelector('input'),out=r.querySelector('output');
-  const show=()=>{out.textContent=fmt(+inp.value,c.d)+(c.u?' '+c.u:'')};
-  show();
-  inp.addEventListener('input',()=>{P[c.k]=parseFloat(inp.value);show();update();});
-});
-const ADV=[
-  {k:'Z2',l:'Z₂ (dents)',min:6},{k:'Z3a',l:'Z₃ₐ (dents)',min:6},{k:'Z3b',l:'Z₃ᵦ (dents)',min:6},{k:'Z4',l:'Z₄ (dents)',min:6},
-  {k:'Rmm',l:'Rayon tambour R (mm)',min:5},{k:'Jm',l:'J moteur (kg·cm²)',min:0.01},
-  {k:'J3',l:'J roue double 3 (kg·cm²)',min:0.01},{k:'J4',l:'J roue 4 + tambour (kg·cm²)',min:0.01}
-];
-ADV.forEach(c=>{
-  const l=document.createElement('label');l.setAttribute('for','adv-'+c.k);
-  l.innerHTML=`${c.l}<input type="number" id="adv-${c.k}" value="${P[c.k]}" min="${c.min}" step="any">`;
-  $('#advGrid').appendChild(l);
-  l.querySelector('input').addEventListener('input',e=>{
-    const v=parseFloat(e.target.value);
-    if(Number.isFinite(v)&&v>=c.min){P[c.k]=v;update();}
-  });
-});
-document.querySelectorAll('input[name=dir]').forEach(r=>r.addEventListener('change',()=>{
-  P.dir=parseInt(document.querySelector('input[name=dir]:checked').value,10);update();
-}));
-document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{
-  mode=document.querySelector('input[name=mode]:checked').value;
-  t=Math.min(t,AM().T);
-  refreshMode();drawCharts();renderChecks();render();
-}));
-
-/* ---------- Échelles et graphiques ---------- */
 function niceScale(lo,hi,n){
   if(hi-lo<1e-9){hi=lo+1;}
   const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),nm=raw/mag;
@@ -669,7 +539,7 @@ function drawTime(host,cfg,TX){
   xs.ticks.filter(t=>t<=TX+1e-9).forEach(t=>{g+=`<line class="axl" x1="${X(t)}" x2="${X(t)}" y1="${H-MB}" y2="${H-MB+4}"/><text x="${X(t)}" y="${H-MB+16}" text-anchor="middle">${fmt(t,xs.dec)}</text>`;});
   const A=AM();
   let b='';
-  if(!A.stuck){b=`<rect class="band" x="${X(0)}" y="${MT}" width="${X(A.ta1)-X(0)}" height="${H-MT-MB}"/><rect class="band" x="${X(A.T-A.ta2)}" y="${MT}" width="${X(A.T)-X(A.T-A.ta2)}" height="${H-MT-MB}"/>`;}
+  if(!A.stuck){b=`<rect class="cband" x="${X(0)}" y="${MT}" width="${X(A.ta1)-X(0)}" height="${H-MT-MB}"/><rect class="cband" x="${X(A.T-A.ta2)}" y="${MT}" width="${X(A.T)-X(A.T-A.ta2)}" height="${H-MT-MB}"/>`;}
   let ln='';
   (cfg.lines||[]).forEach(l=>{
     ln+=`<line class="${l.cls}" x1="${ML}" x2="${W-MR}" y1="${Y(l.y)}" y2="${Y(l.y)}"/>`;
@@ -724,8 +594,6 @@ function drawCharts(){
     drawCW($('#ch-cw'))
   ];
 }
-
-/* ---------- Scène animée ---------- */
 let ST=null;
 function gearD(Z,r,dep){
   const st=2*Math.PI/Z;let d='';
@@ -750,7 +618,7 @@ function buildStage(){
   const left=Math.min(c2.x-Math.max(r2,50),c3.x-Math.max(r3a,50),c4.x-r4)-12;
   const right=Math.max(c4.x+r4,rulerX+60)+8;
   const bottom=yLow+44+26;
-  const mk=(cls,r)=>`<g class="mk"><line class="spoke ${cls}" x1="0" y1="0" x2="${(r*0.78).toFixed(1)}" y2="0"/><circle cx="${(r*0.78).toFixed(1)}" cy="0" r="${Math.max(2.2,r*0.07).toFixed(1)}" class="${cls}" style="fill:var(--bg);stroke-width:2"/></g>`;
+  const mk=(cls,r)=>`<g class="spk"><line class="spoke ${cls}" x1="0" y1="0" x2="${(r*0.78).toFixed(1)}" y2="0"/><circle cx="${(r*0.78).toFixed(1)}" cy="0" r="${Math.max(2.2,r*0.07).toFixed(1)}" class="${cls}" style="fill:var(--bg);stroke-width:2"/></g>`;
   const gear=(id,cx,cy,cls,Z,r,spk)=>`<g id="${id}" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})"><path class="gear ${cls}" d="${gearD(Z,r,dep)}"/>${mk(spk,r)}<circle class="hub" r="2.4"/></g>`;
   let drumSp='';for(let i=0;i<8;i++){const an=i*Math.PI/4;drumSp+=`<line x1="0" y1="0" x2="${(rd*Math.cos(an)).toFixed(1)}" y2="${(rd*Math.sin(an)).toFixed(1)}" stroke="var(--c4)" stroke-width="1" opacity=".5"/>`;}
   const svg=`<svg id="stage" viewBox="${left.toFixed(1)} ${top.toFixed(1)} ${(right-left).toFixed(1)} ${(bottom-top).toFixed(1)}" role="img" aria-label="Animation du palan : moteur, réducteur à deux étages, tambour et charge">
@@ -771,16 +639,16 @@ function buildStage(){
     <polygon id="rmk" points="0,0 -9,-5 -9,5" fill="var(--sc)" transform="translate(${(rulerX-3).toFixed(1)} ${yLow.toFixed(1)})"/>
     <g id="ld" transform="translate(${cableX.toFixed(1)} ${yLow.toFixed(1)})"><rect class="load" x="-32" y="0" width="64" height="44" rx="3"/><text class="lbl" x="0" y="20" text-anchor="middle" style="font-size:13px">5 · ${fmt(P.m,0)} kg</text><circle cx="0" cy="33" r="2.6" style="fill:var(--fg)"/><text x="6" y="37" style="font-size:10px">G₅</text></g>
   </svg>`;
+  if(STAGE_HOST){STAGE_HOST.innerHTML=svg.replace(/ id="[^"]*"/g,'');return;}
   $('#stageHost').innerHTML=svg;
   ST={c2,c3,c4,cableX,rulerX,yHigh,yLow,Lpx,
     g2:$('#g2'),g3:$('#g3a'),g3b:$('#g3b'),g4:$('#g4'),ld:$('#ld'),cab:$('#cab'),rmk:$('#rmk'),
     gh:$('#gh'),ghr:$('#ghr'),gmk:$('#gmk'),ght:$('#ght'),
     n2:$('#n2'),n3:$('#n3'),n4:$('#n4')};
 }
-const clamp=(x,a,b)=>Math.min(Math.max(x,a),b);
 function setRot(g,c,deg,vis){
   g.setAttribute('transform',`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)}) rotate(${(deg%360).toFixed(2)})`);
-  const mk=g.querySelector('.mk');
+  const mk=g.querySelector('.spk');
   if(mk)mk.style.opacity=clamp(1.15-vis/14,0.1,1).toFixed(2);
 }
 const PH={acc:'accélération',cst:'palier',dec:'décélération',stop:'arrêt',stuck:'bloquée'};
@@ -816,8 +684,6 @@ function render(){
   charts.forEach(c=>c.setT(t));
   if(playing)$('#scrub').value=Math.round(clamp(t/A.T,0,1)*1000);
 }
-
-/* ---------- Vérifications, messages et valeurs du cours ---------- */
 function state(r){return r<=0.9?'ok':r<=1?'warn':'ko'}
 const LAB={ok:'OK',warn:'Limite',ko:'Dépassé'};
 function checkRows(rows){
@@ -869,14 +735,9 @@ function refreshMode(){
   }
   if(ST&&ST.gh){if(mode==='re'&&differs)ST.gh.removeAttribute('hidden');else ST.gh.setAttribute('hidden','');}
 }
-function renderInertia(){
-  const pt=[['Rotor moteur',Mth.parts.motor,'var(--c2)'],['Roue double 3',Mth.parts.s3,'var(--c3)'],['Roue 4 et tambour',Mth.parts.s4,'var(--c4)'],['Charge',Mth.parts.load,'var(--c5)']];
-  $('#inBar').innerHTML=pt.map(q=>`<i style="width:${(q[1]/Mth.Je*100).toFixed(2)}%;background:${q[2]}"></i>`).join('');
-  $('#inLeg').innerHTML=pt.map(q=>`<span><em style="background:${q[2]}"></em>${q[0]} : <b class="v">${fmt(q[1]*1e4,2)}</b> kg·cm² (${fmt(q[1]/Mth.Je*100,0)} %)</span>`).join('')+`<span><em style="background:var(--fg)"></em>Total <var>J</var><sub>e</sub> : <b class="v">${fmt(Mth.Je*1e4,2)}</b> kg·cm²</span>`;
-}
-let bound=null;
-function renderCourse(){
-  if(!bound)bound=[...document.querySelectorAll('[data-v]')];
+function fillLive(root){
+  recompute();
+  const bound=[...root.querySelectorAll('[data-v]')];
   const M=Mth;
   const nm=['le rotor du moteur','la roue double 3','la roue 4 avec le tambour','la charge'];
   const ps=[M.parts.motor,M.parts.s3,M.parts.s4,M.parts.load];
@@ -896,57 +757,624 @@ function renderCourse(){
     CsMax:fmt(Math.max(M.Chold,M.Cl),2),CnSet:fmt(P.Cn,2),CnMsg:Math.max(M.Chold,M.Cl)<=P.Cn?'le statique est tenu.':'le statique n\'est pas tenu, il faut un moteur de couple permanent plus élevé.',
     CnNeed:fmt(Math.max(M.Chold,M.Cl,M.Crms),2),CmaxSet:fmt(P.Cmax,2),
     Vlim:fmt(M.Vlim,3),VlimMin:fmt(M.Vlim*60,1),VmaxSet:fmt(P.vmax,2),
-    VlimMsg:P.vmax<=M.Vlim?'La vitesse demandée est atteignable.':'La vitesse demandée dépasse celle que le moteur permet : en réel, le palier plafonne à V_lim.',
+    VlimMsg:P.vmax<=M.Vlim?'La vitesse demandée est atteignable.':'La vitesse demandée dépasse celle que le moteur permet : en réel, le palier plafonne à V<sub>lim</sub>.',
     a1lim:fmt(Math.max(0,M.a1lim),2),a2lim:fmt(Math.max(0,M.a2lim),2),
     alimMsg:P.a<=Math.min(M.a1lim,M.a2lim)?'L\'accélération demandée reste compatible avec le couple maximal.':'L\'accélération demandée dépasse ce que le couple maximal permet : réduire a ou choisir un moteur plus fort. En réel, le variateur limite l\'accélération.',
     realMsg:differs?realText():'Le moteur suit la consigne : le profil réel est identique au profil théorique.'
   };
   bound.forEach(e=>{e.innerHTML=V[e.dataset.v]??'';});
 }
-
-/* ---------- Boucle ---------- */
-let t=0,playing=!reduce,rate=0.5,last=null;
-const HOLD=0.6;
-function setPlayLabel(){$('#play').textContent=playing?'Pause':'Lecture';}
-$('#play').addEventListener('click',()=>{playing=!playing;last=null;setPlayLabel();});
-$('#reset').addEventListener('click',()=>{t=0;$('#scrub').value=0;render();});
-$('#rate').addEventListener('change',e=>{rate=parseFloat(e.target.value);});
-$('#scrub').addEventListener('input',e=>{playing=false;setPlayLabel();t=(parseInt(e.target.value,10)/1000)*AM().T;render();});
-function frame(ts){
-  if(last==null)last=ts;
-  const dt=Math.min((ts-last)/1000,0.1);last=ts;
-  if(playing){t+=dt*rate;if(t>=AM().T+HOLD)t=0;render();}
-  requestAnimationFrame(frame);
+/* ===== atelier ===== */
+/* ================= Atelier 1 : le palan (simulateur) ================= */
+const reduce = reduced();
+const fmt = (x, d = 2) => Number.isFinite(x) ? fx(x, d) : '–';
+const P0 = { m: 125, h: 1.0, vmax: 0.17, a: 1.5, eta: 0.85, dir: 1, Cn: 1.0, Cmax: 1.2, Nmax: 2400, Z2: 12, Z3a: 60, Z3b: 12, Z4: 120, Rmm: 30, Jm: 1.5, J3: 5, J4: 50 };
+const P = Object.assign({}, P0);
+let t = 0, playing = !reduce, rate = 0.5, mode = 're', differs = false, firstSim = true;
+const HOLD = 0.6;
+let Mth = buildModel(P), Mr = buildReal(P, Mth);
+const AM = () => mode === 're' ? Mr : Mth;
+function recompute() {
+  Mth = buildModel(P); Mr = buildReal(P, Mth);
+  differs = Mr.stuck || Mr.a1 < P.a - 1e-9 || Mr.a2 < P.a - 1e-9 || Mr.vp < Mth.vp - 1e-9;
+  t = Math.min(t, AM().T);
 }
-function update(){
-  Mth=buildModel(P);
-  Mr=buildReal(P,Mth);
-  differs=Mr.stuck||Mr.a1<P.a-1e-9||Mr.a2<P.a-1e-9||Mr.vp<Mth.vp-1e-9;
-  t=Math.min(t,AM().T);
-  buildStage();refreshMode();drawCharts();renderChecks();renderInertia();renderCourse();render();
+const SL = [
+  { k: 'm', l: 'Masse de la charge', u: 'kg', min: 5, max: 250, step: 1, d: 0, g: 'grpSt' },
+  { k: 'h', l: 'Course', u: 'm', min: 0.1, max: 4, step: 0.05, d: 2, g: 'grpDy' },
+  { k: 'vmax', l: 'Vitesse maximale demandée', u: 'm/s', min: 0.03, max: 0.4, step: 0.01, d: 2, g: 'grpDy' },
+  { k: 'a', l: 'Accélération demandée', u: 'm/s²', min: 0.05, max: 4, step: 0.05, d: 2, g: 'grpDy' },
+  { k: 'eta', l: 'Rendement de la chaîne', u: '', min: 0.5, max: 1, step: 0.01, d: 2, g: 'grpSt' },
+  { k: 'Cn', l: 'Couple permanent Cn', u: 'N·m', min: 0.1, max: 5, step: 0.05, d: 2, g: 'grpSt', sub: 'Moteur' },
+  { k: 'Cmax', l: 'Couple maximal Cmax', u: 'N·m', min: 0.2, max: 10, step: 0.05, d: 2, g: 'grpDy', sub: 'Moteur' },
+  { k: 'Nmax', l: 'Vitesse maximale Nmax', u: 'tr/min', min: 500, max: 6000, step: 50, d: 0, g: 'grpDy' }
+];
+const ADV = [
+  { k: 'Z2', l: 'Z₂ (dents)', min: 6 }, { k: 'Z3a', l: 'Z₃ₐ (dents)', min: 6 }, { k: 'Z3b', l: 'Z₃ᵦ (dents)', min: 6 }, { k: 'Z4', l: 'Z₄ (dents)', min: 6 },
+  { k: 'Rmm', l: 'Rayon tambour R (mm)', min: 5 }, { k: 'Jm', l: 'J moteur (kg·cm²)', min: 0.01 },
+  { k: 'J3', l: 'J roue double 3 (kg·cm²)', min: 0.01 }, { k: 'J4', l: 'J roue 4 + tambour (kg·cm²)', min: 0.01 }
+];
+function stopSim() { ANIM.fn = null; }
+function drawModeChips() {
+  const m = $('#modeChips'); if (!m) return; m.innerHTML = '';
+  m.append(chipsRow([['th', 'Théorique'], ['re', 'Réel']], mode, v => { mode = v; t = Math.min(t, AM().T); drawModeChips(); refreshMode(); drawCharts(); renderChecks(); render(); }, 'Mode d’affichage'));
 }
-setPlayLabel();
-update();
-t=AM().T*0.3;render();
-$('#scrub').value=300;
-requestAnimationFrame(frame);
-})();
-
-/* ---------- Thème clair / sombre ---------- */
-(function(){
-  const root=document.documentElement,btn=document.getElementById('themeBtn');
-  const mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
-  const isDark=()=>root.dataset.theme?root.dataset.theme==='dark':!!(mq&&mq.matches);
-  const label=()=>{btn.textContent=isDark()?'Mode clair':'Mode sombre';};
-  try{const v=localStorage.getItem('trapeze-theme');if(v==='light'||v==='dark')root.dataset.theme=v;}catch(e){}
-  btn.addEventListener('click',()=>{
-    const n=isDark()?'light':'dark';root.dataset.theme=n;
-    try{localStorage.setItem('trapeze-theme',n);}catch(e){}
-    label();
+function drawDirChips() {
+  const m = $('#dirChips'); if (!m) return; m.innerHTML = '';
+  m.append(chipsRow([[1, 'Montée'], [-1, 'Descente']], P.dir, v => { P.dir = v; drawDirChips(); update(); }, 'Sens du mouvement'));
+}
+function buildControls() {
+  SL.forEach(c => {
+    if (c.sub) $('#' + c.g).appendChild(h('div', { class: 'sub' }, c.sub));
+    const r = document.createElement('div'); r.className = 'srow';
+    r.innerHTML = '<label for="in-' + c.k + '">' + c.l + '</label><output id="out-' + c.k + '" for="in-' + c.k + '"></output><input type="range" id="in-' + c.k + '" min="' + c.min + '" max="' + c.max + '" step="' + c.step + '" value="' + P[c.k] + '">';
+    $('#' + c.g).appendChild(r);
+    const inp = r.querySelector('input'), out = r.querySelector('output'), show = () => { out.textContent = fmt(+inp.value, c.d) + (c.u ? ' ' + c.u : ''); };
+    show();
+    inp.addEventListener('input', () => { P[c.k] = parseFloat(inp.value); show(); update(); });
   });
-  if(mq&&mq.addEventListener)mq.addEventListener('change',label);
-  label();
-})();
-</script>
+  ADV.forEach(c => {
+    const l = document.createElement('label'); l.setAttribute('for', 'adv-' + c.k);
+    l.innerHTML = c.l + '<input type="number" id="adv-' + c.k + '" value="' + P[c.k] + '" min="' + c.min + '" step="any">';
+    $('#advGrid').appendChild(l);
+    l.querySelector('input').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v) && v >= c.min) { P[c.k] = v; update(); } });
+  });
+}
+function update() {
+  recompute(); buildStage(); refreshMode(); drawCharts(); renderChecks(); render();
+}
+function setPlayLabel() { const b = $('#play'); if (b) b.textContent = playing ? 'Pause' : 'Lecture'; }
+function mountSim(root) {
+  root.innerHTML =
+    '<h2>Le palan : trapèze de vitesse et choix du moteur</h2>' +
+    '<p>Un moteur, un réducteur à deux étages, un tambour et une charge de masse <var>m</var>. Réglez la consigne en trapèze et les limites du moteur : l’animation, les courbes et les vérifications se mettent à jour. Deux dimensionnements : <span class="tag tag-st">statique</span> (couple permanent) et <span class="tag tag-dy">dynamique</span> (vitesse maximale et couple d’accélération).</p>' +
+    '<div class="tp"><div class="two"><div class="panel">' +
+    '<div id="modeChips"></div><p id="modeNote" class="note" aria-live="polite"></p>' +
+    '<div class="stage-host" id="stageHost"></div>' +
+    '<div class="transport"><button class="btn" id="play" type="button">Pause</button><button class="btn" id="reset" type="button">Début</button>' +
+    '<label class="small" for="rate" style="margin:0">Vitesse de lecture</label><select id="rate"><option value="0.1">× 0,1</option><option value="0.25">× 0,25</option><option value="0.5">× 0,5</option><option value="1">× 1 (temps réel)</option><option value="2">× 2</option></select>' +
+    '<input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Instant du cycle"></div>' +
+    '<dl class="readout"><div><dt>Instant</dt><dd id="ro-t">0,00 s</dd></div><div><dt>Phase</dt><dd id="ro-ph">–</dd></div><div><dt>Vitesse charge</dt><dd id="ro-v"></dd></div><div><dt>Vitesse moteur</dt><dd id="ro-n"></dd></div><div><dt>Couple moteur</dt><dd id="ro-c"></dd></div><div><dt>Puissance moteur</dt><dd id="ro-p"></dd></div></dl>' +
+    '</div><div class="side"><div class="panel"><h3>Réglages</h3><div class="ctl-grid">' +
+    '<div class="grp" id="grpSt"><div class="grp-t"><span class="tag tag-st">Statique</span> charge et couple permanent</div><div class="sub">Charge</div><div id="dirChips"></div></div>' +
+    '<div class="grp" id="grpDy"><div class="grp-t"><span class="tag tag-dy">Dynamique</span> trapèze et limites du moteur</div><div class="sub">Consigne en trapèze</div></div></div>' +
+    '<details class="adv" style="margin-top:12px"><summary>Chaîne cinématique et inerties</summary><div class="adv-grid" id="advGrid"></div></details></div>' +
+    '<div class="panel"><h3>Le moteur convient-il ?</h3>' +
+    '<div class="blk blk-st"><div class="blk-h"><span class="tag tag-st">Statique</span><span>charge maintenue ou vitesse constante</span></div><div id="checksS"></div><div class="limits" id="limS"></div></div>' +
+    '<div class="blk blk-dy"><div class="blk-h"><span class="tag tag-dy">Dynamique</span><span id="chkMode"></span></div><div id="checksD"></div><div class="limits" id="limD"></div></div></div></div></div>' +
+    '<h3>Courbes du cycle</h3><p class="small">Pointillés : la consigne théorique. Trait plein : ce que réalise le moteur avec ses limites. Les bandes colorées marquent l’accélération et la décélération ; le trait vertical suit l’animation.</p>' +
+    '<div class="keyline" aria-hidden="true"><span><svg width="38" height="8"><line x1="0" y1="4" x2="38" y2="4" stroke="var(--sv)" stroke-width="2.2"/></svg>Réel, avec les limites du moteur</span><span><svg width="38" height="8"><line x1="0" y1="4" x2="38" y2="4" stroke="var(--sv)" stroke-width="2.2" stroke-dasharray="6 4" opacity=".6"/></svg>Théorique, consigne demandée</span></div>' +
+    '<div class="charts"><figure class="chart"><h3>Vitesse de la charge</h3><div id="ch-v"></div></figure><figure class="chart"><h3>Accélération de la charge</h3><div id="ch-a"></div></figure>' +
+    '<figure class="chart"><h3>Couple moteur</h3><div id="ch-c"></div><p>Vert pointillé : couple permanent admissible. Rouge : couple maximal.</p></figure>' +
+    '<figure class="chart"><h3>Puissance mécanique du moteur</h3><div id="ch-p"></div><p>Positive : le moteur fournit. Négative : il freine et la charge l’entraîne.</p></figure>' +
+    '<figure class="chart" style="grid-column:1/-1"><h3>Plan couple – vitesse</h3><div id="ch-cw" style="max-width:640px;margin:0 auto"></div><p>Le trajet doit rester dans la zone admissible : vert en continu, bleu en pointe seulement.</p></figure></div></div>';
+  buildControls(); drawModeChips(); drawDirChips();
+  $('#rate').value = String(rate);
+  $('#play').addEventListener('click', () => { playing = !playing; setPlayLabel(); });
+  $('#reset').addEventListener('click', () => { t = 0; $('#scrub').value = 0; render(); });
+  $('#rate').addEventListener('change', e => { rate = parseFloat(e.target.value); });
+  $('#scrub').addEventListener('input', e => { playing = false; setPlayLabel(); t = (parseInt(e.target.value, 10) / 1000) * AM().T; render(); });
+  setPlayLabel(); update();
+  if (firstSim) { t = AM().T * 0.3; firstSim = false; }
+  render(); $('#scrub').value = Math.round(clamp(t / AM().T, 0, 1) * 1000);
+  ANIM.fn = dt => { if (playing) { t += dt * rate; if (t >= AM().T + HOLD) t = 0; render(); } };
+}
+WORKSHOPS.push({ id: 'g1', title: 'Le palan', hint: 'Réglez la consigne en trapèze et les limites du moteur ; observez l’animation, les courbes et les vérifications statique et dynamique.', mount: mountSim, reset: () => { Object.assign(P, P0); t = 0; mode = 're'; playing = !reduce; firstSim = true; } });
 
-</body></html>
+const EXS = {};
+function mountEx(root, cfg) {
+  const S = EXS[cfg.key] || (EXS[cfg.key] = { flt: 'all', ex: null, pick: null, counted: false, shown: false, score: { ok: 0, tot: 0 } });
+  if (!S.ex) S.ex = cfg.gen(S.flt);
+  const ex = S.ex; root.innerHTML = '';
+  root.append(h('h2', null, cfg.title), h('p', null, cfg.intro));
+  root.append(chipsRow(cfg.filters, S.flt, v => { S.flt = v; S.ex = cfg.gen(v); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); }, 'Type d’exercice'));
+  root.append(h('p', { class: 'scoreline', id: 'ex-score' }, 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot));
+  root.append(h('div', { class: 'exs' }, h('p', { class: 'small' }, ex.tag), h('p', { html: ex.text })));
+  if (ex.fig) root.append(ex.fig());
+  const cho = h('div', { id: 'ex-cho' });
+  const drawCho = () => { cho.innerHTML = ''; if (ex.choice) cho.append(h('p', { class: 'small' }, 'Quelle est cette liaison ?'), chipsRow(ex.choice.options, S.pick, v => { S.pick = v; drawCho(); }, 'Choix de la liaison')); };
+  root.append(cho); drawCho();
+  const row = h('div', { class: 'fieldrow' }), ins = {};
+  ex.fields.forEach(f => {
+    const inp = h('input', { type: 'text', inputmode: 'decimal', id: 'ex-' + cfg.key + '-' + f.id, autocomplete: 'off', 'aria-label': f.label, placeholder: 'ex. 12,5' });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    ins[f.id] = inp; row.append(h('label', { class: 'fld' }, h('span', { html: subz(f.label) }), inp));
+  });
+  root.append(row);
+  const res = h('div', { class: 'verdict', hidden: true, 'aria-live': 'polite' }), sol = h('div', { class: 'solbox', hidden: !S.shown });
+  const count = ok => { if (!S.counted) { S.counted = true; S.score.tot++; if (ok) S.score.ok++; $('#ex-score').textContent = 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot; } };
+  function check() {
+    const marks = ex.fields.map(f => { const v = parseAns(ins[f.id].value), ok = okAns(v, f.val, 0.02, f.abs != null ? f.abs : 0.01); ins[f.id].className = ok ? 'okk' : 'nok'; return { ok, v }; });
+    const chOk = !ex.choice || S.pick === ex.choice.ans, all = marks.every(m => m.ok) && chOk;
+    res.hidden = false; res.className = 'verdict ' + (all ? 'yes' : 'no');
+    res.textContent = all ? 'Correct.' : ex.choice && !S.pick ? 'Choisissez d’abord une liaison.' : marks.some(m => !isFinite(m.v)) ? 'Une réponse est vide ou illisible. Écrivez un nombre (virgule ou point).' : !chOk ? 'La liaison n’est pas la bonne : comparez les deux torseurs aux liaisons du cours.' : 'Pas encore. Reprenez le calcul ou affichez la solution.';
+    count(all);
+  }
+  sol.innerHTML = '<b>Solution</b>' + ex.sol + (ex.fields.length ? '<p class="small">Réponses attendues : ' + ex.fields.map(f => subz(f.label) + ' = ' + fx(f.val, 3)).join(' ; ') + '</p>' : '');
+  if (ex.solNode) sol.append(ex.solNode());
+  root.append(h('div', { class: 'files', style: 'margin:8px 0' },
+    h('button', { class: 'btn pri', type: 'button', onclick: check }, 'Vérifier'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.shown = true; sol.hidden = false; count(false); } }, 'Voir la solution'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.ex = cfg.gen(S.flt); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); $('#scroller').scrollTop = 0; } }, 'Nouvel exercice')), res, sol);
+  root.append(h('p', { class: 'small' }, 'Les réponses numériques sont acceptées à ± 2 %.'));
+  ANIM.fn = null;
+}
+
+
+/* ================= Exercices ================= */
+const F = (id, label, val, abs) => ({ id, label, val, abs: abs == null ? 1e-4 : abs });
+function genTrap(flt) {
+  const kind = pick(flt === 'tri' ? ['tri'] : flt === 'inv' ? ['inv'] : flt === 'trap' ? ['times', 'asym'] : ['times', 'asym', 'tri', 'inv']);
+  const rel = '<p>Rappels : t<sub>a</sub> = V<sub>max</sub>/a ; la distance est l’aire sous la courbe de vitesse ; T = h/V<sub>max</sub> + V<sub>max</sub>/a.</p>';
+  if (kind === 'times') {
+    const V = pick([0.2, 0.25, 0.5, 1, 1.5, 2]), a = pick([0.5, 1, 2, 2.5, 4]), tc = pick([0.5, 1, 2, 3, 4]), ta = V / a, h = V * (ta + tc), T = 2 * ta + tc;
+    return { tag: 'Trapèze symétrique', text: 'Une charge est déplacée d’une course <b>h = ' + fx(h, 3) + ' m</b> avec une loi en trapèze : <b>V<sub>max</sub> = ' + fx(V, 2) + ' m/s</b>, <b>a = ' + fx(a, 2) + ' m/s²</b> (accélération et décélération égales). Déterminer la durée t<sub>a</sub> d’une rampe, la durée t<sub>c</sub> du palier et la durée totale T.',
+      fields: [F('ta', 't_a (s)', ta), F('tc', 't_c (s)', tc), F('T', 'T (s)', T)],
+      sol: rel + '<p>t<sub>a</sub> = ' + fx(V, 2) + '/' + fx(a, 2) + ' = <b>' + fx(ta, 3) + ' s</b>.</p><p>Distance des deux rampes : V²/a = ' + fx(V * V / a, 3) + ' m, donc t<sub>c</sub> = (h − V²/a)/V = (' + fx(h, 3) + ' − ' + fx(V * V / a, 3) + ')/' + fx(V, 2) + ' = <b>' + fx(tc, 3) + ' s</b>.</p><p>T = 2t<sub>a</sub> + t<sub>c</sub> = <b>' + fx(T, 3) + ' s</b>.</p>' };
+  }
+  if (kind === 'asym') {
+    const V = pick([0.5, 1, 2]), a1 = pick([1, 2, 4]), a2 = pick([0.5, 1, 2].filter(x => x !== a1)), tc = pick([1, 2, 3]), t1 = V / a1, t3 = V / a2, h = V * (t1 / 2 + tc + t3 / 2), T = t1 + tc + t3;
+    return { tag: 'Trapèze dissymétrique', text: 'Une charge parcourt <b>h = ' + fx(h, 3) + ' m</b>. La vitesse monte à <b>V<sub>max</sub> = ' + fx(V, 2) + ' m/s</b> avec <b>a<sub>1</sub> = ' + fx(a1, 2) + ' m/s²</b>, reste constante, puis redescend à zéro avec une décélération <b>a<sub>2</sub> = ' + fx(a2, 2) + ' m/s²</b>. Déterminer t<sub>1</sub> (montée), t<sub>3</sub> (descente), t<sub>2</sub> (palier) et T.',
+      fields: [F('t1', 't_1 (s)', t1), F('t3', 't_3 (s)', t3), F('t2', 't_2 (s)', tc), F('T', 'T (s)', T)],
+      sol: '<p>t<sub>1</sub> = V<sub>max</sub>/a<sub>1</sub> = <b>' + fx(t1, 3) + ' s</b> et t<sub>3</sub> = V<sub>max</sub>/a<sub>2</sub> = <b>' + fx(t3, 3) + ' s</b>.</p><p>Δx = V<sub>max</sub>(t<sub>1</sub>/2 + t<sub>2</sub> + t<sub>3</sub>/2), donc t<sub>2</sub> = Δx/V<sub>max</sub> − (t<sub>1</sub> + t<sub>3</sub>)/2 = ' + fx(h / V, 3) + ' − ' + fx((t1 + t3) / 2, 3) + ' = <b>' + fx(tc, 3) + ' s</b>.</p><p>T = t<sub>1</sub> + t<sub>2</sub> + t<sub>3</sub> = <b>' + fx(T, 3) + ' s</b>.</p>' };
+  }
+  if (kind === 'tri') {
+    const pr = pick([[1, 1], [1, 4], [2, 2], [4, 4], [1, 9], [2, 8], [4, 1], [4, 9]]), a = pr[0], h = pr[1], vp = Math.sqrt(a * h), V = vp * pick([1.5, 2, 3]), T = 2 * Math.sqrt(h / a);
+    return { tag: 'Profil triangulaire', text: 'Une charge est déplacée de <b>h = ' + fx(h, 2) + ' m</b> avec <b>V<sub>max</sub> = ' + fx(V, 2) + ' m/s</b> et <b>a = ' + fx(a, 2) + ' m/s²</b> (accélération et décélération égales). Vérifier si V<sub>max</sub> est atteinte ; sinon, déterminer la vitesse de pointe V<sub>p</sub> réellement atteinte et la durée T.',
+      fields: [F('vp', 'V_p (m/s)', vp), F('T', 'T (s)', T)],
+      sol: '<p>Distance des deux rampes à V<sub>max</sub> : V<sub>max</sub>²/a = ' + fx(V * V / a, 2) + ' m, soit plus que h = ' + fx(h, 2) + ' m. La vitesse maximale n’est pas atteinte : le profil est un triangle.</p><p>V<sub>p</sub> = √(h·a) = √(' + fx(h * a, 2) + ') = <b>' + fx(vp, 3) + ' m/s</b>.</p><p>T = 2√(h/a) = <b>' + fx(T, 3) + ' s</b>.</p>' };
+  }
+  const V = pick([0.5, 1, 2]), a = pick([0.5, 1, 2, 4]), tc = pick([1, 2, 3]), ta = V / a, h = V * (ta + tc), T = 2 * ta + tc;
+  return { tag: 'Accélération pour un temps imposé', text: 'Une charge doit parcourir <b>h = ' + fx(h, 3) + ' m</b> en <b>T = ' + fx(T, 3) + ' s</b> avec une loi en trapèze de vitesse maximale <b>V<sub>max</sub> = ' + fx(V, 2) + ' m/s</b> (accélération et décélération égales). Déterminer l’accélération a nécessaire.',
+    fields: [F('a', 'a (m/s²)', a)],
+    sol: '<p>On inverse T = h/V<sub>max</sub> + V<sub>max</sub>/a :</p><p>a = V<sub>max</sub>² / (V<sub>max</sub>·T − h) = ' + fx(V * V, 3) + ' / (' + fx(V * T, 3) + ' − ' + fx(h, 3) + ') = <b>' + fx(a, 3) + ' m/s²</b>.</p>' };
+}
+const G_ = 9.81, ZSETS = [[12, 60, 12, 120], [20, 60, 20, 80], [18, 54, 18, 72], [10, 50, 10, 60], [20, 80, 16, 64]];
+function genDim(flt) {
+  const kind = pick(flt === 'stat' ? ['stat'] : flt === 'dyn' ? ['dyn', 'vlim', 'je'] : ['kin', 'stat', 'je', 'dyn', 'vlim']);
+  const Z = pick(ZSETS), k = (Z[0] / Z[1]) * (Z[2] / Z[3]), m = pick([50, 80, 100, 125, 150, 200]), Rmm = pick([25, 30, 40, 50]), R = Rmm / 1000, eta = pick([0.8, 0.85, 0.9]);
+  const zt = 'Z<sub>2</sub> = ' + Z[0] + ', Z<sub>3a</sub> = ' + Z[1] + ', Z<sub>3b</sub> = ' + Z[2] + ', Z<sub>4</sub> = ' + Z[3];
+  const kF = '<p>k = (Z<sub>2</sub>/Z<sub>3a</sub>)·(Z<sub>3b</sub>/Z<sub>4</sub>) = (' + Z[0] + '/' + Z[1] + ') × (' + Z[2] + '/' + Z[3] + ') = <b>1/' + fx(1 / k, 2) + '</b></p>';
+  if (kind === 'kin') {
+    const V = pick([0.1, 0.2, 0.25, 0.5]), wm = V / (R * k);
+    return { tag: 'Chaîne cinématique', text: 'Le palan a un réducteur à deux étages (' + zt + ') et un tambour de rayon <b>R = ' + Rmm + ' mm</b>. Déterminer l’inverse du rapport de réduction 1/k (avec k = ω<sub>4</sub>/ω<sub>m</sub>), puis la vitesse de rotation ω<sub>m</sub> du moteur (en rad/s) quand la charge monte à <b>V = ' + fx(V, 2) + ' m/s</b>.',
+      fields: [F('ik', '1/k', 1 / k, 0.01), F('wm', 'ω_m (rad/s)', wm, 0.01)],
+      sol: kF + '<p>V = R·k·ω<sub>m</sub>, donc ω<sub>m</sub> = V/(R·k) = ' + fx(V, 2) + '/(' + fx(R, 3) + ' × ' + fx(k, 4) + ') = <b>' + fx(wm, 2) + ' rad/s</b>, soit ' + fx(wm * 60 / TAU, 0) + ' tr/min.</p>' };
+  }
+  if (kind === 'stat') {
+    const Ch = m * G_ * R * k;
+    return { tag: 'Dimensionnement statique', text: 'Une charge de <b>m = ' + m + ' kg</b> est levée par un tambour de rayon <b>R = ' + Rmm + ' mm</b>, avec un rapport de réduction <b>k = 1/' + fx(1 / k, 2) + '</b> et un rendement <b>η = ' + fx(eta, 2) + '</b> (g = 9,81 m/s²). Déterminer le couple moteur de maintien à l’arrêt, le couple à vitesse constante en montée et celui à vitesse constante en descente (en N·m).',
+      fields: [F('Ch', 'C_maintien (N·m)', Ch, 0.001), F('Cm', 'C_montée (N·m)', Ch / eta, 0.001), F('Cd', 'C_descente (N·m)', Ch * eta, 0.001)],
+      sol: '<p>C<sub>maintien</sub> = m·g·R·k = ' + m + ' × 9,81 × ' + fx(R, 3) + ' × ' + fx(k, 4) + ' = <b>' + fx(Ch, 3) + ' N·m</b>.</p><p>Montée : C<sub>maintien</sub>/η = <b>' + fx(Ch / eta, 3) + ' N·m</b>. Descente : C<sub>maintien</sub>·η = <b>' + fx(Ch * eta, 3) + ' N·m</b>.</p><p>Le moteur doit tenir le plus grand : C<sub>n</sub> ≥ ' + fx(Ch / eta, 3) + ' N·m.</p>' };
+  }
+  if (kind === 'je') {
+    const Jm = pick([1, 1.5, 2, 3]), J3 = pick([4, 5, 8]), J4 = pick([40, 50, 80]), s3 = J3 * Math.pow(Z[0] / Z[1], 2), s4 = J4 * k * k, sl = m * R * R * k * k * 1e4, Je = Jm + s3 + s4 + sl;
+    return { tag: 'Inertie équivalente', text: 'Palan à réducteur (' + zt + ', <b>R = ' + Rmm + ' mm</b>, <b>m = ' + m + ' kg</b>). Inerties : rotor <b>J<sub>m</sub> = ' + fx(Jm, 1) + ' kg·cm²</b> ; roue double 3 <b>J<sub>3</sub> = ' + J3 + ' kg·cm²</b> ; roue 4 avec tambour <b>J<sub>4</sub> = ' + J4 + ' kg·cm²</b>. Déterminer l’inertie équivalente J<sub>e</sub> ramenée à l’arbre moteur (en kg·cm²).',
+      fields: [F('Je', 'J_e (kg·cm²)', Je, 0.005)],
+      sol: kF + '<p>J<sub>e</sub> = J<sub>m</sub> + J<sub>3</sub>(Z<sub>2</sub>/Z<sub>3a</sub>)² + J<sub>4</sub>k² + m·R²·k²</p><p>= ' + fx(Jm, 2) + ' + ' + fx(s3, 3) + ' + ' + fx(s4, 3) + ' + ' + fx(sl, 3) + ' = <b>' + fx(Je, 3) + ' kg·cm²</b>.</p><p>Le rotor domine : la charge, ramenée par k², pèse très peu.</p>' };
+  }
+  if (kind === 'dyn') {
+    const a = pick([0.5, 1, 1.5, 2]), Je = pick([1.2, 1.8, 2.5, 3.5]), Cr = pick([0.5, 0.8, 1, 1.2]), al = a / (R * k), dJ = Je * 1e-4 * al;
+    return { tag: 'Dimensionnement dynamique', text: 'En montée, le couple résistant ramené au moteur vaut <b>C<sub>r</sub> = ' + fx(Cr, 2) + ' N·m</b> et l’inertie équivalente <b>J<sub>e</sub> = ' + fx(Je, 1) + ' kg·cm²</b>. Le tambour a un rayon <b>R = ' + Rmm + ' mm</b>, le rapport est <b>k = 1/' + fx(1 / k, 2) + '</b> et le trapèze demande <b>a = ' + fx(a, 2) + ' m/s²</b>. Déterminer l’accélération angulaire α<sub>m</sub> du moteur (en rad/s²), puis le couple moteur pendant l’accélération et pendant la décélération (en N·m).',
+      fields: [F('al', 'α_m (rad/s²)', al, 0.5), F('Ca', 'C_accélération (N·m)', Cr + dJ, 0.001), F('Cd', 'C_décélération (N·m)', Cr - dJ, 0.001)],
+      sol: '<p>α<sub>m</sub> = a/(R·k) = ' + fx(a, 2) + '/(' + fx(R, 3) + ' × ' + fx(k, 4) + ') = <b>' + fx(al, 1) + ' rad/s²</b>.</p><p>J<sub>e</sub>·α<sub>m</sub> = ' + fx(Je * 1e-4, 6) + ' × ' + fx(al, 1) + ' = ' + fx(dJ, 3) + ' N·m.</p><p>Accélération : C<sub>r</sub> + J<sub>e</sub>α<sub>m</sub> = <b>' + fx(Cr + dJ, 3) + ' N·m</b>. Décélération : C<sub>r</sub> − J<sub>e</sub>α<sub>m</sub> = <b>' + fx(Cr - dJ, 3) + ' N·m</b>.</p><p>Le pic est le plus grand en valeur absolue : C<sub>max</sub> ≥ ' + fx(Math.max(Math.abs(Cr + dJ), Math.abs(Cr - dJ)), 3) + ' N·m.</p>' };
+  }
+  const Nmax = pick([1500, 2400, 3000]), wmax = Nmax * TAU / 60, Vl = wmax * R * k;
+  return { tag: 'Vitesse maximale atteignable', text: 'Le moteur a une vitesse maximale <b>N<sub>max</sub> = ' + Nmax + ' tr/min</b>. Le palan a un rapport <b>k = 1/' + fx(1 / k, 2) + '</b> et un tambour de rayon <b>R = ' + Rmm + ' mm</b>. Déterminer la vitesse maximale V<sub>lim</sub> de la charge (en m/s) puis en m/min.',
+    fields: [F('Vl', 'V_lim (m/s)', Vl, 0.0005), F('Vm', 'V_lim (m/min)', Vl * 60, 0.01)],
+    sol: '<p>ω<sub>max</sub> = 2π·N<sub>max</sub>/60 = ' + fx(wmax, 1) + ' rad/s.</p><p>V<sub>lim</sub> = ω<sub>max</sub>·R·k = ' + fx(wmax, 1) + ' × ' + fx(R, 3) + ' × ' + fx(k, 4) + ' = <b>' + fx(Vl, 3) + ' m/s</b> = <b>' + fx(Vl * 60, 2) + ' m/min</b>.</p>' };
+}
+WORKSHOPS.push({ id: 'g2', title: 'Exercices : trapèze', hint: 'Calculez les durées, la vitesse de pointe ou l’accélération d’une loi de vitesse en trapèze.', mount: r => mountEx(r, { key: 'g2', title: 'Exercices : loi de vitesse en trapèze', intro: 'Les données sont tirées au hasard. Utilisez l’aire sous la courbe de vitesse : la distance parcourue est la somme de deux triangles (rampes) et d’un rectangle (palier). Unités : m, m/s, m/s² et s.', filters: [['all', 'Tous'], ['trap', 'Trapèze'], ['tri', 'Triangle'], ['inv', 'Accélération imposée']], gen: genTrap }), reset: () => { delete EXS.g2; } });
+WORKSHOPS.push({ id: 'g3', title: 'Exercices : dimensionnement', hint: 'Ramenez la charge sur l’arbre moteur, calculez les couples statique et dynamique, vérifiez la vitesse maximale.', mount: r => mountEx(r, { key: 'g3', title: 'Exercices : dimensionnement du moteur', intro: 'Chaîne cinématique, couple statique, inertie équivalente, couple d’accélération et vitesse maximale. Utilisez g = 9,81 m/s². Les couples sont en N·m, les inerties en kg·cm² (1 kg·cm² = 10⁻⁴ kg·m²).', filters: [['all', 'Tous'], ['stat', 'Statique'], ['dyn', 'Dynamique']], gen: genDim }), reset: () => { delete EXS.g3; } });
+WORKSHOPS.sort((a, b) => a.id.localeCompare(b.id));
+
+/* ---------- activités (consignes, défi, QCM) ---------- */
+const ACT = {
+  g1: {
+    title: 'Le palan', level: 'Découverte', time: '30 min',
+    goal: 'Relier la loi de vitesse en trapèze aux courbes de couple et de puissance, puis vérifier qu’un moteur convient en statique et en dynamique.',
+    steps: [
+      'Laissez les réglages par défaut et passez de « Théorique » à « Réel ». Repérez sur la courbe de vitesse les trois phases : accélération, palier, décélération.',
+      'Réduisez la course à 0,1 m. Que devient la courbe de vitesse ? Retrouvez la valeur de V<sub>p</sub> dans le cours.',
+      'Bloc <b>statique</b> : changez la masse et le sens (montée ou descente). Comparez les couples de maintien, de montée et de descente au couple permanent C<sub>n</sub>.',
+      'Bloc <b>dynamique</b> : augmentez l’accélération jusqu’à voir des badges « Dépassé ». En mode réel, observez la consigne fantôme et la durée du cycle.',
+      'Baissez C<sub>max</sub> jusqu’à ce que la charge ne monte plus. Quelle comparaison explique ce blocage ?',
+      'Ouvrez « Chaîne cinématique et inerties », modifiez Z<sub>2</sub> et Z<sub>4</sub> et suivez k, la vitesse moteur et le couple.'
+    ],
+    defi: { q: 'Trouvez un moteur (C<sub>n</sub>, C<sub>max</sub>, N<sub>max</sub>) aussi petit que possible qui suit la consigne par défaut sans limitation, avec tous les badges verts ou « Limite ».', a: 'Il faut C<sub>n</sub> ≥ max(couple statique, C<sub>eff</sub>), C<sub>max</sub> ≥ C<sub>pic</sub> et N<sub>max</sub> ≥ N<sub>p</sub>. Le cours donne ces trois valeurs minimales dans l’encadré « Moteur minimal pour la consigne demandée ».' },
+    course: 'trapeze',
+    qcm: [
+      { q: 'V<sub>max</sub> = 0,5 m/s et a = 2 m/s². La durée d’une rampe vaut :', o: ['0,25 s', '1 s', '4 s', '0,5 s'], a: 0, w: 't<sub>a</sub> = V<sub>max</sub>/a = 0,5/2 = 0,25 s.' },
+      { q: 'Quelle grandeur représente l’aire sous la courbe de vitesse ?', o: ['La distance parcourue', 'L’accélération', 'Le couple moteur', 'La puissance'], a: 0, w: 'Le déplacement est l’intégrale de la vitesse.' },
+      { q: 'Si la course est plus courte que V<sub>max</sub>²/a, le profil devient :', o: ['Un triangle', 'Un rectangle', 'Un trapèze plus long', 'Une parabole'], a: 0, w: 'La vitesse maximale n’est jamais atteinte : plus de palier, V<sub>p</sub> = √(h·a).' },
+      { q: 'Quel est le couple de maintien d’une charge à l’arrêt ?', o: ['m·g·R·k', 'm·g·R', 'm·g·R/k', 'J<sub>e</sub>·α<sub>m</sub>'], a: 0, w: 'Le poids crée m·g·R sur le tambour, ramené au moteur par le rapport k.' },
+      { q: 'Avec η &lt; 1, le couple statique est le plus élevé :', o: ['En montée', 'En descente', 'À l’arrêt uniquement', 'Il est identique partout'], a: 0, w: 'En montée les pertes s’opposent au moteur : m·g·R·k/η. En descente elles l’aident : m·g·R·k·η.' },
+      { q: 'En montée, pendant la phase d’accélération, le couple moteur vaut :', o: ['C<sub>r</sub> + J<sub>e</sub>·α<sub>m</sub>', 'C<sub>r</sub> − J<sub>e</sub>·α<sub>m</sub>', 'J<sub>e</sub>·α<sub>m</sub> seul', 'C<sub>r</sub> seul'], a: 0, w: 'Le moteur porte la charge (C<sub>r</sub>) et la met en vitesse (J<sub>e</sub>·α<sub>m</sub>).' },
+      { q: 'Le pic de couple doit rester inférieur à :', o: ['C<sub>max</sub>', 'C<sub>n</sub>', 'N<sub>max</sub>', 'η'], a: 0, w: 'Le pic est de courte durée : on le compare à C<sub>max</sub>. C<sub>n</sub> se compare au couple permanent et au couple efficace.' },
+      { q: 'Quand la consigne dépasse les limites du moteur, en mode réel :', o: ['Le variateur limite le couple : rampes adoucies et cycle plus long', 'Le moteur suit quand même', 'La charge s’arrête toujours', 'Le trapèze devient un rectangle'], a: 0, w: 'Les valeurs réalisées sont a<sub>1</sub> = min(a, a<sub>max,acc</sub>), a<sub>2</sub> = min(a, a<sub>max,déc</sub>) et V = min(V<sub>max</sub>, V<sub>lim</sub>).' }
+    ]
+  },
+  g2: {
+    title: 'Exercices : trapèze', level: 'Entraînement', time: '20 min',
+    goal: 'Calculer les durées, la vitesse de pointe ou l’accélération d’une loi en trapèze à partir de la course.',
+    steps: [
+      'Faites un croquis de v(t) : montée, palier, descente.',
+      'Calculez la durée d’une rampe t<sub>a</sub> = V<sub>max</sub>/a et la distance V²/a des deux rampes.',
+      'Comparez cette distance à la course : si elle est plus grande, le profil est un triangle.',
+      'Sinon, t<sub>c</sub> = (h − V²/a)/V et T = 2t<sub>a</sub> + t<sub>c</sub>.',
+      'Contrôlez par l’aire : V<sub>max</sub>(t<sub>1</sub> + t<sub>2</sub>) doit redonner la course (cas symétrique).'
+    ],
+    defi: { q: 'Une charge doit parcourir 2 m en 4 s avec V<sub>max</sub> = 1 m/s. Quelle accélération faut-il ?', a: 'a = V²/(V·T − h) = 1/(4 − 2) = 0,5 m/s². La rampe dure 2 s, le palier 0 s : le profil est juste triangulaire (V<sub>p</sub> = V<sub>max</sub>).' },
+    course: 'trapeze',
+    qcm: [
+      { q: 'V<sub>max</sub> = 1 m/s, a = 2 m/s², h = 5 m. La durée totale T vaut :', o: ['5,5 s', '5 s', '4,5 s', '6 s'], a: 0, w: 'T = h/V<sub>max</sub> + V<sub>max</sub>/a = 5 + 0,5 = 5,5 s (t<sub>a</sub> = 0,5 s, t<sub>c</sub> = 4,5 s).' },
+      { q: 'h = 1 m, a = 1 m/s², V<sub>max</sub> = 2 m/s. La durée du cycle vaut :', o: ['2 s', '1 s', '2,5 s', '3 s'], a: 0, w: 'V<sub>max</sub>²/a = 4 m &gt; h : profil triangulaire, V<sub>p</sub> = √(h·a) = 1 m/s, T = 2√(h/a) = 2 s.' },
+      { q: 'h = 3 m, T = 4 s, V<sub>max</sub> = 1 m/s. L’accélération vaut :', o: ['1 m/s²', '0,75 m/s²', '3 m/s²', '0,33 m/s²'], a: 0, w: 'a = V²/(V·T − h) = 1/(4 − 3) = 1 m/s².' },
+      { q: 'V<sub>max</sub> = 1 m/s, t<sub>1</sub> = 1 s, t<sub>2</sub> = 2 s, t<sub>3</sub> = 2 s. La course vaut :', o: ['3,5 m', '5 m', '4 m', '3 m'], a: 0, w: 'Δx = V<sub>max</sub>(t<sub>1</sub>/2 + t<sub>2</sub> + t<sub>3</sub>/2) = 0,5 + 2 + 1 = 3,5 m.' },
+      { q: 'À quelle condition V<sub>max</sub> est-elle atteinte (cas symétrique) ?', o: ['h ≥ V<sub>max</sub>²/a', 'h ≤ V<sub>max</sub>²/a', 'h = V<sub>max</sub>·a', 'Toujours'], a: 0, w: 'Les deux rampes parcourent V<sub>max</sub>²/a ; il faut que la course soit au moins égale.' }
+    ]
+  },
+  g3: {
+    title: 'Exercices : dimensionnement', level: 'Entraînement', time: '25 min',
+    goal: 'Ramener la charge sur l’arbre moteur et calculer les couples et la vitesse à comparer aux caractéristiques du moteur.',
+    steps: [
+      'Calculez le rapport k à partir des quatre nombres de dents.',
+      'Ramenez la vitesse : ω<sub>m</sub> = V/(R·k), α<sub>m</sub> = a/(R·k).',
+      'Statique : m·g·R·k, divisé par η en montée, multiplié par η en descente.',
+      'Dynamique : C<sub>r</sub> ± J<sub>e</sub>·α<sub>m</sub> pendant les rampes, avec J<sub>e</sub> en kg·m².',
+      'Comparez : C<sub>statique</sub> et C<sub>eff</sub> à C<sub>n</sub>, C<sub>pic</sub> à C<sub>max</sub>, N<sub>p</sub> à N<sub>max</sub>.'
+    ],
+    defi: { q: 'Pourquoi l’inertie de la charge pèse-t-elle si peu dans J<sub>e</sub>, alors que la charge est lourde ?', a: 'Elle est ramenée par m·R²·k². Avec k = 1/50, le facteur k² = 1/2500 la rend négligeable devant le rotor du moteur.' },
+    course: 'arbre',
+    qcm: [
+      { q: 'Z<sub>2</sub> = 12, Z<sub>3a</sub> = 60, Z<sub>3b</sub> = 12, Z<sub>4</sub> = 120. Le rapport k vaut :', o: ['1/50', '1/10', '1/5', '1/25'], a: 0, w: 'k = (12/60)·(12/120) = 0,2 × 0,1 = 1/50.' },
+      { q: 'V = 0,2 m/s, R = 0,04 m, k = 1/50. La vitesse du moteur vaut :', o: ['250 rad/s', '0,4 rad/s', '5 rad/s', '10 rad/s'], a: 0, w: 'ω<sub>m</sub> = V/(R·k) = 0,2/(0,04 × 0,02) = 250 rad/s.' },
+      { q: 'm·g·R·k = 1 N·m et η = 0,8. Couples à vitesse constante en montée et en descente :', o: ['1,25 N·m et 0,8 N·m', '0,8 N·m et 1,25 N·m', '1 N·m et 1 N·m', '1,25 N·m et 1,25 N·m'], a: 0, w: 'Montée : 1/0,8 = 1,25. Descente : 1 × 0,8 = 0,8.' },
+      { q: 'm = 100 kg, R = 0,05 m, k = 1/50. Le couple de maintien vaut environ :', o: ['0,98 N·m', '49 N·m', '9,81 N·m', '0,098 N·m'], a: 0, w: 'm·g·R·k = 100 × 9,81 × 0,05 × 0,02 ≈ 0,98 N·m.' },
+      { q: 'Pourquoi l’inertie de la charge est-elle négligeable dans J<sub>e</sub> ?', o: ['Elle est multipliée par k², très petit', 'Elle est divisée par k²', 'Elle est nulle', 'Le moteur la compense'], a: 0, w: 'Le terme est m·R²·k² : avec un grand rapport de réduction, il devient très faible.' },
+      { q: 'C<sub>r</sub> = 1 N·m et J<sub>e</sub>·α<sub>m</sub> = 0,5 N·m en montée. Couples en accélération et en décélération :', o: ['1,5 N·m et 0,5 N·m', '0,5 N·m et 1,5 N·m', '1 N·m et 1 N·m', '1,5 N·m et 1,5 N·m'], a: 0, w: 'Accélération : C<sub>r</sub> + J<sub>e</sub>α<sub>m</sub> = 1,5. Décélération : C<sub>r</sub> − J<sub>e</sub>α<sub>m</sub> = 0,5.' },
+      { q: 'N<sub>max</sub> = 3000 tr/min, R = 0,05 m, k = 1/50. V<sub>lim</sub> vaut environ :', o: ['0,31 m/s', '3,1 m/s', '0,031 m/s', '15,7 m/s'], a: 0, w: 'ω<sub>max</sub> = 314 rad/s et V<sub>lim</sub> = 314 × 0,05 × 0,02 ≈ 0,31 m/s.' }
+    ]
+  }
+};
+
+/* ---------- figures du cours ---------- */
+const FIGS = {};
+let STAGE_HOST = null;
+function axesTP(svg, x0, y0, x1, y1, lab) {
+  el('line', { class: 'plot-ax', x1: x0, y1: y0, x2: x1, y2: y0 }, svg); el('line', { class: 'plot-ax', x1: x0, y1: y1, x2: x0, y2: y0 }, svg);
+  if (lab) el('text', { class: 'plot-ttl', x: x0 + 4, y: y1 - 4 }, svg).textContent = lab;
+}
+FIGS.trapAV = () => {
+  const svg = mkSvg('0 0 720 340', 'Accélération et vitesse en fonction du temps'), ta = 1, tc = 2, T = 4, X = q => 90 + q * 135;
+  [0, ta, ta + tc, T].forEach(q => el('line', { class: 'plot-grid', x1: X(q), x2: X(q), y1: 26, y2: 304 }, svg));
+  [['accélération', ta / 2], ['palier', ta + tc / 2], ['décélération', ta + tc + 0.5]].forEach(p => svgTxt(svg, { class: 'gtxt sm', x: X(p[1]), y: 18 }, p[0]));
+  axesTP(svg, 90, 90, 640, 34, 'a (m/s²)'); axesTP(svg, 90, 262, 640, 168, 'V (m/s)');
+  el('path', { class: 'curve', d: 'M' + X(0) + ' 90 V54 H' + X(ta) + ' V90 H' + X(ta + tc) + ' V126 H' + X(T) + ' V90' }, svg);
+  svgTxt(svg, { class: 'gtxt', x: X(ta / 2), y: 46 }, '+a'); svgTxt(svg, { class: 'gtxt', x: X(ta + tc + 0.5), y: 142 }, '−a');
+  const dv = 'M' + X(0) + ' 262 L' + X(ta) + ' 190 H' + X(ta + tc) + ' L' + X(T) + ' 262';
+  el('path', { class: 'curve fill', d: dv + 'Z' }, svg); el('path', { class: 'curve', d: dv }, svg);
+  svgTxt(svg, { class: 'gtxt', x: 84, y: 194, style: 'text-anchor:end;font-size:11px' }, 'V_max');
+  [[0, '0'], [ta, 't_a'], [ta + tc, 't_a + t_c'], [T, 'T']].forEach(p => svgTxt(svg, { class: 'gtxt sm', x: X(p[0]), y: 284 }, p[1]));
+  svgTxt(svg, { class: 'gtxt', x: 640, y: 304, style: 'text-anchor:end' }, 't (s)');
+  return figEl(svg, 'Une accélération constante par morceaux donne une vitesse en trapèze : rampe (a), palier (0), rampe (−a).', 720);
+};
+FIGS.areas = () => {
+  const svg = mkSvg('0 0 480 210', 'Les deux triangles des rampes forment un rectangle de largeur t1'), ar = arrowMk(svg);
+  const poly = (pts, cls) => el('polygon', { points: pts.map(p => p.join(',')).join(' '), class: cls }, svg);
+  el('line', { class: 'plot-ax', x1: 60, y1: 160, x2: 450, y2: 160 }, svg); el('line', { class: 'plot-ax', x1: 60, y1: 30, x2: 60, y2: 160 }, svg);
+  poly([[60, 160], [140, 60], [140, 160]], 'fg-a'); poly([[140, 60], [260, 60], [260, 160], [140, 160]], 'fg-m'); poly([[260, 60], [340, 160], [260, 160]], 'fg-b');
+  poly([[60, 60], [140, 60], [60, 160]], 'fg-ghost');
+  el('path', { d: 'M300 122 C 260 48, 170 30, 112 52', fill: 'none', stroke: 'var(--muted)', 'stroke-width': 1.3, 'marker-end': ar }, svg);
+  el('rect', { class: 'fg-rect', x: 60, y: 60, width: 200, height: 100 }, svg);
+  el('polyline', { class: 'curve', points: '60,160 140,60 260,60 340,160' }, svg);
+  svgTxt(svg, { class: 'gtxt', x: 54, y: 64, style: 'text-anchor:end;font-size:11px' }, 'V_max');
+  [[100, 't_1'], [200, 't_2'], [300, 't_1']].forEach(p => svgTxt(svg, { class: 'gtxt', x: p[0], y: 182 }, p[1]));
+  svgTxt(svg, { class: 'gtxt', x: 440, y: 22, style: 'text-anchor:end;fill:var(--accent-ink)' }, 'Δx = V_max·(t_1 + t_2)');
+  return figEl(svg, 'Le triangle de droite, retourné, comble le vide à gauche sous V<sub>max</sub>. Le rectangle en pointillés a pour largeur t<sub>1</sub> + t<sub>2</sub>.', 520);
+};
+FIGS.tri = () => {
+  const svg = mkSvg('0 0 480 210', 'Profil triangulaire de vitesse'), X = q => 60 + q * 100, Y = v => 170 - v * 80;
+  el('line', { class: 'plot-ax', x1: 60, y1: 170, x2: 450, y2: 170 }, svg); el('line', { class: 'plot-ax', x1: 60, y1: 24, x2: 60, y2: 170 }, svg);
+  el('line', { class: 'plot-grid', x1: 60, y1: Y(1.8), x2: 450, y2: Y(1.8) }, svg); svgTxt(svg, { class: 'gtxt sm', x: 446, y: Y(1.8) - 5, style: 'text-anchor:end' }, 'V_max (non atteinte)');
+  const d = 'M' + X(0) + ' 170 L' + X(2) + ' ' + Y(1.1) + ' L' + X(4) + ' 170';
+  el('path', { class: 'curve fill', d: d + 'Z' }, svg); el('path', { class: 'curve', d }, svg);
+  svgTxt(svg, { class: 'gtxt', x: X(2), y: Y(1.1) - 7 }, 'V_p'); svgTxt(svg, { class: 'gtxt', x: X(2), y: 130 }, 'h = V_p·T/2');
+  [[0, '0'], [2, 'T/2'], [4, 'T']].forEach(p => svgTxt(svg, { class: 'gtxt sm', x: X(p[0]), y: 188 }, p[1]));
+  return figEl(svg, 'Si h &lt; V<sub>max</sub>²/a, le palier disparaît. La pointe est V<sub>p</sub> = √(h·a) et la durée T = 2√(h/a) (a = d).', 520);
+};
+FIGS.chain = () => {
+  const host = document.createElement('div'); host.className = 'tp stage-host'; STAGE_HOST = host;
+  try { buildStage(); } finally { STAGE_HOST = null; }
+  return figEl(host, 'La chaîne du palan : moteur 2 (pignon), roue double 3 (3a engrène avec 2, 3b avec 4), roue 4 solidaire du tambour, câble et charge 5. k = (Z<sub>2</sub>/Z<sub>3a</sub>)·(Z<sub>3b</sub>/Z<sub>4</sub>).', 460);
+};
+FIGS.inertia = () => {
+  const M = Mth, pt = [['Rotor moteur', M.parts.motor, 'var(--c2)'], ['Roue double 3', M.parts.s3, 'var(--c3)'], ['Roue 4 et tambour', M.parts.s4, 'var(--c4)'], ['Charge', M.parts.load, 'var(--c5)']];
+  const bar = h('div', { class: 'inertia', role: 'img', 'aria-label': 'Répartition de l’inertie équivalente', html: pt.map(q => '<i style="width:' + (q[1] / M.Je * 100).toFixed(2) + '%;background:' + q[2] + '"></i>').join('') });
+  const leg = h('div', { class: 'legend', html: pt.map(q => '<span><em style="background:' + q[2] + '"></em><span>' + q[0] + ' : <b class="v">' + fx(q[1] * 1e4, 2) + '</b> kg·cm² (' + fx(q[1] / M.Je * 100, 0) + ' %)</span></span>').join('') + '<span><em style="background:var(--fg)"></em><span>Total J<sub>e</sub> : <b class="v">' + fx(M.Je * 1e4, 2) + '</b> kg·cm²</span></span>' });
+  return figEl(h('div', { style: 'padding:10px 12px' }, bar, leg), 'Répartition de J<sub>e</sub> avec les valeurs du simulateur.', 620);
+};
+FIGS.cPhases = () => {
+  const svg = mkSvg('0 0 720 300', 'Couple moteur par phase'), ta = 1, tc = 2, T = 4, X = q => 90 + q * 135, Y = c => 250 - c * 110;
+  [0, ta, ta + tc, T].forEach(q => el('line', { class: 'plot-grid', x1: X(q), x2: X(q), y1: 26, y2: 262 }, svg));
+  el('line', { class: 'plot-ax', x1: 90, y1: 250, x2: 640, y2: 250 }, svg); el('line', { class: 'plot-ax', x1: 90, y1: 30, x2: 90, y2: 250 }, svg);
+  el('text', { class: 'plot-ttl', x: 94, y: 26 }, svg).textContent = 'C (N·m)';
+  el('line', { x1: 90, x2: 640, y1: Y(1.9), y2: Y(1.9), stroke: 'var(--bad)', 'stroke-width': 1.3 }, svg); svgTxt(svg, { class: 'gtxt', x: 636, y: Y(1.9) - 5, style: 'text-anchor:end;fill:var(--bad)' }, 'C_max');
+  el('line', { x1: 90, x2: 640, y1: Y(1.25), y2: Y(1.25), stroke: 'var(--ok)', 'stroke-width': 1.3, 'stroke-dasharray': '6 4' }, svg); svgTxt(svg, { class: 'gtxt', x: 636, y: Y(1.25) - 5, style: 'text-anchor:end;fill:var(--ok)' }, 'C_n');
+  el('path', { class: 'curve', d: 'M' + X(0) + ' ' + Y(1.6) + ' H' + X(ta) + ' V' + Y(1) + ' H' + X(ta + tc) + ' V' + Y(0.4) + ' H' + X(T) }, svg);
+  svgTxt(svg, { class: 'gtxt', x: X(0.5), y: Y(1.6) - 8 }, 'C_r + J_e·α'); svgTxt(svg, { class: 'gtxt', x: X(ta + tc / 2), y: Y(1) - 8 }, 'C_r'); svgTxt(svg, { class: 'gtxt', x: X(ta + tc + 0.5), y: Y(0.4) - 8 }, 'C_r − J_e·α');
+  [[0.5, 'accélération'], [ta + tc / 2, 'palier'], [ta + tc + 0.5, 'décélération']].forEach(p => svgTxt(svg, { class: 'gtxt sm', x: X(p[0]), y: 280 }, p[1]));
+  return figEl(svg, 'Couple moteur en montée : C<sub>r</sub> à porter, plus J<sub>e</sub>·α pendant l’accélération, moins J<sub>e</sub>·α pendant la décélération. Le pic doit rester sous C<sub>max</sub>, la moyenne quadratique sous C<sub>n</sub>.', 720);
+};
+FIGS.planCW = () => {
+  recompute(); const host = document.createElement('div'); host.className = 'tp'; host.style.maxWidth = '640px'; drawCW(host);
+  return figEl(host, 'Plan couple – vitesse du simulateur : la zone verte est le fonctionnement permanent (C<sub>n</sub>), la zone bleue la pointe (C<sub>max</sub>). Les trois points sont l’accélération, le palier et la décélération.', 640);
+};
+
+/* ---------- cours ---------- */
+const COURSE = [];
+const ph = n => '<div class="fig" data-fig="' + n + '"></div>';
+COURSE.push({ id: 'trapeze', t: 'Loi de vitesse en trapèze', h: `
+<p>Pour déplacer la charge d'une course <var>h</var>, on envoie au variateur une consigne en trois temps : une rampe jusqu'à <var>V</var><sub>max</sub> à accélération constante <var>a</var>, un palier à <var>V</var><sub>max</sub>, puis une rampe symétrique jusqu'à l'arrêt. La vitesse dessine un trapèze, l'accélération un créneau.</p>` + ph('trapAV') + `
+<div class="eq">
+  <div><var>t</var><sub>a</sub> = <var>V</var><sub>max</sub> / <var>a</var> <span class="why">durée de chaque rampe</span></div>
+  <div><var>d</var><sub>a</sub> = <var>V</var><sub>max</sub>² / (2<var>a</var>) <span class="why">distance parcourue pendant une rampe</span></div>
+  <div><var>t</var><sub>c</sub> = ( <var>h</var> − <var>V</var><sub>max</sub>² / <var>a</var> ) / <var>V</var><sub>max</sub> <span class="why">durée du palier</span></div>
+  <div><var>T</var> = 2<var>t</var><sub>a</sub> + <var>t</var><sub>c</sub> = <var>h</var> / <var>V</var><sub>max</sub> + <var>V</var><sub>max</sub> / <var>a</var></div>
+</div>
+<h3>Déplacement : l'aire sous la courbe de vitesse</h3>
+<p>Le déplacement est l'intégrale de la vitesse, donc l'aire sous le trapèze. On note <var>t</var><sub>1</sub> la durée de montée en vitesse (égale à la descente quand les normes d'accélération et de décélération sont égales) et <var>t</var><sub>2</sub> la durée à vitesse constante : <var>t</var><sub>1</sub> = <var>t</var><sub>a</sub> et <var>t</var><sub>2</sub> = <var>t</var><sub>c</sub>. Les deux rampes sont deux triangles de même aire, qui se complètent en un rectangle de hauteur <var>V</var><sub>max</sub> et de largeur <var>t</var><sub>1</sub>.</p>` + ph('areas') + `
+<div class="eq">
+  <div>Δ<var>x</var> = ½ <var>V</var><sub>max</sub> <var>t</var><sub>1</sub> + <var>V</var><sub>max</sub> <var>t</var><sub>2</sub> + ½ <var>V</var><sub>max</sub> <var>t</var><sub>1</sub> = <var>V</var><sub>max</sub> ( <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub> )</div>
+  <div><var>t</var><sub>2</sub> = Δ<var>x</var> / <var>V</var><sub>max</sub> − <var>t</var><sub>1</sub></div>
+  <div><var>T</var> = 2 <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub> = Δ<var>x</var> / <var>V</var><sub>max</sub> + <var>t</var><sub>1</sub></div>
+</div>
+<p>Ce raccourci suppose des normes d'accélération et de décélération égales. Sinon, avec <var>t</var><sub>1</sub> pour la montée et <var>t</var><sub>3</sub> pour la descente : Δ<var>x</var> = <var>V</var><sub>max</sub> ( <var>t</var><sub>1</sub> / 2 + <var>t</var><sub>2</sub> + <var>t</var><sub>3</sub> / 2 ).</p>
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div><var>V</var><sub>max</sub> ( <var>t</var><sub>1</sub> + <var>t</var><sub>2</sub> ) = <b data-v="vp"></b> × ( <b data-v="ta"></b> + <b data-v="tc"></b> ) = <b data-v="dx"></b> m, soit la course demandée Δ<var>x</var> = <b data-v="hSet"></b> m.</div>
+<h3>Quand la vitesse maximale n'est pas atteinte</h3>
+<p>Si <var>h</var> &lt; <var>V</var><sub>max</sub>² / <var>a</var>, la vitesse maximale n'est jamais atteinte : le profil devient un triangle, de sommet <var>V</var><sub>p</sub> = √(<var>h a</var>) et de durée <var>T</var> = 2√(<var>h</var> / <var>a</var>).</p>` + ph('tri') + `
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div>Profil <b data-v="shape"></b> : <var>V</var><sub>p</sub> = <b data-v="vp"></b> m/s, <var>t</var><sub>a</sub> = <b data-v="ta"></b> s, <var>t</var><sub>c</sub> = <b data-v="tc"></b> s, durée totale <var>T</var> = <b data-v="T"></b> s.</div>
+<h3>Accélération pour un temps imposé</h3>
+<p>Quelle accélération pour parcourir <var>h</var> en un temps <var>T</var> imposé, avec <var>V</var><sub>max</sub> donnée ? On inverse l'expression de <var>T</var> :</p>
+<div class="eq"><div><var>a</var> = <var>V</var><sub>max</sub>² / ( <var>V</var><sub>max</sub> <var>T</var> − <var>h</var> ) <span class="why">avec <var>V</var><sub>max</sub> <var>T</var> &gt; <var>h</var></span></div></div>
+<p class="small">Les quatre changements d'accélération sont des échelons : le à-coup (dérivée de l'accélération) est infini. La mécanique et la charge, qui se balance au bout du câble, le ressentent. Une loi en S lisse ces transitions, au prix d'un trajet un peu plus long.</p>
+<div class="retain"><b>À retenir.</b> Rampe, palier, rampe. La distance est l'aire du trapèze. Si la course est trop courte, le palier disparaît et le profil devient un triangle.</div>` });
+
+COURSE.push({ id: 'arbre', t: 'Ramener la charge sur l’arbre moteur', h: `
+<p>Le variateur pilote la vitesse du moteur, pas celle de la charge. Il faut donc écrire le trapèze côté moteur. Le rapport de réduction vient des quatre roues, et le câble relie la vitesse de la charge à celle du tambour.</p>` + ph('chain') + `
+<div class="eq">
+  <div><var>k</var> = <var>ω</var><sub>4</sub> / <var>ω</var><sub>m</sub> = ( <var>Z</var><sub>2</sub> / <var>Z</var><sub>3a</sub> ) · ( <var>Z</var><sub>3b</sub> / <var>Z</var><sub>4</sub> )</div>
+  <div><var>V</var> = <var>R</var> <var>ω</var><sub>4</sub> = <var>R</var> <var>k</var> <var>ω</var><sub>m</sub></div>
+  <div><var>ω</var><sub>m</sub> = <var>V</var> / (<var>R k</var>) <span class="why">et</span> <var>α</var><sub>m</sub> = <var>a</var> / (<var>R k</var>)</div>
+</div>
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div><var>k</var> = <b data-v="k"></b>. Au palier, <var>ω</var><sub>m</sub> = <b data-v="wp"></b> rad/s, soit <b data-v="Np"></b> tr/min. Pendant les rampes, <var>α</var><sub>m</sub> = <b data-v="alpha"></b> rad/s².</div>
+<h3>Inertie équivalente</h3>
+<p>Les pièces tournantes ne tournent pas à la même vitesse, donc elles ne pèsent pas pareil vu du moteur. On les ramène par l'égalité des énergies cinétiques : ½ <var>J</var><sub>e</sub> <var>ω</var><sub>m</sub>² = Σ énergies.</p>
+<div class="eq"><div><var>J</var><sub>e</sub> = <var>J</var><sub>m</sub> + <var>J</var><sub>3</sub> ( <var>Z</var><sub>2</sub> / <var>Z</var><sub>3a</sub> )² + <var>J</var><sub>4</sub> <var>k</var>² + <var>m</var> <var>R</var>² <var>k</var>²</div></div>` + ph('inertia') + `
+<p>Terme dominant avec ces valeurs : <b class="v" data-v="dominant"></b>. Le réducteur divise l'inertie de la charge par le carré du rapport, donc elle pèse peu devant le rotor.</p>
+<div class="retain"><b>À retenir.</b> On passe du côté charge au côté moteur par <var>R k</var> pour les vitesses et par <var>k</var>² pour les inerties.</div>` });
+
+COURSE.push({ id: 'deux', t: 'Deux dimensionnements à ne pas mélanger', h: `
+<p>Un même moteur doit satisfaire deux familles de conditions. Elles ne portent pas sur les mêmes situations ni sur les mêmes grandeurs du catalogue : on les traite séparément, puis on garde le moteur qui respecte les deux.</p>
+<div class="duo">
+  <div class="st"><h3><span class="tag tag-st">Statique</span> le couple</h3><dl>
+    <dt>Situation</dt><dd>Charge maintenue à l'arrêt, ou déplacée à vitesse constante : <var>a</var> = 0.</dd>
+    <dt>Équation</dt><dd>Somme des couples nulle sur l'arbre moteur.</dd>
+    <dt>Ce qui compte</dt><dd>Le poids, le rapport de réduction, le rendement.</dd>
+    <dt>Ce qui ne compte pas</dt><dd>L'inertie et la loi de vitesse.</dd>
+    <dt>À vérifier</dt><dd>Le couple permanent <var>C</var><sub>n</sub>, qui fixe l'échauffement.</dd>
+    <dt>Résultat</dt><dd>Le couple nominal minimal et le couple du frein de maintien.</dd></dl></div>
+  <div class="dy"><h3><span class="tag tag-dy">Dynamique</span> la vitesse et l'accélération</h3><dl>
+    <dt>Situation</dt><dd>Accélération imposée par le trapèze : <var>a</var> ≠ 0.</dd>
+    <dt>Équation</dt><dd><var>J</var><sub>e</sub> <var>α</var><sub>m</sub> = <var>C</var><sub>m</sub> − <var>C</var><sub>r</sub>.</dd>
+    <dt>Ce qui compte</dt><dd>L'inertie équivalente, la loi de vitesse, puis le couple statique qui s'ajoute.</dd>
+    <dt>À vérifier</dt><dd>La vitesse <var>N</var><sub>max</sub>, le couple <var>C</var><sub>max</sub> pour l'accélération, le couple efficace.</dd>
+    <dt>Résultat</dt><dd>La vitesse et l'accélération maximales atteignables, la puissance du variateur.</dd></dl></div>
+</div>
+<p class="small">Pendant une rampe, le moteur fournit les deux à la fois : le couple statique pour porter la charge, et le couple dynamique pour la mettre en vitesse. Le dimensionnement statique ne suffit donc jamais quand on impose une accélération.</p>
+<div class="retain"><b>À retenir.</b> Statique : <var>C</var><sub>n</sub> et frein. Dynamique : <var>N</var><sub>max</sub>, <var>C</var><sub>max</sub> et couple efficace. Le moteur doit passer les deux.</div>` });
+
+COURSE.push({ id: 'statique', t: 'Dimensionnement statique', h: `
+<div class="kicker"><span class="tag tag-st">Statique</span><span>accélération nulle, on dimensionne en couple</span></div>
+<p>Sans accélération, le théorème du moment dynamique se réduit à l'équilibre des couples. Le poids de la charge crée un couple sur le tambour, ramené ensuite sur l'arbre moteur.</p>
+<div class="eq">
+  <div><var>C</var><sub>t</sub> = <var>m g R</var> <span class="why">couple de la charge sur le tambour</span></div>
+  <div><var>C</var><sub>maintien</sub> = <var>m g R k</var> <span class="why">à l'arrêt</span></div>
+  <div><var>C</var><sub>montée</sub> = <var>m g R k</var> / <var>η</var> <span class="why">vitesse constante, les pertes s'opposent au moteur</span></div>
+  <div><var>C</var><sub>descente</sub> = <var>m g R k</var> · <var>η</var> <span class="why">vitesse constante, les pertes aident le moteur à freiner</span></div>
+</div>
+<div class="tbl"><table class="ctable"><thead><tr><th>Situation</th><th>Couple moteur</th><th>Rapport à <var>C</var><sub>n</sub></th></tr></thead><tbody>
+  <tr><td>Couple de la charge sur le tambour</td><td class="num" data-v="Ct"></td><td class="num">–</td></tr>
+  <tr><td>Maintien à l'arrêt</td><td class="num" data-v="Chold"></td><td class="num" data-v="rHold"></td></tr>
+  <tr><td>Montée à vitesse constante</td><td class="num" data-v="ClUp"></td><td class="num" data-v="rUp"></td></tr>
+  <tr><td>Descente à vitesse constante</td><td class="num" data-v="ClDown"></td><td class="num" data-v="rDown"></td></tr>
+</tbody></table></div>
+<p>La condition de dimensionnement est <var>C</var><sub>statique</sub> ≤ <var>C</var><sub>n</sub>, le couple que le moteur fournit en permanence sans surchauffer. On retient le plus grand des couples statiques que le moteur doit tenir.</p>
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div>Couple statique à tenir : <b data-v="CsMax"></b> N·m, donc <var>C</var><sub>n</sub> ≥ <b data-v="CsMax"></b> N·m. Le moteur choisi a <var>C</var><sub>n</sub> = <b data-v="CnSet"></b> N·m : <span data-v="CnMsg"></span></div>
+<p>En régime établi de montée, la puissance utile est <var>m g V</var> = <b class="v" data-v="Putile"></b> W, et le moteur fournit cette puissance divisée par <var>η</var>.</p>
+<p>À l'arrêt, la charge entraînerait le moteur en sens inverse, car un train d'engrenages cylindriques est réversible. Un moteur bloqué sous tension chauffe : on tient la charge avec un frein à manque de courant. Le calcul de <var>C</var><sub>maintien</sub> sert alors à dimensionner ce frein, avec un coefficient de sécurité.</p>
+<p class="small">Si l'énoncé néglige les frottements, poser <var>η</var> = 1 : montée et descente donnent alors le même couple statique.</p>
+<div class="retain"><b>À retenir.</b> Le moteur tient <var>m g R k</var>, divisé par <var>η</var> en montée, multiplié par <var>η</var> en descente. On compare à <var>C</var><sub>n</sub> et on ajoute un frein pour le maintien.</div>` });
+
+COURSE.push({ id: 'dynamique', t: 'Dimensionnement dynamique', h: `
+<div class="kicker"><span class="tag tag-dy">Dynamique</span><span>accélération imposée, on dimensionne en vitesse et en couple de pointe</span></div>
+<h3>Vitesse maximale atteignable</h3>
+<p>La vitesse du palier se traduit en vitesse de rotation du moteur par le rapport de réduction. Elle ne doit pas dépasser la vitesse maximale du moteur <var>N</var><sub>max</sub>, d'où la vitesse maximale de la charge :</p>
+<div class="eq"><div><var>V</var><sub>lim</sub> = <var>ω</var><sub>max</sub> <var>R k</var> <span class="why">avec <var>ω</var><sub>max</sub> = 2π <var>N</var><sub>max</sub> / 60</span></div></div>
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div><var>V</var><sub>lim</sub> = <b data-v="Vlim"></b> m/s (<b data-v="VlimMin"></b> m/min). Vitesse demandée : <b data-v="VmaxSet"></b> m/s. <span data-v="VlimMsg"></span></div>
+<p class="small">Sur un moteur réel, le couple disponible baisse quand la vitesse monte. Le simulateur utilise une zone rectangulaire <var>C</var><sub>max</sub> × <var>N</var><sub>max</sub>, ce qui suffit pour un exercice.</p>
+<h3>Couple pour l'accélération maximale du trapèze</h3>
+<p>Imposer une accélération coûte un couple supplémentaire pour mettre en vitesse l'inertie équivalente. Le théorème du moment dynamique sur l'arbre moteur donne :</p>
+<div class="eq"><div><var>J</var><sub>e</sub> · d<var>ω</var><sub>m</sub>/d<var>t</var> = <var>C</var><sub>m</sub> − <var>C</var><sub>r</sub> <span class="why">donc</span> <var>C</var><sub>m</sub> = <var>C</var><sub>r</sub> + <var>J</var><sub>e</sub> <var>α</var><sub>m</sub></div></div>
+<p>Ici <var>C</var><sub>r</sub> est le couple résistant du cas statique : <var>m g R k</var> / <var>η</var> en montée, <var>m g R k</var> · <var>η</var> en descente. Le trapèze de vitesse donne un couple constant par phase.</p>` + ph('cPhases') + `
+<div class="tbl"><table class="ctable"><thead><tr><th>Phase</th><th>Durée</th><th>Couple moteur (montée)</th><th>Valeur pour le sens choisi</th></tr></thead><tbody>
+  <tr><td>Accélération</td><td class="num" data-v="ta2"></td><td><var>C</var><sub>r</sub> + <var>J</var><sub>e</sub> <var>a</var> / (<var>R k</var>)</td><td class="num" data-v="Ca"></td></tr>
+  <tr><td>Palier</td><td class="num" data-v="tc2"></td><td><var>C</var><sub>r</sub></td><td class="num" data-v="Cc"></td></tr>
+  <tr><td>Décélération</td><td class="num" data-v="ta3"></td><td><var>C</var><sub>r</sub> − <var>J</var><sub>e</sub> <var>a</var> / (<var>R k</var>)</td><td class="num" data-v="Cd"></td></tr>
+</tbody></table></div>
+<p>En descente, le signe de <var>α</var><sub>m</sub> s'inverse : la charge accélère toute seule et le moteur retient. Le pic de couple se produit alors au début de la décélération. Si <var>J</var><sub>e</sub> <var>α</var><sub>m</sub> dépasse <var>C</var><sub>r</sub>, le couple change de signe pendant une phase : le moteur doit pousser au lieu de retenir.</p>
+<p>Le couple de pic doit rester sous <var>C</var><sub>max</sub>. On en tire l'accélération maximale que ce moteur peut imposer, en montée par exemple :</p>
+<div class="eq">
+  <div><var>a</var><sub>max, acc</sub> = ( <var>C</var><sub>max</sub> − <var>C</var><sub>r</sub> ) <var>R k</var> / <var>J</var><sub>e</sub> <span class="why">phase d'accélération</span></div>
+  <div><var>a</var><sub>max, déc</sub> = ( <var>C</var><sub>max</sub> + <var>C</var><sub>r</sub> ) <var>R k</var> / <var>J</var><sub>e</sub> <span class="why">phase de décélération</span></div>
+</div>
+<p>En descente, les deux expressions sont échangées. L'accélération du trapèze doit être inférieure à la plus petite des deux.</p>
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div>Couple de pic demandé : <var>C</var><sub>pic</sub> = <b data-v="Cpk"></b> N·m pour <var>C</var><sub>max</sub> = <b data-v="CmaxSet"></b> N·m. Accélérations maximales : <b data-v="a1lim"></b> m/s² (mise en vitesse) et <b data-v="a2lim"></b> m/s² (décélération), pour <var>a</var> = <b data-v="aSet"></b> m/s² demandé. <span data-v="alimMsg"></span></div>
+<h3>Échauffement et puissance</h3>
+<p>Le pic de couple n'est supporté que brièvement. L'échauffement dépend de la moyenne quadratique du couple sur le cycle, qui doit rester sous <var>C</var><sub>n</sub> :</p>
+<div class="eq"><div><var>C</var><sub>eff</sub> = √( Σ <var>C</var><sub>i</sub>² <var>t</var><sub>i</sub> / <var>T</var> ) ≤ <var>C</var><sub>n</sub></div></div>
+<p>Ici <var>C</var><sub>eff</sub> = <b class="v" data-v="Crms"></b> N·m. La puissance instantanée est <var>P</var> = <var>C</var><sub>m</sub> <var>ω</var><sub>m</sub>, maximale en fin d'accélération, à <b class="v" data-v="Pmax"></b> W ici. Le variateur doit fournir cette pointe.</p>
+<div class="live"><div class="hd">Moteur minimal pour la consigne demandée</div><var>C</var><sub>n</sub> ≥ <b data-v="CnNeed"></b> N·m (statique et couple efficace), <var>C</var><sub>max</sub> ≥ <b data-v="Cpk"></b> N·m (pic), <var>N</var><sub>max</sub> ≥ <b data-v="Np"></b> tr/min (palier).</div>` + ph('planCW') + `
+<h3>Ce que fait vraiment le moteur</h3>
+<p>Quand la consigne demande plus que le moteur ne peut donner, le variateur limite le courant, donc le couple. Les rampes s'adoucissent et la vitesse plafonne. Le profil réalisable se calcule avec les mêmes formules, en remplaçant <var>a</var> et <var>V</var><sub>max</sub> par les valeurs que le moteur permet :</p>
+<div class="eq">
+  <div><var>a</var><sub>1</sub> = min( <var>a</var> , <var>a</var><sub>max, acc</sub> ) <span class="why">accélération réelle</span></div>
+  <div><var>a</var><sub>2</sub> = min( <var>a</var> , <var>a</var><sub>max, déc</sub> ) <span class="why">décélération réelle</span></div>
+  <div><var>V</var><sub>réel</sub> = min( <var>V</var><sub>max</sub> , <var>V</var><sub>lim</sub> )</div>
+</div>
+<p>Si <var>C</var><sub>max</sub> est inférieur à <var>C</var><sub>r</sub>, le moteur ne lève pas la charge en montée, et ne la retient pas en descente.</p>
+<div class="live"><div class="hd">Avec les valeurs du simulateur</div><span data-v="realMsg"></span></div>
+<div class="retain"><b>À retenir.</b> On ajoute <var>J</var><sub>e</sub> <var>α</var><sub>m</sub> pendant les rampes. On vérifie <var>C</var><sub>pic</sub> ≤ <var>C</var><sub>max</sub> et <var>N</var><sub>p</sub> ≤ <var>N</var><sub>max</sub>, puis <var>C</var><sub>eff</sub> ≤ <var>C</var><sub>n</sub>.</div>` });
+
+COURSE.push({ id: 'methode', t: 'Méthode : choisir un moteur', h: `
+<ol>
+<li><b>Loi de vitesse.</b> Calculer <var>t</var><sub>a</sub>, <var>t</var><sub>c</sub> et <var>T</var> (ou le triangle si la course est courte).</li>
+<li><b>Chaîne cinématique.</b> Calculer <var>k</var>, puis <var>ω</var><sub>m</sub> = <var>V</var>/(<var>R k</var>) et <var>α</var><sub>m</sub> = <var>a</var>/(<var>R k</var>).</li>
+<li><b>Statique.</b> Calculer <var>m g R k</var>, divisé ou multiplié par <var>η</var> selon le sens. Comparer à <var>C</var><sub>n</sub> ; dimensionner le frein.</li>
+<li><b>Inertie.</b> Calculer <var>J</var><sub>e</sub> avec les termes en <var>k</var>².</li>
+<li><b>Dynamique.</b> Calculer <var>C</var><sub>a</sub>, <var>C</var><sub>c</sub>, <var>C</var><sub>d</sub>, le pic, le couple efficace et la puissance maximale.</li>
+<li><b>Comparer au catalogue.</b> <var>C</var><sub>n</sub> ≥ max(statique, <var>C</var><sub>eff</sub>), <var>C</var><sub>max</sub> ≥ <var>C</var><sub>pic</sub>, <var>N</var><sub>max</sub> ≥ <var>N</var><sub>p</sub>.</li>
+<li><b>Vérifier</b> avec le simulateur : tous les badges doivent être verts.</li>
+</ol>
+<div class="retain"><b>À retenir.</b> Loi de vitesse → ramener sur le moteur → statique → inertie → dynamique → comparaison au catalogue.</div>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'g1' };
+const AS = { key: 'g1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null, perm: {} };
+const CS = { open: false, id: 'torseurs' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  stopSim();
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag; box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal', html: '<b>Objectif. </b>' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    const perm = AS.perm[AS.key] || (AS.perm[AS.key] = a.qcm.map(q => shuffled(q.o.length)));
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', { html: (i + 1) + '. ' + q.q }));
+      perm[i].forEach(j => {
+        const o = q.o[j];
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+$('#bAct').addEventListener('click', () => { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); });
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  recompute(); hydrateFigs(art); fillLive(art);
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : trapèze de vitesse et choix du moteur'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Trois ateliers sur la loi de vitesse en trapèze et le choix d’un moteur : un simulateur de palan, des exercices sur le trapèze et des exercices de dimensionnement.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans le simulateur, réglez la consigne et les limites du moteur avec les curseurs. L’animation, les courbes et les vérifications se mettent à jour. « Théorique » montre la consigne, « Réel » ce que permet le moteur.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> donne les formules, avec les valeurs calculées pour vos réglages.</li><li>Dans les exercices, tapez un nombre (virgule ou point) ; les réponses sont acceptées à ± 2 %.</li></ul>' +
+    '<h3>Conventions</h3><p>Statique en bleu, dynamique en jaune. Charge de masse m, tambour de rayon R, rapport de réduction k = ω<sub>4</sub>/ω<sub>m</sub>, g = 9,81 m/s².</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM et le choix clair ou sombre sont mémorisés dans ce navigateur uniquement.</p>' }));
+});
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  const b = $('#bTheme'); b.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre'; b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+}
+applyTheme(lsGet(KEYS.theme, 'light'));
+$('#bTheme').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; applyTheme(t); lsSet(KEYS.theme, t); });
+function loop(ts) {
+  const dt = Math.min(0.05, (ts - ANIM.last) / 1000 || 0); ANIM.last = ts;
+  if (ANIM.fn && !CS.open && !document.hidden) { try { ANIM.fn(dt); } catch (e) { ANIM.fn = null; } }
+  requestAnimationFrame(loop);
+}
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); requestAnimationFrame(loop); })();
+
+</script>
+</body>
+</html>
