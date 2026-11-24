@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier Gyroscope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : barre d'outils en haut, onglets d'ateliers, zone de travail, panneau Activité à droite (feuille basse sur téléphone), vue Cours avec sommaire. Même gabarit que l'Atelier Récursivité. */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--field:#ffffff;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;--run:#2e8b3a;
+  --node-stroke:#33475b;
+  --ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;
+  --ok-soft:rgba(30,122,46,.15);--warn-soft:rgba(154,91,0,.13);--bad-soft:rgba(192,40,31,.13);
+  --g-s:#cfe3f6;--g-p:#f6e2bf;--g-c:#d3ecd7;--g-ps:#dcd6ee;--g-m:#e4e8ee;
+  --overlay:rgba(10,16,22,.55);--shadow:rgba(0,0,0,.28);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#14181d;--bar:#1d232a;--panel:#191e24;--panel2:#212830;--field:#14181d;--line:#3b4551;
+  --fg:#e8ecf0;--muted:#9ba6b2;--accent:#5b9bd5;--accent-fg:#0b1620;--accent-soft:#203449;--accent-ink:#b3d4f2;--run:#62c673;
+  --node-stroke:#a7b8c9;
+  --ok:#62c673;--warn:#e3a94f;--bad:#f2766d;
+  --ok-soft:rgba(98,198,115,.18);--warn-soft:rgba(227,169,79,.17);--bad-soft:rgba(242,118,109,.17);
+  --g-s:#27425c;--g-p:#5b4420;--g-c:#25492d;--g-ps:#3d3760;--g-m:#2d3640;
+  --overlay:rgba(0,0,0,.65);--shadow:rgba(0,0,0,.6);color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}
+.phead .sub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
+.tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 10px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--fg)}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent)}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+sub,sup{line-height:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60;max-width:90vw}
+#dlg{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox header b{font-size:16px}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+#act{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+#act .pbody{font-size:13.5px}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{margin:0 0 10px;padding-left:20px}.steps li{margin-bottom:9px}
+.defi{border:1px dashed var(--accent);border-radius:8px;padding:8px 10px;margin:0 0 12px}.defi p{margin:6px 0}
+.defi summary{cursor:pointer;font-weight:500;color:var(--accent-ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;padding:8px 10px 6px;margin:0 0 10px;min-width:0}
+fieldset.q legend{font-weight:600;padding:0 4px;max-width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer}
+.opt input{margin-top:3px;width:auto;flex:none}
+.opt.good{background:var(--ok-soft)}.opt.bad{background:var(--bad-soft)}
+.why{font-size:12.5px;color:var(--muted);margin:6px 4px 2px}
+.score{font-weight:600;font-size:15px;margin:4px 0 8px}
+/* cours */
+#course{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.ctop,.cwrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ctop{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:8px;border-bottom:1px solid var(--line);background:var(--bar)}
+.cwrap{flex:1;min-height:0;display:flex;gap:28px;padding-block:14px}
+.ctoc{flex:none;width:250px;overflow:auto;display:flex;flex-direction:column;gap:1px}
+.ctoc button{display:block;width:100%;text-align:left;padding:6px 10px;border:0;border-left:3px solid transparent;background:transparent;cursor:pointer;font-size:13.5px}
+.ctoc button:hover{background:var(--panel2)}
+.ctoc button.on{border-left-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.ctoc-sel{display:none;margin:8px max(16px,env(safe-area-inset-left,0px)) 0;width:auto}
+.cbody{flex:1;min-width:0;overflow:auto;max-width:860px;padding-right:6px}
+.ckick{color:var(--muted);font-size:12.5px;margin:0}
+.cbody h2{font-size:26px;margin:2px 0 12px;text-wrap:balance}
+.cbody h3{font-size:16.5px;margin:22px 0 6px}
+.cbody p,.cbody li{font-size:14.5px;line-height:1.6}
+.cbody ul,.cbody ol{padding-left:22px}.cbody li{margin-bottom:4px}
+.cbody table{display:block;overflow-x:auto;max-width:100%}
+.ctable{border-collapse:collapse;font-size:13.5px;margin:8px 0 12px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:5px 9px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.retain{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:9px 12px;margin:16px 0 6px;font-size:14px}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+.cpn{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 32px}
+/* ateliers */
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:1000px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:24px 0 6px}
+#ws p{font-size:14.5px;line-height:1.55}
+#ws .small{font-size:12.5px}
+.zsh{border:1px solid var(--line);border-radius:10px;padding:9px 12px 3px;background:var(--panel2)}.zsh-t{margin-bottom:6px}.zsh .chips{margin-bottom:8px}
+.opts{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}.opts .fld{margin:0}
+.opts input[type=range]{width:220px;max-width:100%}
+.opts input[type=number]{width:96px;font-family:var(--font-mono)}
+.zgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:6px 0 10px}
+.zgrid .fld{margin:0 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);overflow-wrap:anywhere}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.verdict.yes{background:var(--ok-soft);border-color:var(--ok)}.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.two>div{min-width:0}
+.viewlbl{font-size:12.5px;color:var(--muted);margin:8px 0 2px!important}
+.gwrap{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--bg)}
+svg.g{display:block;width:100%;height:auto}
+.formula.sm{font-size:13.5px;line-height:1.7}
+.calc{margin:6px 0 10px}.calc .formula{margin:4px 0}
+.chk{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+.chk div{display:flex;gap:8px;align-items:baseline;border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:13.5px}
+.chk .mk{flex:none;font-weight:700;width:1.2em;text-align:center}
+.chk .okk{background:var(--ok-soft);border-color:var(--ok)}.chk .okk .mk{color:var(--ok)}
+.chk .nok{background:var(--bad-soft);border-color:var(--bad)}.chk .nok .mk{color:var(--bad)}
+.tbl{overflow-x:auto;margin:8px 0}
+table.ctable{border-collapse:collapse;font-size:13px}
+.ctable th,.ctable td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.ctable th{background:var(--panel2);font-weight:600}
+.ctable td.n{font-family:var(--font-mono);text-align:right;white-space:nowrap}
+details.adv{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:12px 0;background:var(--panel)}
+details.adv summary{cursor:pointer;font-weight:600;color:var(--accent-ink)}
+details.adv[open] summary{margin-bottom:8px}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--node-stroke);vertical-align:-1px;margin-right:5px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 0}
+/* dessins d'engrenages */
+.gear{stroke:var(--node-stroke);stroke-width:1.2;stroke-linejoin:round}
+.gear.s{fill:var(--g-s)}.gear.p{fill:var(--g-p)}.gear.c{fill:var(--g-c)}.gear.m{fill:var(--g-m)}.gear.in{fill:var(--g-s)}.gear.out{fill:var(--g-c)}
+.pitch{fill:none;stroke:var(--muted);stroke-dasharray:4 3;stroke-width:.8;opacity:.75}
+.hub{fill:var(--bg);stroke:var(--node-stroke);stroke-width:1.2}
+.mk{fill:var(--bad)}
+.arm{fill:var(--g-ps);stroke:var(--node-stroke);stroke-width:1.2;opacity:.62}
+.shaft{stroke:var(--node-stroke);stroke-width:1.6}
+.gtxt{font:600 12px var(--font-mono);fill:var(--fg);text-anchor:middle}
+.gtxt.sm{font-size:10.5px;font-weight:500;fill:var(--muted)}
+.gtxt.l{text-anchor:start}
+.dirtxt{font:600 15px var(--font-ui);fill:var(--accent-ink);text-anchor:middle}
+.hatchln{stroke:var(--node-stroke);stroke-width:1.1}
+.fixlbl{font:600 11px var(--font-ui);fill:var(--bad);text-anchor:middle}
+.ground{stroke:var(--node-stroke);stroke-width:1}
+.rect{stroke:var(--node-stroke);stroke-width:1.2}
+.rect.in{fill:var(--g-s)}.rect.out{fill:var(--g-c)}.rect.s{fill:var(--g-s)}.rect.p{fill:var(--g-p)}.rect.c{fill:var(--g-c)}.rect.m{fill:var(--g-m)}
+.bean{stroke:var(--node-stroke);stroke-width:1;fill:none;opacity:.7}
+.plot-ax{stroke:var(--muted);stroke-width:1}
+.plot-grid{stroke:var(--line);stroke-width:.7;stroke-dasharray:3 3}
+.plot-lbl{font:11px var(--font-mono);fill:var(--muted)}
+.plot-ttl{font:600 12px var(--font-ui);fill:var(--fg)}
+.curve{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.curve.fill{fill:var(--accent-soft);stroke:none}
+.cursor{stroke:var(--bad);stroke-width:1.4}
+.cdot{fill:var(--bad)}
+.rail{position:relative;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);margin:8px 0}
+.rail .car{position:absolute;top:4px;width:34px;height:24px;margin-left:-17px;border-radius:5px;background:var(--accent);border:1px solid var(--accent-ink)}
+/* exercices */
+.exs{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel);margin:8px 0}
+.exs p{margin:4px 0}
+.fieldrow{display:flex;gap:10px 16px;flex-wrap:wrap;margin:10px 0}
+.fieldrow .fld{margin:0;min-width:150px;flex:1 1 150px}
+.fieldrow input{font-family:var(--font-mono)}
+.fieldrow input.okk{border-color:var(--ok);background:var(--ok-soft)}
+.fieldrow input.nok{border-color:var(--bad);background:var(--bad-soft)}
+.solbox{border-left:3px solid var(--accent);padding:2px 12px;margin:10px 0;background:var(--panel2);border-radius:0 8px 8px 0}
+.scoreline{font:500 12.5px var(--font-mono);color:var(--muted);margin:2px 0}
+@media (max-width:820px){
+  .ctoc{display:none}.ctoc-sel{display:block}.cwrap{padding-top:8px}.cbody{padding-right:0}
+  #act{position:fixed;left:0;right:0;bottom:0;width:auto;height:70%;max-height:none;border-radius:14px 14px 0 0;z-index:35;box-shadow:0 -8px 30px var(--shadow);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .work{flex-direction:column;gap:8px}
+}
+/* illustrations du cours */
+.fig{margin:14px 0;max-width:100%}
+.fig .gwrap{background:var(--bg)}
+.fig figcaption{font-size:13px;line-height:1.5;color:var(--muted);margin:6px 2px 0}
+.figrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0;align-items:start}
+.figrow .fig{margin:0;min-width:0}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .12s,background .12s}}
+/* atelier gyroscope */
+#ws{max-width:1240px}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;min-width:0;margin-bottom:10px}
+.panel h3{margin:0 0 6px!important;font-size:15px!important}
+.angrow{display:flex;gap:10px;align-items:center;margin-top:6px}
+.angrow input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.angrow input[type=number]{width:84px}
+.angrow .lab{font-size:13px;white-space:nowrap}
+.canvas3d{width:100%;height:420px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2);touch-action:none;cursor:grab}
+.canvas3d canvas{display:block}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:8px 0}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.infob{background:var(--accent-soft);border-radius:8px;padding:8px 12px;font-size:13.5px;margin:8px 0}
+.figs2d{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0}
+.figs2d .fig{margin:0;flex:1 1 300px;max-width:340px}
+.vres{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 18px;display:flex;flex-direction:column;gap:10px;align-items:center;min-height:90px}
+.vm{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:15px;flex-wrap:wrap;justify-content:center}
+.vm .tb{font-size:3.2rem;line-height:1;color:var(--muted);font-weight:300}
+.vcol{display:flex;flex-direction:column;gap:4px;text-align:center}
+.vcol span{padding:2px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field);min-width:60px}
+.mat{display:inline-grid;grid-template-columns:repeat(3,auto);gap:2px 12px;font-family:var(--font-mono);font-size:13px;padding:4px 10px;border-left:2px solid var(--muted);border-right:2px solid var(--muted);border-radius:4px}
+@media (max-width:820px){.canvas3d{height:300px}}
+#g-plot{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.ptit{font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+.chkrow{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:6px 0}
+.chkrow label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.chkrow i{display:inline-block;width:11px;height:11px;border-radius:50%}
+.sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.appsvg{max-width:520px;margin:6px auto}
+table.tb2{border-collapse:collapse;margin:8px 0;font-size:13.5px}
+table.tb2 td,table.tb2 th{border:1px solid var(--line);padding:5px 10px;text-align:center}
+table.tb2 th{background:var(--panel2)}
+@media print{
+  header.band,#modes,#act,#hint,.noprint{display:none!important}
+  html,body,#app,#work,#stage,#scroller{height:auto!important;overflow:visible!important;display:block!important}
+  #course{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="9.5" cy="13" r="7" fill="none" stroke="var(--fg)" stroke-width="1.6" stroke-dasharray="3.2 1.6"/><circle cx="18.5" cy="13" r="5.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.6 1.4"/><circle cx="9.5" cy="13" r="1.8" fill="var(--warn)"/></svg><span>Atelier Gyroscope <small>SI · CPGE</small></span></div>
+    <div class="files">
+      <button class="btn" id="bAct" type="button" aria-pressed="false">Activité</button>
+      <button class="btn" id="bCourse" type="button" aria-pressed="false">Cours</button>
+      <button class="btn" id="bTheme" type="button" aria-pressed="false">Mode sombre</button>
+      <button class="btn" id="bHelp" type="button">Aide</button>
+    </div>
+  </div></header>
+  <div class="band" id="modes"><div class="inner row"><div class="seg" id="wsSeg" role="tablist" aria-label="Ateliers"></div></div></div>
+  <main class="inner work" id="work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws"></div></div></section>
+    <aside id="act" hidden aria-label="Activité"></aside>
+  </main>
+  <section id="course" hidden aria-label="Cours"></section>
+</div>
+<div id="dlg" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  return el;
+}
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function isSmall() { try { return window.matchMedia('(max-width:820px)').matches; } catch (e) { return false; } }
+function reduced() { try { return window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch (e) { return false; } }
+const KEYS = { act: 'atelier-gyro-v1', theme: 'atelier-gyro-theme' };
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+const WORKSHOPS = [];
+const ANIM = { fn: null, last: 0 };
+const TAU = 2 * Math.PI, DEG = 180 / Math.PI;
+const copy = o => JSON.parse(JSON.stringify(o));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function fx(v, d) {
+  if (d == null) d = 2;
+  if (!isFinite(v)) return '∞';
+  const f = Math.pow(10, d); let r = Math.round(v * f) / f; if (Object.is(r, -0)) r = 0;
+  let s = String(r); if (/e/.test(s)) s = r.toFixed(d);
+  return s.replace('.', ',').replace('-', '−');
+}
+const sg = (v, d) => (v > 0 ? '+' : '') + fx(v, d);
+function parseAns(s) {
+  s = String(s).trim().replace(/\s/g, '').replace(/[−–]/g, '-').replace(/,/g, '.');
+  if (/^[-+]?(\d+\.?\d*|\.\d+)\/[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) { const q = s.split('/'); return +q[0] / +q[1]; }
+  if (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return +s;
+  return NaN;
+}
+function okAns(v, t, rel, abs) { rel = rel == null ? 0.02 : rel; abs = abs == null ? 0.005 : abs; return isFinite(v) && Math.abs(v - t) <= Math.max(abs, Math.abs(t) * rel); }
+const subz = s => String(s).replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+function svgTxt(parent, attrs, str) {
+  const t = el('text', attrs, parent), parts = String(str).split(/_([A-Za-z0-9]+)/);
+  parts.forEach((p, i) => {
+    if (i % 2 === 0) { if (p) { const sp = el('tspan', {}, t); sp.textContent = p; if (i > 0) sp.setAttribute('dy', '-3'); } }
+    else { const sp = el('tspan', { dy: '3', 'font-size': '0.78em' }, t); sp.textContent = p; }
+  });
+  return t;
+}
+function stats(list) { return h('div', { class: 'gstats' }, list.map(k => h('div', { class: 'stat' }, h('span', { html: k[0] }), h('b', { html: k[1] })))); }
+function chipsRow(items, cur, cb, label) {
+  return h('div', { class: 'chips', role: 'group', 'aria-label': label || '' }, items.map(it => h('button', { type: 'button', class: 'chip' + (cur === it[0] ? ' on' : ''), 'aria-pressed': cur === it[0] ? 'true' : 'false', disabled: it[2] === true, html: subz(it[1]), onclick: () => cb(it[0]) })));
+}
+function rng(label, min, max, step, get, set, fmtFn) {
+  const out = h('b', null, fmtFn(get()));
+  const inp = h('input', { type: 'range', min, max, step, 'aria-label': label });
+  inp.value = get();
+  inp.addEventListener('input', () => { set(+inp.value); out.textContent = fmtFn(+inp.value); });
+  return h('label', { class: 'fld' }, h('span', { html: subz(label) + ' = ' }, out), inp);
+}
+let SVGN = 0;
+function shuffled(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- aides de dessin ---------- */
+function mkSvg(vb, label) { return el('svg', { class: 'g', viewBox: vb, role: 'img', 'aria-label': label }); }
+function figEl(node, cap, maxw) { return h('figure', { class: 'fig' }, h('div', { class: 'gwrap', style: maxw ? 'max-width:' + maxw + 'px' : null }, node), h('figcaption', { html: cap })); }
+function figRow(list) { return h('div', { class: 'figrow' }, list); }
+function arrowMk(svg) {
+  const d = el('defs', {}, svg), id = 'am' + (++SVGN), m = el('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, d);
+  el('path', { d: 'M0 0L10 5L0 10Z', fill: 'var(--accent-ink)' }, m);
+  return 'url(#' + id + ')';
+}
+function dimH(svg, ar, x1, x2, y, label) {
+  el('line', { x1: x1.toFixed(1), x2: x2.toFixed(1), y1: y, y2: y, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: ((x1 + x2) / 2).toFixed(1), y: y - 5, style: 'font-size:11.5px' }, label);
+}
+function dimV(svg, ar, x, y1, y2, label, tx) {
+  el('line', { x1: x, x2: x, y1, y2, stroke: 'var(--accent-ink)', 'stroke-width': 1.4, 'marker-start': ar, 'marker-end': ar }, svg);
+  svgTxt(svg, { class: 'gtxt', x: tx, y: (y1 + y2) / 2 + 4, style: 'font-size:11.5px' }, label);
+}
+function hatchDefs(svg, id) {
+  const d = el('defs', {}, svg), p = el('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, d);
+  el('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'hatchln' }, p);
+}
+function hydrateFigs(root) {
+  root.querySelectorAll('[data-fig]').forEach(ph => {
+    const f = FIGS[ph.getAttribute('data-fig')];
+    if (!f) { ph.remove(); return; }
+    try { ph.replaceWith(f()); } catch (e) { console.error('figure ' + ph.getAttribute('data-fig'), e); ph.remove(); }
+  });
+}
+function shuffled(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+
+/* ====================== physique et réglages ====================== */
+const G = 9.81, SC = 6; /* 1 unité de scène = 1/6 m */
+const toR = x => x / DEG;
+const GCOL = { H: '#1f9d55', W: '#d98a00', M: '#e0483a', O: '#2f7fd1', F: '#8e44ad' };
+const GY0 = { m: 1, R: 60, d: 100, N: 1500, th0: 90, mode: 'release', fric: false, ts: 1 };
+const GE0 = { N: 1500, Om: 30, al: 90, m: 2, R: 100, L: 300, vH: true, vO: true, vC: true, vF: true };
+const GY = copy(GY0), GE = copy(GE0);
+const AP = { kind: 'moto', moto: { v: 90, rho: 80, Rw: 0.3, I: 0.7, dir: 'gauche' }, navire: { I: 5000, N: 3000, Om: 1, L: 5, dir: 'babord', sens: 'avant' } };
+const ST = {}, SE = {};
+
+function gp(P) { const R = P.R / 1000, d = P.d / 1000; return { m: P.m, R, d, I3: 0.5 * P.m * R * R, I1: 0.25 * P.m * R * R + P.m * d * d, w: P.N * Math.PI / 30 }; }
+function steadyRate(p, th, w3) {
+  const a = p.I1 * Math.cos(th), b = -p.I3 * w3, c = p.m * G * p.d;
+  if (Math.abs(a) < 1e-9) return Math.abs(b) < 1e-12 ? 0 : -c / b;
+  const disc = b * b - 4 * a * c;
+  if (disc < 0) return -b / (2 * a);
+  const r1 = (-b + Math.sqrt(disc)) / (2 * a), r2 = (-b - Math.sqrt(disc)) / (2 * a);
+  return Math.abs(r1) < Math.abs(r2) ? r1 : r2;
+}
+/* simulation d'un solide de révolution pesant (équations de Lagrange) */
+function topInit(P, st) {
+  const p = gp(P); st.p = p; st.th = toR(P.th0); st.thd = 0; st.phi = 0; st.spin = 0; st.t = 0; st.ppsi = p.I3 * p.w;
+  const s = Math.sin(st.th), c = Math.cos(st.th), pd = P.mode === 'steady' ? steadyRate(p, st.th, p.w) : 0;
+  st.pphi = p.I1 * pd * s * s + st.ppsi * c; st.phd = pd;
+  st.hist = [[0, 0]]; st.plot = [[0, P.th0]]; st.trace = []; st.nextTr = 0; st.nextPl = 0.02;
+}
+function topPhid(st, th) { const p = st.p, s2 = Math.sin(th) ** 2; return s2 < 1e-5 ? 0 : (st.pphi - st.ppsi * Math.cos(th)) / (p.I1 * s2); }
+function topF(st, th, thd) {
+  const p = st.p, pd = topPhid(st, th), s = Math.sin(th), c = Math.cos(th);
+  return [thd, (p.I1 * pd * pd * s * c - st.ppsi * pd * s + p.m * G * p.d * s) / p.I1, pd];
+}
+function topStep(st, h, fric) {
+  const th = st.th, thd = st.thd, k1 = topF(st, th, thd), k2 = topF(st, th + h / 2 * k1[0], thd + h / 2 * k1[1]), k3 = topF(st, th + h / 2 * k2[0], thd + h / 2 * k2[1]), k4 = topF(st, th + h * k3[0], thd + h * k3[1]);
+  st.th += h * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6; st.thd += h * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6; st.phi += h * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) / 6;
+  if (st.th < 0.03) { st.th = 0.03; if (st.thd < 0) st.thd = 0; }
+  if (st.th > Math.PI - 0.03) { st.th = Math.PI - 0.03; if (st.thd > 0) st.thd = 0; }
+  const pd = topPhid(st, st.th); st.phd = pd;
+  if (fric) { st.ppsi *= Math.exp(-h / 45); const s = Math.sin(st.th); st.pphi = st.p.I1 * pd * s * s + st.ppsi * Math.cos(st.th); }
+  st.t += h;
+}
+function topAdvance(st, dt, fric) {
+  const h = 0.0005, n = Math.min(240, Math.max(1, Math.round(dt / h)));
+  for (let i = 0; i < n; i++) {
+    topStep(st, h, fric);
+    if (st.t >= st.nextPl) { st.plot.push([st.t, st.th * DEG]); st.nextPl = st.t + 0.02; if (st.plot.length > 400) st.plot.shift(); }
+    if (st.t >= st.nextTr) { st.trace.push([st.th, st.phi]); st.nextTr = st.t + 0.03; if (st.trace.length > 520) st.trace.shift(); }
+  }
+  st.hist.push([st.t, st.phi]); while (st.hist.length > 2 && st.t - st.hist[1][0] > 1) st.hist.shift();
+}
+function topMeasured(st) { const a = st.hist[0], b = st.hist[st.hist.length - 1]; return b[0] - a[0] > 0.25 ? (b[1] - a[1]) / (b[0] - a[0]) : NaN; }
+/* intégration "hors ligne" pour les figures du cours */
+function topSimulate(P, T, dtOut) {
+  const st = {}; topInit(P, st); const out = [[0, P.th0]]; let nx = dtOut;
+  while (st.t < T) { topStep(st, 0.0005, false); if (st.t >= nx) { out.push([st.t, st.th * DEG]); nx += dtOut; } }
+  return out;
+}
+
+/* ====================== dessin 2D ====================== */
+function gArr(svg, x1, y1, x2, y2, col, w) {
+  w = w || 2.6; const a = Math.atan2(y2 - y1, x2 - x1), L = 5 + w * 1.6, g = el('g', {}, svg), f = v => v.toFixed(1);
+  el('line', { x1: f(x1), y1: f(y1), x2: f(x2 - Math.cos(a) * L * 0.7), y2: f(y2 - Math.sin(a) * L * 0.7), stroke: col, 'stroke-width': w, 'stroke-linecap': 'round' }, g);
+  el('polygon', { points: f(x2) + ',' + f(y2) + ' ' + f(x2 - L * Math.cos(a - 0.42)) + ',' + f(y2 - L * Math.sin(a - 0.42)) + ' ' + f(x2 - L * Math.cos(a + 0.42)) + ',' + f(y2 - L * Math.sin(a + 0.42)), fill: col }, g);
+  return g;
+}
+/* arc fléché : angles en degrés (sens trigonométrique à l'écran, y vers le haut) */
+function gArc(svg, cx, cy, r, a0, a1, col, w) {
+  w = w || 2.6; const p = a => [cx + r * Math.cos(a / DEG), cy - r * Math.sin(a / DEG)], s = p(a0), e = p(a1), large = Math.abs(a1 - a0) > 180 ? 1 : 0, sweep = a1 > a0 ? 0 : 1;
+  const d = 'M' + s[0].toFixed(1) + ' ' + s[1].toFixed(1) + ' A' + r + ' ' + r + ' 0 ' + large + ' ' + sweep + ' ' + e[0].toFixed(1) + ' ' + e[1].toFixed(1);
+  el('path', { d, fill: 'none', stroke: col, 'stroke-width': w, 'stroke-linecap': 'round' }, svg);
+  const t = (a1 > a0 ? a1 + 90 : a1 - 90) / DEG, ex = e[0], ey = e[1], L = 5 + w * 1.6, tx = Math.cos(t), ty = -Math.sin(t), nx = -ty, ny = tx;
+  el('polygon', { points: ex.toFixed(1) + ',' + ey.toFixed(1) + ' ' + (ex - L * tx + 0.45 * L * nx).toFixed(1) + ',' + (ey - L * ty + 0.45 * L * ny).toFixed(1) + ' ' + (ex - L * tx - 0.45 * L * nx).toFixed(1) + ',' + (ey - L * ty - 0.45 * L * ny).toFixed(1), fill: col }, svg);
+}
+const T2 = (svg, x, y, s, col, cls) => svgTxt(svg, { class: 'gtxt' + (cls ? ' ' + cls : ''), x, y, style: col ? 'fill:' + col : null }, s);
+const NOCS = 'var(--fg)', MUT = 'var(--muted)';
+
+/* ====================== vue 3D (caméra souris) ====================== */
+const T3 = { on: false };
+function bgHex() { try { const n = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--panel2').trim().replace('#', ''), 16); return isNaN(n) ? 0xf1f3f6 : n; } catch (e) { return 0xf1f3f6; } }
+function fgHex() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 0xdde3ee : 0x333b4a; }
+function updateCam() {
+  const c = T3.camera, d = T3.dist; c.position.set(d * Math.sin(T3.ry) * Math.cos(T3.rx), d * Math.sin(T3.rx) + T3.ty, d * Math.cos(T3.ry) * Math.cos(T3.rx)); c.lookAt(0, T3.ty, 0);
+}
+function stopSim() {
+  ANIM.fn = null; T3.tick = null; T3.rebuild = null;
+  if (T3.on) {
+    try { window.removeEventListener('pointerup', T3.up); window.removeEventListener('pointermove', T3.mv); T3.renderer.dispose(); if (T3.renderer.forceContextLoss) T3.renderer.forceContextLoss(); } catch (e) { /* rien */ }
+    T3.on = false;
+  }
+}
+function refreshThreeTheme() { if (T3.on) { try { T3.scene.background = new THREE.Color(bgHex()); if (T3.rebuild) T3.rebuild(); } catch (e) { /* rien */ } } }
+function initThree() {
+  const box = $('#g-canvas'); if (!box) return false;
+  if (typeof THREE === 'undefined') { box.innerHTML = '<p class="small" style="padding:14px">La vue 3D demande une connexion internet (bibliothèque three.js). Les valeurs calculées restent utilisables.</p>'; return false; }
+  try {
+    const w = box.clientWidth || 560, hh = box.clientHeight || 420;
+    T3.scene = new THREE.Scene(); T3.scene.background = new THREE.Color(bgHex());
+    T3.camera = new THREE.PerspectiveCamera(45, w / hh, 0.1, 100);
+    T3.renderer = new THREE.WebGLRenderer({ antialias: true }); T3.renderer.setSize(w, hh); T3.renderer.setPixelRatio(window.devicePixelRatio || 1);
+    box.innerHTML = ''; box.appendChild(T3.renderer.domElement);
+    T3.scene.add(new THREE.AmbientLight(0xffffff, 0.75)); const dl = new THREE.DirectionalLight(0xffffff, 0.55); dl.position.set(3, 6, 4); T3.scene.add(dl);
+    const grid = new THREE.GridHelper(6, 12, 0xbbbbbb, 0xd5d8de); grid.position.y = -1.5; T3.scene.add(grid);
+    T3.dyn = new THREE.Group(); T3.scene.add(T3.dyn);
+    T3.rx = 0.35; T3.ry = 0.7; T3.dist = 6.4; T3.ty = -0.2; T3.drag = false;
+    updateCam();
+    const cv = T3.renderer.domElement;
+    cv.addEventListener('pointerdown', e => { T3.drag = true; T3.px = e.clientX; T3.py = e.clientY; });
+    T3.up = () => { T3.drag = false; };
+    T3.mv = e => { if (!T3.drag) return; T3.ry += (e.clientX - T3.px) * 0.008; T3.rx = Math.max(-1.3, Math.min(1.4, T3.rx + (e.clientY - T3.py) * 0.008)); T3.px = e.clientX; T3.py = e.clientY; updateCam(); };
+    window.addEventListener('pointerup', T3.up); window.addEventListener('pointermove', T3.mv);
+    cv.addEventListener('wheel', e => { e.preventDefault(); T3.dist = Math.max(2.5, Math.min(14, T3.dist + e.deltaY * 0.01)); updateCam(); }, { passive: false });
+    T3.on = true;
+    ANIM.fn = dt => { if (!T3.on) return; try { if (T3.tick) T3.tick(dt); T3.renderer.render(T3.scene, T3.camera); } catch (e) { console.error(e); T3.on = false; } };
+    return true;
+  } catch (e) { box.innerHTML = '<p class="small" style="padding:14px">WebGL n’est pas disponible sur cet appareil. Les valeurs calculées restent utilisables.</p>'; T3.on = false; return false; }
+}
+window.addEventListener('resize', () => { const b = $('#g-canvas'); if (!T3.on || !b) return; const w = b.clientWidth, hh = b.clientHeight; if (!w || !hh) return; T3.camera.aspect = w / hh; T3.camera.updateProjectionMatrix(); T3.renderer.setSize(w, hh); });
+function resetView() { if (T3.on) { T3.rx = 0.35; T3.ry = 0.7; T3.dist = 6.4; T3.ty = -0.2; updateCam(); } }
+function clearDyn() { while (T3.dyn.children.length) T3.dyn.remove(T3.dyn.children[0]); }
+/* flèche à longueur variable */
+function mkVec(color) {
+  const g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ color }), shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 8), mat), head = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.2, 12), mat);
+  g.add(shaft, head);
+  const Y = new THREE.Vector3(0, 1, 0), o = { g,
+    set(origin, dir, len) {
+      if (!(len > 0.02) || dir.lengthSq() < 1e-12) { g.visible = false; return; }
+      g.visible = true; const sl = Math.max(0.02, len - 0.2); shaft.scale.y = sl; shaft.position.y = sl / 2; head.position.y = sl + 0.1;
+      g.position.copy(origin); g.quaternion.setFromUnitVectors(Y, dir.clone().normalize());
+    } };
+  return o;
+}
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const QY = a => new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), a), QZ = a => new THREE.Quaternion().setFromAxisAngle(V3(0, 0, 1), a);
+function mat(col) { return new THREE.MeshLambertMaterial({ color: col }); }
+function mkRotor(Rs, th) {
+  /* disque + rayons marqués, axe local y */
+  const g = new THREE.Group(), dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(Rs, Rs, th, 48), mat(dark ? 0x5b6b86 : 0x9fb0cc)));
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(Rs, th * 0.35, 8, 48), mat(dark ? 0x8fa3c4 : 0x5c6f93)); rim.rotation.x = Math.PI / 2; g.add(rim);
+  for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(Rs * 0.92, th * 1.15, 0.05), mat(k === 0 ? 0xe0483a : (dark ? 0xdde3ee : 0x2a3140))); b.position.set(Math.cos(k * Math.PI / 2) * Rs * 0.46, 0, Math.sin(k * Math.PI / 2) * Rs * 0.46); b.rotation.y = -k * Math.PI / 2; g.add(b); }
+  return g;
+}
+
+/* ====================== atelier 1 : gyroscope pesant ====================== */
+function build3dG1() {
+  if (!T3.on) return; clearDyn();
+  const p = gp(GY), dS = p.d * SC, Rs = Math.max(0.12, p.R * SC), dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 1.5, 16), mat(dark ? 0x7a8599 : 0x6b7587)); col.position.y = -0.75; T3.dyn.add(col);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.6, 0.08, 32), mat(dark ? 0x4a5468 : 0x7b8598)); foot.position.y = -1.46; T3.dyn.add(foot);
+  T3.dyn.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), mat(0xe0483a)));
+  const rot = new THREE.Group(), Lr = dS + 0.5, rod = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, Lr, 10), mat(dark ? 0xc9d2e3 : 0x444c5c)); rod.position.y = Lr / 2 - 0.3; rot.add(rod);
+  const spin = mkRotor(Rs, 0.09); spin.position.y = dS; rot.add(spin); T3.dyn.add(rot);
+  const vH = mkVec(GCOL.H), vM = mkVec(GCOL.M), vO = mkVec(GCOL.O), vW = mkVec(GCOL.W); T3.dyn.add(vH.g, vM.g, vO.g, vW.g);
+  const N = 520, pos = new Float32Array(N * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setDrawRange(0, 0);
+  const trace = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: dark ? 0xf0c36a : 0xc98600 })); trace.frustumCulled = false; T3.dyn.add(trace);
+  T3.o1 = { rot, spin, vH, vM, vO, vW, geo, pos, dS, N };
+}
+function pose3dG1() {
+  const o = T3.o1, st = ST; if (!o || !T3.on) return;
+  const th = st.th, ph = st.phi, w3 = st.ppsi / st.p.I3, sg = w3 >= 0 ? 1 : -1;
+  const q = QY(ph).multiply(QZ(-th)); o.rot.quaternion.copy(q); o.spin.rotation.y = st.spin;
+  const u = V3(Math.sin(th) * Math.cos(ph), Math.cos(th), -Math.sin(th) * Math.sin(ph)), dS = o.dS;
+  o.vH.set(V3(0, 0, 0), u.clone().multiplyScalar(sg), 1.35);
+  o.vM.set(V3(0, 0, 0), V3(u.z, 0, -u.x).multiplyScalar(1), Math.abs(Math.sin(th)) > 0.02 ? 0.9 : 0);
+  o.vO.set(V3(0, 0, 0), V3(0, st.phd >= 0 ? 1 : -1, 0), Math.abs(st.phd) > 0.01 ? 0.9 : 0);
+  o.vW.set(u.clone().multiplyScalar(dS), V3(0, -1, 0), 0.8);
+  const tr = st.trace, n = Math.min(tr.length, o.N);
+  for (let i = 0; i < n; i++) { const a = tr[tr.length - n + i], t = a[0], f = a[1]; o.pos[3 * i] = dS * Math.sin(t) * Math.cos(f); o.pos[3 * i + 1] = dS * Math.cos(t); o.pos[3 * i + 2] = -dS * Math.sin(t) * Math.sin(f); }
+  o.geo.setDrawRange(0, n); o.geo.attributes.position.needsUpdate = true;
+}
+function g1Out() {
+  const p = ST.p, w = p.w, H = p.I3 * (ST.ppsi / p.I3), M = p.m * G * p.d, Om = w !== 0 ? M / (p.I3 * w) : NaN, Ms = topMeasured(ST);
+  const out = $('#g-out'); if (!out) return;
+  out.innerHTML = ''; out.append(stats([
+    ['Moment cinétique H = I·ω', fx(Math.abs(H), 3) + ' kg·m²/s'], ['Moment du poids M = m·g·d', fx(M, 3) + ' N·m'],
+    ['Ω théorique = M / (I·ω)', isFinite(Om) ? fx(Math.abs(Om), 3) + ' rad/s' : '∞'], ['Période de précession', isFinite(Om) && Om !== 0 ? fx(TAU / Math.abs(Om), 2) + ' s' : '—'],
+    ['Ω mesuré (simulation)', isFinite(Ms) ? fx(Math.abs(Ms), 3) + ' rad/s' : '…'], ['Ω / ω', isFinite(Om) && w ? fx(Math.abs(Om / w), 4) + (Math.abs(Om / w) < 0.05 ? ' · hypothèse valable' : ' · Ω n’est plus petit devant ω') : '—'],
+    ['Pulsation de nutation I·ω / I<sub>1</sub>', fx(Math.abs(p.I3 * w) / p.I1, 1) + ' rad/s'], ['Inertie I = ½·m·R²', fx(p.I3 * 1e6, 0) + ' g·m²·10<sup>-3</sup>'.replace('g·m²·10<sup>-3</sup>', '×10<sup>−6</sup> kg·m²')]]));
+}
+function g1Plot() {
+  const svg = $('#g-plot'); if (!svg) return; const pl = ST.plot; if (pl.length < 2) return;
+  const W = 520, Hh = 130, mx = 36, my = 14, t1 = pl[pl.length - 1][0], t0 = Math.max(0, t1 - 6), pts = pl.filter(a => a[0] >= t0);
+  let lo = Math.min.apply(null, pts.map(a => a[1])), hi = Math.max.apply(null, pts.map(a => a[1])); lo = Math.min(lo, GY.th0 - 3); hi = Math.max(hi, GY.th0 + 3);
+  const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+  const X = t => mx + (t - t0) / Math.max(6, t1 - t0) * (W - mx - 8), Y = a => Hh - my - (a - lo) / (hi - lo) * (Hh - 2 * my);
+  svg.innerHTML = '';
+  el('line', { x1: mx, y1: Hh - my, x2: W - 8, y2: Hh - my, stroke: 'var(--line)' }, svg); el('line', { x1: mx, y1: 6, x2: mx, y2: Hh - my, stroke: 'var(--line)' }, svg);
+  [lo + pad, hi - pad].forEach(v => { el('line', { x1: mx - 3, x2: mx, y1: Y(v), y2: Y(v), stroke: 'var(--muted)' }, svg); T2(svg, mx - 5, Y(v) + 4, Math.round(v) + '°', MUT, 'sm').setAttribute('text-anchor', 'end'); });
+  el('line', { x1: mx, x2: W - 8, y1: Y(GY.th0), y2: Y(GY.th0), stroke: 'var(--muted)', 'stroke-dasharray': '4 4' }, svg);
+  el('polyline', { points: pts.map(a => X(a[0]).toFixed(1) + ',' + Y(a[1]).toFixed(1)).join(' '), fill: 'none', stroke: GCOL.M, 'stroke-width': 2 }, svg);
+  T2(svg, W - 12, Hh - 2, 'temps (s)', MUT, 'sm').setAttribute('text-anchor', 'end'); T2(svg, mx + 4, 12, 'θ(t)', MUT, 'sm').setAttribute('text-anchor', 'start');
+}
+function g1Reinit() { topInit(GY, ST); if (T3.on) { build3dG1(); pose3dG1(); } g1Out(); g1Plot(); }
+function mountG1(root) {
+  root.innerHTML = '<h2>Gyroscope pesant et précession</h2><p>Un rotor lancé à grande vitesse est monté sur une tige articulée en O. Son poids crée un moment horizontal : au lieu de basculer, le gyroscope <b>précesse</b> autour de la verticale. Modifiez les paramètres, la simulation redémarre avec les équations complètes (la nutation apparaît si on lâche le gyroscope sans vitesse de précession).</p>' +
+    '<div class="two"><div><div id="g-ctl" class="panel"></div><div id="g-out"></div></div><div>' +
+    '<p class="viewlbl">Vue 3D (souris : tourner la vue ; molette : zoom)</p><div class="canvas3d" id="g-canvas" role="img" aria-label="Gyroscope en précession"></div>' +
+    '<div class="leg"><span><i style="background:' + GCOL.H + '"></i>H moment cinétique</span><span><i style="background:' + GCOL.M + '"></i>M moment du poids</span><span><i style="background:' + GCOL.O + '"></i>Ω vitesse de précession</span><span><i style="background:' + GCOL.W + '"></i>P poids</span><span>Trace : trajectoire du centre de gravité</span></div>' +
+    '<div class="files"><button class="btn" id="g-pause" type="button">Pause</button><button class="btn" id="g-restart" type="button">Relancer</button><button class="btn" id="g-rv" type="button">Réinitialiser la vue</button></div>' +
+    '<p class="ptit">Inclinaison θ de l’axe par rapport à la verticale, en fonction du temps</p><svg id="g-plot" viewBox="0 0 520 130" role="img" aria-label="Courbe de l’angle θ en fonction du temps"></svg></div></div>';
+  const ctl = $('#g-ctl'), re = () => g1Reinit();
+  const S = (l, a, b, s, k, f) => rng(l, a, b, s, () => GY[k], v => { GY[k] = v; re(); }, f);
+  ctl.append(h('h3', null, 'Réglages du gyroscope'),
+    S('N (vitesse de rotation, tr/min)', -3000, 3000, 100, 'N', v => (v >= 0 ? '+' : '') + v),
+    S('m (masse du rotor, kg)', 0.2, 3, 0.1, 'm', v => fx(v, 1)), S('R (rayon du rotor, mm)', 30, 120, 5, 'R', v => v), S('d (distance O → G, mm)', 20, 300, 10, 'd', v => v),
+    S('θ_0 (inclinaison initiale, °)', 20, 160, 5, 'th0', v => v),
+    h('p', { class: 'small' }, 'Départ'), chipsRow([['release', 'Lâché sans précession'], ['steady', 'Lancé en précession régulière']], GY.mode, v => { GY.mode = v; mountG1ctl(); re(); }, 'Condition initiale'),
+    h('label', { class: 'chkrow' }, h('span', null, h('input', { type: 'checkbox', id: 'g-fr', checked: GY.fric }), ' Frottement (le rotor ralentit, constante de temps 45 s)')),
+    rng('Vitesse du temps ×', 0.1, 2, 0.1, () => GY.ts, v => { GY.ts = v; }, v => fx(v, 1)));
+  $('#g-fr').addEventListener('change', e => { GY.fric = e.target.checked; });
+  function mountG1ctl() { /* rafraîchit les puces */ const c = $('#g-ctl'); if (!c) return; const chips = c.querySelectorAll('.chip'); chips.forEach(b => { const on = (b.textContent.indexOf('Lâché') === 0 && GY.mode === 'release') || (b.textContent.indexOf('Lancé') === 0 && GY.mode === 'steady'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
+  $('#g-pause').addEventListener('click', e => { SE.pause = !SE.pause; e.target.textContent = SE.pause ? 'Reprendre' : 'Pause'; });
+  $('#g-restart').addEventListener('click', re); $('#g-rv').addEventListener('click', resetView);
+  SE.pause = false; topInit(GY, ST);
+  if (initThree()) {
+    T3.dist = 5.2; T3.ty = -0.1; updateCam();
+    build3dG1(); T3.rebuild = () => { build3dG1(); pose3dG1(); };
+    let acc = 0;
+    T3.tick = dt => {
+      if (!SE.pause) { topAdvance(ST, dt * GY.ts, GY.fric); const w3 = ST.ppsi / ST.p.I3; ST.spin += clamp(w3 * 0.05, -20, 20) * dt; }
+      pose3dG1(); acc += dt; if (acc > 0.15) { acc = 0; g1Out(); g1Plot(); }
+    };
+    pose3dG1();
+  } else {
+    let last = 0; ANIM.fn = dt => { if (!SE.pause) topAdvance(ST, dt * GY.ts, GY.fric); last += dt; if (last > 0.15) { last = 0; g1Out(); g1Plot(); } };
+  }
+  g1Out(); g1Plot();
+}
+WORKSHOPS.push({ id: 'g1', title: 'Gyroscope et précession', hint: 'Réglez la vitesse de rotation, la masse et le bras de levier : observez la précession, la nutation et comparez Ω mesuré à Ω = m·g·d / (I·ω).', mount: mountG1, reset: () => { Object.assign(GY, copy(GY0)); } });
+
+/* ====================== atelier 2 : effet gyroscopique ====================== */
+function ge() { const R = GE.R / 1000, I = 0.5 * GE.m * R * R, w = GE.N * Math.PI / 30, Om = GE.Om * Math.PI / 30, al = toR(GE.al), H = I * w, C = Math.abs(I * w * Om * Math.sin(al)), L = GE.L / 1000; return { R, I, w, Om, al, H, C, L, F: C / L }; }
+function build3dG2() {
+  if (!T3.on) return; clearDyn();
+  const p = ge(), Rs = Math.max(0.12, p.R * SC), dark = document.documentElement.getAttribute('data-theme') === 'dark', Lb = Math.max(0.7, p.L * SC * 0.5);
+  const P = new THREE.Group(); T3.dyn.add(P);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.1, 48), mat(dark ? 0x4a5468 : 0x8a95a8)); plate.position.y = -1.45; P.add(plate);
+  const mk = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.1), mat(0xe0483a)); mk.position.set(1.4, -1.38, 0); P.add(mk);
+  const u = V3(Math.sin(p.al), Math.cos(p.al), 0), q = new THREE.Quaternion().setFromUnitVectors(V3(0, 1, 0), u);
+  const rotor = new THREE.Group(); rotor.quaternion.copy(q); P.add(rotor);
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2 * Lb + 0.4, 10), mat(dark ? 0xc9d2e3 : 0x444c5c)); rotor.add(axle);
+  const spin = mkRotor(Rs, 0.14); rotor.add(spin);
+  [1, -1].forEach(s => {
+    const bp = u.clone().multiplyScalar(s * Lb), blk = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), mat(dark ? 0xaab6cc : 0x56627a)); blk.position.copy(bp); P.add(blk);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, bp.y + 1.45, 8), mat(dark ? 0x7a8599 : 0x6b7587)); post.position.set(bp.x, (bp.y - 1.45) / 2, 0); P.add(post);
+  });
+  const vH = mkVec(GCOL.H), vC = mkVec(GCOL.M), vF1 = mkVec(GCOL.F), vF2 = mkVec(GCOL.F); P.add(vH.g, vC.g, vF1.g, vF2.g);
+  const vO = mkVec(GCOL.O); T3.dyn.add(vO.g);
+  T3.o2 = { P, rotor, spin, vH, vC, vF1, vF2, vO, u, Lb };
+}
+function pose3dG2() {
+  const o = T3.o2; if (!o || !T3.on) return; const p = ge();
+  o.P.rotation.y = SE.Phi || 0; o.spin.rotation.y = SE.spin || 0;
+  const sgW = GE.N >= 0 ? 1 : -1, Hv = o.u.clone().multiplyScalar(sgW), Ov = V3(0, GE.Om >= 0 ? 1 : -1, 0), Cr = Ov.clone().multiplyScalar(Math.abs(GE.Om)).cross(Hv.clone().multiplyScalar(Math.abs(p.H)));
+  o.vH.set(V3(0, 0, 0), Hv, GE.vH ? 1.45 : 0); o.vO.set(V3(0, 0, 0), Ov, GE.vO && Math.abs(GE.Om) > 0.01 ? 1.2 : 0);
+  /* couple exercé par le rotor sur le bâti : H ∧ Ω */
+  const Cf = Cr.clone().multiplyScalar(-1), cn = Cf.length(); o.vC.set(V3(0, 0.0, 0), Cf, GE.vC && cn > 1e-6 ? 0.45 + 0.8 * Math.tanh(p.C / 12) : 0);
+  /* efforts sur le bâti aux deux paliers : F_rotor = -(C_r × u) / L */
+  const Fn = cn > 1e-6 ? Cr.clone().cross(o.u).multiplyScalar(-1).normalize() : V3(0, 0, 0), sh = 0.4 + 1.0 * Math.tanh(p.F / 120);
+  const Fon = Fn.clone().multiplyScalar(-1);
+  [[o.vF1, 1], [o.vF2, -1]].forEach(a => a[0].set(o.u.clone().multiplyScalar(a[1] * o.Lb), Fon.clone().multiplyScalar(a[1]), GE.vF && p.F > 0.05 ? sh : 0));
+}
+function g2Out() {
+  const p = ge(), out = $('#g-out2'); if (!out) return;
+  const par = Math.abs(Math.sin(p.al)) < 0.01;
+  out.innerHTML = ''; out.append(stats([['I = ½·m·R²', fx(p.I, 4) + ' kg·m²'], ['ω', fx(p.w, 1) + ' rad/s'], ['Ω', fx(p.Om, 3) + ' rad/s'], ['H = I·ω', fx(p.H, 3) + ' kg·m²/s'], ['C = I·ω·Ω·sin α', fx(p.C, 2) + ' N·m'], ['Effort par palier F = C / L', fx(p.F, 1) + ' N']]));
+  out.append(h('div', { class: 'infob', html: par ? 'L’axe du rotor est <b>parallèle</b> à Ω : sin α = 0, il n’y a pas d’effet gyroscopique.' : (Math.abs(sin1(p.al)) > 0.99 ? 'L’axe du rotor est <b>perpendiculaire</b> à Ω : l’effet est maximal.' : 'L’effet gyroscopique est proportionnel à sin α = ' + fx(Math.abs(Math.sin(p.al)), 2) + '.') }));
+}
+const sin1 = a => Math.sin(a);
+function mountG2(root) {
+  root.innerHTML = '<h2>Effet gyroscopique : rotor sur plateau tournant</h2><p>Un rotor tourne à la vitesse ω dans deux paliers fixés sur un plateau qui tourne lui-même à la vitesse Ω autour de la verticale. L’axe du rotor est obligé de changer de direction : les paliers doivent exercer un couple sur le rotor, et le rotor exerce en retour un <b>couple gyroscopique</b> sur le bâti. Faites varier l’angle α, les vitesses et la distance entre paliers.</p>' +
+    '<div class="two"><div><div id="g-ctl" class="panel"></div><div id="g-out2"></div></div><div>' +
+    '<p class="viewlbl">Vue 3D (souris : tourner la vue ; molette : zoom)</p><div class="canvas3d" id="g-canvas" role="img" aria-label="Rotor sur plateau tournant"></div>' +
+    '<div class="leg"><span><i style="background:' + GCOL.H + '"></i>H moment cinétique du rotor</span><span><i style="background:' + GCOL.O + '"></i>Ω rotation du plateau</span><span><i style="background:' + GCOL.M + '"></i>couple gyroscopique du rotor sur le bâti</span><span><i style="background:' + GCOL.F + '"></i>efforts du rotor sur les paliers</span></div>' +
+    '<p class="small">La rotation du rotor est ralentie à l’écran pour rester visible.</p>' +
+    '<div class="files"><button class="btn" id="g-pause" type="button">Pause</button><button class="btn" id="g-rv" type="button">Réinitialiser la vue</button></div></div></div>';
+  const ctl = $('#g-ctl'), S = (l, a, b, s, k, f, rb) => rng(l, a, b, s, () => GE[k], v => { GE[k] = v; if (rb && T3.on) { build3dG2(); } pose3dG2(); g2Out(); }, f);
+  const chk = (k, lab, col) => h('label', null, h('input', { type: 'checkbox', checked: GE[k], onchange: e => { GE[k] = e.target.checked; pose3dG2(); } }), h('i', { style: 'background:' + col }), lab);
+  ctl.append(h('h3', null, 'Réglages'), S('N (rotor, tr/min)', -3000, 3000, 100, 'N', v => (v >= 0 ? '+' : '') + v), S('Ω (plateau, tr/min)', -60, 60, 1, 'Om', v => (v >= 0 ? '+' : '') + v),
+    S('α (angle entre l’axe du rotor et Ω, °)', 0, 180, 5, 'al', v => v, true), S('m (masse du rotor, kg)', 0.5, 5, 0.5, 'm', v => fx(v, 1)), S('R (rayon, mm)', 50, 200, 10, 'R', v => v, true), S('L (distance entre paliers, mm)', 100, 600, 20, 'L', v => v, true),
+    h('div', { class: 'chkrow' }, chk('vH', 'H', GCOL.H), chk('vO', 'Ω', GCOL.O), chk('vC', 'Couple', GCOL.M), chk('vF', 'Efforts aux paliers', GCOL.F)));
+  $('#g-pause').addEventListener('click', e => { SE.pause = !SE.pause; e.target.textContent = SE.pause ? 'Reprendre' : 'Pause'; }); $('#g-rv').addEventListener('click', resetView);
+  SE.pause = false; SE.Phi = 0; SE.spin = 0;
+  if (initThree()) {
+    T3.dist = 7.4; T3.ty = -0.5; T3.rx = 0.5; updateCam();
+    build3dG2(); T3.rebuild = () => { build3dG2(); pose3dG2(); };
+    T3.tick = dt => { if (!SE.pause) { const p = ge(); SE.Phi += p.Om * dt; SE.spin += clamp(p.w * 0.05, -20, 20) * dt; } pose3dG2(); };
+    pose3dG2();
+  }
+  g2Out();
+}
+WORKSHOPS.push({ id: 'g2', title: 'Effet gyroscopique', hint: 'Faites tourner le plateau : le rotor exerce un couple C = I·ω·Ω·sin α sur le bâti, qui se traduit par deux efforts opposés sur les paliers.', mount: mountG2, reset: () => { Object.assign(GE, copy(GE0)); } });
+
+/* ====================== atelier 3 : applications ====================== */
+function drawMoto(svg, p) {
+  const left = p.dir === 'gauche', v = p.v / 3.6, lean = Math.atan(v * v / (G * p.rho)) * DEG, vis = Math.min(lean, 26), sg = left ? -1 : 1, cx = 180, gy = 225;
+  el('line', { x1: 20, y1: gy, x2: 340, y2: gy, stroke: 'var(--muted)', 'stroke-width': 2 }, svg);
+  const g = el('g', { transform: 'rotate(' + (sg * vis).toFixed(1) + ' ' + cx + ' ' + gy + ')' }, svg);
+  el('ellipse', { cx, cy: 165, rx: 9, ry: 60, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, g);
+  el('line', { x1: cx, y1: 165, x2: cx, y2: 85, stroke: NOCS, 'stroke-width': 5, 'stroke-linecap': 'round' }, g);
+  el('rect', { x: cx - 14, y: 55, width: 28, height: 34, rx: 8, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 1.5 }, g);
+  el('circle', { cx, cy: 40, r: 11, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 1.5 }, g);
+  gArr(g, cx, 165, cx - 78, 165, GCOL.H, 3.4); T2(g, cx - 70, 150, 'H', GCOL.H);
+  el('circle', { cx, cy: 165, r: 3.5, fill: NOCS }, g);
+  const ox = 300; gArr(svg, ox, 190, ox, left ? 120 : 250, GCOL.O, 3.4); T2(svg, ox + 16, left ? 130 : 248, 'Ω', GCOL.O);
+  gArc(svg, 92, 150, 38, left ? 60 : 120, left ? -60 : 240, GCOL.M, 3.2); T2(svg, 92, 150, 'C_g', GCOL.M);
+  T2(svg, cx, 252, 'Vue de l’arrière · virage à ' + p.dir + (lean > 26 ? ' · inclinaison limitée à l’écran' : ''), MUT, 'sm');
+  return lean;
+}
+function drawShip(svg, p) {
+  const bab = p.dir === 'babord', fwd = p.sens === 'avant', up = (bab ? 1 : -1) * (fwd ? 1 : -1), pitch = up * 10 * Math.tanh(p.I * (p.N * Math.PI / 30) * (p.Om * Math.PI / 180) / 20000), cx = 210, cy = 165;
+  el('line', { x1: 10, y1: 168, x2: 410, y2: 168, stroke: GCOL.O, 'stroke-width': 1.5, 'stroke-dasharray': '6 5' }, svg);
+  const g = el('g', { transform: 'rotate(' + (-pitch).toFixed(1) + ' ' + cx + ' ' + cy + ')' }, svg);
+  el('polygon', { points: '70,128 350,128 390,128 340,200 100,200', fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, g);
+  el('rect', { x: 230, y: 98, width: 70, height: 30, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 1.5 }, g);
+  el('circle', { cx, cy: 160, r: 22, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, g); el('circle', { cx, cy: 160, r: 3.5, fill: NOCS }, g);
+  gArr(g, cx, 160, fwd ? cx + 80 : cx - 80, 160, GCOL.H, 3.4); T2(g, fwd ? cx + 92 : cx - 92, 148, 'H', GCOL.H);
+  T2(svg, 392, 118, 'avant', MUT, 'sm'); T2(svg, 28, 118, 'arrière', MUT, 'sm');
+  gArr(svg, 70, 70, 70, bab ? 24 : 112, GCOL.O, 3.4); T2(svg, 88, bab ? 38 : 104, 'Ω', GCOL.O);
+  gArc(svg, 330, 70, 30, up > 0 ? 200 : -20, up > 0 ? 330 : 110, GCOL.M, 3.2); T2(svg, 330, 75, 'C_g', GCOL.M);
+  T2(svg, 210, 214, 'Vue de côté · virage à ' + p.dir + ' · la proue ' + (up > 0 ? 'se soulève' : 's’abaisse'), MUT, 'sm');
+  return up;
+}
+function appOut() {
+  const o = $('#g-appout'), A = AP[AP.kind]; if (!o) return; o.innerHTML = '';
+  if (AP.kind === 'moto') {
+    const v = A.v / 3.6, w = v / A.Rw, Om = v / A.rho, C = 2 * A.I * w * Om, lean = Math.atan(v * v / (G * A.rho)) * DEG;
+    o.append(stats([['ω des roues = v / R<sub>w</sub>', fx(w, 1) + ' rad/s (' + fx(w * 30 / Math.PI, 0) + ' tr/min)'], ['Ω lacet = v / ρ', fx(Om, 3) + ' rad/s (' + fx(Om * DEG, 1) + ' °/s)'], ['Couple gyroscopique des 2 roues', fx(C, 1) + ' N·m'], ['Angle d’inclinaison tan φ = v² / (g·ρ)', fx(lean, 1) + '°']]));
+    o.append(h('div', { class: 'infob', html: 'Les roues tournent autour d’un axe horizontal ; le virage fait tourner la moto autour de la verticale (α = 90°). Le couple gyroscopique C = 2·I·ω·Ω tend à <b>redresser</b> la moto : il amène H vers Ω. Il est faible devant le couple du poids, mais il est ressenti à grande vitesse (direction « raide »).' }));
+  } else {
+    const w = A.N * Math.PI / 30, Om = A.Om * Math.PI / 180, C = A.I * w * Om, up = (A.dir === 'babord' ? 1 : -1) * (A.sens === 'avant' ? 1 : -1);
+    o.append(stats([['ω de la turbine', fx(w, 0) + ' rad/s'], ['Ω de giration', fx(Om, 4) + ' rad/s'], ['Couple C = I·ω·Ω', fx(C / 1000, 1) + ' kN·m'], ['Effort par palier F = C / L', fx(C / A.L / 1000, 2) + ' kN']]));
+    o.append(h('div', { class: 'infob', html: 'Axe de la turbine <b>horizontal et longitudinal</b>, giration autour de la verticale : α = 90°. H est dirigé vers ' + (A.sens === 'avant' ? 'l’avant' : 'l’arrière') + ' et le navire vire à ' + A.dir + ' : le couple gyroscopique fait <b>' + (up > 0 ? 'monter' : 'descendre') + ' la proue</b> (H cherche à rejoindre Ω).' }));
+  }
+}
+function appDraw() {
+  const box = $('#g-appfig'); if (!box) return; box.innerHTML = '';
+  if (AP.kind === 'moto') { const s = mkSvg('0 0 360 260', 'Moto en virage, vue arrière'); drawMoto(s, AP.moto); box.append(h('div', { class: 'gwrap appsvg' }, s)); }
+  else { const s = mkSvg('0 0 420 225', 'Navire avec turbine, vue de côté'); drawShip(s, AP.navire); box.append(h('div', { class: 'gwrap appsvg' }, s)); }
+  appOut();
+}
+function appCtl() {
+  const c = $('#g-appctl'); if (!c) return; c.innerHTML = ''; const A = AP[AP.kind], S = (l, a, b, s, k, f) => rng(l, a, b, s, () => A[k], v => { A[k] = v; appDraw(); }, f);
+  c.append(h('h3', null, 'Réglages'));
+  if (AP.kind === 'moto') c.append(S('v (vitesse, km/h)', 20, 200, 5, 'v', v => v), S('ρ (rayon du virage, m)', 20, 300, 5, 'rho', v => v), S('R_w (rayon des roues, m)', 0.25, 0.4, 0.01, 'Rw', v => fx(v, 2)), S('I (inertie d’une roue, kg·m²)', 0.3, 1.5, 0.1, 'I', v => fx(v, 1)),
+    h('p', { class: 'small' }, 'Sens du virage'), chipsRow([['gauche', 'Gauche'], ['droite', 'Droite']], A.dir, v => { A.dir = v; appCtl(); appDraw(); }, 'Sens du virage'));
+  else c.append(S('I (inertie de la turbine, kg·m²)', 1000, 10000, 500, 'I', v => v), S('N (vitesse de la turbine, tr/min)', 1500, 6000, 100, 'N', v => v), S('Ω (vitesse de giration, °/s)', 0.2, 5, 0.1, 'Om', v => fx(v, 1)), S('L (distance entre paliers, m)', 2, 10, 0.5, 'L', v => fx(v, 1)),
+    h('p', { class: 'small' }, 'Sens du virage'), chipsRow([['babord', 'Babord (gauche)'], ['tribord', 'Tribord (droite)']], A.dir, v => { A.dir = v; appCtl(); appDraw(); }, 'Sens du virage'),
+    h('p', { class: 'small' }, 'Sens de rotation de la turbine'), chipsRow([['avant', 'H vers l’avant'], ['arriere', 'H vers l’arrière']], A.sens, v => { A.sens = v; appCtl(); appDraw(); }, 'Sens de la turbine'));
+}
+function mountG3(root) {
+  root.innerHTML = '<h2>Applications : moto et navire</h2><p>Deux situations réelles où le couple gyroscopique C = I·ω·Ω·sin α apparaît. Choisissez le cas, réglez les paramètres et lisez le sens du couple avec la règle « H cherche à rejoindre Ω ».</p><div id="g-sel"></div><div class="two"><div class="panel" id="g-appctl"></div><div><div id="g-appfig"></div></div></div><div id="g-appout"></div>';
+  const sel = () => { const s = $('#g-sel'); s.innerHTML = ''; s.append(chipsRow([['moto', 'Moto en virage'], ['navire', 'Turbine de navire']], AP.kind, v => { AP.kind = v; sel(); appCtl(); appDraw(); }, 'Application')); };
+  sel(); appCtl(); appDraw();
+}
+WORKSHOPS.push({ id: 'g3', title: 'Applications', hint: 'Moto en virage et turbine de navire : calculez le couple gyroscopique et lisez son sens.', mount: mountG3, reset: () => { AP.kind = 'moto'; AP.moto = { v: 90, rho: 80, Rw: 0.3, I: 0.7, dir: 'gauche' }; AP.navire = { I: 5000, N: 3000, Om: 1, L: 5, dir: 'babord', sens: 'avant' }; } });
+
+const EXS = {};
+function mountEx(root, cfg) {
+  const S = EXS[cfg.key] || (EXS[cfg.key] = { flt: 'all', ex: null, pick: null, counted: false, shown: false, score: { ok: 0, tot: 0 } });
+  if (!S.ex) S.ex = cfg.gen(S.flt);
+  const ex = S.ex; root.innerHTML = '';
+  root.append(h('h2', null, cfg.title), h('p', { html: cfg.intro }));
+  root.append(chipsRow(cfg.filters, S.flt, v => { S.flt = v; S.ex = cfg.gen(v); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); }, 'Type d’exercice'));
+  root.append(h('p', { class: 'scoreline', id: 'ex-score' }, 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot));
+  root.append(h('div', { class: 'exs' }, h('p', { class: 'small' }, ex.tag), h('p', { html: ex.text })));
+  if (ex.fig) root.append(ex.fig());
+  const cho = h('div', { id: 'ex-cho' });
+  const drawCho = () => { cho.innerHTML = ''; if (ex.choice) cho.append(h('p', { class: 'small' }, (ex.choice.q || 'Quelle est cette liaison ?')), chipsRow(ex.choice.options, S.pick, v => { S.pick = v; drawCho(); }, 'Choix')); };
+  root.append(cho); drawCho();
+  const row = h('div', { class: 'fieldrow' }), ins = {};
+  ex.fields.forEach(f => {
+    const inp = h('input', { type: 'text', inputmode: 'decimal', id: 'ex-' + cfg.key + '-' + f.id, autocomplete: 'off', 'aria-label': f.label, placeholder: 'ex. 12,5' });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    ins[f.id] = inp; row.append(h('label', { class: 'fld' }, h('span', { html: subz(f.label) }), inp));
+  });
+  root.append(row);
+  const res = h('div', { class: 'verdict', hidden: true, 'aria-live': 'polite' }), sol = h('div', { class: 'solbox', hidden: !S.shown });
+  const count = ok => { if (!S.counted) { S.counted = true; S.score.tot++; if (ok) S.score.ok++; $('#ex-score').textContent = 'Réussis du premier coup : ' + S.score.ok + ' / ' + S.score.tot; } };
+  function check() {
+    const marks = ex.fields.map(f => { const v = parseAns(ins[f.id].value), ok = okAns(v, f.val, 0.02, f.abs != null ? f.abs : 0.01); ins[f.id].className = ok ? 'okk' : 'nok'; return { ok, v }; });
+    const chOk = !ex.choice || S.pick === ex.choice.ans, all = marks.every(m => m.ok) && chOk;
+    res.hidden = false; res.className = 'verdict ' + (all ? 'yes' : 'no');
+    res.textContent = all ? 'Correct.' : ex.choice && !S.pick ? 'Faites d’abord un choix.' : marks.some(m => !isFinite(m.v)) ? 'Une réponse est vide ou illisible. Écrivez un nombre (virgule ou point).' : !chOk ? 'Le choix n’est pas le bon : relisez le cours.' : 'Pas encore. Reprenez le calcul ou affichez la solution.';
+    count(all);
+  }
+  sol.innerHTML = '<b>Solution</b>' + ex.sol + (ex.fields.length ? '<p class="small">Réponses attendues : ' + ex.fields.map(f => subz(f.label) + ' = ' + fx(f.val, 3)).join(' ; ') + '</p>' : '');
+  if (ex.solNode) sol.append(ex.solNode());
+  root.append(h('div', { class: 'files', style: 'margin:8px 0' },
+    h('button', { class: 'btn pri', type: 'button', onclick: check }, 'Vérifier'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.shown = true; sol.hidden = false; count(false); } }, 'Voir la solution'),
+    h('button', { class: 'btn', type: 'button', onclick: () => { S.ex = cfg.gen(S.flt); S.pick = null; S.counted = false; S.shown = false; mountEx($('#ws'), cfg); $('#scroller').scrollTop = 0; } }, 'Nouvel exercice')), res, sol);
+  root.append(h('p', { class: 'small' }, 'Les réponses numériques sont acceptées à ± 2 %.'));
+  ANIM.fn = null;
+}
+
+
+/* ================= Exercices ================= */
+const F = (id, label, val, abs) => ({ id, label, val, abs: abs == null ? 0.01 : abs });
+const rnd = (a, b, s) => { const n = Math.round((b - a) / s); return a + s * Math.floor(Math.random() * (n + 1)); };
+const sig = (x, d) => parseFloat(x.toPrecision(d));
+function genPrec(flt) {
+  const kind = pick(flt === 'calc' ? ['omega', 'spin', 'couple'] : flt === 'sens' ? ['sens'] : flt === 'prop' ? ['prop'] : ['omega', 'spin', 'couple', 'sens', 'prop']);
+  const m = pick([0.5, 0.8, 1, 1.2, 1.5, 2]), R = pick([40, 50, 60, 80, 100]), d = pick([50, 80, 100, 120, 150, 200]), N = pick([1000, 1500, 2000, 3000, 4000]);
+  const mm = m * 1, Rm = R / 1000, dm = d / 1000, I = 0.5 * mm * Rm * Rm, w = N * Math.PI / 30, M = mm * G * dm, H = I * w, Om = M / H;
+  const data = 'un disque homogène de masse <b>m = ' + fx(m, 1) + ' kg</b> et de rayon <b>R = ' + R + ' mm</b>, dont le centre de gravité est à <b>d = ' + d + ' mm</b> du pivot O (g = 9,81 m/s²)';
+  if (kind === 'omega') return { tag: 'Vitesse de précession', text: 'Un gyroscope est constitué de ' + data + '. Le disque tourne à <b>N = ' + N + ' tr/min</b>, l’axe étant horizontal. Calculer la vitesse de précession Ω (en rad/s) avec Ω = m·g·d / (I·ω), où I = ½·m·R².',
+    fields: [F('o', 'Ω (rad/s)', Om, 0.005)],
+    sol: '<p>I = ½·m·R² = ½ × ' + fx(m, 1) + ' × ' + fx(Rm, 3) + '² = <b>' + fx(I, 5) + ' kg·m²</b>.</p><p>ω = 2π·N / 60 = <b>' + fx(w, 1) + ' rad/s</b>. M = m·g·d = ' + fx(M, 3) + ' N·m.</p><p>Ω = M / (I·ω) = ' + fx(M, 3) + ' / (' + fx(I, 5) + ' × ' + fx(w, 1) + ') = <b>' + fx(Om, 3) + ' rad/s</b>, soit une période de ' + fx(TAU / Om, 2) + ' s.</p>' };
+  if (kind === 'spin') { const Ot = pick([0.5, 1, 1.5, 2, 3]), Nn = M / (I * Ot) * 30 / Math.PI;
+    return { tag: 'Vitesse de rotation nécessaire', text: 'Même gyroscope : ' + data + '. On veut une précession à <b>Ω = ' + fx(Ot, 1) + ' rad/s</b>. Quelle vitesse de rotation N (en tr/min) faut-il lancer le disque ?',
+      fields: [F('n', 'N (tr/min)', Nn, 1)],
+      sol: '<p>Ω = m·g·d / (I·ω) donc ω = m·g·d / (I·Ω) = ' + fx(M, 3) + ' / (' + fx(I, 5) + ' × ' + fx(Ot, 1) + ') = <b>' + fx(M / (I * Ot), 1) + ' rad/s</b>.</p><p>N = ω × 60 / (2π) = <b>' + fx(Nn, 0) + ' tr/min</b>.</p>' }; }
+  if (kind === 'couple') return { tag: 'Moment du poids et moment cinétique', text: 'Gyroscope : ' + data + ', tournant à <b>N = ' + N + ' tr/min</b>. Calculer le moment M du poids par rapport à O (en N·m) et le module H du moment cinétique (en kg·m²/s).',
+    fields: [F('m', 'M (N·m)', M, 0.005), F('h', 'H (kg·m²/s)', H, 0.001)],
+    sol: '<p>M = m·g·d = ' + fx(m, 1) + ' × 9,81 × ' + fx(dm, 3) + ' = <b>' + fx(M, 3) + ' N·m</b>.</p><p>H = I·ω = ' + fx(I, 5) + ' × ' + fx(w, 1) + ' = <b>' + fx(H, 3) + ' kg·m²/s</b>. Le théorème du moment dynamique donne ensuite Ω = M / H = ' + fx(Om, 3) + ' rad/s.</p>' };
+  if (kind === 'prop') { const q = pick([['double la vitesse de rotation ω', 0.5, 'ω est multipliée par 2 au dénominateur'], ['double la distance d', 2, 'M = m·g·d est multiplié par 2'], ['double la masse m', 1, 'M et I sont multipliés par 2 (rayon inchangé), Ω ne change pas'], ['double le rayon R du disque (masse inchangée)', 0.25, 'I = ½·m·R² est multiplié par 4']]);
+    return { tag: 'Proportionnalité', text: 'Dans la formule Ω = m·g·d / (I·ω) on ' + q[0] + ', toutes choses égales par ailleurs. Par quel facteur la vitesse de précession Ω est-elle multipliée ?', fields: [F('k', 'Ω_2 / Ω_1', q[1], 0.005)], sol: '<p>Ω = m·g·d / (I·ω) : ' + q[2] + '. Le facteur est donc <b>' + fx(q[1], 2) + '</b>.</p>' }; }
+  /* sens */
+  const aw = pick([true, false]), ans = aw ? 'ccw' : 'cw';
+  return { tag: 'Sens de précession', text: 'Gyroscope à axe horizontal, pivoté en O et chargé par le poids du rotor en G. Le moment cinétique H est dirigé ' + (aw ? '<b>de O vers G</b> (le rotor tourne dans le sens direct autour de l’axe orienté de O vers G)' : '<b>de G vers O</b> (le rotor tourne dans l’autre sens)') + '. Vu de dessus, dans quel sens l’axe précesse-t-il ?',
+    choice: { q: 'Quel est le sens de précession vu de dessus ?', options: [['ccw', 'Sens trigonométrique (anti-horaire)'], ['cw', 'Sens horaire']], ans },
+    fields: [],
+    sol: '<p>Le moment du poids M = OG ∧ P est horizontal et perpendiculaire à l’axe. Le vecteur H tend à rejoindre M : H tourne autour de la verticale.</p><p>' + (aw ? 'H est dirigé de O vers G : H tourne dans le sens <b>trigonométrique</b> vu de dessus.' : 'H est dirigé de G vers O : le sens est <b>horaire</b>. En inversant le sens de rotation du rotor, on inverse le sens de la précession.') + '</p>' };
+}
+function genGyroEx(flt) {
+  const kind = pick(flt === 'calc' ? ['couple', 'palier', 'angle'] : flt === 'app' ? ['moto', 'navire'] : flt === 'sens' ? ['sens'] : ['couple', 'palier', 'angle', 'moto', 'navire', 'sens']);
+  if (kind === 'couple' || kind === 'palier') {
+    const I = pick([0.005, 0.01, 0.02, 0.05, 0.1]), N = pick([1500, 3000, 6000, 9000]), Om = pick([0.5, 1, 2, 3, 5]), L = pick([0.2, 0.3, 0.5, 0.8]), w = N * Math.PI / 30, C = I * w * Om;
+    const base = 'Un rotor d’inertie <b>I = ' + fx(I, 3) + ' kg·m²</b> tourne à <b>N = ' + N + ' tr/min</b> dans un bâti qui tourne à <b>Ω = ' + fx(Om, 1) + ' rad/s</b> autour d’un axe perpendiculaire à l’axe du rotor (α = 90°).';
+    if (kind === 'couple') return { tag: 'Couple gyroscopique', text: base + ' Calculer le couple gyroscopique C = I·ω·Ω (en N·m).', fields: [F('c', 'C (N·m)', C, 0.01)], sol: '<p>ω = 2π·N / 60 = <b>' + fx(w, 1) + ' rad/s</b>.</p><p>C = I·ω·Ω·sin 90° = ' + fx(I, 3) + ' × ' + fx(w, 1) + ' × ' + fx(Om, 1) + ' = <b>' + fx(C, 2) + ' N·m</b>.</p>' };
+    return { tag: 'Efforts sur les paliers', text: base + ' Les deux paliers sont distants de <b>L = ' + fx(L * 1000, 0) + ' mm</b>. Calculer l’effort F supporté par chaque palier du fait de l’effet gyroscopique (en N).', fields: [F('f', 'F (N)', C / L, 0.05)], sol: '<p>C = I·ω·Ω = ' + fx(I, 3) + ' × ' + fx(w, 1) + ' × ' + fx(Om, 1) + ' = ' + fx(C, 2) + ' N·m.</p><p>Les deux paliers forment un couple : F × L = C, donc F = C / L = ' + fx(C, 2) + ' / ' + fx(L, 2) + ' = <b>' + fx(C / L, 1) + ' N</b> (de sens opposé sur chaque palier).</p>' };
+  }
+  if (kind === 'angle') {
+    const al = pick([0, 30, 45, 60, 90, 120, 150, 180]), I = 0.02, w = 314.16, Om = 2, C = I * w * Om * Math.sin(al / DEG);
+    return { tag: 'Influence de l’angle', text: 'Un rotor d’inertie I = 0,02 kg·m² tourne à ω = 314,16 rad/s. Son bâti tourne à Ω = 2 rad/s ; l’angle entre l’axe du rotor et le vecteur Ω est <b>α = ' + al + '°</b>. Calculer le module du couple gyroscopique (en N·m).', fields: [F('c', 'C (N·m)', Math.abs(C), 0.01)], sol: '<p>C = I·ω·Ω·|sin α| = 0,02 × 314,16 × 2 × |sin ' + al + '°| = <b>' + fx(Math.abs(C), 2) + ' N·m</b>.</p>' + (al % 180 === 0 ? '<p>Si l’axe est parallèle à Ω, il n’y a aucun effet gyroscopique.</p>' : '') };
+  }
+  if (kind === 'moto') {
+    const v = pick([60, 90, 120, 150]), rho = pick([50, 80, 120, 200]), Rw = pick([0.28, 0.30, 0.32]), I = pick([0.5, 0.7, 0.9]), w = v / 3.6 / Rw, Om = v / 3.6 / rho, C = 2 * I * w * Om, s = mkSvg('0 0 360 260', 'Moto en virage'), pp = { v, rho, Rw, I, dir: pick(['gauche', 'droite']) };
+    drawMoto(s, pp);
+    return { tag: 'Moto en virage', fig: () => h('div', { class: 'gwrap appsvg' }, s), text: 'Une moto roule à <b>v = ' + v + ' km/h</b> dans un virage de rayon <b>ρ = ' + rho + ' m</b>. Chaque roue a un rayon R<sub>w</sub> = ' + fx(Rw, 2) + ' m et une inertie I = ' + fx(I, 1) + ' kg·m². On néglige l’inclinaison. Calculer le couple gyroscopique des deux roues C = 2·I·ω·Ω (en N·m), avec ω = v / R<sub>w</sub> et Ω = v / ρ.',
+      fields: [F('c', 'C (N·m)', C, 0.05)], sol: '<p>v = ' + v + ' / 3,6 = ' + fx(v / 3.6, 2) + ' m/s. ω = v / R<sub>w</sub> = <b>' + fx(w, 1) + ' rad/s</b>, Ω = v / ρ = <b>' + fx(Om, 3) + ' rad/s</b>.</p><p>C = 2 × ' + fx(I, 1) + ' × ' + fx(w, 1) + ' × ' + fx(Om, 3) + ' = <b>' + fx(C, 1) + ' N·m</b>.</p>' };
+  }
+  if (kind === 'navire') {
+    const I = pick([2000, 5000, 8000]), N = pick([3000, 4500, 6000]), Omd = pick([0.5, 1, 2, 3]), w = N * Math.PI / 30, C = I * w * Omd * Math.PI / 180, s = mkSvg('0 0 420 225', 'Navire'), pp = { I, N, Om: Omd, L: 5, dir: pick(['babord', 'tribord']), sens: 'avant' };
+    drawShip(s, pp);
+    return { tag: 'Turbine de navire', fig: () => h('div', { class: 'gwrap appsvg' }, s), text: 'La turbine d’un navire (inertie <b>I = ' + I + ' kg·m²</b>, <b>N = ' + N + ' tr/min</b>, axe longitudinal) subit une giration de <b>' + fx(Omd, 1) + ' °/s</b> autour de la verticale. Calculer le couple gyroscopique C = I·ω·Ω en <b>kN·m</b>.',
+      fields: [F('c', 'C (kN·m)', C / 1000, 0.05)], sol: '<p>ω = ' + fx(w, 1) + ' rad/s ; Ω = ' + fx(Omd, 1) + ' × π/180 = ' + fx(Omd * Math.PI / 180, 4) + ' rad/s.</p><p>C = ' + I + ' × ' + fx(w, 1) + ' × ' + fx(Omd * Math.PI / 180, 4) + ' = ' + fx(C, 0) + ' N·m = <b>' + fx(C / 1000, 1) + ' kN·m</b>.</p>' };
+  }
+  /* sens : navire */
+  const dir = pick(['babord', 'tribord']), sens = pick(['avant', 'arriere']), up = (dir === 'babord' ? 1 : -1) * (sens === 'avant' ? 1 : -1), s = mkSvg('0 0 420 225', 'Navire'); drawShip(s, { I: 5000, N: 3000, Om: 2, L: 5, dir, sens });
+  return { tag: 'Sens du couple', fig: () => h('div', { class: 'gwrap appsvg' }, s), text: 'Le moment cinétique H de la turbine d’un navire est dirigé vers ' + (sens === 'avant' ? '<b>l’avant</b>' : '<b>l’arrière</b>') + '. Le navire vire à <b>' + dir + '</b> (Ω vertical vers ' + (dir === 'babord' ? 'le haut' : 'le bas') + '). Que fait la proue ?',
+    choice: { q: 'Que fait la proue ?', options: [['monte', 'Elle se soulève'], ['descend', 'Elle s’abaisse']], ans: up > 0 ? 'monte' : 'descend' }, fields: [],
+    sol: '<p>Règle : le couple gyroscopique exercé sur le bâti tend à amener <b>H vers Ω</b>. Ici H est dirigé vers ' + (sens === 'avant' ? 'l’avant' : 'l’arrière') + ' et Ω vers ' + (dir === 'babord' ? 'le haut' : 'le bas') + ' : l’extrémité de H ' + (up > 0 ? 'monte' : 'descend') + ' ; la proue ' + (up > 0 ? '<b>se soulève</b>' : '<b>s’abaisse</b>') + '.</p>' };
+}
+WORKSHOPS.push({ id: 'g4', title: 'Exercices : précession', hint: 'Calculez la vitesse de précession, la vitesse de rotation nécessaire, les moments et le sens de précession.', mount: r => mountEx(r, { key: 'g4', title: 'Exercices : précession gyroscopique', intro: 'Précession d’un gyroscope pesant : Ω = m·g·d / (I·ω) avec I = ½·m·R² pour un disque. Les réponses numériques sont acceptées à 2 % près (virgule ou point).', filters: [['all', 'Tous'], ['calc', 'Calculs'], ['prop', 'Proportionnalité'], ['sens', 'Sens']], gen: genPrec }), reset: () => { delete EXS.g4; } });
+WORKSHOPS.push({ id: 'g5', title: 'Exercices : effet gyroscopique', hint: 'Couple gyroscopique C = I·ω·Ω·sin α, efforts sur les paliers, moto et navire.', mount: r => mountEx(r, { key: 'g5', title: 'Exercices : effet gyroscopique', intro: 'Couple gyroscopique C = I·ω·Ω·sin α (ω en rad/s) ; efforts sur deux paliers distants de L : F = C / L ; règle : le couple sur le bâti amène H vers Ω. Réponses à 2 % près.', filters: [['all', 'Tous'], ['calc', 'Calculs'], ['app', 'Applications'], ['sens', 'Sens']], gen: genGyroEx }), reset: () => { delete EXS.g5; } });
+WORKSHOPS.sort((a, b) => a.id.localeCompare(b.id));
+
+
+/* ---------- activités ---------- */
+const ACT = {
+  g1: {
+    title: 'Gyroscope et précession', level: 'Découverte', time: '30 min',
+    goal: 'Observer la précession d’un gyroscope, relier sa vitesse aux paramètres et la comparer à la formule Ω = m·g·d / (I·ω).',
+    steps: [
+      'Laissez les réglages par défaut en mode « Lâché sans précession ». Observez la trace jaune et la courbe θ(t) : l’axe oscille légèrement (<b>nutation</b>) en tournant autour de la verticale (<b>précession</b>).',
+      'Passez en « Lancé en précession régulière » : la nutation disparaît. Relevez Ω mesuré et comparez avec Ω théorique.',
+      'Doublez la vitesse de rotation N : que devient la vitesse de précession ? Vérifiez le rapport mesuré.',
+      'Doublez la distance d, puis la masse m (rayon inchangé). Dans chaque cas, prévoyez le facteur sur Ω avant de lire la valeur.',
+      'Inversez le signe de N : que devient le sens de précession ? Repérez les vecteurs H (vert), M (rouge) et Ω (bleu).',
+      'Mettez N à environ 100 tr/min : l’hypothèse Ω petit devant ω est-elle encore vérifiée ? Que devient le mouvement ?',
+      'Activez le frottement : que devient l’angle θ et la vitesse de précession lorsque le rotor ralentit ?'
+    ],
+    defi: { q: 'Réglez les paramètres pour obtenir une précession de période environ 2 s avec d = 100 mm. Quelle vitesse de rotation avez-vous choisie ?', a: 'Une période de 2 s correspond à Ω = 2π/2 = 3,14 rad/s. Avec m = 1 kg, R = 60 mm, d = 100 mm : M = 0,981 N·m et I = 1,8×10⁻³ kg·m², donc ω = M/(I·Ω) ≈ 173 rad/s, soit N ≈ 1 650 tr/min.' },
+    course: 'precession',
+    qcm: [
+      { q: 'Pourquoi un gyroscope horizontal ne tombe-t-il pas sous l’action de son poids ?', o: ['Le moment du poids modifie la direction de H au lieu de faire basculer l’axe', 'Le poids est compensé par la force centrifuge', 'Le pivot supporte tout le poids', 'La vitesse de rotation annule la gravité'], a: 0, w: 'dH/dt = M : le moment du poids, horizontal et perpendiculaire à H, fait tourner H autour de la verticale.' },
+      { q: 'La vitesse de précession d’un gyroscope pesant (rotor rapide) vaut :', o: ['Ω = m·g·d / (I·ω)', 'Ω = I·ω / (m·g·d)', 'Ω = m·g·d·I·ω', 'Ω = m·g / (I·ω·d)'], a: 0, w: 'Ω = M / H avec M = m·g·d et H = I·ω.' },
+      { q: 'On double la vitesse de rotation ω du rotor. La vitesse de précession est :', o: ['Divisée par 2', 'Multipliée par 2', 'Inchangée', 'Multipliée par 4'], a: 0, w: 'Ω est inversement proportionnelle à ω.' },
+      { q: 'On double la distance d entre le pivot et le centre de gravité (I inchangée). Ω est :', o: ['Multipliée par 2', 'Divisée par 2', 'Inchangée', 'Multipliée par 4'], a: 0, w: 'Ω est proportionnelle à d, donc au moment du poids.' },
+      { q: 'Le vecteur Ω de précession d’un gyroscope à axe horizontal est :', o: ['Vertical', 'Horizontal, porté par l’axe du rotor', 'Horizontal, perpendiculaire à l’axe du rotor', 'Nul'], a: 0, w: 'L’axe du rotor tourne autour de la verticale passant par O.' },
+      { q: 'Le rotor ralentit à cause des frottements. La vitesse de précession :', o: ['Augmente', 'Diminue', 'Reste constante', 'S’annule'], a: 0, w: 'Ω = M / (I·ω) : quand ω diminue, Ω augmente.' },
+      { q: 'On lâche le gyroscope sans lui donner de vitesse de précession initiale. On observe :', o: ['Une nutation : θ oscille autour de sa valeur moyenne', 'Une chute immédiate sans rotation autour de la verticale', 'Aucune précession', 'Une précession dans l’autre sens'], a: 0, w: 'Le gyroscope commence par tomber légèrement, puis précesse : l’axe décrit une cycloïde.' },
+      { q: 'On inverse le sens de rotation du rotor. Le sens de précession :', o: ['S’inverse', 'Ne change pas', 'Devient nul', 'Dépend de la masse'], a: 0, w: 'H change de sens, donc H tourne dans l’autre sens autour de la verticale.' }
+    ]
+  },
+  g2: {
+    title: 'Effet gyroscopique', level: 'Découverte', time: '25 min',
+    goal: 'Relier le couple gyroscopique C = I·ω·Ω·sin α aux vitesses et à l’orientation de l’axe, et lire les efforts sur les paliers.',
+    steps: [
+      'Laissez α = 90° : l’axe du rotor est horizontal, le plateau tourne autour de la verticale. Repérez H (vert), Ω (bleu), le couple (rouge) et les efforts sur les paliers (violet).',
+      'Faites varier α de 90° à 0° : que devient le couple ? Quelle est la valeur à α = 0 ?',
+      'Doublez Ω puis ω : de quel facteur varie le couple ?',
+      'Doublez la distance L entre paliers : que devient l’effort sur chaque palier ?',
+      'Inversez le sens de rotation du rotor (N négatif) puis celui du plateau : comment changent les sens du couple et des efforts ?',
+      'Vérifiez la règle : le couple exercé par le rotor sur le bâti amène H vers Ω par le plus court chemin.'
+    ],
+    defi: { q: 'Trouvez deux réglages différents (N, Ω, α) donnant le même couple C = 10 N·m avec m = 2 kg et R = 100 mm.', a: 'I = ½·m·R² = 0,01 kg·m². Par exemple N = 3000 tr/min (ω = 314 rad/s), α = 90° : Ω = C/(I·ω) = 3,18 rad/s (30 tr/min). Autre réglage : α = 30° donne sin α = 0,5, il faut alors Ω = 6,37 rad/s.' },
+    course: 'effet',
+    qcm: [
+      { q: 'Le couple gyroscopique d’un rotor de moment d’inertie I, de vitesse ω, dans un bâti de vitesse Ω, vaut en module :', o: ['I·ω·Ω·sin α', 'I·ω·Ω·cos α', 'I·ω / Ω', 'I·(ω + Ω)'], a: 0, w: 'C = |Ω ∧ H| = I·ω·Ω·sin α avec α angle entre H et Ω.' },
+      { q: 'Si l’axe du rotor est parallèle à l’axe de rotation du bâti (α = 0), le couple gyroscopique vaut :', o: ['0', 'I·ω·Ω', 'I·ω·Ω/2', 'une valeur infinie'], a: 0, w: 'H ∥ Ω : le vecteur H ne change pas de direction.' },
+      { q: 'On double Ω et on double ω. Le couple gyroscopique est :', o: ['Multiplié par 4', 'Multiplié par 2', 'Inchangé', 'Multiplié par 8'], a: 0, w: 'C est proportionnel au produit ω·Ω.' },
+      { q: 'Le couple gyroscopique du rotor sur le bâti tend à :', o: ['Amener H vers Ω par le plus court chemin', 'Éloigner H de Ω', 'Arrêter le rotor', 'Aligner Ω sur le poids'], a: 0, w: 'Règle du parallélisme des axes de rotation.' },
+      { q: 'La distance L entre paliers double ; C est inchangé. L’effort sur chaque palier F = C / L :', o: ['Est divisé par 2', 'Est multiplié par 2', 'Reste constant', 'Est divisé par 4'], a: 0, w: 'F·L = C donc F = C / L.' },
+      { q: 'Le couple exercé par les paliers sur le rotor et celui du rotor sur le bâti sont :', o: ['Opposés (action-réaction)', 'Égaux', 'Perpendiculaires', 'Nuls tous les deux'], a: 0, w: 'Principe des actions réciproques : C_bâti = −C_rotor.' }
+    ]
+  },
+  g3: {
+    title: 'Applications', level: 'Application', time: '20 min',
+    goal: 'Calculer et orienter le couple gyroscopique dans deux situations réelles : une moto en virage et une turbine de navire.',
+    steps: [
+      'Moto : réglez v = 90 km/h et ρ = 80 m. Relevez ω, Ω et le couple. Dans quel sens le couple agit-il sur la moto ?',
+      'Doublez la vitesse v : de quel facteur varie le couple ? Expliquez avec C = 2·I·ω·Ω, ω = v/R<sub>w</sub> et Ω = v/ρ.',
+      'Changez le sens du virage : comment changent Ω et le sens du couple ?',
+      'Navire : H vers l’avant, virage à babord : que fait la proue ? Inversez le sens de rotation de la turbine.',
+      'Relevez l’effort sur chaque palier de la turbine ; que se passe-t-il si on double la giration ?'
+    ],
+    defi: { q: 'Pour quelle vitesse la moto (I = 0,7 kg·m² par roue, R<sub>w</sub> = 0,3 m, ρ = 80 m) atteint-elle un couple gyroscopique de 40 N·m ?', a: 'C = 2·I·v² / (R<sub>w</sub>·ρ) donc v² = C·R<sub>w</sub>·ρ / (2·I) = 40 × 0,3 × 80 / 1,4 = 686 m²/s², soit v ≈ 26 m/s ≈ 94 km/h.' },
+    course: 'appli',
+    qcm: [
+      { q: 'Une moto prend un virage à gauche. Le couple gyroscopique des roues sur la moto tend à :', o: ['La redresser', 'La coucher davantage vers l’intérieur', 'La freiner', 'L’accélérer'], a: 0, w: 'H (vers la gauche) rejoint Ω (vers le haut) : la moto est redressée.' },
+      { q: 'Vitesse de la moto doublée, rayon de virage inchangé. Le couple gyroscopique est :', o: ['Multiplié par 4', 'Multiplié par 2', 'Inchangé', 'Divisé par 2'], a: 0, w: 'ω et Ω sont proportionnelles à v, donc C varie comme v².' },
+      { q: 'Rayon du virage doublé, vitesse inchangée. Le couple gyroscopique est :', o: ['Divisé par 2', 'Multiplié par 2', 'Inchangé', 'Divisé par 4'], a: 0, w: 'Ω = v/ρ est divisée par 2.' },
+      { q: 'La turbine d’un navire a un axe longitudinal, H vers l’avant. Le navire vire à babord (Ω vers le haut). La proue :', o: ['Se soulève', 'S’abaisse', 'Dévie à tribord', 'Ne bouge pas'], a: 0, w: 'H vers l’avant rejoint Ω vers le haut : la proue monte.' },
+      { q: 'La turbine d’un navire a son axe vertical et le navire tangue. Cette situation donne un couple gyroscopique d’axe :', o: ['Horizontal et perpendiculaire à la vitesse de tangage', 'Vertical', 'Nul', 'Dans le sens du tangage'], a: 0, w: 'Ω (tangage) et H (vertical) sont perpendiculaires : C est perpendiculaire aux deux.' }
+    ]
+  },
+  g4: {
+    title: 'Exercices : précession', level: 'Entraînement', time: '25 min',
+    goal: 'Calculer la vitesse de précession, retrouver une vitesse de rotation et justifier les proportionnalités.',
+    steps: [
+      'Convertir N (tr/min) en ω (rad/s) : ω = 2π·N / 60.',
+      'Calculer I = ½·m·R² (m en kg, R en m).',
+      'Calculer M = m·g·d (d en m) puis H = I·ω.',
+      'Conclure : Ω = M / H, en rad/s ; période T = 2π / Ω.',
+      'Vérifier l’hypothèse Ω petit devant ω.'
+    ],
+    defi: { q: 'Un rotor est lancé à 3000 tr/min avec m = 1 kg, R = 50 mm, d = 100 mm. Quelle est la période de précession ?', a: 'I = ½ × 1 × 0,05² = 1,25×10⁻³ kg·m² ; ω = 314,2 rad/s ; M = 0,981 N·m. Ω = 0,981 / (1,25×10⁻³ × 314,2) = 2,5 rad/s, soit une période T = 2π/Ω ≈ 2,5 s.' },
+    course: 'precession',
+    qcm: [
+      { q: 'N = 3000 tr/min correspond à ω =', o: ['314 rad/s', '3000 rad/s', '50 rad/s', '1 000 rad/s'], a: 0, w: 'ω = 2π × 3000 / 60 = 314,16 rad/s.' },
+      { q: 'Le moment d’inertie d’un disque homogène autour de son axe est :', o: ['½·m·R²', 'm·R²', '¼·m·R²', '2/5·m·R²'], a: 0, w: 'Disque plein : ½·m·R². Anneau mince : m·R². Sphère pleine : 2/5·m·R².' },
+      { q: 'Quelle est l’unité du moment cinétique H = I·ω ?', o: ['kg·m²/s', 'N·m', 'kg·m/s', 'rad/s'], a: 0, w: 'I en kg·m², ω en rad/s (sans dimension physique).' },
+      { q: 'Le moment du poids M = m·g·d s’exprime en :', o: ['N·m', 'kg·m²/s', 'N', 'rad/s'], a: 0, w: 'Force × distance.' },
+      { q: 'La précession est lente devant la rotation propre lorsque :', o: ['Ω ≪ ω', 'Ω ≫ ω', 'Ω = ω', 'ω = 0'], a: 0, w: 'C’est l’hypothèse du gyroscope rapide : Ω = M/(I·ω) est valable si Ω ≪ ω.' }
+    ]
+  },
+  g5: {
+    title: 'Exercices : effet gyroscopique', level: 'Entraînement', time: '25 min',
+    goal: 'Calculer un couple gyroscopique et les efforts sur les paliers ; déterminer le sens des actions.',
+    steps: [
+      'Écrire les données en unités SI : ω en rad/s, Ω en rad/s (1 °/s = π/180 rad/s).',
+      'Calculer H = I·ω puis C = H·Ω·sin α.',
+      'Pour les efforts sur les paliers : F = C / L (L en m).',
+      'Pour le sens, tracer H et Ω : le couple sur le bâti amène H vers Ω par le plus court chemin.',
+      'Contrôler l’ordre de grandeur et l’unité.'
+    ],
+    defi: { q: 'Quelle vitesse de giration (en °/s) donne un couple de 50 kN·m sur une turbine de 5000 kg·m² tournant à 3000 tr/min ?', a: 'ω = 314,16 rad/s ; Ω = C/(I·ω) = 50 000 / (5000 × 314,16) = 0,0318 rad/s ≈ 1,82 °/s.' },
+    course: 'effet',
+    qcm: [
+      { q: 'Convertir 1 °/s en rad/s :', o: ['0,01745 rad/s', '57,3 rad/s', '1 rad/s', '0,0628 rad/s'], a: 0, w: '1° = π/180 rad.' },
+      { q: 'Quel est l’ordre de grandeur de ω pour N = 6000 tr/min ?', o: ['628 rad/s', '6000 rad/s', '100 rad/s', '60 rad/s'], a: 0, w: 'ω = 2π × 6000 / 60 = 628 rad/s.' },
+      { q: 'Le couple gyroscopique est maximal quand :', o: ['H est perpendiculaire à Ω', 'H est parallèle à Ω', 'H est nul', 'Ω est nul'], a: 0, w: 'sin α = 1 pour α = 90°.' },
+      { q: 'Un couple C est repris par deux paliers distants de L. L’effort sur un palier vaut :', o: ['C / L', 'C × L', 'C / (2·L²)', 'C·L / 2'], a: 0, w: 'Le couple est formé de deux forces égales et opposées : F·L = C.' },
+      { q: 'Le couple gyroscopique est-il présent sur un rotor qui tourne mais dont le bâti est immobile (Ω = 0) ?', o: ['Non', 'Oui', 'Seulement si ω est grand', 'Seulement si α = 0'], a: 0, w: 'C = I·ω·Ω·sin α = 0 si Ω = 0.' }
+    ]
+  }
+};
+
+/* ---------- figures du cours ---------- */
+const FIGS = {};
+const GC = GCOL;
+function gfig(vb, label, cap, maxw, draw) { const s = mkSvg(vb, label); draw(s); return figEl(s, cap, maxw || 420); }
+FIGS.disc = () => gfig('0 0 360 220', 'Rotor et moment cinétique', 'Un rotor (disque) tourne à la vitesse ω autour de son axe. Son moment cinétique <b>H = I·ω</b> est porté par l’axe, orienté par la règle de la main droite : les doigts suivent le sens de rotation, le pouce donne le sens de H.', 440, s => {
+  el('ellipse', { cx: 150, cy: 110, rx: 34, ry: 78, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('ellipse', { cx: 150, cy: 110, rx: 12, ry: 26, fill: 'var(--panel2)', stroke: MUT }, s);
+  el('line', { x1: 150, y1: 110, x2: 150, y2: 40, stroke: GC.M, 'stroke-width': 2 }, s);
+  el('path', { d: 'M156 30 A44 86 0 0 1 156 192', fill: 'none', stroke: GC.O, 'stroke-width': 3 }, s);
+  el('polygon', { points: '156,192 168,192 162,182', fill: GC.O }, s); T2(s, 196, 200, 'ω', GC.O);
+  gArr(s, 150, 110, 320, 110, GC.H, 4); T2(s, 300, 98, 'H = I·ω', GC.H); T2(s, 150, 124, 'G', NOCS); el('circle', { cx: 150, cy: 110, r: 3, fill: NOCS }, s);
+  T2(s, 50, 112, 'rotor', MUT, 'sm');
+});
+FIGS.inertia = () => { const t = h('table', { class: 'tb2' }); t.innerHTML = '<tr><th>Solide homogène</th><th>Moment d’inertie autour de l’axe</th></tr><tr><td>Disque plein (rayon R)</td><td>½·m·R²</td></tr><tr><td>Anneau mince (rayon R)</td><td>m·R²</td></tr><tr><td>Sphère pleine (rayon R)</td><td>2/5·m·R²</td></tr><tr><td>Cylindre plein (rayon R)</td><td>½·m·R²</td></tr>'; return h('figure', { class: 'fig' }, t, h('figcaption', { html: 'Moments d’inertie usuels autour de l’axe de révolution. Pour la précession, plus I est grand (masse loin de l’axe), plus H = I·ω est grand à vitesse égale.' })); };
+FIGS.dh = () => gfig('0 0 380 230', 'Variation du moment cinétique', 'Vue de dessus. Le moment M est perpendiculaire à H : pendant dt, H ne change pas de module, il tourne d’un angle dφ avec <b>dH = M·dt</b>. Donc dφ = M·dt / H et Ω = dφ/dt = M / H.', 460, s => {
+  const cx = 110, cy = 150; el('circle', { cx, cy, r: 120, fill: 'none', stroke: MUT, 'stroke-dasharray': '5 5' }, s);
+  gArr(s, cx, cy, cx + 120, cy, GC.H, 4); T2(s, cx + 60, cy + 18, 'H(t)', GC.H);
+  const a = 0.38; el('line', { x1: cx, y1: cy, x2: cx + 120 * Math.cos(a), y2: cy - 120 * Math.sin(a), stroke: GC.H, 'stroke-width': 3, 'stroke-dasharray': '6 4' }, s); T2(s, cx + 128, cy - 52, 'H(t+dt)', GC.H, 'l');
+  gArr(s, cx + 120, cy, cx + 120, cy - 48, GC.M, 3.4); T2(s, cx + 150, cy - 24, 'dH = M·dt', GC.M, 'l');
+  gArc(s, cx, cy, 52, 0, a * DEG, GC.O, 2.4); T2(s, cx + 72, cy - 14, 'dφ', GC.O);
+  T2(s, cx, cy + 40, 'O', NOCS);
+});
+FIGS.gside = () => gfig('0 0 380 240', 'Gyroscope, vue de côté', 'Vue de côté. Le poids P appliqué en G crée un moment M = OG ∧ P perpendiculaire au plan de la figure (rentrant). H est horizontal : H tourne dans le plan horizontal, autour de la verticale. Ω est vertical.', 470, s => {
+  el('line', { x1: 60, y1: 215, x2: 340, y2: 215, stroke: MUT, 'stroke-width': 2 }, s);
+  el('polygon', { points: '100,215 140,215 128,130 112,130', fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('line', { x1: 120, y1: 120, x2: 285, y2: 120, stroke: NOCS, 'stroke-width': 4, 'stroke-linecap': 'round' }, s);
+  el('ellipse', { cx: 265, cy: 120, rx: 13, ry: 44, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('circle', { cx: 120, cy: 120, r: 6, fill: GC.M }, s); T2(s, 108, 108, 'O', NOCS); el('circle', { cx: 265, cy: 120, r: 3, fill: NOCS }, s); T2(s, 283, 140, 'G', NOCS);
+  gArr(s, 265, 120, 265, 195, GC.W, 3.4); T2(s, 285, 182, 'P', GC.W);
+  gArr(s, 130, 90, 315, 90, GC.H, 3.4); T2(s, 322, 80, 'H', GC.H);
+  gArr(s, 40, 185, 40, 95, GC.O, 3.4); T2(s, 58, 100, 'Ω', GC.O);
+  el('circle', { cx: 190, cy: 160, r: 11, fill: 'var(--panel)', stroke: GC.M, 'stroke-width': 2.4 }, s); el('path', { d: 'M184 154 L196 166 M196 154 L184 166', stroke: GC.M, 'stroke-width': 2.4 }, s); T2(s, 222, 164, 'M', GC.M);
+  gArr(s, 120, 232, 265, 232, NOCS, 1.6); gArr(s, 265, 232, 120, 232, NOCS, 1.6); T2(s, 192, 226, 'd', NOCS);
+});
+FIGS.gtop = () => gfig('0 0 380 250', 'Gyroscope, vue de dessus', 'Vue de dessus : le centre de gravité G décrit un cercle autour de la verticale passant par O. Pour H dirigé de O vers G, la précession se fait dans le sens trigonométrique. Si on inverse le sens de rotation du rotor, le sens de précession s’inverse.', 450, s => {
+  const cx = 170, cy = 125, r = 100; el('circle', { cx, cy, r, fill: 'none', stroke: MUT, 'stroke-dasharray': '5 5' }, s);
+  [[0.9, 0.35], [0.55, 0.28], [0.25, 0.22]].forEach((q, i) => { const a = q[0] * 2 * Math.PI * 0.55 + 0.9; el('line', { x1: cx, y1: cy, x2: cx + r * Math.cos(a), y2: cy - r * Math.sin(a), stroke: GC.H, 'stroke-opacity': q[1] + 0.1, 'stroke-width': 3 }, s); el('circle', { cx: cx + r * Math.cos(a), cy: cy - r * Math.sin(a), r: 7, fill: 'var(--accent-soft)', stroke: NOCS }, s); });
+  gArr(s, cx, cy, cx + r, cy, GC.H, 4); el('circle', { cx: cx + r, cy, r: 8, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s); T2(s, cx + r - 6, cy + 24, 'G', NOCS); T2(s, cx + 50, cy + 16, 'H', GC.H);
+  gArr(s, cx + r, cy - 10, cx + r, cy - 62, GC.M, 3.2); T2(s, cx + r + 20, cy - 40, 'M', GC.M);
+  gArc(s, cx, cy, r + 26, 8, 70, GC.O, 3.2); T2(s, cx + r - 8, cy - r + 16, 'Ω', GC.O);
+  el('circle', { cx, cy, r: 5, fill: GC.M }, s); T2(s, cx - 12, cy + 18, 'O', NOCS);
+});
+FIGS.live = () => { const p = gp(GY), M = p.m * G * p.d, w = p.w, Om = w ? M / (p.I3 * w) : NaN, box = h('div', { class: 'fig' });
+  box.append(stats([['m, R, d', fx(p.m, 1) + ' kg · ' + fx(p.R * 1000, 0) + ' mm · ' + fx(p.d * 1000, 0) + ' mm'], ['N', fx(GY.N, 0) + ' tr/min (ω = ' + fx(w, 1) + ' rad/s)'], ['I = ½·m·R²', fx(p.I3, 5) + ' kg·m²'], ['M = m·g·d', fx(M, 3) + ' N·m'], ['H = I·ω', fx(Math.abs(p.I3 * w), 3) + ' kg·m²/s'], ['Ω = M / H', isFinite(Om) ? fx(Math.abs(Om), 3) + ' rad/s (T = ' + fx(TAU / Math.abs(Om), 2) + ' s)' : '—']]), h('figcaption', { html: 'Application numérique avec les réglages actuels de l’atelier « Gyroscope et précession ».' })); return box; };
+FIGS.omegaN = () => gfig('0 0 420 250', 'Vitesse de précession en fonction de la vitesse de rotation', 'Ω = m·g·d / (I·ω) en fonction de N, avec les réglages actuels de l’atelier : la vitesse de précession est inversement proportionnelle à la vitesse de rotation (hyperbole). Le point rouge est le réglage actuel.', 500, s => {
+  const p = gp(GY), M = p.m * G * p.d, W = 420, Hh = 250, mx = 44, my = 20, N0 = 200, N1 = 3000, f = N => M / (p.I3 * N * Math.PI / 30), ymax = Math.min(10, Math.max(2, f(600))), X = N => mx + (N - N0) / (N1 - N0) * (W - mx - 12), Y = o => Hh - 32 - Math.min(o, ymax) / ymax * (Hh - 32 - my);
+  el('line', { x1: mx, y1: Hh - 32, x2: W - 10, y2: Hh - 32, stroke: MUT }, s); el('line', { x1: mx, y1: my - 6, x2: mx, y2: Hh - 32, stroke: MUT }, s);
+  [0, 1000, 2000, 3000].forEach(n => { const x = X(Math.max(n, N0)); el('line', { x1: x, x2: x, y1: Hh - 32, y2: Hh - 27, stroke: MUT }, s); T2(s, x, Hh - 14, n || 200, MUT, 'sm'); });
+  [0, 0.5, 1].forEach(k => { const v = ymax * k, y = Y(v); el('line', { x1: mx - 4, x2: mx, y1: y, y2: y, stroke: MUT }, s); T2(s, mx - 7, y + 4, fx(v, 1), MUT, 'sm').setAttribute('text-anchor', 'end'); });
+  let d = ''; for (let n = N0; n <= N1; n += 20) { const o = f(n); if (o > ymax * 1.02) continue; d += (d ? 'L' : 'M') + X(n).toFixed(1) + ' ' + Y(o).toFixed(1); }
+  el('path', { d, fill: 'none', stroke: GC.O, 'stroke-width': 2.6 }, s);
+  const Nc = Math.abs(GY.N); if (Nc >= N0 && Nc <= N1 && f(Nc) <= ymax) { el('circle', { cx: X(Nc), cy: Y(f(Nc)), r: 6, fill: GC.M }, s); }
+  T2(s, W - 12, Hh - 2, 'N (tr/min)', MUT, 'sm').setAttribute('text-anchor', 'end'); T2(s, mx + 6, 12, 'Ω (rad/s)', MUT, 'sm').setAttribute('text-anchor', 'start');
+});
+FIGS.turn = () => gfig('0 0 400 250', 'Rotor sur plateau tournant', 'Rotor (axe horizontal, H vers la droite) sur un plateau qui tourne autour de la verticale (Ω vers le haut). Le couple gyroscopique du rotor sur le bâti, <b>C = H ∧ Ω</b>, est sortant (⊙) ; il se traduit par deux efforts opposés sur les paliers : F vers le haut à droite, F vers le bas à gauche.', 480, s => {
+  el('ellipse', { cx: 200, cy: 218, rx: 150, ry: 16, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('line', { x1: 200, y1: 218, x2: 200, y2: 100, stroke: MUT, 'stroke-dasharray': '4 4' }, s);
+  el('line', { x1: 110, y1: 120, x2: 290, y2: 120, stroke: NOCS, 'stroke-width': 4 }, s);
+  [110, 290].forEach(x => { el('rect', { x: x - 9, y: 108, width: 18, height: 24, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, s); el('line', { x1: x, y1: 132, x2: x, y2: 210, stroke: NOCS, 'stroke-width': 2 }, s); });
+  el('ellipse', { cx: 200, cy: 120, rx: 12, ry: 44, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  gArr(s, 200, 120, 330, 120, GC.H, 3.6); T2(s, 345, 112, 'H', GC.H);
+  gArr(s, 50, 200, 50, 90, GC.O, 3.6); T2(s, 68, 100, 'Ω', GC.O);
+  gArr(s, 290, 100, 290, 40, GC.F, 3.4); T2(s, 312, 58, 'F', GC.F); gArr(s, 110, 140, 110, 200, GC.F, 3.4); T2(s, 88, 190, 'F', GC.F);
+  el('circle', { cx: 200, cy: 55, r: 12, fill: 'var(--panel)', stroke: GC.M, 'stroke-width': 2.4 }, s); el('circle', { cx: 200, cy: 55, r: 3.5, fill: GC.M }, s); T2(s, 232, 59, 'C', GC.M);
+  T2(s, 200, 244, 'plateau', MUT, 'sm');
+});
+FIGS.rule = () => { const mk = (al, ttl) => { const s = mkSvg('0 0 200 170', 'Règle H vers Ω, α = ' + al); const cx = 70, cy = 120, L = 90;
+  gArr(s, cx, cy, cx + L, cy, GC.H, 3.6); T2(s, cx + L + 10, cy + 16, 'H', GC.H);
+  const a = al / DEG, ex = cx + L * Math.cos(a), ey = cy - L * Math.sin(a);
+  if (al > 0) { gArr(s, cx, cy, ex, ey, GC.O, 3.6); T2(s, ex + 8, ey - 6, 'Ω', GC.O); gArc(s, cx, cy, 40, 4, al - 4, GC.M, 2.6); T2(s, cx + 62, cy - 26, 'α', NOCS); }
+  else { T2(s, cx + L / 2, cy - 18, 'Ω ∥ H', GC.O); }
+  T2(s, 100, 18, ttl, NOCS); T2(s, 100, 155, 'sin α = ' + fx(Math.sin(a), 2), MUT, 'sm'); return figEl(s, '', 210).firstChild; };
+  return h('div', { class: 'fig' }, h('div', { class: 'figrow' }, mk(90, 'C maximal'), mk(45, 'C réduit'), mk(0, 'C nul')), h('figcaption', { html: 'Le couple gyroscopique agit pour amener <b>H vers Ω</b> par le plus court chemin (flèche rouge). Son module est I·ω·Ω·sin α : maximal quand H ⊥ Ω, nul quand H ∥ Ω.' })); };
+FIGS.nut = () => {
+  const P0 = { m: 1, R: 60, d: 100, N: Math.abs(GY.N) < 300 ? 1500 : Math.abs(GY.N), th0: 90, mode: 'release' }, A = topSimulate(P0, 4, 0.04), B = topSimulate(Object.assign({}, P0, { mode: 'steady' }), 4, 0.04);
+  return gfig('0 0 440 220', 'Nutation', 'Angle θ de l’axe avec la verticale pour un gyroscope lâché sans vitesse de précession (rouge) et lancé en précession régulière (bleu). Dans le premier cas, l’axe commence par descendre un peu avant de remonter : c’est la <b>nutation</b>, de fréquence voisine de I·ω / I<sub>1</sub>.', 520, s => {
+    const W = 440, Hh = 220, mx = 42, my = 16, all = A.concat(B).map(a => a[1]), lo0 = Math.min.apply(null, all) - 1, hi0 = Math.max.apply(null, all) + 1, X = t => mx + t / 4 * (W - mx - 12), Y = a => Hh - 30 - (a - lo0) / (hi0 - lo0) * (Hh - 30 - my);
+    el('line', { x1: mx, y1: Hh - 30, x2: W - 8, y2: Hh - 30, stroke: MUT }, s); el('line', { x1: mx, y1: 6, x2: mx, y2: Hh - 30, stroke: MUT }, s);
+    [lo0 + 1, hi0 - 1].forEach(v => { el('line', { x1: mx - 4, x2: mx, y1: Y(v), y2: Y(v), stroke: MUT }, s); T2(s, mx - 6, Y(v) + 4, fx(v, 1) + '°', MUT, 'sm').setAttribute('text-anchor', 'end'); });
+    [0, 1, 2, 3, 4].forEach(t => T2(s, X(t), Hh - 14, t, MUT, 'sm'));
+    el('polyline', { points: B.map(a => X(a[0]).toFixed(1) + ',' + Y(a[1]).toFixed(1)).join(' '), fill: 'none', stroke: GC.O, 'stroke-width': 2.6 }, s);
+    el('polyline', { points: A.map(a => X(a[0]).toFixed(1) + ',' + Y(a[1]).toFixed(1)).join(' '), fill: 'none', stroke: GC.M, 'stroke-width': 2.6 }, s);
+    T2(s, W - 10, Hh - 2, 't (s)', MUT, 'sm').setAttribute('text-anchor', 'end'); T2(s, 150, 30, 'lâché : nutation', GC.M); T2(s, 150, 205 - 28, 'précession régulière', GC.O);
+  });
+};
+FIGS.moto = () => { const s = mkSvg('0 0 360 260', 'Moto en virage'); drawMoto(s, { v: 90, rho: 80, Rw: 0.3, I: 0.7, dir: 'gauche' }); return figEl(s, 'Moto en virage à gauche, vue de l’arrière. H des roues est dirigé vers la gauche, Ω vers le haut : le couple gyroscopique C<sub>g</sub> tend à amener H vers Ω, c’est-à-dire à <b>redresser</b> la moto.', 440); };
+FIGS.ship = () => { const s = mkSvg('0 0 420 225', 'Navire'); drawShip(s, { I: 5000, N: 3000, Om: 2, L: 5, dir: 'babord', sens: 'avant' }); return figEl(s, 'Navire à turbine longitudinale (H vers l’avant) virant à babord (Ω vers le haut) : le couple gyroscopique fait <b>se soulever la proue</b>. L’inclinaison dessinée est exagérée.', 500); };
+
+/* ---------- cours ---------- */
+const COURSE = [];
+const ph = n => '<div class="fig" data-fig="' + n + '"></div>';
+COURSE.push({ id: 'moment', t: 'Moment cinétique d’un rotor', h: `
+<p>Un <b>rotor</b> est un solide de révolution qui tourne rapidement autour de son axe, à la vitesse angulaire ω. Pour un rotor dont l’axe passe par son centre de gravité G, le moment cinétique est porté par l’axe :</p>
+<div class="formula">H = I · ω</div>
+<p>où I est le moment d’inertie autour de l’axe (en kg·m²) et ω la vitesse de rotation en rad/s (ω = 2π·N / 60 si N est en tr/min). Le vecteur H est orienté par la règle de la main droite.</p>` + ph('disc') + `
+<p>Le moment d’inertie dépend de la forme du rotor ; plus la masse est loin de l’axe, plus I est grand.</p>` + ph('inertia') + `
+<div class="retain"><b>À retenir.</b> H = I·ω est un <b>vecteur</b> : sa direction est celle de l’axe du rotor. Tant qu’aucun moment ne s’exerce, H reste constant, donc l’axe du rotor garde une direction fixe.</div>` });
+COURSE.push({ id: 'tmd', t: 'Théorème du moment dynamique', h: `
+<p>La variation du moment cinétique par rapport à un point fixe O est égale au moment des actions extérieures :</p>
+<div class="formula">dH/dt = M</div>
+<p>Si M est <b>perpendiculaire</b> à H, le module de H ne change pas : seule sa <b>direction</b> varie. C’est ce qui se passe avec un rotor rapide : un moment ne le fait pas basculer, il fait tourner l’axe dans un plan perpendiculaire au moment.</p>` + ph('dh') + `
+<p>Pendant dt, l’extrémité de H se déplace de dH = M·dt, perpendiculairement à H. L’angle parcouru est dφ = M·dt / H, la vitesse angulaire de H vaut donc :</p>
+<div class="formula">Ω = dφ/dt = M / H</div>
+<div class="retain"><b>À retenir.</b> Un moment perpendiculaire à H ne fait pas « tomber » le rotor : il fait <b>tourner H</b> autour de la direction du moment. Plus H est grand, plus la rotation est lente.</div>` });
+COURSE.push({ id: 'precession', t: 'Précession gyroscopique', h: `
+<p>Un rotor est monté sur une tige articulée en O, son centre de gravité G étant à la distance d de O. Son poids P = m·g crée un moment en O :</p>
+<div class="formula">M = OG ∧ P, de module M = m·g·d</div>` + ph('gside') + `
+<p>Ce moment est horizontal et perpendiculaire à H. Le vecteur H, et donc l’axe du rotor, tourne autour de la <b>verticale</b> à la vitesse :</p>
+<div class="formula">Ω = M / H = m·g·d / (I·ω)</div>
+<p>On appelle ce mouvement la <b>précession</b>. Elle est lente devant la rotation propre (Ω ≪ ω) quand le rotor tourne vite.</p>` + ph('gtop') + `
+<ul><li>Ω est <b>inversement proportionnelle</b> à ω : un rotor plus rapide précesse plus lentement.</li><li>Ω est proportionnelle à d et à m (pour I fixé).</li><li>Si on inverse le sens de rotation du rotor, le sens de précession s’inverse.</li><li>Avec les frottements, ω diminue lentement : Ω augmente, et le gyroscope finit par basculer.</li></ul>` + ph('omegaN') + ph('live') + `
+<div class="retain"><b>À retenir.</b> Précession : Ω = m·g·d / (I·ω), vecteur Ω vertical. Rotor plus rapide ⇒ précession plus lente.</div>` });
+COURSE.push({ id: 'effet', t: 'Effet gyroscopique', h: `
+<p>Quand l’axe d’un rotor est entraîné dans une rotation de vitesse Ω (le bâti qui supporte le rotor tourne), le vecteur H change de direction. Le bâti doit donc exercer sur le rotor un couple, et, par réciprocité, le rotor exerce sur le bâti un <b>couple gyroscopique</b> :</p>
+<div class="formula">C = H ∧ Ω, de module C = I · ω · Ω · sin α</div>
+<p>α est l’angle entre l’axe du rotor (le vecteur H) et le vecteur Ω.</p>` + ph('turn') + `
+<p><b>Règle de sens.</b> Le couple gyroscopique exercé sur le bâti tend à amener le vecteur H vers le vecteur Ω, par le plus court chemin.</p>` + ph('rule') + `
+<ul><li>α = 90° : effet maximal. α = 0° ou 180° : effet nul.</li><li>Le couple est proportionnel à I, ω et Ω.</li><li>Il est repris par les paliers : pour deux paliers distants de L, F = C / L sur chacun, avec des sens opposés.</li></ul>
+<p><b>Exemple.</b> Rotor I = 0,01 kg·m², N = 3000 tr/min (ω = 314 rad/s), plateau à Ω = 3 rad/s, α = 90° : C = 0,01 × 314 × 3 = 9,4 N·m. Avec L = 300 mm : F = 31 N par palier.</p>
+<div class="retain"><b>À retenir.</b> C = I·ω·Ω·sin α. Le couple amène H vers Ω. Il charge les paliers de forces opposées F = C / L.</div>` });
+COURSE.push({ id: 'nutation', t: 'Nutation et validité de la formule', h: `
+<p>La formule Ω = m·g·d / (I·ω) décrit la <b>précession régulière</b>. Si on lâche le gyroscope sans lui donner la vitesse de précession, l’axe commence par descendre un peu avant de remonter : l’inclinaison θ oscille autour de sa valeur moyenne. C’est la <b>nutation</b>.</p>` + ph('nut') + `
+<ul><li>La nutation a une pulsation voisine de I·ω / I<sub>1</sub>, où I<sub>1</sub> est le moment d’inertie par rapport à un axe perpendiculaire passant par O. Elle est d’autant plus rapide et plus petite que ω est grand.</li><li>Avec les frottements de l’air et des liaisons, la nutation s’amortit vite : il ne reste que la précession.</li><li>La formule est valable si <b>Ω ≪ ω</b>. À faible vitesse de rotation, le mouvement est complexe, et pour ω = 0 le gyroscope se comporte comme un simple pendule qui tombe.</li></ul>
+<div class="retain"><b>À retenir.</b> Précession : lente et régulière. Nutation : petites oscillations rapides, amorties. Formule valable pour un rotor rapide (Ω ≪ ω).</div>` });
+COURSE.push({ id: 'appli', t: 'Applications', h: `
+<p>L’effet gyroscopique est utilisé ou subi dans de nombreux systèmes.</p>
+<ul><li><b>Toupie, roue de vélo, boomerang :</b> la rotation rapide stabilise l’axe et provoque précession.</li><li><b>Gyroscopes et gyrocompas :</b> un rotor garde une direction fixe dans l’espace ; dans un gyrocompas, la rotation de la Terre fait précesser l’axe vers le nord géographique.</li><li><b>Navires :</b> la turbine de propulsion subit les mouvements de tangage et de giration.</li><li><b>Véhicules à deux roues :</b> les roues sont de petits gyroscopes qui stabilisent l’équilibre en ligne droite.</li><li><b>Hélicoptères et drones :</b> le rotor principal ou les hélices créent des couples gyroscopiques lors des changements d’attitude.</li></ul>` + ph('moto') + `
+<p><b>Moto en virage.</b> Les deux roues ont un axe horizontal ; le virage de rayon ρ à la vitesse v impose Ω = v / ρ, alors que ω = v / R<sub>w</sub>. Le couple C = 2·I·ω·Ω = 2·I·v² / (R<sub>w</sub>·ρ) varie avec le carré de la vitesse.</p>` + ph('ship') + `
+<p><b>Navire.</b> Une turbine à axe longitudinal soumise à une giration produit un couple qui fait tanguer le navire (la proue monte ou descend selon le sens de la giration et celui de la turbine). Les paliers doivent résister à ce couple.</p>
+<div class="retain"><b>À retenir.</b> Pour chaque application : identifier H, Ω et α, calculer C = I·ω·Ω·sin α, puis donner le sens par la règle « H vers Ω ».</div>` });
+COURSE.push({ id: 'methode', t: 'Méthode', h: `
+<ol>
+<li><b>Schématiser</b> : repérer l’axe du rotor et orienter H (main droite), repérer la rotation Ω du bâti.</li>
+<li><b>Convertir</b> : N en rad/s (ω = 2π·N/60), les angles en radians, les distances en mètres.</li>
+<li><b>Calculer I</b> : ½·m·R² pour un disque homogène.</li>
+<li><b>Précession d’un gyroscope pesant</b> : M = m·g·d, H = I·ω, Ω = M / H.</li>
+<li><b>Effet gyroscopique</b> : C = I·ω·Ω·sin α, puis F = C / L sur chaque palier.</li>
+<li><b>Sens</b> : le couple sur le bâti amène H vers Ω (le plus court chemin) ; la précession tourne dans le sens de M vu depuis H.</li>
+<li><b>Contrôler</b> : unités (N·m, rad/s), ordre de grandeur, et hypothèse Ω ≪ ω pour la précession.</li>
+</ol>
+<div class="retain"><b>À retenir.</b> Précession : Ω = M / H. Effet gyroscopique : C = H ∧ Ω. Dans les deux cas, H cherche à rejoindre le vecteur qui lui impose sa rotation.</div>` });
+
+/* ---------- interface ---------- */
+const UI = { cur: 'g1' };
+const AS = { key: 'g1', tab: 'steps', open: false, st: lsGet(KEYS.act, {}), arm: null, perm: {} };
+const CS = { open: false, id: 'torseurs' };
+function actSave() { lsSet(KEYS.act, AS.st); }
+function actState() { return AS.st[AS.key] || (AS.st[AS.key] = { a: {}, checked: false, shown: false }); }
+function actScore(a) { const s = actState(); return a.qcm.filter((q, i) => s.a[i] === q.a).length; }
+function wsById(id) { return WORKSHOPS.find(w => w.id === id) || WORKSHOPS[0]; }
+function renderSeg() {
+  const seg = $('#wsSeg'); seg.innerHTML = '';
+  WORKSHOPS.forEach((w, i) => seg.append(h('button', { type: 'button', role: 'tab', 'aria-pressed': w.id === UI.cur ? 'true' : 'false', 'aria-selected': w.id === UI.cur ? 'true' : 'false', onclick: () => gotoWs(w.id) }, (i + 1) + '. ' + w.title)));
+}
+function mountWs() {
+  const w = wsById(UI.cur), root = $('#ws');
+  stopSim();
+  $('#hint').textContent = w.hint; root.innerHTML = '';
+  w.mount(root);
+  const sc = $('#scroller'); if (sc) sc.scrollTop = 0;
+}
+function gotoWs(id) {
+  if (CS.open) { CS.open = false; renderCourse(); }
+  UI.cur = id; AS.key = id; AS.tab = 'steps';
+  renderSeg(); mountWs(); renderAct();
+}
+function renderAct() {
+  const box = $('#act'), btn = $('#bAct');
+  btn.setAttribute('aria-pressed', AS.open ? 'true' : 'false'); btn.classList.toggle('pri', AS.open);
+  box.hidden = !AS.open;
+  if (!AS.open) { box.innerHTML = ''; return; }
+  const oldB = box.querySelector('.pbody'), tag = AS.key + '|' + AS.tab, keep = oldB && box.dataset.k === tag ? oldB.scrollTop : 0;
+  box.dataset.k = tag; box.innerHTML = '';
+  const a = ACT[AS.key];
+  const close = h('button', { class: 'btn sm', type: 'button', onclick: () => { AS.open = false; renderAct(); } }, 'Fermer');
+  box.append(h('div', { class: 'phead' }, h('b', null, 'Activité'), h('span', { class: 'sub' }, a.title), close));
+  const nq = a.qcm.length;
+  box.append(h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'steps' ? 'true' : 'false', onclick: () => { AS.tab = 'steps'; renderAct(); } }, 'Consignes'),
+    h('button', { type: 'button', role: 'tab', 'aria-selected': AS.tab === 'qcm' ? 'true' : 'false', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Questions (' + nq + ')')));
+  const body = h('div', { class: 'pbody' });
+  if (AS.tab === 'steps') {
+    body.append(h('p', { class: 'small' }, a.level + ' · environ ' + a.time), h('div', { class: 'goal', html: '<b>Objectif. </b>' + a.goal }));
+    body.append(h('ol', { class: 'steps' }, a.steps.map(s => h('li', { html: s }))));
+    body.append(h('div', { class: 'defi' }, h('b', null, 'Défi'), h('p', { html: a.defi.q }), h('details', null, h('summary', null, 'Voir la réponse'), h('p', { html: a.defi.a }))));
+    if (a.course) body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: () => openCourse(a.course) }, 'Voir le cours : ' + courseSection(a.course).t)));
+    body.append(h('p', null, h('button', { class: 'btn', type: 'button', onclick: ev => {
+      const b = ev.currentTarget;
+      if (!AS.arm) { b.textContent = 'Confirmer ? Votre travail sera effacé'; AS.arm = setTimeout(() => { b.textContent = 'Recommencer l’atelier'; AS.arm = null; }, 3500); return; }
+      clearTimeout(AS.arm); AS.arm = null; wsById(UI.cur).reset(); mountWs(); renderAct(); } }, 'Recommencer l’atelier')));
+    body.append(h('p', null, h('button', { class: 'btn pri', type: 'button', onclick: () => { AS.tab = 'qcm'; renderAct(); } }, 'Passer aux questions')));
+  } else {
+    const s = actState(), show = s.checked || s.shown;
+    const perm = AS.perm[AS.key] || (AS.perm[AS.key] = a.qcm.map(q => shuffled(q.o.length)));
+    a.qcm.forEach((q, i) => {
+      const fs = h('fieldset', { class: 'q' }, h('legend', { html: (i + 1) + '. ' + q.q }));
+      perm[i].forEach(j => {
+        const o = q.o[j];
+        const good = show && j === q.a, bad = s.checked && !s.shown && s.a[i] === j && j !== q.a;
+        const inp = h('input', { type: 'radio', name: 'q' + i, checked: show && s.shown ? j === q.a : s.a[i] === j, disabled: show });
+        inp.addEventListener('change', () => { s.a[i] = j; actSave(); renderAct(); });
+        fs.append(h('label', { class: 'opt' + (good ? ' good' : '') + (bad ? ' bad' : '') }, inp, h('span', { html: o + (good ? '  ✓' : '') + (bad ? '  ✗' : '') })));
+      });
+      if (show) { const miss = s.a[i] == null && !s.shown; fs.append(h('p', { class: 'why', html: (miss ? 'Sans réponse. ' : '') + q.w })); }
+      body.append(fs);
+    });
+    const done = Object.keys(s.a).length;
+    body.append(h('p', { class: 'small' }, s.shown ? 'Réponses affichées.' : s.checked ? '' : done + ' réponse(s) sur ' + nq + '.'));
+    if (s.checked && !s.shown) body.append(h('p', { class: 'score' }, 'Score : ' + actScore(a) + ' / ' + nq));
+    const row = h('div', { class: 'files' });
+    if (!show) row.append(h('button', { class: 'btn pri', type: 'button', onclick: () => { s.checked = true; actSave(); renderAct(); } }, 'Corriger'));
+    row.append(h('button', { class: 'btn', type: 'button', onclick: () => { s.shown = true; actSave(); renderAct(); } }, 'Afficher les réponses'));
+    if (show) row.append(h('button', { class: 'btn', type: 'button', onclick: () => { AS.st[AS.key] = { a: {}, checked: false, shown: false }; actSave(); renderAct(); } }, 'Recommencer'));
+    body.append(row);
+  }
+  box.append(body); body.scrollTop = keep;
+}
+$('#bAct').addEventListener('click', () => { if (CS.open) { CS.open = false; renderCourse(); } AS.open = !AS.open; renderAct(); });
+
+function courseSection(id) { return COURSE.find(s => s.id === id) || COURSE[0]; }
+function renderCourse() {
+  const box = $('#course'), btn = $('#bCourse'), work = $('#work');
+  btn.setAttribute('aria-pressed', CS.open ? 'true' : 'false'); btn.classList.toggle('pri', CS.open);
+  box.hidden = !CS.open; work.hidden = CS.open; $('#modes').hidden = CS.open;
+  if (!CS.open) { box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  const cur = courseSection(CS.id), idx = COURSE.indexOf(cur);
+  const go = id => { CS.id = id; renderCourse(); };
+  const nav = h('nav', { class: 'ctoc', 'aria-label': 'Sommaire du cours' }, COURSE.map((s, i) => h('button', { type: 'button', class: s.id === cur.id ? 'on' : '', 'aria-current': s.id === cur.id ? 'true' : 'false', onclick: () => go(s.id) }, (i + 1) + '. ' + s.t)));
+  const sel = h('select', { class: 'ctoc-sel', 'aria-label': 'Choisir une section', onchange: e => go(e.target.value) }, COURSE.map((s, i) => h('option', { value: s.id, selected: s.id === cur.id }, (i + 1) + '. ' + s.t)));
+  const art = h('article', { class: 'cbody' });
+  art.append(h('p', { class: 'ckick' }, 'Cours · section ' + (idx + 1) + ' sur ' + COURSE.length), h('h2', null, cur.t), h('div', { html: cur.h }));
+  hydrateFigs(art);
+  art.append(h('div', { class: 'cpn' },
+    idx > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => go(COURSE[idx - 1].id) }, '← ' + COURSE[idx - 1].t) : h('span'),
+    idx < COURSE.length - 1 ? h('button', { class: 'btn pri', type: 'button', onclick: () => go(COURSE[idx + 1].id) }, COURSE[idx + 1].t + ' →') : h('span')));
+  const top = h('div', { class: 'ctop' }, h('b', null, 'Cours : effet gyroscopique et précession'), h('button', { class: 'btn pri sm', type: 'button', onclick: () => { CS.open = false; renderCourse(); } }, 'Retour à l’atelier'));
+  box.append(top, sel, h('div', { class: 'cwrap' }, nav, art));
+  const sc = box.querySelector('.cwrap'); if (sc) sc.scrollTop = 0; box.scrollTop = 0;
+}
+function openCourse(id) { if (id) CS.id = id; CS.open = true; renderCourse(); }
+$('#bCourse').addEventListener('click', () => { CS.open = !CS.open; renderCourse(); });
+
+function closeDlg() { $('#dlg').hidden = true; $('#dlg').innerHTML = ''; }
+function openDlg(title, body) {
+  const d = $('#dlg'); d.innerHTML = ''; d.hidden = false;
+  d.append(h('div', { class: 'dlgbox', role: 'dialog', 'aria-label': title }, h('header', null, h('b', null, title), h('button', { class: 'btn sm', type: 'button', onclick: closeDlg }, 'Fermer')), h('div', { class: 'dbody' }, body)));
+  d.onclick = ev => { if (ev.target === d) closeDlg(); };
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
+$('#bHelp').addEventListener('click', () => {
+  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur le gyroscope : un gyroscope pesant en précession (simulation 3D avec nutation), un rotor sur plateau tournant (effet gyroscopique), deux applications (moto, navire) et deux séries d’exercices.</p>' +
+    '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans les ateliers 3D, modifiez les curseurs : la simulation se met à jour ; la souris tourne la vue, la molette zoome.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> donne le cours illustré.</li><li>Dans les exercices, tapez un nombre (virgule ou point) ; les réponses sont acceptées à 2 % près.</li></ul>' +
+    '<h3>Couleurs</h3><p>H moment cinétique (vert), M moment ou couple (rouge), Ω vitesse de rotation du bâti ou de précession (bleu), P poids (orange), efforts sur les paliers (violet).</p>' +
+    '<h3>Vos données</h3><p>Les réponses au QCM et le choix clair ou sombre sont mémorisés dans ce navigateur uniquement.</p>' }));
+});
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+  const b = $('#bTheme'); b.textContent = t === 'dark' ? 'Mode clair' : 'Mode sombre'; b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  refreshThreeTheme();
+}
+applyTheme(lsGet(KEYS.theme, 'light'));
+$('#bTheme').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; applyTheme(t); lsSet(KEYS.theme, t); });
+function loop(ts) {
+  const dt = Math.min(0.05, (ts - ANIM.last) / 1000 || 0); ANIM.last = ts;
+  if (ANIM.fn && !CS.open && !document.hidden) { try { ANIM.fn(dt); } catch (e) { ANIM.fn = null; } }
+  requestAnimationFrame(loop);
+}
+(function init() { AS.open = !isSmall(); renderSeg(); mountWs(); renderAct(); renderCourse(); requestAnimationFrame(loop); })();
+
+</script>
+</body>
+</html>
