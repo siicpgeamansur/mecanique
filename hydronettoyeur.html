@@ -212,6 +212,7 @@ function drawKin(){
   g+=`<g transform="rotate(${-ang} ${OX} ${OY})"><rect x="${OX-0.4*s}" y="${OY-0.15*s}" width="${0.8*s}" height="${0.3*s}" fill="#fff" stroke="${C.c2}" stroke-width="3"/>
       <line x1="${OX-0.52*s}" y1="${OY-0.22*s}" x2="${OX-0.52*s}" y2="${OY+0.22*s}" stroke="${C.c1}" stroke-width="2"/>
       <line x1="${OX+0.52*s}" y1="${OY-0.22*s}" x2="${OX+0.52*s}" y2="${OY+0.22*s}" stroke="${C.c1}" stroke-width="2"/></g>`;
+  g+=`<line x1="${X(px)}" y1="${Y(py)}" x2="${X(0.85*ux)}" y2="${Y(0.85*uy)}" stroke="${C.c1}" stroke-width="3.2" stroke-linecap="round"/>`;
   g+=arrow(0,0,3.3,0,C.ink)+arrow(0,0,0,1.65,C.ink)+arrow(0,0,1.95*u[0],1.95*u[1],C.c1,1);
   g+=`<circle cx="${OX}" cy="${OY}" r="3.5" fill="${C.ink}"/><circle cx="${X(lam)}" cy="${Y(cy)}" r="4" fill="${C.ink}"/>`;
   g+=`<line x1="${X(3.15)}" y1="${Y(0)}" x2="${X(3.15)}" y2="${Y(-1)}" stroke="${C.mu}"/>`+arrow(3.15,-0.5,3.15,-0.02,C.mu)+arrow(3.15,-0.5,3.15,-0.98,C.mu);
