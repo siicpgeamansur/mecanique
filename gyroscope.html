@@ -721,6 +721,414 @@ function mountG3(root) {
 }
 WORKSHOPS.push({ id: 'g3', title: 'Applications', hint: 'Moto en virage et turbine de navire : calculez le couple gyroscopique et lisez son sens.', mount: mountG3, reset: () => { AP.kind = 'moto'; AP.moto = { v: 90, rho: 80, Rw: 0.3, I: 0.7, dir: 'gauche' }; AP.navire = { I: 5000, N: 3000, Om: 1, L: 5, dir: 'babord', sens: 'avant' }; } });
 
+/* ====================== atelier 4 : systèmes exploitant l’effet gyroscopique ====================== */
+const SY0 = {
+  kind: 'stab',
+  stab: { m: 250, R: 350, N: 6000, c: 1, D: 20, T0: 5, Tw: 5, aw: 2 },
+  pb: { m: 80, R: 25, f: 4, k: 40, mu: 0.3, N0: 2000 },
+  top: { m: 50, R: 20, d: 15, N: 2000, th0: 5, tau: 20 },
+  mill: { m: 3, R: 800, rm: 1200, N: 30 },
+  cmg: { m: 60, R: 300, N: 6000, dd: 0.2, J: 5000, ang: 60 }
+};
+const SY = copy(SY0), SYA = { f: null, data: null, t: 0, pause: false, cur: [] };
+let SYT = 0;
+const SY_LIST = [['stab', 'Stabilisateur de bateau'], ['pb', 'Powerball'], ['top', 'Toupie'], ['mill', 'Broyeur à meules'], ['cmg', 'CMG de satellite']];
+const SY_OTHERS = '<div class="tbl"><table class="ctable"><tr><th>Système</th><th>Rôle de l’effet gyroscopique</th><th>Relation utile</th></tr>' +
+  '<tr><td>Gyrocompas (navires, sous-marins)</td><td>La rotation de la Terre fait tourner l’axe du rotor ; un rappel pendulaire (gravité) crée un couple qui fait précesser l’axe jusqu’au méridien : il indique le nord géographique, sans aimant.</td><td>composante utile Ω<sub>T</sub>·cos λ (λ latitude), Ω<sub>T</sub> = 7,29×10<sup>−5</sup> rad/s</td></tr>' +
+  '<tr><td>Horizon artificiel, conservateur de cap (avions)</td><td>Un rotor rapide garde sa direction et sert de référence ; les frottements parasites le font dériver lentement.</td><td>dérive Ω = M<sub>parasite</sub> / H</td></tr>' +
+  '<tr><td>Monorail et véhicules gyrostabilisés</td><td>Deux volants contrarotatifs dont on pilote la précession produisent le couple qui maintient l’équilibre sur un rail ou sur deux roues alignées (même principe que le stabilisateur de bateau).</td><td>C = H·dβ/dt</td></tr>' +
+  '<tr><td>Éoliennes (orientation face au vent)</td><td>La rotation de la nacelle (lacet) crée un couple sur l’arbre du rotor et ses paliers ; il limite la vitesse d’orientation.</td><td>C = I·ω·Ω<sub>lacet</sub> (constant pour un rotor tripale, pulsé pour un bipale)</td></tr>' +
+  '<tr><td>Hélices, turbomachines, volants de stockage d’énergie</td><td>Effet subi : les virages ou les mouvements du support chargent les paliers ; il faut en tenir compte au dimensionnement.</td><td>F = I·ω·Ω / L</td></tr>' +
+  '<tr><td>Projectiles, satellites stabilisés par rotation</td><td>La rotation propre rend l’axe peu sensible aux moments perturbateurs (rayures des canons, satellites « spinnés »).</td><td>Ω = M / H, petit si H est grand</td></tr>' +
+  '<tr><td>Stabilisateurs de caméras et de jumelles</td><td>Des rotors rapides s’opposent aux petites rotations parasites de l’appareil tenu à la main ou embarqué.</td><td>C = H ∧ Ω</td></tr>' +
+  '</table></div><p class="small">À ne pas confondre : les gyromètres MEMS des téléphones et des drones ne contiennent pas de rotor ; ils mesurent la vitesse de rotation par la force de Coriolis sur une masse vibrante.</p>';
+
+/* ---- outils : courbes ---- */
+function niceStep(r, n) { if (!(r > 0)) return 1; const raw = r / n, p = Math.pow(10, Math.floor(Math.log10(raw))), q = raw / p; return (q < 1.5 ? 1 : q < 3.5 ? 2 : q < 7.5 ? 5 : 10) * p; }
+function stepDec(st) { return Math.max(0, Math.min(3, -Math.floor(Math.log10(st) + 1e-9))); }
+function syPlot(series, o) {
+  const W = 520, Hh = o.h || 180, ml = 52, mr = 14, mt = 18, mb = 30, f1 = v => v.toFixed(1);
+  let lo = Infinity, hi = -Infinity, xa = Infinity, xb = -Infinity;
+  series.forEach(sr => sr.pts.forEach(p => { if (p[1] < lo) lo = p[1]; if (p[1] > hi) hi = p[1]; if (p[0] < xa) xa = p[0]; if (p[0] > xb) xb = p[0]; }));
+  (o.hl || []).forEach(l => { lo = Math.min(lo, l.v); hi = Math.max(hi, l.v); });
+  (o.pts || []).forEach(p => { lo = Math.min(lo, p[1]); hi = Math.max(hi, p[1]); });
+  const x0 = o.x0 != null ? o.x0 : xa, x1 = o.x1 != null ? o.x1 : xb;
+  let y0 = o.y0 != null ? o.y0 : lo, y1 = o.y1 != null ? o.y1 : hi;
+  if (o.sym) { const m = Math.max(Math.abs(y0), Math.abs(y1)) || 1; y0 = -m * 1.08; y1 = m * 1.08; }
+  else { if (!(y1 > y0)) y1 = y0 + 1; const pd = (y1 - y0) * 0.08; if (o.y0 == null) y0 -= pd; if (o.y1 == null) y1 += pd; }
+  const X = x => ml + (x - x0) / ((x1 - x0) || 1) * (W - ml - mr), Y = y => Hh - mb - (y - y0) / (y1 - y0) * (Hh - mt - mb);
+  const s = mkSvg('0 0 ' + W + ' ' + Hh, o.label || 'Courbe');
+  const sy = niceStep(y1 - y0, 4), dy = stepDec(sy);
+  for (let v = Math.ceil(y0 / sy) * sy; v <= y1 + 1e-9; v += sy) { const y = Y(v); el('line', { x1: ml, x2: W - mr, y1: f1(y), y2: f1(y), class: 'plot-grid' }, s); T2(s, ml - 6, y + 4, fx(v, dy), MUT, 'sm').setAttribute('text-anchor', 'end'); }
+  const sx = niceStep(x1 - x0, 6), dx = stepDec(sx);
+  for (let v = Math.ceil(x0 / sx) * sx; v <= x1 + 1e-9; v += sx) { const x = X(v); el('line', { x1: f1(x), x2: f1(x), y1: Hh - mb, y2: Hh - mb + 4, class: 'plot-ax' }, s); T2(s, x, Hh - mb + 16, fx(v, dx), MUT, 'sm'); }
+  el('line', { x1: ml, x2: W - mr, y1: Hh - mb, y2: Hh - mb, class: 'plot-ax' }, s); el('line', { x1: ml, x2: ml, y1: mt - 6, y2: Hh - mb, class: 'plot-ax' }, s);
+  (o.hl || []).forEach(l => { el('line', { x1: ml, x2: W - mr, y1: f1(Y(l.v)), y2: f1(Y(l.v)), stroke: l.col || MUT, 'stroke-width': 1.3, 'stroke-dasharray': '5 4' }, s); if (l.lab) T2(s, W - mr - 4, Y(l.v) - 5, l.lab, l.col || MUT, 'sm').setAttribute('text-anchor', 'end'); });
+  (o.vl || []).forEach(l => { if (!(l.v >= x0 && l.v <= x1)) return; el('line', { x1: f1(X(l.v)), x2: f1(X(l.v)), y1: mt - 6, y2: Hh - mb, stroke: l.col || MUT, 'stroke-width': 1.3, 'stroke-dasharray': '5 4' }, s); if (l.lab) T2(s, X(l.v) + (l.left ? -4 : 4), mt + 4 + (l.dy || 0), l.lab, l.col || MUT, 'sm').setAttribute('text-anchor', l.left ? 'end' : 'start'); });
+  series.forEach(sr => {
+    if (sr.pts.length < 2) return;
+    const at = { points: sr.pts.map(p => f1(X(p[0])) + ',' + f1(Y(Math.max(y0, Math.min(y1, p[1]))))).join(' '), fill: 'none', stroke: sr.col, 'stroke-width': sr.w || 2.2, 'stroke-linejoin': 'round' };
+    if (sr.dash) at['stroke-dasharray'] = sr.dash;
+    el('polyline', at, s);
+  });
+  (o.pts || []).forEach(p => el('circle', { cx: f1(X(p[0])), cy: f1(Y(p[1])), r: 5.5, fill: p[2] || GCOL.M }, s));
+  T2(s, W - mr - 4, Hh - mb - 6, o.xl || '', MUT, 'sm').setAttribute('text-anchor', 'end'); T2(s, ml + 4, 11, o.yl || '', MUT, 'sm').setAttribute('text-anchor', 'start');
+  return { svg: s, X, Y, mt, mb, Hh };
+}
+function legH(items) { return h('div', { class: 'leg' }, items.map(it => h('span', null, h('i', { style: 'background:' + it[0] }), it[1]))); }
+function plotBox(box, title, pl, leg) { box.append(h('p', { class: 'ptit' }, title), h('div', { class: 'gwrap' }, pl.svg)); if (leg) box.append(legH(leg)); }
+function cursorOn(pl) { const ln = el('line', { x1: pl.X(0), x2: pl.X(0), y1: pl.mt - 6, y2: pl.Hh - pl.mb, class: 'cursor' }, pl.svg); SYA.cur.push({ ln, X: pl.X }); }
+const pts2 = (a, b) => b.map((v, i) => [a[i], v]);
+
+/* ---- 1. stabilisateur gyroscopique de bateau ---- */
+function stabCalc(A) {
+  const R = A.R / 1000, I = 0.5 * A.m * R * R, w = A.N * Math.PI / 30, H = I * w, K = A.D * 1000 * G, w0 = TAU / A.T0, J = K / (w0 * w0), b = 2 * 0.06 * Math.sqrt(K * J), c = A.c * 1000, bg = H * H / c, M0 = K * A.aw / DEG, ww = TAU / A.Tw;
+  const Jc = 0.5 * A.m * R * R, kg = 0.05 * c;
+  /* amplitude linéaire exacte : Z = K − J·ω² + i·b·ω − H²·ω² / (k − J_c·ω² + i·c·ω) */
+  const lin = g => { let zr = K - J * ww * ww, zi = b * ww; if (g) { const dr = kg - Jc * ww * ww, di = c * ww, q = H * H * ww * ww / (dr * dr + di * di); zr -= q * dr; zi += q * di; } return M0 / Math.hypot(zr, zi); };
+  const r = { R, I, w, H, K, J, b, c, bg, M0, ww, w0, Jc, kg, a0: lin(false), a1: lin(true) };
+  r.sim = stabSim(r); return r;
+}
+/* roulis φ (bateau seul et bateau + stabilisateur) et cardan β : J_c·β'' + c·β' + k·β = H·φ'·cos β, butées à ±70° */
+function stabSim(r) {
+  const J = r.J, b = r.b, K = r.K, H = r.H, c = r.c, M0 = r.M0, ww = r.ww, Jc = r.Jc, kg = r.kg, bm = 70 / DEG, lam = Math.max(c / Jc, H / Math.sqrt(J * Jc), Math.sqrt(K / J));
+  const hs = Math.max(1e-4, Math.min(0.004, 1.0 / lam)), T = 60;
+  const o = { t: [], p0: [], p: [], b: [], ww, stop: false, A0: 0, A1: 0, B: 0, C: 0 };
+  const ac = (t, p, v, bv, be) => (M0 * Math.sin(ww * t) - b * v - K * p - H * bv * Math.cos(be)) / J;
+  const ab = (v, bv, be) => { let x = (H * v * Math.cos(be) - c * bv - kg * be) / Jc; if ((be >= bm && bv >= 0 && x > 0) || (be <= -bm && bv <= 0 && x < 0)) x = 0; return x; };
+  const a0 = (t, q, v) => (M0 * Math.sin(ww * t) - b * v - K * q) / J;
+  let t = 0, p = 0, v = 0, be = 0, bv = 0, q = 0, u = 0, nx = 0;
+  while (t <= T + 1e-9) {
+    if (t >= nx - 1e-9) {
+      o.t.push(t); o.p0.push(q); o.p.push(p); o.b.push(be); nx += 0.02;
+      if (t >= 30) { o.A0 = Math.max(o.A0, Math.abs(q)); o.A1 = Math.max(o.A1, Math.abs(p)); o.C = Math.max(o.C, Math.abs(H * bv * Math.cos(be))); }
+      o.B = Math.max(o.B, Math.abs(be));
+    }
+    /* RK4 sur (φ, φ', β, β') */
+    const s1 = [v, ac(t, p, v, bv, be), bv, ab(v, bv, be)];
+    let X = [p + hs / 2 * s1[0], v + hs / 2 * s1[1], be + hs / 2 * s1[2], bv + hs / 2 * s1[3]];
+    const s2 = [X[1], ac(t + hs / 2, X[0], X[1], X[3], X[2]), X[3], ab(X[1], X[3], X[2])];
+    X = [p + hs / 2 * s2[0], v + hs / 2 * s2[1], be + hs / 2 * s2[2], bv + hs / 2 * s2[3]];
+    const s3 = [X[1], ac(t + hs / 2, X[0], X[1], X[3], X[2]), X[3], ab(X[1], X[3], X[2])];
+    X = [p + hs * s3[0], v + hs * s3[1], be + hs * s3[2], bv + hs * s3[3]];
+    const s4 = [X[1], ac(t + hs, X[0], X[1], X[3], X[2]), X[3], ab(X[1], X[3], X[2])];
+    p += hs / 6 * (s1[0] + 2 * s2[0] + 2 * s3[0] + s4[0]); v += hs / 6 * (s1[1] + 2 * s2[1] + 2 * s3[1] + s4[1]);
+    be += hs / 6 * (s1[2] + 2 * s2[2] + 2 * s3[2] + s4[2]); bv += hs / 6 * (s1[3] + 2 * s2[3] + 2 * s3[3] + s4[3]);
+    if (be > bm) { be = bm; if (bv > 0) bv = 0; } else if (be < -bm) { be = -bm; if (bv < 0) bv = 0; }
+    const l1q = u, l1u = a0(t, q, u), l2q = u + hs / 2 * l1u, l2u = a0(t + hs / 2, q + hs / 2 * l1q, u + hs / 2 * l1u), l3q = u + hs / 2 * l2u, l3u = a0(t + hs / 2, q + hs / 2 * l2q, u + hs / 2 * l2u), l4q = u + hs * l3u, l4u = a0(t + hs, q + hs * l3q, u + hs * l3u);
+    q += hs / 6 * (l1q + 2 * l2q + 2 * l3q + l4q); u += hs / 6 * (l1u + 2 * l2u + 2 * l3u + l4u);
+    t += hs;
+  }
+  o.stop = o.B >= bm * 0.995;
+  return o;
+}
+function stabFig() {
+  const s = mkSvg('0 0 380 230', 'Bateau en roulis avec stabilisateur gyroscopique, vue de l’arrière'), cx = 190, cy = 140;
+  const wave = el('path', { d: '', fill: 'none', stroke: GCOL.O, 'stroke-width': 1.6, opacity: 0.8 }, s);
+  const hull = (cx - 125) + ',' + (cy - 28) + ' ' + (cx + 125) + ',' + (cy - 28) + ' ' + (cx + 88) + ',' + (cy + 36) + ' ' + cx + ',' + (cy + 46) + ' ' + (cx - 88) + ',' + (cy + 36);
+  const gh = el('g', {}, s); el('polygon', { points: hull, fill: 'none', stroke: MUT, 'stroke-width': 1.6, 'stroke-dasharray': '6 4' }, gh);
+  const g = el('g', {}, s); el('polygon', { points: hull, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, g);
+  el('rect', { x: cx - 45, y: cy - 58, width: 90, height: 30, rx: 3, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 1.5 }, g);
+  el('rect', { x: cx - 50, y: cy - 16, width: 100, height: 44, rx: 5, fill: 'none', stroke: MUT, 'stroke-width': 1.4 }, g);
+  el('line', { x1: cx - 50, x2: cx + 50, y1: cy + 6, y2: cy + 6, stroke: GCOL.O, 'stroke-width': 1.2, 'stroke-dasharray': '3 3' }, g);
+  [-50, 50].forEach(dx => el('circle', { cx: cx + dx, cy: cy + 6, r: 4, fill: GCOL.O }, g));
+  const fw = el('ellipse', { cx, cy: cy + 6, rx: 38, ry: 5, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, g);
+  const ax = el('line', { x1: cx, x2: cx, y1: cy - 16, y2: cy + 28, stroke: GCOL.H, 'stroke-width': 3, 'stroke-linecap': 'round' }, g);
+  T2(g, cx + 14, cy - 6, 'H', GCOL.H); T2(g, cx + 64, cy + 10, 'y', GCOL.O, 'sm');
+  const tx = el('text', { x: 12, y: 20, class: 'gtxt l', style: 'font-size:12px' }, s), tx2 = el('text', { x: 12, y: 36, class: 'gtxt l sm' }, s);
+  const o = {
+    svg: s,
+    upd(ph0n, phn, be, t, ww) {
+      g.setAttribute('transform', 'rotate(' + (phn * DEG).toFixed(2) + ' ' + cx + ' ' + cy + ')');
+      gh.setAttribute('transform', 'rotate(' + (ph0n * DEG).toFixed(2) + ' ' + cx + ' ' + cy + ')');
+      fw.setAttribute('ry', Math.max(4, 38 * Math.abs(Math.sin(be))).toFixed(1));
+      const cb = Math.cos(be); ax.setAttribute('y1', (cy + 6 - 22 * cb).toFixed(1)); ax.setAttribute('y2', (cy + 6 + 22 * cb).toFixed(1));
+      let d = ''; for (let x = 0; x <= 380; x += 10) d += (x ? 'L' : 'M') + x + ' ' + (cy + 12 + 5 * Math.sin(x / 38 - (ww || 1) * t)).toFixed(1); wave.setAttribute('d', d);
+      tx.textContent = 't = ' + fx(t, 1) + ' s · φ = ' + fx(phn * DEG, 1) + '° (sans : ' + fx(ph0n * DEG, 1) + '°)';
+      tx2.textContent = 'cardan β = ' + fx(be * DEG, 0) + '°';
+    }
+  };
+  o.upd(0, 0, 0, 0, 1);
+  return o;
+}
+
+/* ---- 2. powerball ---- */
+function pbCalc(A) {
+  const m = A.m / 1000, R = A.R / 1000, I = 0.5 * m * R * R, Om = TAU * A.f, ws = Om * A.k, w0 = A.N0 * Math.PI / 30, kk = A.mu * Om / A.k, ts = w0 < ws ? Math.log(ws / w0) / kk : 0, Cs = I * ws * Om, rb = 0.035;
+  return { m, R, I, Om, ws, Ns: ws * 30 / Math.PI, w0, kk, ts, Cs, rb, F: Cs / rb, E: 0.5 * I * ws * ws, Hs: I * ws, C0: I * w0 * Om, Nn: Cs / (2 * 0.02) };
+}
+function pbFig() {
+  const s = mkSvg('0 0 420 250', 'Powerball en coupe'), cx = 210, cy = 125;
+  el('circle', { cx, cy, r: 108, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('line', { x1: cx - 108, x2: cx + 108, y1: cy, y2: cy, stroke: MUT, 'stroke-dasharray': '4 4' }, s);
+  [-1, 1].forEach(k => { const x = cx + k * 90; el('path', { d: 'M' + (x - 13) + ' ' + (cy - 10) + ' H' + (x + 13) + ' M' + (x - 13) + ' ' + (cy + 10) + ' H' + (x + 13), stroke: NOCS, 'stroke-width': 2.6 }, s); });
+  el('line', { x1: cx - 92, x2: cx + 92, y1: cy, y2: cy, stroke: NOCS, 'stroke-width': 4, 'stroke-linecap': 'round' }, s);
+  el('ellipse', { cx, cy, rx: 14, ry: 56, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('path', { d: 'M' + (cx + 20) + ' ' + (cy - 60) + ' A26 60 0 0 1 ' + (cx + 20) + ' ' + (cy + 60), fill: 'none', stroke: NOCS, 'stroke-width': 1.8 }, s);
+  el('polygon', { points: (cx + 20) + ',' + (cy + 60) + ' ' + (cx + 31) + ',' + (cy + 55) + ' ' + (cx + 29) + ',' + (cy + 66), fill: NOCS }, s); T2(s, cx + 30, cy + 80, 'ω', NOCS);
+  gArr(s, cx + 18, cy - 24, cx + 132, cy - 24, GCOL.H, 3.4); T2(s, cx + 142, cy - 20, 'H', GCOL.H);
+  gArr(s, 38, 205, 38, 70, GCOL.O, 3.4); T2(s, 40, 58, 'Ω (poignet)', GCOL.O);
+  gArr(s, cx + 90, cy - 12, cx + 90, cy - 62, GCOL.F, 3.2); T2(s, cx + 104, cy - 48, 'N', GCOL.F);
+  gArr(s, cx - 90, cy + 12, cx - 90, cy + 62, GCOL.F, 3.2); T2(s, cx - 104, cy + 56, 'N', GCOL.F);
+  el('circle', { cx: cx - 52, cy: cy - 68, r: 11, fill: 'var(--panel)', stroke: GCOL.M, 'stroke-width': 2.4 }, s); el('circle', { cx: cx - 52, cy: cy - 68, r: 3.5, fill: GCOL.M }, s); T2(s, cx - 52, cy - 86, 'C = H ∧ Ω', GCOL.M);
+  gArr(s, cx - 90, cy + 96, cx, cy + 96, NOCS, 1.4); gArr(s, cx, cy + 96, cx - 90, cy + 96, NOCS, 1.4); T2(s, cx - 45, cy + 91, 'a', NOCS);
+  T2(s, cx + 90, cy + 30, 'gorge', MUT, 'sm'); T2(s, 300, 244, 'axe de rayon r roulant dans la gorge', MUT, 'sm');
+  return s;
+}
+
+/* ---- 3. toupie ---- */
+function topCalc(A) {
+  const m = A.m / 1000, R = A.R / 1000, d = A.d / 1000, I3 = 0.5 * m * R * R, I1 = 0.25 * m * R * R + m * d * d, mgd = m * G * d, w = A.N * Math.PI / 30, wc = 2 * Math.sqrt(I1 * mgd) / I3, Om = mgd / (I3 * w), wn = I3 * w / I1, tc = w > wc ? A.tau * Math.log(w / wc) : 0;
+  const r = { m, R, d, I3, I1, mgd, w, wc, Nc: wc * 30 / Math.PI, Om, wn, tc };
+  r.sim = topSysSim(A, tc); return r;
+}
+function topSysSim(A, tc) {
+  const P = { m: A.m / 1000, R: A.R, d: A.d, N: A.N, th0: A.th0, mode: 'steady' }, st = {}; topInit(P, st);
+  const p = st.p, wn = Math.abs(p.I3 * p.w) / p.I1, Tm = Math.min(60, Math.max(8, tc * 1.4 + 6)), hh = Math.max(Tm / 2.5e5, Math.min(0.0005, 0.12 / Math.max(wn, 1)));
+  const th = [[0, A.th0]], nn = [[0, A.N]]; let nx = 0.05, fell = null;
+  while (st.t < Tm) {
+    topStep(st, hh, false);
+    st.ppsi *= Math.exp(-hh / A.tau); const sn = Math.sin(st.th); st.pphi = p.I1 * st.phd * sn * sn + st.ppsi * Math.cos(st.th);
+    if (st.t >= nx) { th.push([st.t, st.th * DEG]); nn.push([st.t, st.ppsi / p.I3 * 30 / Math.PI]); nx += 0.05; }
+    if (st.th * DEG > 70) { fell = st.t; th.push([st.t, st.th * DEG]); break; }
+  }
+  return { th, nn, fell, Tm };
+}
+function topFig(A) {
+  const s = mkSvg('0 0 380 250', 'Toupie, vue de côté'), ox = 175, oy = 228, t = clamp(A.th0, 10, 28) / DEG, L = 112, ux = Math.sin(t), uy = -Math.cos(t), gx = ox + L * ux, gy = oy + L * uy, px = -uy, py = ux, f1 = v => v.toFixed(1);
+  el('line', { x1: 30, x2: 350, y1: oy, y2: oy, stroke: MUT, 'stroke-width': 2 }, s);
+  el('line', { x1: ox, x2: ox, y1: oy, y2: 26, stroke: MUT, 'stroke-dasharray': '4 4' }, s);
+  el('ellipse', { cx: ox, cy: f1(gy), rx: f1(Math.abs(gx - ox)), ry: 12, fill: 'none', stroke: GCOL.O, 'stroke-dasharray': '5 4' }, s);
+  el('polygon', { points: ox + ',' + oy + ' ' + f1(gx + 70 * px - 4 * ux) + ',' + f1(gy + 70 * py - 4 * uy) + ' ' + f1(gx - 70 * px - 4 * ux) + ',' + f1(gy - 70 * py - 4 * uy), fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 1.6 }, s);
+  el('line', { x1: f1(gx), y1: f1(gy), x2: f1(gx + 34 * ux), y2: f1(gy + 34 * uy), stroke: NOCS, 'stroke-width': 4, 'stroke-linecap': 'round' }, s);
+  el('ellipse', { cx: f1(gx), cy: f1(gy), rx: 74, ry: 13, transform: 'rotate(' + f1(t * DEG) + ' ' + f1(gx) + ' ' + f1(gy) + ')', fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('circle', { cx: f1(gx), cy: f1(gy), r: 3.2, fill: NOCS }, s); T2(s, gx - 14, gy + 4, 'G', NOCS);
+  gArr(s, gx + 38 * ux, gy + 38 * uy, gx + 100 * ux, gy + 100 * uy, GCOL.H, 3.4); T2(s, gx + 108 * ux + 10, gy + 108 * uy + 4, 'H', GCOL.H);
+  gArr(s, gx + 2, gy + 6, gx + 2, gy + 66, GCOL.W, 3.2); T2(s, gx + 16, gy + 62, 'P', GCOL.W);
+  gArr(s, 58, 200, 58, 90, GCOL.O, 3.4); T2(s, 58, 80, 'Ω', GCOL.O);
+  el('circle', { cx: ox + 62, cy: oy - 22, r: 10, fill: 'var(--panel)', stroke: GCOL.M, 'stroke-width': 2.2 }, s); el('path', { d: 'M' + (ox + 56) + ' ' + (oy - 28) + ' L' + (ox + 68) + ' ' + (oy - 16) + ' M' + (ox + 68) + ' ' + (oy - 28) + ' L' + (ox + 56) + ' ' + (oy - 16), stroke: GCOL.M, 'stroke-width': 2.2 }, s); T2(s, ox + 84, oy - 18, 'M', GCOL.M);
+  gArc(s, ox, oy, 46, 90, 90 - t * DEG + 3, NOCS, 1.6); T2(s, ox + 10, oy - 52, 'θ', NOCS);
+  el('circle', { cx: ox, cy: oy, r: 3.5, fill: GCOL.M }, s); T2(s, ox - 14, oy + 16, 'O', NOCS);
+  return s;
+}
+
+/* ---- 4. broyeur à meules ---- */
+function millCalc(A) {
+  const m = A.m * 1000, R = A.R / 1000, rm = A.rm / 1000, Om = A.N * Math.PI / 30, w = Om * rm / R, I = 0.5 * m * R * R, H = I * w, C = I * w * Om, dN = C / rm, P = m * G;
+  return { m, R, rm, Om, w, I, H, C, dN, P, Nt: P + dN, gain: dN / P };
+}
+function millFig() {
+  const s = mkSvg('0 0 420 262', 'Broyeur à meules, vue de côté'), sx = 90, yc = 140, wx = 300, yb = 215;
+  el('rect', { x: 36, y: yb, width: 368, height: 12, fill: 'var(--g-m)', stroke: NOCS, 'stroke-width': 1.4 }, s); T2(s, 372, yb + 24, 'piste', MUT, 'sm');
+  el('rect', { x: sx - 7, y: 20, width: 14, height: yb - 20, fill: 'var(--g-m)', stroke: NOCS, 'stroke-width': 1.4 }, s);
+  el('line', { x1: sx, x2: wx, y1: yc, y2: yc, stroke: NOCS, 'stroke-width': 5, 'stroke-linecap': 'round' }, s);
+  el('circle', { cx: sx, cy: yc, r: 6, fill: 'var(--bg)', stroke: NOCS, 'stroke-width': 2 }, s); T2(s, sx + 58, yc + 20, 'articulation O', MUT, 'sm');
+  el('rect', { x: wx - 22, y: yc - 75, width: 44, height: 150, rx: 10, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('line', { x1: wx - 30, x2: wx + 30, y1: yc, y2: yc, stroke: NOCS, 'stroke-width': 3 }, s);
+  gArr(s, sx - 34, 112, sx - 34, 38, GCOL.O, 3.4); T2(s, sx - 34, 30, 'Ω', GCOL.O);
+  gArr(s, wx - 28, yc - 16, wx - 128, yc - 16, GCOL.H, 3.4); T2(s, wx - 140, yc - 20, 'H', GCOL.H);
+  el('circle', { cx: 196, cy: 72, r: 11, fill: 'var(--panel)', stroke: GCOL.M, 'stroke-width': 2.4 }, s); el('circle', { cx: 196, cy: 72, r: 3.5, fill: GCOL.M }, s); T2(s, 214, 76, 'dH/dt = Ω ∧ H', GCOL.M, 'l');
+  gArr(s, wx - 8, yc + 4, wx - 8, yc + 58, GCOL.W, 3); T2(s, wx - 36, yc + 52, 'P', GCOL.W);
+  gArr(s, wx + 8, yb, wx + 8, yb - 70, GCOL.F, 3); T2(s, wx + 38, yb - 58, 'N', GCOL.F);
+  gArr(s, sx, 246, wx, 246, NOCS, 1.4); gArr(s, wx, 246, sx, 246, NOCS, 1.4); T2(s, (sx + wx) / 2, 240, 'r_m', NOCS);
+  gArr(s, 352, yc, 352, yb, NOCS, 1.4); gArr(s, 352, yb, 352, yc, NOCS, 1.4); T2(s, 366, (yc + yb) / 2 + 4, 'R', NOCS);
+  T2(s, wx, yc - 84, 'meule', MUT, 'sm');
+  return s;
+}
+
+/* ---- 5. CMG ---- */
+function cmgCalc(A) {
+  const R = A.R / 1000, I = 0.5 * A.m * R * R, w = A.N * Math.PI / 30, H = I * w, tau = H * A.dd, th = A.ang / DEG, t = 2 * Math.sqrt(th * A.J / tau), tRW = 2 * Math.sqrt(th * A.J / 0.2), wmax = tau * t / (2 * A.J), dmax = A.dd * t / 2;
+  return { R, I, w, H, tau, th, t, tRW, wmax, dmax, Lmax: A.J * wmax };
+}
+function cmgFig() {
+  const s = mkSvg('0 0 420 246', 'Actionneur gyroscopique dans un satellite'), cx = 210, cy = 125;
+  [[12, 98], [340, 98]].forEach(p => { el('rect', { x: p[0], y: p[1], width: 68, height: 54, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 1.4 }, s); el('line', { x1: p[0] + 34, x2: p[0] + 34, y1: p[1], y2: p[1] + 54, stroke: NOCS, 'stroke-width': 0.8 }, s); });
+  el('line', { x1: 80, x2: 90, y1: 125, y2: 125, stroke: NOCS, 'stroke-width': 3 }, s); el('line', { x1: 330, x2: 340, y1: 125, y2: 125, stroke: NOCS, 'stroke-width': 3 }, s);
+  el('rect', { x: 90, y: 35, width: 240, height: 180, rx: 8, fill: 'var(--panel2)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('rect', { x: cx - 62, y: cy - 62, width: 124, height: 124, rx: 12, fill: 'none', stroke: MUT, 'stroke-width': 1.6 }, s);
+  el('line', { x1: cx, x2: cx, y1: cy - 62, y2: cy + 80, stroke: GCOL.O, 'stroke-width': 1.4, 'stroke-dasharray': '4 3' }, s);
+  el('rect', { x: cx - 12, y: cy + 62, width: 24, height: 16, fill: 'var(--g-m)', stroke: NOCS, 'stroke-width': 1.2 }, s); T2(s, cx + 18, cy + 76, 'moteur du cardan', MUT, 'sm').setAttribute('text-anchor', 'start');
+  el('ellipse', { cx, cy, rx: 12, ry: 50, fill: 'var(--accent-soft)', stroke: NOCS, 'stroke-width': 2 }, s);
+  el('line', { x1: cx - 30, x2: cx + 30, y1: cy, y2: cy, stroke: NOCS, 'stroke-width': 3 }, s);
+  gArr(s, cx + 16, cy, cx + 108, cy, GCOL.H, 3.4); T2(s, cx + 108, cy - 10, 'H', GCOL.H);
+  gArr(s, cx, cy - 62, cx, cy - 84, GCOL.O, 3); gArc(s, cx, cy - 74, 16, 200, -20, GCOL.O, 2); T2(s, cx + 36, cy - 80, 'dδ/dt', GCOL.O);
+  el('circle', { cx: 112, cy: 228, r: 9, fill: 'var(--panel)', stroke: GCOL.M, 'stroke-width': 2.2 }, s); el('circle', { cx: 112, cy: 228, r: 3, fill: GCOL.M }, s); T2(s, 127, 232, 'τ sur le satellite (sortant)', GCOL.M, 'l');
+  return s;
+}
+
+/* ---- descriptions des systèmes ---- */
+const SYS = {
+  stab: {
+    heavy: true, anim: true,
+    prin: '<b>Principe.</b> Un volant à axe vertical tourne très vite dans un cardan d’axe transversal. Le roulis fait basculer le cardan (précession) ; cette précession crée en retour un couple gyroscopique qui s’oppose au roulis. Un frein sur le cardan dissipe l’énergie du roulis.',
+    ctl: (S, A) => [S('m (masse du volant, kg)', 50, 600, 10, 'm', v => v), S('R (rayon du volant, mm)', 200, 500, 10, 'R', v => v), S('N (vitesse du volant, tr/min)', 0, 9000, 250, 'N', v => v), S('c (frein du cardan, kN·m·s/rad)', 0.05, 10, 0.05, 'c', v => fx(v, 2)),
+      h('p', { class: 'small' }, 'Bateau et houle'), S('Δ (déplacement du bateau, t)', 5, 60, 1, 'D', v => v), S('T_0 (période propre de roulis, s)', 3, 8, 0.5, 'T0', v => fx(v, 1)), S('T_h (période de la houle, s)', 2, 12, 0.5, 'Tw', v => fx(v, 1)), S('α_h (pente de la houle, °)', 0.5, 5, 0.5, 'aw', v => fx(v, 1))],
+    stats: (A, r) => { const d = r.sim; return [['H = I·ω', fx(r.H, 0) + ' N·m·s'], ['Amortissement ajouté H²/c', fx(r.bg / 1000, 1) + ' kN·m·s/rad'], ['Roulis sans stabilisateur', fx(d.A0 * DEG, 1) + '°'], ['Roulis avec stabilisateur', fx(d.A1 * DEG, 1) + '°'], ['Réduction du roulis', d.A0 > 1e-9 ? fx(100 * (1 - d.A1 / d.A0), 0) + ' %' : '—'], ['Inclinaison max du cardan β', fx(d.B * DEG, 0) + '°'], ['Couple anti-roulis max H·dβ/dt·cos β', fx(d.C / 1000, 1) + ' kN·m']]; },
+    note: (A, r) => { const d = r.sim; if (A.N === 0) return ['warn', 'Volant arrêté : H = 0, aucun couple gyroscopique.']; if (d.stop) return ['no', 'Le cardan atteint ses <b>butées</b> (±70°) : il ne peut plus précesser et l’effet est perdu pendant ce temps. Augmentez le frein c ou H.']; if (r.Jc * r.ww > 0.5 * r.c) return ['warn', 'Frein trop faible devant l’inertie du cardan (J<sub>c</sub>·ω<sub>h</sub> &gt; c/2) : le cardan oscille sans dissiper beaucoup d’énergie. Augmentez c.']; if (d.B < 4 / DEG) return ['warn', 'Cardan presque <b>bloqué</b> (β reste très petit) : le volant précesse peu, l’amortissement H²/c est faible. Diminuez c.']; return ['yes', 'Réglage efficace : le cardan précesse sans atteindre ses butées.']; },
+    eq: (A, r) => { const d = r.sim; return '<p><b>Repère.</b> x : axe longitudinal du bateau (roulis φ) ; y : axe transversal, axe du cardan (angle β) ; z : axe vertical, axe du volant au repos.</p>' +
+      '<p><b>1. Moment cinétique du volant</b> (disque homogène) :</p><div class="formula sm">H = I·ω = ½·m·R²·ω = ½ × ' + A.m + ' × ' + fx(r.R, 3) + '² × ' + fx(r.w, 1) + ' = <b>' + fx(r.H, 0) + ' N·m·s</b></div>' +
+      '<p><b>2. Le roulis fait précesser le cardan.</b> La coque tourne à dφ/dt autour de x et entraîne l’axe du volant : H change de direction. Le théorème du moment dynamique appliqué à l’ensemble volant + cardan, projeté sur l’axe y du cardan freiné (coefficient c, inertie J<sub>c</sub>), donne :</p>' +
+      '<div class="formula sm">J<sub>c</sub>·d²β/dt² + c·dβ/dt = H·(dφ/dt)·cos β &nbsp;⟹&nbsp; dβ/dt ≈ H·(dφ/dt)·cos β / c &nbsp;si J<sub>c</sub>·ω<sub>h</sub> ≪ c</div><div class="formula sm">ici J<sub>c</sub> ≈ ½·m·R² = ' + fx(r.Jc, 1) + ' kg·m² (volant + cadre) ; J<sub>c</sub>·ω<sub>h</sub> = ' + fx(r.Jc * r.ww, 0) + ' N·m·s/rad à comparer à c = ' + fx(r.c, 0) + ' N·m·s/rad</div>' +
+      '<p><b>3. La précession crée le couple anti-roulis.</b> H tourne maintenant à dβ/dt autour de y ; le volant exerce sur la coque un couple porté par x, opposé au roulis :</p>' +
+      '<div class="formula sm">C<sub>x</sub> = −H·(dβ/dt)·cos β ≈ −(H²/c)·cos²β·(dφ/dt)</div>' +
+      '<p>Le stabilisateur se comporte comme un <b>amortisseur de roulis</b> de coefficient :</p><div class="formula sm">b<sub>g</sub> = H² / c = ' + fx(r.H, 0) + '² / ' + fx(r.c, 0) + ' = <b>' + fx(r.bg / 1000, 1) + ' kN·m·s/rad</b></div>' +
+      '<p><b>4. Équation du roulis</b> (Δ = ' + A.D + ' t, hauteur métacentrique GM = 1 m, amortissement propre ζ = 0,06) :</p>' +
+      '<div class="formula sm">J·d²φ/dt² + (b + b<sub>g</sub>)·dφ/dt + K·φ = M<sub>0</sub>·sin(ω<sub>h</sub>·t)</div>' +
+      '<div class="formula sm">K = Δ·g·GM = ' + fx(r.K / 1000, 1) + ' kN·m/rad ; J = K·(T<sub>0</sub>/2π)² = ' + fx(r.J / 1000, 1) + ' t·m² ; b = 2ζ·√(K·J) = ' + fx(r.b / 1000, 1) + ' kN·m·s/rad<br>M<sub>0</sub> = K·α<sub>h</sub> = ' + fx(r.M0 / 1000, 2) + ' kN·m ; ω<sub>h</sub> = 2π/T<sub>h</sub> = ' + fx(r.ww, 3) + ' rad/s</div>' +
+      '<p><b>5. Amplitude du roulis en régime établi</b> (modèle linéaire, cos β ≈ 1). Avec l’approximation précédente :</p>' +
+      '<div class="formula sm">φ<sub>max</sub> = M<sub>0</sub> / √[(K − J·ω<sub>h</sub>²)² + ((b + b<sub>g</sub>)·ω<sub>h</sub>)²]</div>' +
+      '<p>Calcul exact en régime harmonique (inertie J<sub>c</sub> et rappel k du cardan compris) : φ<sub>max</sub> = M<sub>0</sub> / |K − J·ω<sub>h</sub>² + i·b·ω<sub>h</sub> − H²·ω<sub>h</sub>² / (k − J<sub>c</sub>·ω<sub>h</sub>² + i·c·ω<sub>h</sub>)|.</p>' +
+      '<div class="formula sm">sans stabilisateur : ' + fx(r.a0 * DEG, 1) + '° ; avec : <b>' + fx(r.a1 * DEG, 1) + '°</b><br>simulation complète (butées et cos β compris) : ' + fx(d.A0 * DEG, 1) + '° → ' + fx(d.A1 * DEG, 1) + '°</div>' +
+      '<p>À la résonance (T<sub>h</sub> = T<sub>0</sub>) et si J<sub>c</sub>·ω<sub>h</sub> ≪ c, le roulis est divisé par (b + b<sub>g</sub>) / b = ' + fx((r.b + r.bg) / r.b, 1) + '.</p>' +
+      '<p><b>6. Bilan de puissance.</b> C<sub>x</sub>·dφ/dt = −H·(dβ/dt)·(dφ/dt)·cos β = −c·(dβ/dt)² ≤ 0 : l’énergie du roulis est dissipée dans le frein du cardan, le volant ne fait que la « transférer ». Si c est trop faible, le cardan oscille librement (son inertie domine) sans dissiper d’énergie et peut partir en butée ; si c est trop grand, il est bloqué (dβ/dt → 0) : dans les deux cas l’effet disparaît. Les stabilisateurs commerciaux pilotent activement le cardan pour rester près de l’optimum.</p>' +
+      '<p class="small">La simulation intègre les équations complètes (inertie du cardan, cos β, butées à ±70°) avec un faible ressort de rappel qui recentre le cardan (k = 0,05·c par seconde).</p>'; },
+    plot: (A, r, box) => {
+      const d = r.sim, p1 = syPlot([{ pts: pts2(d.t, d.p0.map(v => v * DEG)), col: 'var(--muted)', dash: '5 4' }, { pts: pts2(d.t, d.p.map(v => v * DEG)), col: GCOL.O }], { sym: true, xl: 't (s)', yl: 'roulis φ (°)', label: 'Roulis du bateau avec et sans stabilisateur' });
+      cursorOn(p1); plotBox(box, 'Roulis φ(t) : avec stabilisateur (bleu) et sans (pointillé)', p1, [[GCOL.O, 'avec stabilisateur'], ['var(--muted)', 'sans stabilisateur']]);
+      const p2 = syPlot([{ pts: pts2(d.t, d.b.map(v => v * DEG)), col: GCOL.W }], { y0: -80, y1: 80, h: 150, hl: [{ v: 70, col: GCOL.M, lab: 'butée' }, { v: -70, col: GCOL.M }], xl: 't (s)', yl: 'cardan β (°)', label: 'Inclinaison du cardan' });
+      cursorOn(p2); plotBox(box, 'Inclinaison β(t) du cardan (précession du volant)', p2);
+    }
+  },
+  pb: {
+    prin: '<b>Principe.</b> Le poignet fait tourner la coque à Ω, perpendiculairement à l’axe du rotor. Le couple gyroscopique plaque les extrémités de l’axe contre la gorge ; le frottement fait rouler l’axe dans la gorge et accélère le rotor, jusqu’à ce que l’axe roule sans glisser.',
+    ctl: (S, A) => [S('m (masse du rotor, g)', 30, 200, 5, 'm', v => v), S('R (rayon du rotor, mm)', 15, 35, 1, 'R', v => v), S('f (fréquence du poignet, tr/s)', 1, 8, 0.5, 'f', v => fx(v, 1)), S('a/r (demi-longueur / rayon de l’axe)', 20, 80, 1, 'k', v => v), S('μ (frottement axe / gorge)', 0.1, 0.6, 0.05, 'mu', v => fx(v, 2)), S('N_0 (vitesse de lancement, tr/min)', 500, 5000, 100, 'N0', v => v)],
+    stats: (A, r) => [['I = ½·m·R²', fx(r.I * 1e6, 1) + '×10<sup>−6</sup> kg·m²'], ['Ω = 2π·f', fx(r.Om, 1) + ' rad/s'], ['Vitesse maximale N<sub>max</sub>', fx(r.Ns, 0) + ' tr/min'], ['Couple ressenti C<sub>max</sub> = I·ω·Ω', fx(r.Cs, 2) + ' N·m'], ['Effort au bord de la boule', fx(r.F, 0) + ' N (≈ ' + fx(r.F / G, 1) + ' kgf)'], ['Taux de croissance k = μ·Ω·r/a', fx(r.kk, 3) + ' s<sup>−1</sup>'], ['Temps de montée', r.ts > 0 ? fx(r.ts, 1) + ' s' : '—'], ['Énergie cinétique ½·I·ω<sub>max</sub>²', fx(r.E, 1) + ' J']],
+    note: (A, r) => r.w0 >= r.ws ? ['warn', 'Le rotor est lancé plus vite que la vitesse de roulement : le frottement le ralentit jusqu’à N<sub>max</sub>. Tournez le poignet plus vite.'] : null,
+    eq: (A, r) => '<p><b>1. Données.</b> Rotor assimilé à un disque :</p><div class="formula sm">I = ½·m·R² = ½ × ' + fx(r.m, 3) + ' × ' + fx(r.R, 3) + '² = ' + fx(r.I * 1e6, 2) + '×10<sup>−6</sup> kg·m² ; Ω = 2π·f = ' + fx(r.Om, 2) + ' rad/s</div>' +
+      '<p><b>2. Couple gyroscopique.</b> Le poignet fait tourner l’axe du rotor à Ω, perpendiculaire à H (α = 90°) :</p><div class="formula sm">C = H ∧ Ω, de module C = I·ω·Ω</div>' +
+      '<p><b>3. Efforts dans la gorge.</b> Ce couple tend à faire sortir l’axe du plan de la gorge ; ses deux extrémités, distantes de 2a, appuient sur les parois avec des efforts opposés :</p><div class="formula sm">N·2a = C &nbsp;⟹&nbsp; N = C / (2a)</div>' +
+      '<p><b>4. Le frottement entraîne le rotor.</b> Tant que l’axe glisse dans la gorge, l’effort tangentiel μ·N à chaque contact, au rayon r de l’axe, donne un couple moteur sur la rotation propre :</p><div class="formula sm">C<sub>m</sub> = 2·μ·N·r = μ·(r/a)·C = μ·(r/a)·I·ω·Ω</div>' +
+      '<p><b>5. Équation de la rotation propre</b> (pertes négligées) :</p><div class="formula sm">I·dω/dt = μ·(r/a)·I·ω·Ω &nbsp;⟹&nbsp; dω/dt = k·ω, &nbsp;k = μ·Ω·r/a = ' + fx(A.mu, 2) + ' × ' + fx(r.Om, 2) + ' / ' + A.k + ' = <b>' + fx(r.kk, 3) + ' s<sup>−1</sup></b></div><div class="formula sm">ω(t) = ω<sub>0</sub>·e<sup>k·t</sup></div>' +
+      '<p>La croissance est <b>exponentielle</b> : le couple moteur est proportionnel à ω. Avec ω<sub>0</sub> = 0, rien ne se passe : c’est pourquoi on lance le rotor avec une ficelle ou le pouce.</p>' +
+      '<p><b>6. Vitesse limite.</b> L’accélération cesse quand l’axe roule sans glisser : la vitesse du point de contact sur l’axe (ω·r) égale celle de la gorge (Ω·a) :</p><div class="formula sm">ω<sub>max</sub> = Ω·a/r = ' + fx(r.Om, 2) + ' × ' + A.k + ' = <b>' + fx(r.ws, 0) + ' rad/s</b> (' + fx(r.Ns, 0) + ' tr/min) ; temps de montée t = ln(ω<sub>max</sub>/ω<sub>0</sub>) / k = ' + (r.ts > 0 ? fx(r.ts, 1) + ' s' : '—') + '</div>' +
+      '<p><b>7. Couple ressenti.</b></p><div class="formula sm">C<sub>max</sub> = I·ω<sub>max</sub>·Ω = I·Ω²·a/r = <b>' + fx(r.Cs, 2) + ' N·m</b> ; au bord de la boule (r<sub>b</sub> = 35 mm) : F ≈ C/r<sub>b</sub> = ' + fx(r.F, 0) + ' N</div>' +
+      '<p>Le couple résistant croît comme le <b>carré</b> de la vitesse du poignet : c’est ce qui fait de la powerball un appareil de musculation de l’avant-bras.</p><p class="small">Modèle simplifié : frottement de Coulomb, roulement parfait à la vitesse limite, pertes dans l’air négligées.</p>',
+    plot: (A, r, box) => {
+      const T = r.ts > 0 ? r.ts * 1.3 + 1 : 6, pts = [];
+      for (let i = 0; i <= 200; i++) { const t = T * i / 200, w = r.w0 < r.ws ? Math.min(r.ws, r.w0 * Math.exp(r.kk * t)) : Math.max(r.ws, r.w0 * Math.exp(-r.kk * t)); pts.push([t, w * 30 / Math.PI]); }
+      const p = syPlot([{ pts, col: GCOL.O }], { y0: 0, hl: [{ v: r.Ns, col: GCOL.M, lab: 'N_max' }], xl: 't (s)', yl: 'N (tr/min)', label: 'Montée en vitesse du rotor' });
+      plotBox(box, 'Montée en vitesse du rotor (poignet à fréquence constante)', p);
+    }
+  },
+  top: {
+    heavy: true,
+    prin: '<b>Principe.</b> Le poids crée un moment autour de la pointe ; grâce au moment cinétique de rotation propre, il ne fait pas tomber la toupie mais la fait précesser. Au-dessus d’une vitesse critique, l’axe proche de la verticale est stable ; les frottements ralentissent la toupie jusqu’à la chute.',
+    ctl: (S, A) => [S('m (masse, g)', 20, 300, 5, 'm', v => v), S('R (rayon du plateau, mm)', 10, 50, 1, 'R', v => v), S('d (hauteur de G au-dessus de la pointe, mm)', 5, 50, 1, 'd', v => v), S('N (vitesse de lancement, tr/min)', 200, 4000, 100, 'N', v => v), S('θ_0 (inclinaison initiale, °)', 2, 30, 1, 'th0', v => v), S('τ (constante de temps des frottements, s)', 5, 60, 1, 'tau', v => v)],
+    stats: (A, r) => [['I<sub>3</sub> = ½·m·R²', fx(r.I3 * 1e6, 2) + '×10<sup>−6</sup> kg·m²'], ['I<sub>1</sub> = ¼·m·R² + m·d²', fx(r.I1 * 1e6, 2) + '×10<sup>−6</sup> kg·m²'], ['Vitesse critique N<sub>c</sub>', fx(r.Nc, 0) + ' tr/min'], ['Précession Ω ≈ m·g·d / (I<sub>3</sub>·ω)', fx(r.Om, 2) + ' rad/s (T = ' + fx(TAU / r.Om, 2) + ' s)'], ['Pulsation de nutation I<sub>3</sub>·ω / I<sub>1</sub>', fx(r.wn, 0) + ' rad/s'], ['Instabilité prévue t<sub>c</sub> = τ·ln(ω/ω<sub>c</sub>)', r.tc > 0 ? fx(r.tc, 1) + ' s' : 'dès le départ'], ['Chute simulée (θ > 70°)', r.sim.fell != null ? fx(r.sim.fell, 1) + ' s' : 'pas avant ' + fx(r.sim.Tm, 0) + ' s']],
+    note: (A, r) => r.w <= r.wc ? ['no', 'N &lt; N<sub>c</sub> : la toupie est <b>instable dès le lancement</b>, elle tombe.'] : ['yes', 'N &gt; N<sub>c</sub> : la toupie tient tant que les frottements ne l’ont pas ralentie sous N<sub>c</sub>.'],
+    eq: (A, r) => '<p><b>1. Inerties</b> (plateau assimilé à un disque, axe perpendiculaire passant par la pointe O, théorème de Huygens) :</p><div class="formula sm">I<sub>3</sub> = ½·m·R² = ' + fx(r.I3 * 1e6, 2) + '×10<sup>−6</sup> kg·m² ; I<sub>1</sub> = ¼·m·R² + m·d² = ' + fx(r.I1 * 1e6, 2) + '×10<sup>−6</sup> kg·m²</div>' +
+      '<p><b>2. Énergies</b> avec les angles d’Euler : précession φ, nutation θ, rotation propre ψ :</p><div class="formula sm">T = ½·I<sub>1</sub>·[(dθ/dt)² + (dφ/dt)²·sin²θ] + ½·I<sub>3</sub>·ω<sub>3</sub>², &nbsp;ω<sub>3</sub> = dψ/dt + (dφ/dt)·cos θ ; &nbsp;V = m·g·d·cos θ</div>' +
+      '<p><b>3. Intégrales premières</b> (φ et ψ n’apparaissent pas dans le lagrangien L = T − V) :</p><div class="formula sm">I<sub>3</sub>·ω<sub>3</sub> = cte ; &nbsp;I<sub>1</sub>·(dφ/dt)·sin²θ + I<sub>3</sub>·ω<sub>3</sub>·cos θ = cte ; &nbsp;T + V = cte</div>' +
+      '<p><b>4. Équation de Lagrange en θ :</b></p><div class="formula sm">I<sub>1</sub>·d²θ/dt² = I<sub>1</sub>·(dφ/dt)²·sin θ·cos θ − I<sub>3</sub>·ω<sub>3</sub>·(dφ/dt)·sin θ + m·g·d·sin θ</div>' +
+      '<p><b>5. Précession régulière</b> (θ = cte) :</p><div class="formula sm">m·g·d = (dφ/dt)·(I<sub>3</sub>·ω<sub>3</sub> − I<sub>1</sub>·(dφ/dt)·cos θ) &nbsp;⟹&nbsp; Ω ≈ m·g·d / (I<sub>3</sub>·ω<sub>3</sub>) = ' + fx(r.mgd * 1000, 2) + '×10<sup>−3</sup> / (' + fx(r.I3 * 1e6, 2) + '×10<sup>−6</sup> × ' + fx(r.w, 1) + ') = <b>' + fx(r.Om, 2) + ' rad/s</b></div>' +
+      '<p><b>6. Stabilité de la toupie « dormante ».</b> Pour θ petit, on pose ξ = θ·e<sup>iφ</sup> (projection horizontale de l’axe). L’équation linéarisée est :</p><div class="formula sm">I<sub>1</sub>·d²ξ/dt² − i·I<sub>3</sub>·ω<sub>3</sub>·dξ/dt − m·g·d·ξ = 0</div>' +
+      '<p>En cherchant ξ = e<sup>iλt</sup> : I<sub>1</sub>·λ² − I<sub>3</sub>·ω<sub>3</sub>·λ + m·g·d = 0. Les solutions restent bornées si λ est réel, c’est-à-dire si le discriminant est positif :</p><div class="formula sm">I<sub>3</sub>²·ω<sub>3</sub>² &gt; 4·I<sub>1</sub>·m·g·d &nbsp;⟹&nbsp; ω<sub>c</sub> = 2·√(I<sub>1</sub>·m·g·d) / I<sub>3</sub> = <b>' + fx(r.wc, 1) + ' rad/s</b> (N<sub>c</sub> = ' + fx(r.Nc, 0) + ' tr/min)</div>' +
+      '<p>Les deux racines donnent la précession lente (λ ≈ m·g·d / (I<sub>3</sub>·ω<sub>3</sub>)) et la nutation rapide (λ ≈ I<sub>3</sub>·ω<sub>3</sub>/I<sub>1</sub> = ' + fx(r.wn, 0) + ' rad/s).</p>' +
+      '<p><b>7. Effet des frottements.</b> ω<sub>3</sub>(t) = ω<sub>0</sub>·e<sup>−t/τ</sup> ; la toupie devient instable quand ω<sub>3</sub> = ω<sub>c</sub> :</p><div class="formula sm">t<sub>c</sub> = τ·ln(ω<sub>0</sub>/ω<sub>c</sub>) = ' + (r.tc > 0 ? A.tau + ' × ln(' + fx(r.w, 1) + ' / ' + fx(r.wc, 1) + ') = <b>' + fx(r.tc, 1) + ' s</b>' : 'déjà dépassé') + '</div>' +
+      '<p class="small">La simulation intègre les équations de Lagrange complètes (même modèle que l’atelier 1), avec un ralentissement exponentiel de la rotation propre.</p>',
+    plot: (A, r, box) => {
+      const sm = r.sim, vl = r.tc > 0 ? [{ v: r.tc, col: GCOL.M, lab: 't_c', left: true }] : [];
+      const p1 = syPlot([{ pts: sm.th, col: GCOL.M }], { y0: 0, x0: 0, x1: sm.Tm, vl, xl: 't (s)', yl: 'θ (°)', label: 'Inclinaison de la toupie' });
+      plotBox(box, 'Inclinaison θ(t) de l’axe (la toupie tombe quand θ dépasse 70°)', p1);
+      const p2 = syPlot([{ pts: sm.nn, col: GCOL.O }], { y0: 0, x0: 0, x1: sm.Tm, h: 150, hl: [{ v: r.Nc, col: GCOL.M, lab: 'N_c' }], vl, xl: 't (s)', yl: 'N (tr/min)', label: 'Vitesse de rotation de la toupie' });
+      plotBox(box, 'Vitesse de rotation propre N(t) et vitesse critique Nc', p2);
+    }
+  },
+  mill: {
+    prin: '<b>Principe.</b> La meule roule sur la piste en tournant autour de l’arbre vertical. Son moment cinétique de rotation propre, horizontal, est obligé de tourner avec l’arbre : le couple gyroscopique appuie la meule sur la piste et augmente l’effort d’écrasement, sans masse supplémentaire.',
+    ctl: (S, A) => [S('m (masse de la meule, t)', 0.5, 10, 0.5, 'm', v => fx(v, 1)), S('R (rayon de la meule, mm)', 400, 1500, 50, 'R', v => v), S('r_m (rayon de la piste, mm)', 600, 2500, 50, 'rm', v => v), S('N (vitesse de l’arbre, tr/min)', 5, 60, 1, 'N', v => v)],
+    stats: (A, r) => [['ω de la meule = Ω·r<sub>m</sub>/R', fx(r.w, 2) + ' rad/s'], ['I = ½·m·R²', fx(r.I, 0) + ' kg·m²'], ['H = I·ω', fx(r.H, 0) + ' N·m·s'], ['Couple I·ω·Ω', fx(r.C / 1000, 2) + ' kN·m'], ['Poids m·g', fx(r.P / 1000, 1) + ' kN'], ['Effort ajouté ΔN = ½·m·R·Ω²', fx(r.dN / 1000, 2) + ' kN'], ['Effort d’écrasement N', fx(r.Nt / 1000, 1) + ' kN (+' + fx(100 * r.gain, 0) + ' %)']],
+    eq: (A, r) => '<p><b>1. Roulement sans glissement</b> de la meule sur la piste : le centre de la meule a la vitesse Ω·r<sub>m</sub>, le point de contact est immobile :</p><div class="formula sm">ω·R = Ω·r<sub>m</sub> &nbsp;⟹&nbsp; ω = Ω·r<sub>m</sub>/R = ' + fx(r.Om, 3) + ' × ' + fx(r.rm, 2) + ' / ' + fx(r.R, 2) + ' = <b>' + fx(r.w, 2) + ' rad/s</b></div>' +
+      '<p><b>2. Moment cinétique de rotation propre</b> (axe radial, horizontal) :</p><div class="formula sm">H = I·ω = ½·m·R²·ω = ' + fx(r.I, 0) + ' × ' + fx(r.w, 2) + ' = ' + fx(r.H, 0) + ' N·m·s</div>' +
+      '<p><b>3. L’axe de la meule tourne avec l’arbre</b> (Ω vertical, perpendiculaire à H) :</p><div class="formula sm">dH/dt = Ω ∧ H, &nbsp;de module I·ω·Ω = ' + fx(r.C / 1000, 2) + ' kN·m (porté par l’axe tangent)</div>' +
+      '<p><b>4. Théorème du moment dynamique</b> en O (articulation sur l’arbre, qui laisse la meule libre de monter ou descendre), en projection sur l’axe tangent. Seuls le poids P et la réaction N de la piste ont un moment, de bras de levier r<sub>m</sub> :</p><div class="formula sm">r<sub>m</sub>·(N − m·g) = I·ω·Ω</div>' +
+      '<div class="formula sm">ΔN = N − m·g = I·ω·Ω / r<sub>m</sub> = I·Ω²/R = ½·m·R·Ω² = <b>' + fx(r.dN / 1000, 2) + ' kN</b></div>' +
+      '<p><b>5. Effort d’écrasement.</b></p><div class="formula sm">N = m·g + ½·m·R·Ω² = ' + fx(r.P / 1000, 1) + ' + ' + fx(r.dN / 1000, 2) + ' = <b>' + fx(r.Nt / 1000, 1) + ' kN</b> ; &nbsp;ΔN / (m·g) = R·Ω² / (2g) = ' + fx(100 * r.gain, 1) + ' %</div>' +
+      '<p>Le gain relatif ne dépend <b>ni de la masse ni du rayon de la piste</b>, seulement de R et de Ω (au carré). Doubler la vitesse de l’arbre multiplie l’effort ajouté par 4.</p>',
+    plot: (A, r, box) => {
+      const pts = []; for (let n = 0; n <= 60; n++) { const o = n * Math.PI / 30; pts.push([n, 100 * r.R * o * o / (2 * G)]); }
+      const p = syPlot([{ pts, col: GCOL.O }], { y0: 0, x0: 0, x1: 60, pts: [[A.N, 100 * r.gain]], xl: 'N arbre (tr/min)', yl: 'ΔN / (m·g) en %', label: 'Gain d’effort en fonction de la vitesse de l’arbre' });
+      plotBox(box, 'Effort ajouté par l’effet gyroscopique, en % du poids (point rouge : réglage actuel)', p);
+    }
+  },
+  cmg: {
+    prin: '<b>Principe.</b> Un volant tourne à vitesse constante ; un moteur fait pivoter son cardan. Le moment cinétique change de direction et le satellite reçoit un couple H·dδ/dt, bien plus grand que le couple du moteur : c’est un amplificateur de couple pour orienter satellites et stations spatiales.',
+    ctl: (S, A) => [S('m (masse du volant, kg)', 10, 150, 5, 'm', v => v), S('R (rayon du volant, mm)', 100, 400, 10, 'R', v => v), S('N (vitesse du volant, tr/min)', 1000, 10000, 250, 'N', v => v), S('dδ/dt (vitesse du cardan, rad/s)', 0.05, 1, 0.05, 'dd', v => fx(v, 2)), S('J (inertie du satellite, kg·m²)', 500, 20000, 500, 'J', v => v), S('θ (angle de basculement, °)', 10, 180, 5, 'ang', v => v)],
+    stats: (A, r) => [['H = I·ω', fx(r.H, 0) + ' N·m·s'], ['Couple sur le satellite τ = H·dδ/dt', fx(r.tau, 0) + ' N·m'], ['Durée du basculement (CMG)', fx(r.t, 1) + ' s'], ['Durée avec une roue de réaction (0,2 N·m)', fx(r.tRW, 0) + ' s (' + fx(r.tRW / 60, 1) + ' min)'], ['Gain de couple', '× ' + fx(r.tau / 0.2, 0)], ['Angle du cardan nécessaire δ<sub>max</sub>', fx(r.dmax, 2) + ' rad (' + fx(r.dmax * DEG, 0) + '°)']],
+    note: (A, r) => r.dmax > 1 ? ['no', 'δ<sub>max</sub> &gt; 1 rad : cos δ chute et le couple diminue, le moment cinétique échangé J·ω<sub>max</sub> = ' + fx(r.Lmax, 0) + ' N·m·s approche H. Il faut un volant plus gros, ou une grappe de plusieurs CMG.'] : ['yes', 'Le cardan reste sous 1 rad : l’approximation cos δ ≈ 1 est acceptable.'],
+    eq: (A, r) => '<p><b>1. Moment cinétique du volant</b> (vitesse constante) :</p><div class="formula sm">H = I·ω = ½·m·R²·ω = ' + fx(r.I, 2) + ' × ' + fx(r.w, 1) + ' = <b>' + fx(r.H, 0) + ' N·m·s</b></div>' +
+      '<p><b>2. Couple fourni.</b> Le moteur du cardan fait tourner H à la vitesse dδ/dt autour d’un axe perpendiculaire. Le théorème du moment dynamique appliqué au volant donne le couple que le satellite doit lui fournir ; par réciprocité, le satellite reçoit :</p><div class="formula sm">τ = −dH/dt = H ∧ (dδ/dt), &nbsp;module τ = H·(dδ/dt)·cos δ ≈ ' + fx(r.H, 0) + ' × ' + fx(A.dd, 2) + ' = <b>' + fx(r.tau, 0) + ' N·m</b></div>' +
+      '<p>Le moteur du cardan ne fournit que le petit couple nécessaire à faire tourner le cardan : c’est le volant qui « amplifie ».</p>' +
+      '<p><b>3. Manœuvre en « bang-bang »</b> (accélération pendant t/2, puis freinage symétrique) d’un satellite d’inertie J sur un angle θ :</p><div class="formula sm">θ = 2 × ½·(τ/J)·(t/2)² = τ·t² / (4J) &nbsp;⟹&nbsp; t = 2·√(θ·J/τ) = 2 × √(' + fx(r.th, 3) + ' × ' + A.J + ' / ' + fx(r.tau, 0) + ') = <b>' + fx(r.t, 1) + ' s</b></div>' +
+      '<p><b>4. Comparaison avec une roue de réaction</b> (le couple est celui de son moteur, ici 0,2 N·m) :</p><div class="formula sm">t = 2·√(θ·J / 0,2) = ' + fx(r.tRW, 0) + ' s, soit ' + fx(r.tRW / r.t, 0) + ' fois plus long</div>' +
+      '<p><b>5. Limites.</b> Le moment cinétique échangé avec le satellite ne peut pas dépasser H :</p><div class="formula sm">J·ω<sub>max</sub> = τ·t/2 = ' + fx(r.Lmax, 0) + ' N·m·s ; &nbsp;δ<sub>max</sub> = J·ω<sub>max</sub> / H = (dδ/dt)·t/2 = ' + fx(r.dmax, 2) + ' rad</div>' +
+      '<p>Au-delà d’environ 1 rad, cos δ diminue et le couple chute ; certaines orientations des cardans (singularités) rendent impossible un couple dans une direction donnée. On utilise donc des grappes de 3 à 6 CMG pilotées ensemble ; la Station spatiale internationale est orientée par quatre CMG.</p>',
+    plot: (A, r, box) => {
+      const T = r.tRW, f = (t, tt) => { const a = r.th * 4 / (tt * tt); return t <= tt / 2 ? 0.5 * a * t * t : t >= tt ? r.th : r.th - 0.5 * a * (tt - t) * (tt - t); };
+      const pa = [], pb2 = []; for (let i = 0; i <= 300; i++) { const t = T * i / 300; pa.push([t, f(t, r.t) * DEG]); pb2.push([t, f(t, r.tRW) * DEG]); }
+      const p = syPlot([{ pts: pb2, col: 'var(--muted)', dash: '5 4' }, { pts: pa, col: GCOL.O }], { y0: 0, x0: 0, x1: T, xl: 't (s)', yl: 'angle (°)', label: 'Basculement du satellite' });
+      plotBox(box, 'Angle du satellite pendant la manœuvre', p, [[GCOL.O, 'CMG'], ['var(--muted)', 'roue de réaction 0,2 N·m']]);
+    }
+  }
+};
+SYS.stab.calc = stabCalc; SYS.pb.calc = pbCalc; SYS.top.calc = topCalc; SYS.mill.calc = millCalc; SYS.cmg.calc = cmgCalc;
+SYS.pb.fig = () => pbFig(); SYS.top.fig = A => topFig(A); SYS.mill.fig = () => millFig(); SYS.cmg.fig = () => cmgFig();
+const SYCAP = {
+  pb: 'Coupe de la powerball : l’axe du rotor (H) est logé dans une gorge circulaire ; le poignet fait tourner la coque à Ω. Le couple gyroscopique C = H ∧ Ω appuie les extrémités de l’axe sur la gorge (efforts N opposés).',
+  top: 'Toupie posée sur sa pointe O : le moment du poids M = OG ∧ P (⊗) fait tourner H autour de la verticale (précession Ω) au lieu de faire tomber la toupie.',
+  mill: 'Meule articulée en O sur l’arbre vertical : H (rotation propre) tourne avec l’arbre à Ω. Le théorème du moment dynamique impose N &gt; P : la piste doit pousser plus fort que le poids.',
+  cmg: 'Actionneur gyroscopique (CMG) : le moteur fait tourner le cardan à dδ/dt ; H change de direction et le satellite reçoit le couple τ = H·dδ/dt (⊙).'
+};
+
+/* ---- montage de l’atelier ---- */
+function syRun() {
+  const k = SY.kind, A = SY[k], D = SYS[k], out = $('#sy-out'); if (!out) return;
+  const r = D.calc ? D.calc(A) : null;
+  out.innerHTML = ''; out.append(stats(D.stats(A, r)));
+  const n = D.note && D.note(A, r); if (n) out.append(h('div', { class: 'verdict ' + n[0], html: n[1] }));
+  $('#sy-eq').innerHTML = D.eq(A, r);
+  if (!D.anim) { const fb = $('#sy-fig'); fb.innerHTML = ''; fb.append(figEl(D.fig(A, r), SYCAP[k], 460)); }
+  const pb = $('#sy-plot'); pb.innerHTML = ''; SYA.cur = []; if (D.plot) D.plot(A, r, pb);
+  if (D.anim) { SYA.data = r.sim; SYA.t = 0; }
+}
+function syUpdate(now) { clearTimeout(SYT); const D = SYS[SY.kind]; if (now || !D.heavy) syRun(); else SYT = setTimeout(syRun, 160); }
+function syKind() {
+  const sel = $('#sy-sel'); if (!sel) return; sel.innerHTML = '';
+  sel.append(chipsRow(SY_LIST, SY.kind, v => { SY.kind = v; syKind(); }, 'Système'));
+  const k = SY.kind, D = SYS[k], A = SY[k];
+  $('#sy-prin').innerHTML = D.prin;
+  const c = $('#sy-ctl'); c.innerHTML = '';
+  const S = (l, a, b, st, key, f) => rng(l, a, b, st, () => A[key], v => { A[key] = v; syUpdate(); }, f);
+  c.append(h('h3', null, 'Réglages'), ...D.ctl(S, A));
+  const fb = $('#sy-fig'); fb.innerHTML = ''; SYA.f = null; SYA.data = null; SYA.pause = false;
+  if (D.anim) {
+    SYA.f = stabFig();
+    const bP = h('button', { class: 'btn', type: 'button', onclick: e => { SYA.pause = !SYA.pause; e.target.textContent = SYA.pause ? 'Reprendre' : 'Pause'; } }, 'Pause');
+    const bR = h('button', { class: 'btn', type: 'button', onclick: () => { SYA.t = 0; } }, 'Rejouer');
+    fb.append(h('p', { class: 'viewlbl' }, 'Vue de l’arrière : animation de la simulation (houle de côté)'), h('div', { class: 'gwrap' }, SYA.f.svg),
+      h('div', { class: 'leg' }, h('span', null, 'Coque pleine : avec stabilisateur'), h('span', null, 'Pointillé : même bateau sans stabilisateur'), h('span', null, h('i', { style: 'background:' + GCOL.H }), 'axe du volant (H)'), h('span', null, h('i', { style: 'background:' + GCOL.O }), 'axe du cardan')),
+      h('div', { class: 'files' }, bP, bR));
+  }
+  syUpdate(true);
+}
+function mountSys(root) {
+  root.innerHTML = '<h2>Systèmes exploitant l’effet gyroscopique</h2><p>Un rotor de moment cinétique H dont on fait tourner l’axe à la vitesse Ω exerce sur son support le couple <b>C = H ∧ Ω</b>. Ce couple, subi dans les ateliers précédents, est ici <b>exploité</b> : pour amortir le roulis d’un bateau, entretenir la rotation d’une powerball, faire tenir une toupie, augmenter l’effort d’un broyeur ou orienter un satellite. Choisissez un système, réglez les paramètres et suivez les équations, recalculées avec vos valeurs.</p>' +
+    '<div id="sy-sel"></div><div id="sy-prin" class="infob"></div>' +
+    '<div class="two"><div><div class="panel" id="sy-ctl"></div><div id="sy-out"></div></div><div><div id="sy-fig"></div><div id="sy-plot"></div></div></div>' +
+    '<h3>Équations détaillées</h3><div id="sy-eq"></div>' +
+    '<details class="adv"><summary>Autres systèmes industriels exploitant ou subissant l’effet gyroscopique</summary>' + SY_OTHERS + '</details>';
+  syKind();
+  ANIM.fn = dt => {
+    if (SY.kind !== 'stab' || !SYA.f || !SYA.data || SYA.pause) return;
+    const d = SYA.data, n = d.t.length; SYA.t += dt; if (SYA.t > d.t[n - 1]) SYA.t = 0;
+    const i = Math.min(n - 1, Math.round(SYA.t / 0.02));
+    SYA.f.upd(d.p0[i], d.p[i], d.b[i], d.t[i], d.ww);
+    SYA.cur.forEach(c => { const x = c.X(d.t[i]).toFixed(1); c.ln.setAttribute('x1', x); c.ln.setAttribute('x2', x); });
+  };
+}
+WORKSHOPS.push({ id: 'g3s', title: 'Systèmes gyroscopiques', hint: 'Stabilisateur de bateau, powerball, toupie, broyeur à meules, CMG de satellite : principe, simulation et équations détaillées.', mount: mountSys, reset: () => { Object.assign(SY, copy(SY0)); } });
+
 const EXS = {};
 function mountEx(root, cfg) {
   const S = EXS[cfg.key] || (EXS[cfg.key] = { flt: 'all', ex: null, pick: null, counted: false, shown: false, score: { ok: 0, tot: 0 } });
@@ -893,6 +1301,31 @@ const ACT = {
       { q: 'La turbine d’un navire a son axe vertical et le navire tangue. Cette situation donne un couple gyroscopique d’axe :', o: ['Horizontal et perpendiculaire à la vitesse de tangage', 'Vertical', 'Nul', 'Dans le sens du tangage'], a: 0, w: 'Ω (tangage) et H (vertical) sont perpendiculaires : C est perpendiculaire aux deux.' }
     ]
   },
+  g3s: {
+    title: 'Systèmes gyroscopiques', level: 'Application', time: '45 min',
+    goal: 'Comprendre comment des systèmes réels exploitent le couple gyroscopique C = H ∧ Ω : produire un couple (stabilisateur, CMG), stabiliser un axe (toupie), augmenter un effort (broyeur) ou entretenir une rotation (powerball).',
+    steps: [
+      '<b>Stabilisateur</b> : avec les réglages par défaut, comparez le roulis avec et sans stabilisateur. Retrouvez la réduction avec le rapport b / (b + H²/c).',
+      'Diminuez fortement le frein c (vers 0,05) : que fait le cardan ? Augmentez-le fortement (vers 10) : que deviennent β et le roulis ? Expliquez avec dβ/dt ≈ H·(dφ/dt)/c et C = H·dβ/dt.',
+      'Mettez N = 0, puis éloignez la période de houle T<sub>h</sub> de la période propre T<sub>0</sub> : quand le stabilisateur est-il le plus utile ?',
+      '<b>Powerball</b> : relevez N<sub>max</sub> et le couple ressenti. Doublez la fréquence du poignet : de quel facteur varie le couple ? Pourquoi faut-il lancer le rotor avant de tourner le poignet ?',
+      '<b>Toupie</b> : relevez la vitesse critique N<sub>c</sub>. Lancez la toupie juste au-dessus puis juste au-dessous de N<sub>c</sub>. Comparez l’instant de chute simulé avec τ·ln(ω<sub>0</sub>/ω<sub>c</sub>).',
+      '<b>Broyeur</b> : vérifiez que le gain d’effort ne dépend ni de m ni de r<sub>m</sub>. Que se passe-t-il si on double la vitesse de l’arbre ?',
+      '<b>CMG</b> : comparez la durée de basculement du satellite avec un CMG et avec une roue de réaction. Augmentez θ : quand l’angle du cardan dépasse-t-il 1 rad ?'
+    ],
+    defi: { q: 'Broyeur : quelle vitesse de l’arbre (en tr/min) faut-il pour que l’effet gyroscopique double la force d’écrasement d’une meule de rayon R = 0,8 m ?', a: 'Il faut ΔN = m·g, soit ½·m·R·Ω² = m·g, donc Ω = √(2g/R) = √(2 × 9,81 / 0,8) = 4,95 rad/s, soit N ≈ 47 tr/min. La masse de la meule n’intervient pas.' },
+    course: 'systemes',
+    qcm: [
+      { q: 'Dans un stabilisateur gyroscopique anti-roulis, le couple qui s’oppose au roulis est produit par :', o: ['La précession du volant dans son cardan (C = H·dβ/dt)', 'Le poids du volant', 'La force centrifuge du volant', 'Le frein seul, sans effet gyroscopique'], a: 0, w: 'Le roulis fait précesser le cardan ; cette précession, combinée à H, crée un couple de roulis opposé au mouvement.' },
+      { q: 'On bloque complètement le cardan du stabilisateur (frein infini). Le roulis :', o: ['N’est plus amorti par le volant', 'Est amorti au maximum', 'Devient nul', 'Change de période'], a: 0, w: 'dβ/dt = 0 : plus de couple anti-roulis. Le couple gyroscopique charge seulement la structure, autour de l’axe transversal.' },
+      { q: 'L’amortissement ajouté par le stabilisateur (cardan freiné, coefficient c) vaut :', o: ['H² / c', 'H·c', 'c / H', 'H / c²'], a: 0, w: 'dβ/dt ≈ H·(dφ/dt)/c et C = −H·dβ/dt ≈ −(H²/c)·dφ/dt.' },
+      { q: 'Pourquoi faut-il lancer le rotor d’une powerball avant de tourner le poignet ?', o: ['Le couple moteur dû au frottement est proportionnel à I·ω·Ω : il est nul si ω = 0', 'Pour chauffer les roulements', 'Pour équilibrer la boule', 'Parce que le poignet tourne trop lentement'], a: 0, w: 'dω/dt = μ·Ω·(r/a)·ω : la croissance est exponentielle et suppose ω₀ ≠ 0.' },
+      { q: 'La vitesse critique d’une toupie (axe vertical stable au-dessus) vaut :', o: ['ω<sub>c</sub> = 2·√(I₁·m·g·d) / I₃', 'ω<sub>c</sub> = m·g·d / (I₃·ω)', 'ω<sub>c</sub> = √(g / d)', 'ω<sub>c</sub> = I₃ / I₁'], a: 0, w: 'Condition de stabilité de la toupie dormante : I₃²·ω² > 4·I₁·m·g·d.' },
+      { q: 'Dans un broyeur à meules, l’effort ajouté par l’effet gyroscopique vaut (meule = disque) :', o: ['½·m·R·Ω²', 'm·g', 'm·r<sub>m</sub>·Ω²', '½·m·R²·Ω'], a: 0, w: 'r<sub>m</sub>·(N − m·g) = I·ω·Ω avec ω = Ω·r<sub>m</sub>/R, d’où ΔN = I·Ω²/R = ½·m·R·Ω².' },
+      { q: 'Le couple fourni à un satellite par un actionneur gyroscopique (CMG) vaut environ :', o: ['H·dδ/dt', 'I·d²δ/dt²', 'H / (dδ/dt)', '½·I·ω²'], a: 0, w: 'Le cardan fait tourner H à dδ/dt : |dH/dt| = H·dδ/dt, et le satellite reçoit l’opposé.' },
+      { q: 'Un gyrocompas indique le nord géographique grâce à :', o: ['La rotation de la Terre, qui fait tourner l’axe du rotor', 'Le champ magnétique terrestre', 'La force de Coriolis sur une masse vibrante', 'Le poids du rotor seul'], a: 0, w: 'La rotation terrestre et le rappel pendulaire font précesser l’axe jusqu’au méridien. Les gyromètres MEMS, eux, utilisent la force de Coriolis.' }
+    ]
+  },
   g4: {
     title: 'Exercices : précession', level: 'Entraînement', time: '25 min',
     goal: 'Calculer la vitesse de précession, retrouver une vitesse de rotation et justifier les proportionnalités.',
@@ -1023,6 +1456,13 @@ FIGS.nut = () => {
 FIGS.moto = () => { const s = mkSvg('0 0 360 260', 'Moto en virage'); drawMoto(s, { v: 90, rho: 80, Rw: 0.3, I: 0.7, dir: 'gauche' }); return figEl(s, 'Moto en virage à gauche, vue de l’arrière. H des roues est dirigé vers la gauche, Ω vers le haut : le couple gyroscopique C<sub>g</sub> tend à amener H vers Ω, c’est-à-dire à <b>redresser</b> la moto.', 440); };
 FIGS.ship = () => { const s = mkSvg('0 0 420 225', 'Navire'); drawShip(s, { I: 5000, N: 3000, Om: 2, L: 5, dir: 'babord', sens: 'avant' }); return figEl(s, 'Navire à turbine longitudinale (H vers l’avant) virant à babord (Ω vers le haut) : le couple gyroscopique fait <b>se soulever la proue</b>. L’inclinaison dessinée est exagérée.', 500); };
 
+/* figures : systèmes gyroscopiques */
+FIGS.sy_stab = () => { const f = stabFig(); f.upd(0.28, 0.06, 0.6, 0, 1); return figEl(f.svg, 'Stabilisateur anti-roulis, vue de l’arrière : volant d’axe vertical (H, vert) dans un cardan d’axe transversal (bleu). Le roulis fait basculer le cardan d’un angle β ; le couple gyroscopique qui en résulte s’oppose au roulis (pointillé : même bateau sans stabilisateur).', 480); };
+FIGS.sy_pb = () => figEl(pbFig(), SYCAP.pb, 480);
+FIGS.sy_top = () => figEl(topFig({ th0: 20 }), SYCAP.top, 460);
+FIGS.sy_mill = () => figEl(millFig(), SYCAP.mill, 480);
+FIGS.sy_cmg = () => figEl(cmgFig(), SYCAP.cmg, 480);
+
 /* ---------- cours ---------- */
 const COURSE = [];
 const ph = n => '<div class="fig" data-fig="' + n + '"></div>';
@@ -1065,6 +1505,33 @@ COURSE.push({ id: 'appli', t: 'Applications', h: `
 <p><b>Moto en virage.</b> Les deux roues ont un axe horizontal ; le virage de rayon ρ à la vitesse v impose Ω = v / ρ, alors que ω = v / R<sub>w</sub>. Le couple C = 2·I·ω·Ω = 2·I·v² / (R<sub>w</sub>·ρ) varie avec le carré de la vitesse.</p>` + ph('ship') + `
 <p><b>Navire.</b> Une turbine à axe longitudinal soumise à une giration produit un couple qui fait tanguer le navire (la proue monte ou descend selon le sens de la giration et celui de la turbine). Les paliers doivent résister à ce couple.</p>
 <div class="retain"><b>À retenir.</b> Pour chaque application : identifier H, Ω et α, calculer C = I·ω·Ω·sin α, puis donner le sens par la règle « H vers Ω ».</div>` });
+COURSE.push({ id: 'systemes', t: 'Systèmes exploitant l’effet gyroscopique', h: `
+<p>Tous ces systèmes reposent sur la même relation : le théorème du moment dynamique appliqué à un rotor de moment cinétique H = I·ω dont l’axe tourne à la vitesse Ω.</p>
+<div class="formula">dH/dt = Ω ∧ H &nbsp;⟺&nbsp; le rotor exerce sur son support le couple C = H ∧ Ω, de module I·ω·Ω·sin α</div>
+<p>On l’exploite de trois façons :</p>
+<ul><li><b>Produire un couple</b> en faisant tourner volontairement l’axe d’un rotor rapide : stabilisateur de bateau, actionneur gyroscopique de satellite (CMG), monorail gyroscopique. Un petit moteur ou un frein sur le cardan commande un grand couple.</li><li><b>Stabiliser une direction</b> : un moment perturbateur M ne fait que précesser l’axe, à la vitesse Ω = M / H, d’autant plus lentement que H est grand : toupie, gyrocompas, projectiles.</li><li><b>Transformer le couple gyroscopique en effort</b> : il augmente un effort de contact (broyeur à meules) ou, par frottement, entretient une rotation (powerball).</li></ul>
+<h3>1. Stabilisateur gyroscopique de bateau</h3>
+<p>Un volant lourd tourne à plusieurs milliers de tr/min autour d’un axe vertical z. Il est monté dans un cardan d’axe transversal y, équipé d’un frein ou d’un vérin piloté. Le roulis du bateau se fait autour de l’axe longitudinal x.</p>` + ph('sy_stab') + `
+<ol><li>Le roulis dφ/dt (axe x) fait tourner H ; il en résulte un couple autour de y qui fait <b>précesser le cardan</b> : J<sub>c</sub>·d²β/dt² + c·dβ/dt = H·(dφ/dt)·cos β.</li><li>Cette précession dβ/dt (axe y) fait à son tour tourner H : le volant exerce sur la coque un couple autour de x, <b>opposé au roulis</b> : C<sub>x</sub> = −H·(dβ/dt)·cos β.</li><li>Cardan freiné, inertie négligée : dβ/dt ≈ H·(dφ/dt)/c, donc C<sub>x</sub> ≈ −(H²/c)·dφ/dt. C’est un amortissement ajouté b<sub>g</sub> = H²/c.</li></ol>
+<div class="formula">J·d²φ/dt² + (b + H²/c)·dφ/dt + K·φ = M<sub>houle</sub>(t), &nbsp;avec K = Δ·g·GM</div>
+<p>À la résonance, l’amplitude du roulis est divisée par (b + H²/c)/b. L’énergie est dissipée dans le frein : C<sub>x</sub>·dφ/dt = −c·(dβ/dt)². Le frein doit être bien réglé : trop faible, le cardan part en butée ; trop fort, il est bloqué et le volant ne précesse plus.</p>
+<h3>2. Powerball (gyroscope de poignet)</h3>
+<p>Un rotor tourne dans une coque sphérique ; les extrémités de son axe (rayon r, demi-longueur a) sont logées dans une gorge circulaire. L’utilisateur fait tourner la coque d’un mouvement circulaire du poignet, à la vitesse Ω perpendiculaire à l’axe du rotor.</p>` + ph('sy_pb') + `
+<ul><li>Couple gyroscopique : C = I·ω·Ω ; il bascule l’axe, qui appuie sur les parois de la gorge avec N = C/(2a).</li><li>Le frottement aux deux contacts entraîne le rotor : I·dω/dt = 2·μ·N·r = μ·(r/a)·I·ω·Ω, d’où <b>ω(t) = ω<sub>0</sub>·e<sup>k·t</sup></b> avec k = μ·Ω·r/a. La croissance est exponentielle : il faut une vitesse initiale (ficelle de lancement).</li><li>Vitesse limite, quand l’axe roule sans glisser dans la gorge : ω·r = Ω·a, soit ω<sub>max</sub> = Ω·a/r. Le couple ressenti C<sub>max</sub> = I·Ω²·a/r croît comme le carré de la vitesse du poignet.</li></ul>
+<h3>3. Toupie</h3>
+<p>Solide de révolution posé sur sa pointe O, centre de gravité G à la distance d. Avec les angles d’Euler (précession φ, nutation θ, rotation propre ψ) :</p>` + ph('sy_top') + `
+<div class="formula">T = ½·I<sub>1</sub>·[(dθ/dt)² + (dφ/dt)²·sin²θ] + ½·I<sub>3</sub>·ω<sub>3</sub>², &nbsp;ω<sub>3</sub> = dψ/dt + (dφ/dt)·cos θ ; &nbsp;V = m·g·d·cos θ</div>
+<ul><li>Intégrales premières : I<sub>3</sub>·ω<sub>3</sub> = cte ; I<sub>1</sub>·(dφ/dt)·sin²θ + I<sub>3</sub>·ω<sub>3</sub>·cos θ = cte ; T + V = cte.</li><li>Équation de Lagrange en θ : I<sub>1</sub>·d²θ/dt² = I<sub>1</sub>·(dφ/dt)²·sin θ·cos θ − I<sub>3</sub>·ω<sub>3</sub>·(dφ/dt)·sin θ + m·g·d·sin θ.</li><li>Précession régulière (θ constant) : m·g·d = (dφ/dt)·(I<sub>3</sub>·ω<sub>3</sub> − I<sub>1</sub>·(dφ/dt)·cos θ), soit, pour une toupie rapide, Ω ≈ m·g·d / (I<sub>3</sub>·ω<sub>3</sub>).</li><li>Toupie « dormante » (axe vertical) : en posant ξ = θ·e<sup>iφ</sup>, les petits mouvements vérifient I<sub>1</sub>·d²ξ/dt² − i·I<sub>3</sub>·ω<sub>3</sub>·dξ/dt − m·g·d·ξ = 0. Ils restent bornés si <b>I<sub>3</sub>²·ω<sub>3</sub>² &gt; 4·I<sub>1</sub>·m·g·d</b>, d’où la vitesse critique ω<sub>c</sub> = 2·√(I<sub>1</sub>·m·g·d) / I<sub>3</sub>.</li><li>Les frottements font décroître ω<sub>3</sub> ; quand ω<sub>3</sub> &lt; ω<sub>c</sub>, la toupie devient instable, oscille de plus en plus et tombe.</li></ul>
+<h3>4. Broyeur à meules</h3>
+<p>Une meule de masse m et de rayon R, articulée sur un arbre vertical tournant à Ω, roule sans glisser sur la piste à la distance r<sub>m</sub> de l’axe (broyeurs et moulins à meules verticales, malaxeurs).</p>` + ph('sy_mill') + `
+<ul><li>Roulement sans glissement : ω·R = Ω·r<sub>m</sub>.</li><li>L’axe de la meule tourne avec l’arbre : dH/dt = Ω ∧ H, de module I·ω·Ω.</li><li>Théorème du moment dynamique en O (articulation), sur l’axe tangent : r<sub>m</sub>·(N − m·g) = I·ω·Ω.</li></ul>
+<div class="formula">N = m·g + I·Ω²/R = m·g + ½·m·R·Ω² &nbsp;(meule assimilée à un disque)</div>
+<p>La force d’écrasement est augmentée de ΔN/(m·g) = R·Ω²/(2g), quelles que soient la masse et la distance r<sub>m</sub>.</p>
+<h3>5. Actionneur gyroscopique de satellite (CMG)</h3>
+<p>Un volant à vitesse constante (H = I·ω) est monté sur un cardan motorisé. En faisant tourner le cardan à dδ/dt, on fait tourner H : le satellite reçoit le couple τ = −dH/dt, de module <b>τ = H·(dδ/dt)·cos δ</b>.</p>` + ph('sy_cmg') + `
+<p>Le moteur du cardan ne fournit qu’un faible couple, mais le couple de sortie est très grand : c’est un <b>amplificateur de couple</b>, bien plus puissant qu’une roue de réaction (dont le couple est celui de son moteur). La Station spatiale internationale est orientée par quatre CMG. Limites : le moment cinétique échangé ne peut pas dépasser H, et certaines orientations des cardans (singularités) sont à éviter ; on utilise donc des grappes de plusieurs CMG.</p>
+<h3>6. Autres systèmes industriels</h3>` + SY_OTHERS + `
+<div class="retain"><b>À retenir.</b> C = H ∧ Ω. On impose Ω pour produire un couple ou un effort (stabilisateur, CMG, broyeur, powerball) ; on subit un couple pour obtenir une précession lente Ω = M / H (toupie, gyrocompas). Dans tous les cas : identifier H, Ω et α, écrire le théorème du moment dynamique, puis vérifier le sens avec la règle « H vers Ω ».</div>` });
 COURSE.push({ id: 'methode', t: 'Méthode', h: `
 <ol>
 <li><b>Schématiser</b> : repérer l’axe du rotor et orienter H (main droite), repérer la rotation Ω du bâti.</li>
@@ -1186,7 +1653,7 @@ function openDlg(title, body) {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#dlg').hidden) closeDlg(); });
 $('#bHelp').addEventListener('click', () => {
-  openDlg('Aide', h('div', { html: '<p>Cinq ateliers sur le gyroscope : un gyroscope pesant en précession (simulation 3D avec nutation), un rotor sur plateau tournant (effet gyroscopique), deux applications (moto, navire) et deux séries d’exercices.</p>' +
+  openDlg('Aide', h('div', { html: '<p>Six ateliers sur le gyroscope : un gyroscope pesant en précession (simulation 3D avec nutation), un rotor sur plateau tournant (effet gyroscopique), deux applications (moto, navire), les systèmes qui exploitent l’effet gyroscopique (stabilisateur de bateau, powerball, toupie, broyeur, CMG) et deux séries d’exercices.</p>' +
     '<h3>Utilisation</h3><ul><li>Choisissez un atelier dans la barre du haut.</li><li>Dans les ateliers 3D, modifiez les curseurs : la simulation se met à jour ; la souris tourne la vue, la molette zoome.</li><li>Le bouton <b>Activité</b> affiche les consignes, un défi et un QCM avec correction.</li><li>Le bouton <b>Cours</b> donne le cours illustré.</li><li>Dans les exercices, tapez un nombre (virgule ou point) ; les réponses sont acceptées à 2 % près.</li></ul>' +
     '<h3>Couleurs</h3><p>H moment cinétique (vert), M moment ou couple (rouge), Ω vitesse de rotation du bâti ou de précession (bleu), P poids (orange), efforts sur les paliers (violet).</p>' +
     '<h3>Vos données</h3><p>Les réponses au QCM et le choix clair ou sombre sont mémorisés dans ce navigateur uniquement.</p>' }));
