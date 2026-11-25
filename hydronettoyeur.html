@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atelier Hydronettoyeur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page reprise de l'atelier « Algorithmes de tri » : barre d'outils grise, onglets de vues, zone de travail blanche encadrée, panneau Commandes à droite (en dessous sur téléphone). */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --font-ui:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#ffffff;--bar:#eeeeee;--panel:#ffffff;--panel2:#f1f3f6;--line:#b9bfc7;
+  --fg:#111111;--muted:#5a6068;--accent:#2e6da4;--accent-fg:#ffffff;--accent-soft:#dcebf8;--accent-ink:#1b4a76;
+  --node-stroke:#33475b;--ok:#1e7a2e;--warn:#9a5b00;--bad:#c0281f;--violet:#7b4fc2;
+  --s1:#2e6da4;--s2:#e08a1e;--s3:#1e7a2e;--deliv:#c0281f;--suct:#2b8fd6;--frame:#33475b;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--font-ui)}
+button,input{font:inherit;color:inherit}
+.inner{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:.01em;flex:1}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.files{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:500;font-size:13px;padding:6px 11px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:3px 8px;font-size:12px}
+:is(button,input,summary):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;padding:7px 14px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#hint{flex:none;padding:6px 12px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--bar)}
+#scroller{flex:1;min-height:0;overflow:auto}
+#ws{padding:16px max(16px,env(safe-area-inset-left,0px)) 30px;max-width:980px}
+#ws h2{font-size:24px;margin:0 0 8px;text-wrap:balance}
+#ws h3{font-size:16.5px;margin:20px 0 6px}
+#ws p{font-size:14.5px;line-height:1.55}
+.stagebox{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;margin:8px 0}
+.stagebox svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--font-ui)}
+.duo{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:8px}
+.leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 6px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;background:var(--c)}
+.verdict{border-radius:8px;padding:9px 12px;margin:10px 0;font-size:14px;background:var(--panel2);border:1px solid var(--line)}
+.formula{background:var(--panel2);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;font-size:15px;overflow-x:auto}
+.mono{font-family:var(--font-mono);font-size:13px}
+.fig3{position:relative;height:clamp(340px,50vh,560px);border-radius:8px;overflow:hidden;background:#fff;touch-action:none;cursor:grab}
+.fig3 canvas{position:absolute;inset:0;width:100%;height:100%}
+.fig3 .hint3{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);pointer-events:none}
+/* panneau commandes */
+#side{flex:none;width:clamp(280px,24vw,340px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:0;max-height:100%}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+.phead b{font-size:15px}.phead .sub{color:var(--muted);font-size:12.5px}
+.pbody{overflow:auto;padding:12px;flex:1;min-height:0;font-size:13.5px}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:9px;font-size:12.5px;color:var(--muted)}
+.fld b{color:var(--fg);font-family:var(--font-mono);font-weight:500}
+input[type=range]{width:100%;padding:0;accent-color:var(--accent)}
+.goal{background:var(--accent-soft);color:var(--accent-ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.gstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat span{font-size:12px;color:var(--muted)}.stat b{font-size:14px;font-family:var(--font-mono);font-weight:500;overflow-wrap:anywhere}
+.small{font-size:12px;color:var(--muted);margin:0 0 9px}
+#dlg{position:fixed;inset:0;background:rgba(10,16,22,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlgbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);max-height:88%;display:flex;flex-direction:column}
+.dlgbox header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dlgbox .dbody{padding:14px 16px;overflow:auto}
+.dlgbox h3{margin:14px 0 4px;font-size:14px}.dlgbox p,.dlgbox li{margin:4px 0;font-size:13.5px}
+@media (max-width:820px){
+  html,body{height:auto}#app{height:auto}
+  .work{flex-direction:column}
+  #side{width:auto;max-height:none}
+  .duo{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="band"><div class="inner row">
+    <div class="brand"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><line x1="2" y1="13" x2="10" y2="13" stroke="var(--s1)" stroke-width="3"/><line x1="16" y1="3" x2="10" y2="23" stroke="var(--s2)" stroke-width="3.2"/><rect x="15" y="16" width="9" height="5" fill="var(--s3)"/></svg><span>Atelier Hydronettoyeur <small>Pompe à plateau oscillant · cinématique</small></span></div>
+    <div class="files"><button class="btn" id="bHelp" type="button">Aide</button></div>
+  </div></header>
+  <div class="band"><div class="inner row"><div class="seg" id="seg" role="tablist" aria-label="Vues">
+    <button type="button" role="tab" data-v="kin" aria-pressed="true">1. Schéma cinématique</button>
+    <button type="button" role="tab" data-v="v3d" aria-pressed="false">2. Vue 3D</button>
+  </div></div></div>
+  <main class="inner work">
+    <section id="stage"><div id="hint"></div><div id="scroller"><div id="ws">
+
+      <div id="p-kin">
+        <h2>Schéma cinématique animé</h2>
+        <p>L'arbre 1 tourne d'un angle θ autour de x₀. Sa portée inclinée de α fait osciller le plateau 2, qui pousse le piston 3 ; le ressort maintient le contact au point A. La vue est une coupe par le plan (O, x₀, y₀) : le trait du plateau est sa trace dans ce plan.</p>
+        <div class="stagebox"><svg id="kin" viewBox="0 0 760 420" role="img" aria-label="Schéma cinématique animé de la pompe"></svg></div>
+        <div class="leg"><span><i style="--c:var(--s1)"></i>arbre 1</span><span><i style="--c:var(--s2)"></i>plateau 2</span><span><i style="--c:var(--s3)"></i>piston 3</span><span><i style="--c:var(--deliv)"></i>refoulement</span><span><i style="--c:var(--suct)"></i>aspiration</span></div>
+        <div class="duo">
+          <div class="stagebox"><svg id="end" viewBox="0 0 220 220" role="img" aria-label="Vue de bout suivant x0"></svg></div>
+          <div class="stagebox"><svg id="plot" viewBox="0 0 380 220" role="img" aria-label="Déplacement du piston en fonction de θ"></svg></div>
+        </div>
+        <h3>Loi entrée-sortie</h3>
+        <p>Le point A appartient au plan du plateau, de normale x′₁ : <span class="mono">OA · x′₁ = 0</span>. Avec <span class="mono">OA = λ·x₀ − R·y₀</span> et <span class="mono">x′₁ = cos α·x₀ + sin α·(cos θ·y₀ + sin θ·z₀)</span>, on obtient :</p>
+        <div class="formula mono">x<sub>A</sub> = λ = R·tan α·cos θ &nbsp;&nbsp;⇒&nbsp;&nbsp; course = 2R·tan α</div>
+        <div class="verdict" id="phase" aria-live="polite"></div>
+      </div>
+
+      <div id="p-v3d" hidden>
+        <h2>Vue 3D du dessin d'ensemble</h2>
+        <p>Maquette simplifiée reconstituée d'après le plan : arbre à portée inclinée, plateau oscillant sur roulement, trois pistons à 120° rappelés par ressorts, culasse avec clapets. La marque noire montre que le plateau oscille sans tourner ; la marque blanche suit la rotation de l'arbre.</p>
+        <div class="stagebox"><div class="fig3" id="v3"><span class="hint3">Glisser pour tourner · molette ou pincer pour zoomer</span></div></div>
+        <div class="files" style="margin:8px 0">
+          <button class="btn" id="carter" type="button" aria-pressed="true">Masquer le carter</button>
+          <button class="btn" id="reset" type="button">Recentrer la vue</button>
+        </div>
+        <div class="leg"><span><i style="--c:var(--s1)"></i>arbre 1</span><span><i style="--c:#e8892b"></i>plateau 2</span><span><i style="--c:#2e9d6a"></i>pistons 3</span><span><i style="--c:var(--deliv)"></i>clapet de refoulement / chambre qui refoule</span><span><i style="--c:var(--suct)"></i>clapet d'aspiration / chambre qui aspire</span></div>
+        <p class="small">La géométrie 3D est proportionnée, pas cotée.</p>
+      </div>
+
+    </div></div></section>
+
+    <aside id="side" aria-label="Commandes">
+      <div class="phead"><b>Commandes</b><span class="sub">communes aux deux vues</span></div>
+      <div class="pbody">
+        <div class="files" style="margin-bottom:12px">
+          <button class="btn pri" id="play" type="button" aria-pressed="true">Pause</button>
+          <button class="btn" id="step" type="button">+15°</button>
+          <button class="btn" id="zero" type="button">θ = 0</button>
+        </div>
+        <label class="fld"><span>Vitesse d'animation : <b id="spdv">15 tr/min</b></span><input id="spd" type="range" min="2" max="60" value="15"></label>
+        <label class="fld"><span>Inclinaison α : <b id="alv">12°</b></span><input id="al" type="range" min="0" max="20" step="0.5" value="12"></label>
+        <label class="fld"><span>Angle θ : <b id="thv">0°</b></span><input id="th" type="range" min="0" max="360" step="1" value="0"></label>
+        <div class="gstats">
+          <div class="stat"><span>x<sub>A</sub></span><b id="rx">–</b></div>
+          <div class="stat"><span>Course</span><b id="rc">–</b></div>
+          <div class="stat"><span>Cylindrée (3 pistons)</span><b id="rv">–</b></div>
+          <div class="stat"><span>Phase piston 3</span><b id="rp">–</b></div>
+        </div>
+        <div class="goal"><b>Loi. </b>x<sub>A</sub> = R·tan α·cos θ. Le piston refoule quand θ est entre 180° et 360° (x<sub>A</sub> croît).</div>
+        <p class="small">R = 25 mm et Ø piston = 15 mm : valeurs d'exemple, non cotées sur le plan.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+<div id="dlg" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const st={th:0,al:12*Math.PI/180,rpm:15,play:!matchMedia('(prefers-reduced-motion: reduce)').matches,view:'kin'};
+const Rmm=25,dmm=15,deg=Math.PI/180;
+const C={ink:'#111111',fr:'#33475b',c1:'#2e6da4',c2:'#e08a1e',c3:'#1e7a2e',mu:'#5a6068',line:'#b9bfc7',del:'#c0281f',suc:'#2b8fd6'};
+const HINT={kin:'Lancez ou mettez en pause l’animation, réglez α et θ dans le panneau Commandes : la trace du plateau et le piston suivent la loi x_A = R·tan α·cos θ.',
+  v3d:'Faites tourner la maquette à la souris ou au doigt. Masquez le carter pour voir le plateau oscillant et les trois pistons.'};
+
+/* ---------- vues ---------- */
+const seg=$('seg');
+function setView(v){st.view=v;for(const b of seg.querySelectorAll('button'))b.setAttribute('aria-pressed',b.dataset.v===v);
+  $('p-kin').hidden=v!=='kin';$('p-v3d').hidden=v!=='v3d';$('hint').textContent=HINT[v];$('scroller').scrollTop=0}
+seg.addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v)});
+setView('kin');
+
+/* ---------- schéma cinématique 2D ---------- */
+const kin=$('kin'),endv=$('end'),plot=$('plot');
+const s=105,OX=360,OY=185;
+const X=x=>OX+x*s,Y=y=>OY-y*s;
+const P=(x,y)=>`${X(x).toFixed(1)},${Y(y).toFixed(1)}`;
+function arrow(x1,y1,x2,y2,col,dash){
+  const a=Math.atan2(-(y2-y1),x2-x1),h=9,X2=X(x2),Y2=Y(y2);
+  const p1=`${X2-h*Math.cos(a-0.4)},${Y2-h*Math.sin(a-0.4)}`,p2=`${X2-h*Math.cos(a+0.4)},${Y2-h*Math.sin(a+0.4)}`;
+  return `<line x1="${X(x1)}" y1="${Y(y1)}" x2="${X2}" y2="${Y2}" stroke="${col}" stroke-width="1.6" ${dash?'stroke-dasharray="6 4"':''}/><polygon points="${X2},${Y2} ${p1} ${p2}" fill="${col}"/>`;
+}
+function spring(x1,x2,y,n,a){
+  let d=`M${P(x1,y)}`;const L=x2-x1,sg=L/(2*n+2);
+  d+=` L${P(x1+sg,y)}`;
+  for(let i=0;i<2*n;i++)d+=` L${P(x1+sg*(1.5+i),y+(i%2?-a:a))}`;
+  return d+` L${P(x2-sg,y)} L${P(x2,y)}`;
+}
+const t=(x,y,txt,col,anc='start',w=500,fs=15)=>`<text x="${x}" y="${y}" fill="${col}" font-size="${fs}" font-weight="${w}" text-anchor="${anc}">${txt}</text>`;
+function drawKin(){
+  const {th,al}=st,ta=Math.tan(al),c=Math.cos(th);
+  const lam=ta*c,vel=-ta*Math.sin(th),ph=vel>0?C.del:C.suc;
+  const ux=Math.cos(al),uy=Math.sin(al)*c,un=Math.hypot(ux,uy),u=[ux/un,uy/un],ang=Math.atan2(uy,ux)/deg;
+  let g='';
+  g+=`<g stroke="${C.fr}" stroke-width="3" fill="none" stroke-linecap="round">
+   <polyline points="${P(-2.55,-0.16)} ${P(-2.55,-1.85)} ${P(2.25,-1.85)} ${P(2.25,-1.25)}"/>
+   <line x1="${X(-3.05)}" y1="${Y(-1.5)}" x2="${X(-3.05)}" y2="${Y(-2.1)}"/>
+   <line x1="${X(-3.05)}" y1="${Y(-1.85)}" x2="${X(-2.55)}" y2="${Y(-1.85)}"/></g>`;
+  for(let i=0;i<6;i++)g+=`<line x1="${X(-3.05)}" y1="${Y(-1.55-i*0.1)}" x2="${X(-3.05)-10}" y2="${Y(-1.55-i*0.1)+10}" stroke="${C.fr}" stroke-width="1.2"/>`;
+  g+=`<rect x="${X(-2.9)}" y="${Y(0.16)}" width="${0.7*s}" height="${0.32*s}" fill="none" stroke="${C.fr}" stroke-width="3"/>`;
+  const cy=-1,cl=1.6,cr=2.95,hp=0.24;
+  g+=`<rect x="${X(lam+2.45)}" y="${Y(cy+0.18)}" width="${(cr-(lam+2.45))*s}" height="${0.36*s}" fill="${ph}" opacity=".3"/>`;
+  g+=`<rect x="${X(cl)}" y="${Y(cy+hp)}" width="${(cr-cl)*s}" height="${2*hp*s}" fill="none" stroke="${C.fr}" stroke-width="3"/>`;
+  g+=`<line x1="${X(cr)}" y1="${Y(cy)}" x2="${X(3.25)}" y2="${Y(cy)}" stroke="${C.mu}" stroke-width="1" stroke-dasharray="10 3 2 3"/>`;
+  g+=`<path d="${spring(lam+0.17,cl,cy,6,0.13)}" fill="none" stroke="${C.ink}" stroke-width="1.4"/>`;
+  g+=`<line x1="${X(lam)}" y1="${Y(cy)}" x2="${X(lam+2.05)}" y2="${Y(cy)}" stroke="${C.c3}" stroke-width="3.2"/>
+      <rect x="${X(lam+2.05)}" y="${Y(cy+0.18)}" width="${0.4*s}" height="${0.36*s}" fill="${C.c3}" opacity=".85"/>
+      <rect x="${X(lam+0.02)}" y="${Y(cy+0.1)}" width="${0.15*s}" height="${0.2*s}" fill="#fff" stroke="${C.c3}" stroke-width="2"/>`;
+  const px=-0.95*ux,py=-0.95*uy;
+  g+=`<polyline points="${P(-3.15,0)} ${P(px,0)} ${P(px,py)} ${P(0.85*ux,0.85*uy)}" fill="none" stroke="${C.c1}" stroke-width="3.2" stroke-linejoin="round"/>`;
+  [-2.95,-2.15].forEach(x=>g+=`<line x1="${X(x)}" y1="${Y(0.24)}" x2="${X(x)}" y2="${Y(-0.24)}" stroke="${C.c1}" stroke-width="2"/>`);
+  g+=`<line x1="${X(-1.6*ta*c)}" y1="${Y(1.6)}" x2="${X(1.32*ta*c)}" y2="${Y(-1.32)}" stroke="${C.c2}" stroke-width="5" stroke-linecap="round"/>`;
+  g+=`<g transform="rotate(${-ang} ${OX} ${OY})"><rect x="${OX-0.4*s}" y="${OY-0.15*s}" width="${0.8*s}" height="${0.3*s}" fill="#fff" stroke="${C.c2}" stroke-width="3"/>
+      <line x1="${OX-0.52*s}" y1="${OY-0.22*s}" x2="${OX-0.52*s}" y2="${OY+0.22*s}" stroke="${C.c1}" stroke-width="2"/>
+      <line x1="${OX+0.52*s}" y1="${OY-0.22*s}" x2="${OX+0.52*s}" y2="${OY+0.22*s}" stroke="${C.c1}" stroke-width="2"/></g>`;
+  g+=arrow(0,0,3.3,0,C.ink)+arrow(0,0,0,1.65,C.ink)+arrow(0,0,1.95*u[0],1.95*u[1],C.c1,1);
+  g+=`<circle cx="${OX}" cy="${OY}" r="3.5" fill="${C.ink}"/><circle cx="${X(lam)}" cy="${Y(cy)}" r="4" fill="${C.ink}"/>`;
+  g+=`<line x1="${X(3.15)}" y1="${Y(0)}" x2="${X(3.15)}" y2="${Y(-1)}" stroke="${C.mu}"/>`+arrow(3.15,-0.5,3.15,-0.02,C.mu)+arrow(3.15,-0.5,3.15,-0.98,C.mu);
+  g+=t(X(3.3)+4,Y(0)+5,'x₀',C.ink)+t(OX+8,Y(1.65)+4,'y₀',C.ink)+t(X(1.95*u[0])+6,Y(1.95*u[1])-4,"x'₁",C.c1);
+  g+=t(OX-8,OY+30,'O',C.ink,'end',600)+t(X(lam)-8,Y(cy)+5,'A',C.ink,'end',600)+t(X(3.15)+7,Y(-0.5)+5,'R',C.mu);
+  g+=t(X(-2.6),Y(0.42),'Arbre 1',C.c1,'middle',600)+t(X(-1.6*ta*c)-12,Y(1.6)+4,'Plateau 2',C.c2,'end',600);
+  g+=t(X(2.27),Y(-1.47),'Piston 3',C.c3,'middle',600)+t(X((lam+1.6)/2+0.1),Y(-0.72),'Ressort',C.mu,'middle');
+  g+=t(X(cr-0.05),Y(cy+0.33),vel>0?'refoulement':'aspiration',ph,'end',600);
+  kin.innerHTML=g;
+
+  const ec=110,er=58,eX=y=>ec+y*er,eY=z=>ec-z*er;
+  let e=t(10,20,'Vue de bout (suivant x₀)',C.mu,'start',400,13);
+  e+=`<circle cx="${ec}" cy="${ec}" r="${er}" fill="none" stroke="${C.line}" stroke-dasharray="4 4"/>`;
+  const ea=(x2,y2,col,lab)=>{const a=Math.atan2(ec-y2,x2-ec),h=8;return `<line x1="${ec}" y1="${ec}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="1.6"/><polygon points="${x2},${y2} ${x2-h*Math.cos(a-0.4)},${y2+h*Math.sin(a-0.4)} ${x2-h*Math.cos(a+0.4)},${y2+h*Math.sin(a+0.4)}" fill="${col}"/>`+t(x2+(x2>=ec?4:-4),y2-5,lab,col,x2>=ec?'start':'end',500,14)};
+  e+=ea(eX(1.45),eY(0),C.ink,'y₀')+ea(eX(0),eY(1.45),C.ink,'z₀')+ea(eX(1.3*Math.cos(th)),eY(1.3*Math.sin(th)),C.c1,'y₁');
+  const arc=Math.min(th,2*Math.PI-0.001),r0=26;
+  e+=`<path d="M${ec+r0},${ec} A${r0},${r0} 0 ${arc>Math.PI?1:0} 0 ${ec+r0*Math.cos(arc)},${ec-r0*Math.sin(arc)}" fill="none" stroke="${C.c1}" stroke-width="1.2"/>`;
+  for(let i=0;i<3;i++){const f=Math.PI+i*2*Math.PI/3,py=Math.cos(f),pz=Math.sin(f),v=Math.tan(al)*(py*Math.sin(th)-pz*Math.cos(th));
+    e+=`<circle cx="${eX(py)}" cy="${eY(pz)}" r="${i?7:9}" fill="${v>0?C.del:C.suc}" stroke="${i?'none':C.c3}" stroke-width="3"/>`}
+  e+=t(10,210,'● entouré : piston 3 du schéma',C.mu,'start',400,12);
+  endv.innerHTML=e;
+
+  const L=40,Rt=365,T=28,B=180,mid=(T+B)/2,amp=(B-T)/2-6,px2=d=>L+(Rt-L)*d/360,py2=v=>mid-v*amp;
+  let q=t(L,18,'x_A/R et vitesse selon θ',C.mu,'start',400,13);
+  q+=`<rect x="${px2(180)}" y="${T}" width="${px2(360)-px2(180)}" height="${B-T}" fill="${C.del}" opacity=".07"/>`;
+  q+=`<line x1="${L}" y1="${mid}" x2="${Rt}" y2="${mid}" stroke="${C.line}"/><line x1="${L}" y1="${T}" x2="${L}" y2="${B}" stroke="${C.line}"/>`;
+  [0,90,180,270,360].forEach(d=>q+=t(px2(d),B+18,d+'°',C.mu,'middle',400,12));
+  const sc=1/Math.tan(20*deg);let a1='',a2='';
+  for(let d=0;d<=360;d+=4){a1+=`${d?'L':'M'}${px2(d).toFixed(1)},${py2(ta*Math.cos(d*deg)*sc).toFixed(1)} `;a2+=`${d?'L':'M'}${px2(d).toFixed(1)},${py2(-ta*Math.sin(d*deg)*sc).toFixed(1)} `}
+  q+=`<path d="${a1}" fill="none" stroke="${C.c3}" stroke-width="2.4"/><path d="${a2}" fill="none" stroke="${C.mu}" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  const dn=th/deg;q+=`<line x1="${px2(dn)}" y1="${T}" x2="${px2(dn)}" y2="${B}" stroke="${C.ink}"/><circle cx="${px2(dn)}" cy="${py2(lam*sc)}" r="5" fill="${C.c3}"/>`;
+  q+=t(px2(270),T+14,'refoulement',C.del,'middle',400,12)+t(px2(90),T+14,'aspiration',C.suc,'middle',400,12);
+  q+=t(Rt,B+34,'— x_A   - - vitesse   (échelle : α = 20°)',C.mu,'end',400,12);
+  plot.innerHTML=q;
+
+  $('thv').textContent=Math.round(dn)+'°';$('th').value=Math.round(dn);
+  $('rx').textContent=(Rmm*lam).toFixed(2)+' mm';
+  const course=2*Rmm*ta;$('rc').textContent=course.toFixed(2)+' mm';
+  $('rv').textContent=(3*Math.PI*dmm*dmm/4*course/1000).toFixed(2)+' cm³/tr';
+  const rp=$('rp');rp.textContent=vel>0?'refoulement':'aspiration';rp.style.color=ph;
+  $('phase').textContent='θ = '+Math.round(dn)+'° : x_A = '+(Rmm*lam).toFixed(2)+' mm, le piston 3 est en '+(vel>0?'refoulement (il avance vers la culasse).':'aspiration (il recule vers le plateau).');
+}
+
+/* ---------- maquette 3D ---------- */
+const box=$('v3');let three=null;
+if(window.THREE){
+  const T=THREE,ren=new T.WebGLRenderer({antialias:true,alpha:true});
+  ren.setPixelRatio(Math.min(devicePixelRatio,2));box.prepend(ren.domElement);
+  const scene=new T.Scene(),cam=new T.PerspectiveCamera(38,1,0.1,100);
+  scene.add(new T.HemisphereLight(0xffffff,0x667788,0.8));
+  const dl=new T.DirectionalLight(0xffffff,0.8);dl.position.set(4,6,5);scene.add(dl);
+  const dl2=new T.DirectionalLight(0xffffff,0.3);dl2.position.set(-5,-2,-4);scene.add(dl2);
+  const M=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:c,metalness:.3,roughness:.5},o));
+  const mS=M(0x2e6da4),mP=M(0xe8892b),mPi=M(0x2e9d6a),mSp=M(0x50565e,{metalness:.7,roughness:.3}),mH=M(0x9aa3ad,{transparent:true,opacity:.18,depthWrite:false,side:T.DoubleSide});
+  const mHead=M(0x8a939c,{transparent:true,opacity:.35,depthWrite:false}),mRing=M(0xc7ccd2,{metalness:.8,roughness:.25});
+  const cylX=(r,l,mat,sg=40,r2,open)=>{const g=new T.CylinderGeometry(r2??r,r,l,sg,1,!!open);g.rotateZ(-Math.PI/2);return new T.Mesh(g,mat)};
+  const R=1,phis=[0,1,2].map(i=>Math.PI+i*2*Math.PI/3);
+  const shaft=new T.Group();scene.add(shaft);
+  const sm=cylX(0.32,2.9,mS);sm.position.x=-2.05;shaft.add(sm);
+  const hub=cylX(0.95,0.3,mS);hub.position.x=-0.62;shaft.add(hub);
+  const key=new T.Mesh(new T.BoxGeometry(0.32,0.14,0.14),M(0xffffff));key.position.set(-0.62,0.95,0);shaft.add(key);
+  const jour=cylX(0.3,1.0,mS);shaft.add(jour);
+  const plate=new T.Group();scene.add(plate);
+  plate.add(cylX(1.45,0.16,mP,64));
+  const pr=new T.Mesh(new T.TorusGeometry(0.42,0.08,16,40),mRing);pr.rotation.y=Math.PI/2;pr.position.x=-0.12;plate.add(pr);
+  const notch=new T.Mesh(new T.BoxGeometry(0.2,0.25,0.12),M(0x1a1a1a));notch.position.set(0,1.38,0);plate.add(notch);
+  const brg=new T.Mesh(new T.TorusGeometry(0.48,0.12,16,40),mRing);brg.rotation.y=Math.PI/2;brg.position.x=-2.2;scene.add(brg);
+  const hous=new T.Group();scene.add(hous);
+  const h1=cylX(1.8,2.6,mH,64,null,true);h1.position.x=-0.25;hous.add(h1);
+  const fl=new T.Mesh(new T.RingGeometry(0.5,1.8,64),mH);fl.rotation.y=Math.PI/2;fl.position.x=-1.55;hous.add(fl);
+  const nose=cylX(0.62,1.2,mH,40,0.75);nose.position.x=-2.15;hous.add(nose);
+  const blk=cylX(1.55,1.85,mH,64,null,true);blk.position.x=1.95;hous.add(blk);
+  const head=cylX(1.6,0.38,mHead,64);head.position.x=3.04;scene.add(head);
+  const spGeo=(()=>{const pts=[],n=7;for(let i=0;i<=n*40;i++){const u=i/(n*40),a=u*n*2*Math.PI;pts.push(new T.Vector3(u,0.27*Math.cos(a),0.27*Math.sin(a)))}return new T.TubeGeometry(new T.CatmullRomCurve3(pts),n*40,0.028,8,false)})();
+  const chGeo=(()=>{const g=new T.CylinderGeometry(0.17,0.17,1,24);g.rotateZ(-Math.PI/2);g.translate(0.5,0,0);return g})();
+  const pist=phis.map(f=>{
+    const y=R*Math.cos(f),z=R*Math.sin(f),o={y,z};
+    o.p=cylX(0.17,2.3,mPi);o.pad=cylX(0.24,0.08,mPi);o.sp=new T.Mesh(spGeo,mSp);
+    o.cm=M(0x2b8fd6,{transparent:true,opacity:.65});o.ch=new T.Mesh(chGeo,o.cm);
+    o.vIn=new T.Mesh(new T.SphereGeometry(0.1,16,12),M(0x2b8fd6));o.vOut=new T.Mesh(new T.SphereGeometry(0.1,16,12),M(0xc0281f));
+    const k=1.28;o.vIn.position.set(3.25,y*k+z*0.18,z*k-y*0.18);o.vOut.position.set(3.25,y*k-z*0.18,z*k+y*0.18);
+    [o.p,o.pad,o.sp,o.ch].forEach(m=>{m.position.y=y;m.position.z=z;scene.add(m)});scene.add(o.vIn,o.vOut);
+    return o});
+  const grid=new T.GridHelper(10,20,0xb9bfc7,0xd6dade);grid.position.y=-2.2;scene.add(grid);
+  const tgt=new T.Vector3(0.4,0,0),orb={yaw:-0.75,pitch:0.38,dist:9.5};
+  const place=()=>{const cp=Math.cos(orb.pitch);cam.position.set(tgt.x+orb.dist*cp*Math.sin(orb.yaw),tgt.y+orb.dist*Math.sin(orb.pitch),tgt.z+orb.dist*cp*Math.cos(orb.yaw));cam.lookAt(tgt)};
+  const ptrs=new Map();let pinch=0;
+  box.addEventListener('pointerdown',e=>{box.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);box.style.cursor='grabbing'});
+  box.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const [px,py]=ptrs.get(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+    if(ptrs.size===1){orb.yaw-=(e.clientX-px)*0.008;orb.pitch=Math.max(-1.4,Math.min(1.4,orb.pitch+(e.clientY-py)*0.008))}
+    else if(ptrs.size===2){const [a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch)orb.dist=Math.max(4,Math.min(20,orb.dist*pinch/d));pinch=d}});
+  const up=e=>{ptrs.delete(e.pointerId);pinch=0;box.style.cursor=''};
+  box.addEventListener('pointerup',up);box.addEventListener('pointercancel',up);
+  box.addEventListener('wheel',e=>{e.preventDefault();orb.dist=Math.max(4,Math.min(20,orb.dist*(1+e.deltaY*0.001)))},{passive:false});
+  $('reset').onclick=()=>{orb.yaw=-0.75;orb.pitch=0.38;orb.dist=9.5};
+  $('carter').onclick=e=>{hous.visible=!hous.visible;head.material.opacity=hous.visible?.35:.12;e.currentTarget.textContent=hous.visible?'Masquer le carter':'Afficher le carter';e.currentTarget.setAttribute('aria-pressed',hous.visible)};
+  const size=()=>{const w=box.clientWidth,h=box.clientHeight;if(!w||!h)return;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()};
+  const ro3=new ResizeObserver(size);ro3.observe(box);
+  const X1=new T.Vector3(1,0,0),n=new T.Vector3();
+  three=()=>{
+    if(st.view!=='v3d')return;
+    const {th,al}=st,ta=Math.tan(al);
+    shaft.rotation.x=th;jour.rotation.set(0,0,al);
+    n.set(Math.cos(al),Math.sin(al)*Math.cos(th),Math.sin(al)*Math.sin(th));
+    plate.quaternion.setFromUnitVectors(X1,n);
+    pist.forEach(o=>{
+      const lam=-ta*(o.y*Math.cos(th)+o.z*Math.sin(th)),v=ta*(o.y*Math.sin(th)-o.z*Math.cos(th));
+      o.pad.position.x=lam+0.12;o.p.position.x=lam+0.12+1.15;
+      o.sp.position.x=lam+0.16;o.sp.scale.x=1.02-(lam+0.16);
+      const e=lam+0.12+2.3;o.ch.position.x=e;o.ch.scale.x=Math.max(0.01,2.85-e);
+      const del=v>0;o.cm.color.setHex(del?0xc0281f:0x2b8fd6);
+      o.vOut.material.emissive.setHex(del?0x661111:0);o.vIn.material.emissive.setHex(del?0:0x103a66);
+      o.vOut.scale.setScalar(del?1.3:0.8);o.vIn.scale.setScalar(del?0.8:1.3)});
+    place();ren.render(scene,cam)};
+}else{box.insertAdjacentHTML('beforeend','<p style="padding:20px">La bibliothèque 3D n’a pas pu se charger.</p>')}
+
+/* ---------- commandes et boucle ---------- */
+const play=$('play');
+const setPlay=v=>{st.play=v;play.textContent=v?'Pause':'Lecture';play.setAttribute('aria-pressed',v)};setPlay(st.play);
+play.onclick=()=>setPlay(!st.play);
+$('step').onclick=()=>{setPlay(false);st.th=(Math.round(st.th/deg/15)*15+15)%360*deg};
+$('zero').onclick=()=>{setPlay(false);st.th=0};
+$('spd').oninput=e=>{st.rpm=+e.target.value;$('spdv').textContent=st.rpm+' tr/min'};
+$('al').oninput=e=>{st.al=+e.target.value*deg;$('alv').textContent=e.target.value.replace('.',',')+'°'};
+$('th').oninput=e=>{setPlay(false);st.th=+e.target.value*deg};
+
+function closeDlg(){$('dlg').hidden=true;$('dlg').innerHTML=''}
+$('bHelp').onclick=()=>{const d=$('dlg');d.hidden=false;
+  d.innerHTML='<div class="dlgbox" role="dialog" aria-label="Aide"><header><b>Aide</b><button class="btn sm" type="button" id="dclose">Fermer</button></header><div class="dbody">'+
+  '<p>Deux vues de la pompe de l’hydronettoyeur, animées par les mêmes commandes.</p><h3>Utilisation</h3><ul><li><b>Schéma cinématique</b> : coupe animée par le plan (O, x₀, y₀), vue de bout et courbe x_A(θ).</li><li><b>Vue 3D</b> : maquette en rotation libre ; le carter peut être masqué.</li><li>Le panneau <b>Commandes</b> règle la vitesse, l’inclinaison α et l’angle θ.</li></ul>'+
+  '<h3>Repères</h3><p>θ : rotation de l’arbre autour de x₀. α : angle entre x₁ et x′₁, axe de la portée inclinée. R : distance entre l’axe de l’arbre et l’axe du piston.</p></div></div>';
+  $('dclose').onclick=closeDlg;d.onclick=ev=>{if(ev.target===d)closeDlg()}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('dlg').hidden)closeDlg()});
+
+let last=performance.now();
+const loop=tm=>{const dt=Math.min(0.1,(tm-last)/1000);last=tm;
+  if(st.play)st.th=(st.th+st.rpm/60*2*Math.PI*dt)%(2*Math.PI);
+  drawKin();if(three)three();requestAnimationFrame(loop)};
+requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
