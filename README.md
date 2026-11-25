@@ -65,6 +65,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | [Équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html) | Visualiser l'équilibrage dynamique d'un rotor. |
 | [Équations différentielles du mouvement](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Établir et résoudre les équations différentielles du mouvement. |
 | [Effets gyroscopiques](https://siicpgeamansur.github.io/mecanique/gyroscope.html) | Établir et résoudre les équations différentielles du mouvement. |
+| [Hydro-nettoyeur](https://siicpgeamansur.github.io/mecanique/hydronettoyeur.html) | Viuslaisation de l'hydro-nettoyeur vu en TD. |
 
 ## Actionneurs et dimensionnement
 
