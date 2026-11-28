@@ -66,6 +66,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | [Équations différentielles du mouvement](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Établir et résoudre les équations différentielles du mouvement. |
 | [Effets gyroscopiques](https://siicpgeamansur.github.io/mecanique/gyroscope.html) | Établir et résoudre les équations différentielles du mouvement. |
 | [Hydro-nettoyeur](https://siicpgeamansur.github.io/mecanique/hydronettoyeur.html) | Viuslaisation de l'hydro-nettoyeur vu en TD. |
+| [Pertes dynamiques](https://siicpgeamansur.github.io/mecanique/pertes_dynamiques.html) | Viuslaisation des pertes dynamiques. |
 
 ## Actionneurs et dimensionnement
 
