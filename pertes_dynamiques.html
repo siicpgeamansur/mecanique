@@ -1,0 +1,191 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Atelier Pertes dynamiques</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--fu:'IBM Plex Sans',system-ui,sans-serif;--fm:'IBM Plex Mono',ui-monospace,monospace;--bg:#fff;--bar:#eee;--pn:#fff;--p2:#f1f3f6;--line:#b9bfc7;--fg:#111;--mu:#5a6068;--ac:#2e6da4;--soft:#dcebf8;--ink:#1b4a76;--ok:#1e7a2e;--bad:#c0281f;--vi:#7b4fc2;--b1:#0a5fd0;--g2:#0b9a4a;--r3:#d6222a;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px/1.45 var(--fu)}
+#app{height:100%;display:flex;flex-direction:column}
+.in{padding-inline:max(14px,env(safe-area-inset-left,0px))}
+.band{background:var(--bar);border-bottom:1px solid var(--line);flex:none}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-block:7px}
+.brand{font-weight:600;font-size:16px}.brand small{font-weight:400;color:var(--mu);font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--pn);overflow-x:auto;max-width:100%}
+.seg button{border:0;background:0;padding:7px 12px;font:500 13px var(--fu);color:var(--fg);cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}.seg button[aria-pressed=true]{background:var(--ac);color:#fff}
+.btn{font:500 13px var(--fu);padding:6px 11px;border:1px solid var(--line);background:var(--pn);color:var(--fg);border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--ac)}.btn.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+:is(button,input,summary):focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.tabs{display:flex;gap:2px;overflow-x:auto}.tabs button{border:0;border-bottom:2px solid transparent;background:0;padding:7px 12px;font:500 13px var(--fu);color:var(--mu);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--ac)}
+.work{flex:1;min-height:0;display:flex;gap:10px;padding-block:10px}
+#stage{flex:1;min-width:0;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:12px}
+#act{flex:none;width:clamp(280px,27vw,370px);overflow:auto;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13.5px}
+@media(max-width:820px){.work{flex-direction:column;overflow:auto}#stage,#act{width:auto;flex:none;overflow:visible}}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:4px 16px;margin-bottom:8px}
+.fld{display:flex;flex-direction:column;font-size:12.5px;color:var(--mu)}.fld b{color:var(--fg);font-family:var(--fm);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--ac)}
+canvas{display:block;width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;margin:8px 0}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 8px}.dwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}.tb{border-collapse:collapse;width:100%;font-size:12.5px}.tb th{background:var(--p2);text-align:left;padding:5px 8px;font-weight:600}.tb td{padding:3px 8px;border-top:1px solid var(--line);white-space:nowrap}.tb input{width:110px;vertical-align:middle}.tb b{font:500 12px var(--fm);display:inline-block;min-width:38px}.sc{height:190px}.pl{height:210px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:6px;margin:6px 0}
+.kpi div{background:var(--p2);border-radius:8px;padding:6px 9px;font-size:12px;color:var(--mu)}.kpi b{display:block;font:500 15px var(--fm);color:var(--fg)}
+.goal{background:var(--soft);color:var(--ink);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+.steps{padding-left:20px;margin:0 0 10px}.steps li{margin-bottom:7px}
+details{border:1px dashed var(--ac);border-radius:8px;padding:8px 10px;margin:0 0 10px}summary{cursor:pointer;font-weight:500;color:var(--ink)}
+fieldset.q{border:1px solid var(--line);border-radius:8px;margin:0 0 10px;padding:6px 10px;min-width:0}fieldset.q legend{font-weight:600;padding:0 4px}
+.opt{display:flex;gap:8px;padding:3px 5px;border-radius:6px;cursor:pointer}.opt.good{background:rgba(30,122,46,.2)}.opt.bad{background:rgba(192,40,31,.2)}
+.why{font-size:12.5px;color:var(--mu);margin:4px}.score{font-weight:600;margin-top:8px}
+#cov{flex:1;min-height:0;display:flex;gap:24px;padding-block:14px}
+.toc{flex:none;width:230px;display:flex;flex-direction:column;overflow:auto}.toc button{text-align:left;padding:7px 10px;border:0;border-left:3px solid transparent;background:0;color:var(--fg);font:13.5px var(--fu);cursor:pointer}
+.toc button.on{border-left-color:var(--ac);background:var(--soft);color:var(--ink);font-weight:600}
+.cb{flex:1;overflow:auto;max-width:820px}.cb h2{font-size:24px;margin:0 0 10px}.cb h3{font-size:16px;margin:18px 0 4px}.cb p,.cb li{font-size:14.5px;line-height:1.6}
+.fm{background:var(--p2);border-left:3px solid var(--ac);padding:7px 12px;margin:8px 0;font:14px var(--fm);overflow-x:auto}
+.ret{background:var(--soft);color:var(--ink);border-radius:8px;padding:9px 12px;margin:14px 0}
+@media(max-width:700px){#cov{flex-direction:column}.toc{width:auto;flex-direction:row}}
+</style></head><body><div id="app">
+<div class="band"><div class="row in"><div class="brand">Atelier Pertes dynamiques <small>PSI* · frottement &amp; rendement</small></div><div class="seg" id="mode"><button aria-pressed="true" data-m="0">Ateliers</button><button aria-pressed="false" data-m="1">Cours</button></div></div><div class="tabs in" id="tabs"></div></div>
+<div class="work in" id="atv"><div id="stage"></div><aside id="act"></aside></div>
+<div id="cov" class="in" hidden><nav class="toc" id="toc"></nav><article class="cb" id="cb"></article></div></div>
+<script>
+const $=s=>document.querySelector(s),G=9.81,PI=Math.PI;
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const F=(x,d=3)=>String(+(+x).toPrecision(d)).replace('.',',');
+const V=id=>+$('#'+id).value;
+const sl=(id,l,a,b,s,v,u='')=>`<label class="fld">${l} = <b id="o_${id}">${F(v)}</b> ${u}<input type="range" id="${id}" min="${a}" max="${b}" step="${s}" value="${v}"></label>`;
+function out(){document.querySelectorAll('#stage input[type=range]').forEach(i=>{const o=$('#o_'+i.id);if(o)o.textContent=F(i.value)})}
+function sz(cv){const d=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(cv.width!=Math.round(w*d)){cv.width=Math.round(w*d);cv.height=Math.round(h*d)}const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,h);return[x,w,h]}
+function plot(cv,o){const[x,w,h]=sz(cv),L=46,R=10,T=10,B=24,X=v=>L+(v-o.x0)/(o.x1-o.x0)*(w-L-R),Y=v=>h-B-(v-o.y0)/(o.y1-o.y0)*(h-T-B);
+x.font='11px '+C('--fu');x.lineWidth=1;
+for(let i=0;i<=4;i++){const v=o.y0+(o.y1-o.y0)*i/4,y=Y(v);x.strokeStyle=C('--line');x.globalAlpha=.5;x.beginPath();x.moveTo(L,y);x.lineTo(w-R,y);x.stroke();x.globalAlpha=1;x.fillStyle=C('--mu');x.textAlign='right';x.fillText(F(v,2),L-4,y+4)}
+for(let i=0;i<=5;i++){const v=o.x0+(o.x1-o.x0)*i/5;x.textAlign='center';x.fillText(F(v,2),X(v),h-B+13)}
+x.textAlign='right';x.fillText(o.xl,w-R,h-3);x.textAlign='left';x.fillText(o.yl,4,T+2);
+(o.hl||[]).forEach(a=>{x.strokeStyle=a.c;x.setLineDash([4,3]);x.beginPath();x.moveTo(L,Y(a.y));x.lineTo(w-R,Y(a.y));x.stroke();x.setLineDash([]);x.fillStyle=a.c;x.textAlign='right';x.fillText(a.t,w-R-2,Y(a.y)-3)});
+o.ser.forEach(s=>{x.strokeStyle=s.c;x.lineWidth=s.w||2;x.setLineDash(s.d||[]);x.beginPath();s.p.forEach((q,i)=>i?x.lineTo(X(q[0]),Y(q[1])):x.moveTo(X(q[0]),Y(q[1])));x.stroke()});
+x.setLineDash([]);let lx=L+14;x.textAlign='left';o.ser.forEach(s=>{if(s.n){x.fillStyle=s.c;x.fillText('— '+s.n,lx,T+10);lx+=x.measureText('— '+s.n).width+14}});return{x,X,Y,L,w,h,T,B}}
+const ar=(x,a,b,c,d,col)=>{if(Math.hypot(c-a,d-b)<3)return;x.strokeStyle=x.fillStyle=col;x.lineWidth=2;x.beginPath();x.moveTo(a,b);x.lineTo(c,d);x.stroke();const t=Math.atan2(d-b,c-a);x.beginPath();x.moveTo(c,d);x.lineTo(c-8*Math.cos(t-.4),d-8*Math.sin(t-.4));x.lineTo(c-8*Math.cos(t+.4),d-8*Math.sin(t+.4));x.fill()};
+function gear(x,cx,cy,R,a,col,n){x.strokeStyle=col;x.lineWidth=2;x.fillStyle=C('--bg');x.beginPath();x.arc(cx,cy,R,0,2*PI);x.fill();x.stroke();for(let i=0;i<n;i++){const t=a+i*2*PI/n;x.beginPath();x.moveTo(cx+R*Math.cos(t),cy+R*Math.sin(t));x.lineTo(cx+(R+4)*Math.cos(t),cy+(R+4)*Math.sin(t));x.stroke()}x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));x.stroke()}
+
+/* ---------- Atelier 1 : Coulomb, adhérence / glissement, stick-slip ---------- */
+let S0;function r0(){S0={t:0,x:0,v:0,T:0,h:[],lh:0}}
+function step0(n){const f0=V('f0'),f=Math.min(V('f'),f0),c=V('c'),k=V('k'),Vd=V('Vd')/1000,s=S0,dt=.001;
+for(let i=0;i<n;i++){const Fs=k*(Vd*s.t-s.x);
+if(s.v===0&&Math.abs(Fs)<=f0*G){s.T=Fs}else{const sg=s.v!==0?Math.sign(s.v):Math.sign(Fs),T=sg*f*G+c*s.v,vn=s.v+(Fs-T)*dt;
+if(s.v!==0&&s.v*vn<=0&&Math.abs(Fs)<=f0*G){s.v=0;s.T=Fs}else{s.v=vn;s.x+=vn*dt;s.T=T}}
+s.t+=dt;if(s.t-s.lh>=.02){s.lh=s.t;s.h.push([s.t,Fs,s.T,s.v*1000]);if(s.h.length>400)s.h.shift()}}}
+function draw0(){const s=S0,f0=V('f0'),f=Math.min(V('f'),f0),k=V('k'),Vd=V('Vd')/1000,[x,w,h]=sz($('#cv0')),fl=h-44,bx=w*.3,ext=Vd*s.t-s.x,st=s.v===0;
+x.strokeStyle=C('--fg');x.lineWidth=1.5;x.beginPath();x.moveTo(0,fl);x.lineTo(w,fl);x.stroke();
+const off=((-s.x*1500)%30+30)%30;x.lineWidth=1;for(let i=-1;i<w/30+1;i++){x.beginPath();x.moveTo(i*30+off,fl);x.lineTo(i*30+off-8,fl+9);x.stroke()}
+x.fillStyle=C('--soft');x.strokeStyle=C('--b1');x.lineWidth=2;x.fillRect(bx-35,fl-44,70,44);x.strokeRect(bx-35,fl-44,70,44);
+const sx=bx+35,ex=sx+40+ext*1500,y=fl-22;x.strokeStyle=C('--mu');x.lineWidth=1.5;x.beginPath();x.moveTo(sx,y);for(let i=1;i<=12;i++)x.lineTo(sx+(ex-sx)*i/13,y+(i%2?-7:7));x.lineTo(ex,y);x.stroke();x.fillStyle=C('--g2');x.fillRect(ex,y-12,12,24);
+const ph=Math.atan(st?f0:f),Lc=78;x.fillStyle='rgba(123,79,194,.16)';x.beginPath();x.moveTo(bx,fl);x.lineTo(bx-Math.tan(ph)*Lc,fl-Lc);x.lineTo(bx+Math.tan(ph)*Lc,fl-Lc);x.fill();
+ar(x,bx,fl,bx,fl-G*5,'#e08a00');ar(x,bx,fl,bx-Math.abs(s.T)*5,fl,'#e08a00');ar(x,bx,fl,bx-Math.abs(s.T)*5,fl-G*5,C('--vi'));
+x.font='12.5px '+C('--fu');x.fillStyle=st?C('--ok'):C('--bad');x.textAlign='left';x.fillText(st?'ADHÉRENCE : |T| = F ≤ f₀N (R dans le cône de demi-angle φ₀)':'GLISSEMENT : T = fN + c·v (R sur le cône de demi-angle φ)',8,16);
+x.fillStyle=C('--mu');x.fillText('|T|/N = '+F(Math.abs(s.T)/G,2)+'   (f₀ = '+F(f0,2)+', f = '+F(f,2)+')   N = mg = 9,81 N',8,34)}
+function plots0(){const h=S0.h,t=S0.t,x0=Math.max(0,t-8),f0=V('f0'),f=Math.min(V('f'),f0),Vd=V('Vd');
+plot($('#cv1'),{x0,x1:x0+8,y0:0,y1:Math.max(f0,.2)*G*1.5,xl:'t (s)',yl:'forces (N)',hl:[{y:f0*G,c:C('--vi'),t:'f₀N'},{y:f*G,c:C('--ok'),t:'fN'}],ser:[{p:h.map(q=>[q[0],q[1]]),c:C('--g2'),n:'F ressort'},{p:h.map(q=>[q[0],q[2]]),c:C('--r3'),n:'T frottement'}]});
+plot($('#cv2'),{x0,x1:x0+8,y0:Math.min(0,...h.map(q=>q[3])),y1:Math.max(Vd*2,...h.map(q=>q[3]))*1.1,xl:'t (s)',yl:'v (mm/s)',ser:[{p:[[x0,Vd],[x0+8,Vd]],c:C('--mu'),d:[4,3],n:'tireur'},{p:h.map(q=>[q[0],q[3]]),c:C('--b1'),n:'bloc'}]})}
+
+/* ---------- Atelier 2 : rendement d'une liaison hélicoïdale ---------- */
+const set=(id,v)=>{$('#'+id).value=v};
+function pre(f,p,r){set('fr',f);set('p',p);set('rm',r);out();upd1()}
+let D1=0,TH1=0;
+function calc1(){const p=V('p')/1e3,rm=V('rm')/1e3,f=V('fr'),al=Math.atan(p/2/PI/rm),ph=Math.atan(f),T=Math.tan;return{p,rm,f,al,ph,ed:T(al)/T(al+ph),ei:al>ph?T(al-ph)/T(al):0}}
+const tg1=()=>{D1=1-D1;$('#dir').textContent=D1?'Sens : inverse (écrou → vis)':'Sens : direct (vis → écrou)';upd1()};
+function frc(c){const{al,ph,f}=c,Fa=V('Fa'),sa=Math.sin(al),ca=Math.cos(al),blk=!!D1&&al<=ph;let Q,N,T;
+if(!D1){Q=Fa*Math.tan(al+ph);N=Q*sa+Fa*ca;T=f*N}else if(blk){Q=0;N=Fa*ca;T=Fa*sa}else{Q=Fa*Math.tan(al-ph);N=Q*sa+Fa*ca;T=f*N}return{Q,N,T,blk,Fa}}
+function draw1b(c){const[x,w,h]=sz($('#cv12')),{al,ph}=c,{Q,N,T,blk,Fa}=frc(c),sa=Math.sin(al),ca=Math.cos(al),td=D1?1:-1,
+Nv=[-sa*N,ca*N],Tv=[td*ca*T,td*sa*T],Rv=[Nv[0]+Tv[0],Nv[1]+Tv[1]],sc=95/Math.max(Fa,Q,N,T,Math.hypot(Rv[0],Rv[1]),1),
+Lp=Math.min(w*.55,(h-70)/Math.max(.15,sa)),A=[44,h-24],Bx=A[0]+Lp*ca,By=A[1]-Lp*sa,sp=blk?.5:((TH1*.06)%1+1)%1*.6+.2,
+K=[A[0]+sp*Lp*ca,A[1]-sp*Lp*sa],nc=[-sa,-ca],Bc=[K[0]+13*nc[0],K[1]+13*nc[1]],P=(o,v,col,t)=>{const e=[o[0]+v[0]*sc,o[1]-v[1]*sc];ar(x,o[0],o[1],e[0],e[1],col);x.fillStyle=col;x.textAlign='center';x.font='12px '+C('--fu');x.fillText(t,e[0]+(e[0]>=o[0]?10:-10),e[1]-5)};
+x.fillStyle=C('--p2');x.strokeStyle=C('--g2');x.lineWidth=2;x.beginPath();x.moveTo(A[0],A[1]);x.lineTo(Bx,A[1]);x.lineTo(Bx,By);x.closePath();x.fill();x.stroke();
+x.fillStyle=C('--mu');x.font='12px '+C('--fu');x.textAlign='left';x.fillText('α = '+F(al*180/PI)+'°',A[0]+30,A[1]-5);
+const a0=Math.atan2(nc[1],nc[0]);x.fillStyle='rgba(123,79,194,.16)';x.beginPath();x.moveTo(K[0],K[1]);x.lineTo(K[0]+85*Math.cos(a0-ph),K[1]+85*Math.sin(a0-ph));x.lineTo(K[0]+85*Math.cos(a0+ph),K[1]+85*Math.sin(a0+ph));x.fill();
+x.save();x.translate(Bc[0],Bc[1]);x.rotate(-al);x.fillStyle='rgba(214,34,42,.2)';x.strokeStyle=C('--r3');x.lineWidth=2;x.fillRect(-20,-11,40,22);x.strokeRect(-20,-11,40,22);x.restore();
+P(K,Nv,'#e08a00','N');P(K,Tv,'#e08a00','T');P(K,Rv,C('--vi'),'R = N + T');P(Bc,[0,-Fa],C('--r3'),'F');if(Q>0)P(Bc,[Q,0],C('--b1'),'Q');
+x.fillStyle=blk?C('--bad'):C('--mu');x.textAlign='left';x.fillText(blk?'Adhérence : T = F·sin α ≤ f·N, R reste dans le cône (α ≤ φ)':'Glissement : T = f·N, R sur le cône de demi-angle φ = '+F(ph*180/PI)+'°  —  Q = F·tan(α'+(D1?'−':'+')+'φ)',8,16);
+x.fillText('Développement du filet : l’écrou est un bloc sur un plan incliné d’angle α. N : réaction normale du filet ; T : frottement tangentiel ; Q = C/rₘ : effort tangentiel de la vis.',8,h-6)}
+function upd1(){const c=calc1(),{p,rm,al,ph,ed,ei}=c,fc=frc(c),Fa=V('Fa'),T=Math.tan,dg=180/PI,d=[],iv=[];
+for(let a=.5;a+ph*dg<89;a+=.5){const r=a/dg;d.push([a,T(r)/T(r+ph)]);iv.push([a,r>ph?T(r-ph)/T(r):0])}
+const o=plot($('#cv4'),{x0:0,x1:80,y0:0,y1:1,xl:'angle d’hélice α (°)',yl:'rendement',ser:[{p:d,c:C('--b1'),n:'direct',w:2.5},{p:iv,c:C('--g2'),n:'inverse',d:[5,4]}]}),x=o.x;
+x.fillStyle='rgba(123,79,194,.15)';x.fillRect(o.L,o.T,o.X(ph*dg)-o.L,o.h-o.T-o.B);x.fillStyle=C('--vi');x.textAlign='left';x.fillText('α ≤ φ : irréversible',o.L+4,o.h-o.B-6);
+x.strokeStyle=C('--r3');x.setLineDash([3,3]);x.beginPath();x.moveTo(o.X(al*dg),o.T);x.lineTo(o.X(al*dg),o.h-o.B);x.stroke();x.setLineDash([]);
+[[ed,C('--b1')],[ei,C('--g2')]].forEach(q=>{x.fillStyle=q[1];x.beginPath();x.arc(o.X(al*dg),o.Y(q[0]),5,0,2*PI);x.fill()});
+$('#kp1').innerHTML=[['α',F(al*dg)+' °'],['φ = atan f',F(ph*dg)+' °'],['η direct',F(ed)],['η inverse',ei>0?F(ei):'irréversible'],['C sans frott.',F(Fa*p/2/PI)+' N·m'],['C réel',F(Fa*rm*T(al+ph))+' N·m'],['Pertes (direct)',F((1-ed)*100)+' %'],['N réaction du filet',F(fc.N)+' N'],['T tangentiel',F(fc.T)+' N'],['Q = C/rₘ',F(fc.Q)+' N']].map(a=>`<div>${a[0]}<b>${a[1]}</b></div>`).join('');
+const e=D1?ei:ed,[y,w,h]=sz($('#cv5'));y.fillStyle=C('--g2');y.fillRect(0,0,w*e,h);y.fillStyle=C('--r3');y.fillRect(w*e,0,w*(1-e),h);y.fillStyle='#fff';y.font='500 13px '+C('--fu');y.textAlign='left';y.fillText(e>0?(D1?'effort restitué ':'couple utile ')+F(e*100,3)+' %':'BLOQUÉ : η inverse ≤ 0',8,h/2+4);if(e<.9&&e>0){y.textAlign='right';y.fillText('perdu par frottement',w-8,h/2+4)}}
+function draw1(dt){const c=calc1(),[x,w,h]=sz($('#cv8')),y0=h/2+6,R=Math.max(14,Math.min(34,c.rm*1e3*2.2)),pp=Math.max(12,Math.min(150,c.p*1e3*2.5)),L=34,Rr=w-20,blk=D1&&c.al<=c.ph,om=blk?0:(D1?-3:3),Fa=V('Fa');TH1+=om*dt;
+x.save();x.beginPath();x.rect(L,y0-R,Rr-L,2*R);x.clip();x.fillStyle=C('--p2');x.fillRect(L,y0-R,Rr-L,2*R);x.strokeStyle=C('--g2');x.lineWidth=2;
+const ph0=((TH1*pp/2/PI)%pp+pp)%pp;for(let u=L-pp+ph0;u<Rr;u+=pp){x.beginPath();x.moveTo(u,y0+R);x.lineTo(u+pp/2,y0-R);x.stroke()}x.restore();
+x.strokeStyle=C('--g2');x.lineWidth=2;x.strokeRect(L,y0-R,Rr-L,2*R);
+const rg=Math.max(40,Rr-L-110),xn=L+10+(((TH1*pp/2/PI)%rg)+rg)%rg,yt=y0-R-28,dr=-1;
+x.fillStyle='rgba(214,34,42,.18)';x.fillRect(xn,y0-R-10,60,2*R+20);x.strokeStyle=C('--r3');x.strokeRect(xn,y0-R-10,60,2*R+20);
+ar(x,xn+30-dr*25,yt,xn+30+dr*25,yt,C('--r3'));x.font='12px '+C('--fu');x.fillStyle=C('--r3');x.textAlign='center';x.fillText(D1?'F moteur':'F résistant',xn+30,yt-6);
+const bc=C('--b1');x.strokeStyle=bc;x.lineWidth=2;x.beginPath();x.ellipse(L-8,y0,9,R+6,0,-PI/2,PI/2);x.stroke();ar(x,L-8,y0+R+6,L-20,y0+R+6,bc);x.fillStyle=bc;x.textAlign='left';x.fillText(D1?'C résistant':'C moteur',2,y0-R-14);
+const v=c.p*1e3*3/2/PI,Pe=D1?Fa*c.p*3/2/PI:Fa*c.rm*Math.tan(c.al+c.ph)*3,Ps=Pe*(D1?c.ei:c.ed);
+x.fillStyle=blk?C('--bad'):C('--mu');x.textAlign='left';x.fillText(blk?'IRRÉVERSIBLE (α ≤ φ) : l’écrou ne peut pas entraîner la vis':'ω vis = 3 rad/s (ralenti)   v écrou = p·ω/2π = '+F(v,3)+' mm/s   P entrée = '+F(Pe,3)+' W   P sortie = '+F(Ps,3)+' W   pertes = '+F(Pe-Ps,3)+' W',8,h-8);draw1b(c)}
+/* ---------- Atelier 3 : chaîne, frottement ou rendement ---------- */
+let AP=0,PC=3;const E=5,C0=.5,K0=C0/300,Jm=2e-4,Jp=2e-5,J2=2e-3,rr=.2,lam=rr*.01/2/PI,A2={tp:0,hold:0,pin:null,cur:null};
+const LI=['Pivot 0-1 (rotor)','Engrènement 1-2','Pivot 0-2 (arbre)','Hélicoïdale 2-3','Glissière 0-3'];
+const FR=[[0,.1,.005,.02,0,20,.5,3],[0,.05,.005,.01,0,10,.5,1],[0,.2,.005,.05,0,20,.5,10],[0,1,.02,.3,0,20,.5,10],[0,500,10,250,0,200,5,0]],RD=[.97,.97,.98,.6,.9],KP=[.05,.02,.05,.1,.05],CL=['#0a5fd0','#0b9a4a','#d6222a','#7b4fc2','#9a5b00'];
+function model(){const act=[1,PC>=1,PC>=1,PC>=3,PC>=3],J1=Jm+Jp,J2e=PC>=1?rr*rr*(1.5e-3+(PC>=2?5e-4:0)):0;const vt=$('#vt').checked,M=V('M'),Cl=PC>=3?lam*(V('Fe')+(vt?M*G:0)):0,Mm=PC>=3?M*lam*lam:0,g=[1,rr,rr,rr,lam],P=a=>a.reduce((p,q)=>p*q,1);
+if(!AP){let cs=Cl,f=0;for(let i=0;i<5;i++)if(act[i]){cs+=g[i]*V('s'+i);f+=g[i]*g[i]*V('v'+i)*(i<4?1e-4:1)}const J=J1+J2e+Mm;return{J:()=>J,Cr:w=>cs+f*w,eta:w=>Cl/(cs+f*w),Cl,act}}
+const e0=[0,1,2,3,4].map(i=>V('e'+i)),k=[0,1,2,3,4].map(i=>V('k'+i)),et=w=>e0.map((e,i)=>act[i]?Math.min(1,Math.max(.05,e-k[i]*w/300)):1);
+return{J:w=>{const e=et(w);return J1+J2e/(e[0]*e[1])+Mm/P(e)},Cr:w=>Cl/P(et(w)),eta:w=>P(et(w)),et,Cl,act}}
+function sim2(m){const W=[],TH=[],CM=[],CR=[];let om=0,th=0;for(let i=0;i<=1200;i++){const cm=C0-K0*om,cr=m.Cr(om),tq=cm-cr,st=om===0&&tq<=0;W.push(om);TH.push(th);CM.push(cm);CR.push(st?cm:cr);if(!st)om=Math.max(0,om+tq/m.J(om)*.001);th+=om*.001}return{W,TH,CM,CR,m}}
+const ID=sim2({J:()=>Jm,Cr:()=>0});
+function upd2(){const m=model(),c=A2.cur=sim2(m),we=c.W[1200],it=c.W.findIndex(v=>v>=.632*we);
+m.act.forEach((a,i)=>{[$('#fr'+i),$('#rd'+i)].forEach(r=>{r.style.opacity=a?1:.35;r.querySelectorAll('input').forEach(e=>e.disabled=!a)})});['M','Fe','vt'].forEach(id=>{$('#'+id).disabled=PC<3});$('#tf').hidden=!!AP;$('#tr').hidden=!AP;
+$('#nt').textContent=AP?'Approche globale : chaque liaison a un rendement η_i(ω) = η₀ − κ·ω/ω₀ qui dépend du point de fonctionnement ; η global = produit ; tout l’aval est divisé par η. Avec une charge utile nulle (Fₑ = 0, horizontal), un rendement seul ne crée aucune perte à vitesse constante.':'Approche locale : frottement sec Cs·sgn(ω) et visqueux fv·ω dans chaque liaison, ramenés à l’arbre moteur (×r, ×r², ×λ selon la liaison). La courbe η global est alors déduite : η = C_utile / C_r,eq(ω).';
+$('#kp2').innerHTML=[['ω∞',we>0?F(we)+' rad/s':'démarrage impossible'],['v∞ écrou',PC>=3?F(we*lam*1000)+' mm/s':'—'],['τ (63 %)',F(it/1000)+' s'],['J_eq (ω∞)',F(m.J(we)*1e4)+' ·10⁻⁴'],['C_r,eq (ω∞)',F(m.Cr(we))+' N·m'],['η global (ω∞)',m.Cl>0?F(m.eta(we)):'— (pas de charge utile)']].map(a=>`<div>${a[0]}<b>${a[1]}</b></div>`).join('')}
+function mk(o,t,v){const x=o.x;x.strokeStyle=C('--r3');x.setLineDash([3,3]);x.beginPath();x.moveTo(o.X(t),o.T);x.lineTo(o.X(t),o.h-o.B);x.stroke();x.setLineDash([]);x.fillStyle=C('--r3');x.beginPath();x.arc(o.X(t),o.Y(v),5,0,2*PI);x.fill()}
+function draw2(){const c=A2.cur,m=c.m,i=Math.min(1200,Math.round(A2.tp/.001)),th=c.TH[i],[x,w,h]=sz($('#cv3')),y0=h/2+8,R1=14,R2=70,px=64,wx=px+R1+R2;
+x.fillStyle=C('--p2');x.strokeStyle=C('--mu');x.lineWidth=1.5;x.fillRect(6,y0-20,30,40);x.strokeRect(6,y0-20,30,40);x.fillStyle=C('--fg');x.font='11px '+C('--fu');x.textAlign='center';x.fillText('Mot',21,y0+4);
+x.beginPath();x.moveTo(36,y0);x.lineTo(px,y0);x.stroke();if(PC>=1)gear(x,wx,y0,R2,-rr*th,C('--g2'),40);gear(x,px,y0,R1,th,C('--b1'),8);
+const L=w-14;if(PC>=2){x.strokeStyle=C('--g2');x.lineWidth=3;x.beginPath();x.moveTo(wx,y0);x.lineTo(L,y0);x.stroke();x.lineWidth=1;const ph=(rr*th*6)%12;for(let u=wx+R2+ph;u<L;u+=12){x.beginPath();x.moveTo(u,y0-5);x.lineTo(u+5,y0+5);x.stroke()}}
+if(PC>=3){const xn=wx+R2+10+((lam*th*4000)%(L-wx-R2-90));x.fillStyle=C('--r3');x.globalAlpha=.2;x.fillRect(xn-30,y0-62,60,44);x.globalAlpha=1;x.strokeStyle=C('--r3');x.lineWidth=2;x.strokeRect(xn-30,y0-62,60,44);x.strokeRect(xn-10,y0-18,20,18);x.fillStyle=C('--r3');x.textAlign='center';x.fillText('M = '+F(V('M'),3)+' kg',xn,y0-36);ar(x,xn+34,y0-40,xn+34+Math.min(40,c.W[i]*lam*1000),y0-40,C('--vi'))}
+x.fillStyle=C('--mu');x.textAlign='left';x.font='12px '+C('--fu');x.fillText('t = '+F(A2.tp,3)+' s   ωm = '+F(c.W[i],3)+' rad/s'+(PC>=3?'   v = '+F(c.W[i]*lam*1000,3)+' mm/s':'')+'   η global = '+(m.Cl>0?F(m.eta(c.W[i]),3):'—'),8,16);
+const pts=a=>{const o=[];for(let j=0;j<=1200;j+=6)o.push([j/1000,a[j]]);return o},ser=[{p:pts(ID.W),c:C('--mu'),d:[5,4],n:'moteur seul idéal'}];
+if(A2.pin)ser.push({p:pts(A2.pin.W),c:C('--vi'),n:'figée'});ser.push({p:pts(c.W),c:C('--b1'),w:3,n:'courante'});
+let o=plot($('#cv6'),{x0:0,x1:1.2,y0:0,y1:320,xl:'t (s)',yl:'ωm (rad/s)',hl:[{y:c.W[1200],c:C('--ok'),t:'ω∞'}],ser});mk(o,A2.tp,c.W[i]);
+o=plot($('#cv11'),{x0:0,x1:1.2,y0:-.05,y1:.55,xl:'t (s)',yl:'couples ramenés au moteur (N·m)',ser:[{p:pts(c.CM),c:C('--b1'),w:3,n:'Cm'},{p:pts(c.CR),c:C('--r3'),n:'C résistant'},{p:pts(c.CM.map((v,j)=>v-c.CR[j])),c:C('--g2'),n:'J·dω/dt'}]});mk(o,A2.tp,c.CM[i]);
+const ws=[];for(let k=0;k<=300;k+=5)ws.push(k);
+var sr=[{p:ws.map(k=>[k,m.eta(k)]),c:C('--b1'),w:3,n:'η global'}];if(AP)LI.forEach((_,j)=>m.act[j]&&sr.push({p:ws.map(k=>[k,m.et(k)[j]]),c:CL[j],w:1,d:[3,3],n:'η'+(j+1)}));
+o=plot($('#cv9'),{x0:0,x1:300,y0:0,y1:1.05,xl:'ωm (rad/s)',yl:'rendement selon le point de fonctionnement',ser:sr});if(m.Cl>0)mk(o,c.W[i],m.eta(c.W[i]))}
+const rl2=()=>{A2.tp=0;A2.hold=0},pin2=()=>{A2.pin=A2.cur};
+
+/* ---------- Panneau activité + quiz ---------- */
+const AT=['1 · Frottement de Coulomb et Stick and Slip','2 · Rendement d’une vis','3 · Chaîne : frottement ou rendement'];
+const rg=(id,a,b,s,v)=>`<input type="range" id="${id}" min="${a}" max="${b}" step="${s}" value="${v}"> <b id="o_${id}">${F(v)}</b>`,TB=(id,h1,h2,rows,hid)=>`<table class="tb" id="${id}"${hid?' hidden':''}><tr><th>Liaison</th><th>${h1}</th><th>${h2}</th></tr>${rows}</table>`;
+const TPL=[()=>`<div class="ctl">${sl('f0','f₀ adhérence',.1,1,.01,.4)}${sl('f','f glissement',.05,1,.01,.25)}${sl('c','c visqueux',0,20,.5,1,'N·s/m')}${sl('k','raideur k du ressort',20,300,5,60,'N/m')}${sl('Vd','vitesse du tireur',10,200,5,50,'mm/s')}</div><button class="btn pri" onclick="r0()">↺ Relancer</button><canvas id="cv0" class="sc"></canvas><canvas id="cv1" class="pl"></canvas><canvas id="cv2" class="pl"></canvas>`,
+()=>`<div class="ctl">${sl('p','pas p',2,60,1,10,'mm')}${sl('rm','rayon moyen rₘ',5,25,1,10,'mm')}${sl('fr','f du filet',.01,.3,.01,.1)}${sl('Fa','effort axial F',100,5000,100,1000,'N')}</div><button class="btn" onclick="pre(.1,4,10)">Trapézoïdale</button> <button class="btn" onclick="pre(.02,10,10)">Vis à billes</button> <button class="btn" onclick="pre(.1,40,10)">Grand pas</button> <button class="btn pri" id="dir" onclick="tg1()">${D1?'Sens : inverse (écrou → vis)':'Sens : direct (vis → écrou)'}</button><canvas id="cv8" class="sc"></canvas><canvas id="cv12" style="height:250px"></canvas><div class="kpi" id="kp1"></div><canvas id="cv4" class="pl"></canvas><canvas id="cv5" style="height:46px"></canvas>`,
+()=>`<div class="seg" id="pc">${['Moteur seul','+ roue 2','+ vis','+ écrou et masse M'].map((t,i)=>`<button aria-pressed="${PC==i}" data-p="${i}">${t}</button>`).join('')}</div> <div class="seg" id="ap"><button aria-pressed="${AP==0}" data-a="0">Approche par frottement</button><button aria-pressed="${AP==1}" data-a="1">Approche par rendement</button></div><p id="nt" style="font-size:12.5px;color:var(--mu);margin:6px 0"></p><div class="dwrap">${TB('tf','frottement sec Cs (N·m ; glissière : N)','visqueux fv (×10⁻⁴ N·m·s/rad ; glissière : N·s/m)',LI.map((n,i)=>{const q=FR[i];return `<tr id="fr${i}"><td>${n}</td><td>${rg('s'+i,q[0],q[1],q[2],q[3])}</td><td>${rg('v'+i,q[4],q[5],q[6],q[7])}</td></tr>`}).join(''),AP)}${TB('tr','η₀ (indépendant de la vitesse)','κ : perte de η à ω₀ = 300 rad/s',LI.map((n,i)=>`<tr id="rd${i}"><td>${n}</td><td>${rg('e'+i,.3,1,.01,RD[i])}</td><td>${rg('k'+i,0,.5,.01,KP[i])}</td></tr>`).join(''),!AP)}</div><div class="ctl">${sl('M','masse M',0,1000,10,500,'kg')}${sl('Fe','effort utile Fₑ',0,1000,10,300,'N')}${sl('sp','ralenti (× temps réel)',.02,.5,.01,.15)}</div><label><input type="checkbox" id="vt"> axe vertical (le poids de M s’ajoute à la charge)</label> <button class="btn pri" onclick="rl2()">↺ Relancer</button> <button class="btn" onclick="pin2()">📌 Figer la courbe</button><canvas id="cv3" class="sc"></canvas><div class="two"><canvas id="cv6" class="pl"></canvas><canvas id="cv11" class="pl"></canvas></div><canvas id="cv9" class="pl"></canvas><div class="kpi" id="kp2"></div>`];
+const PN=[{g:'Observer adhérence, glissement et broutement (stick-slip) sur un contact sec.',s:['Le ressort tire le bloc : repérez les phases d’<b>adhérence</b> (T = F, le cône contient R) puis de <b>glissement</b> (T = fN).','Réglez f = f₀ : le broutement disparaît. Puis creusez l’écart f₀ − f.','Augmentez c (visqueux) : comment évolue l’amplitude ?'],d:['Condition d’adhérence ?','‖T‖ ≤ f₀‖N‖ ⇔ R fait avec la normale un angle ≤ φ₀, tan φ₀ = f₀. Au glissement : ‖T‖ = f‖N‖, T opposé à la vitesse de glissement.']},
+{g:'Relier géométrie du filet (α), frottement (φ) et rendement.',s:['Préréglage <b>Trapézoïdale</b> : α ≤ φ ? lisez η inverse.','Préréglage <b>Vis à billes</b> : comparez C réel et C sans frottement.','Balayez p pour chercher l’angle qui maximise η direct à f = 0,1.','Basculez en <b>sens inverse</b> : la vis tourne-t-elle encore ? Que devient le rendement ?','Dans le plan incliné, relevez N, T et R : T = f·N au glissement, R sur le cône. En sens inverse bloqué, comparez T = F·sin α et f·N.'],d:['Montrer que α ≤ φ ⇒ η direct < ½','η = tan α / tan(α+φ) ≤ tan φ / tan 2φ = (1 − tan²φ)/2 < ½.']},
+{g:'Comparer l’approche locale (Cs, fv par liaison) et globale (η par liaison, dépendant de la vitesse) sur ωm(t) et sur le couple moteur.',s:['Choisissez les <b>pièces</b> : moteur seul, puis + roue 2, + vis, + écrou et masse M. Notez à chaque ajout J_eq, ω∞, τ (les liaisons inactives sont grisées).','Approche <b>frottement</b> : réglez Cs et fv de chaque liaison active.','Lisez le couple moteur : Cm = J·dω/dt + C résistant. Que vaut J·dω/dt en régime permanent ?','Approche <b>rendement</b> : réglez κ = 0 puis augmentez-le. Que devient la courbe η global ?','Mettez Fₑ = 0 en horizontal : que se passe-t-il pour les pertes ? Cochez « axe vertical », 📌 figez et comparez.'],d:['Calculer ω∞ en approche rendement','En régime permanent Cm = C₀ − k·ω = C_utile/η_global(ω) : équation à résoudre en ω, car les η_i dépendent aussi de ω.']}];
+const QZ=[[{q:'Le bloc glisse avec f₀ > f. L’effort tangentiel vaut…',o:['f₀N','fN (+ c·v)','l’effort F du ressort'],a:1,w:'Dès qu’il y a glissement, ‖T‖ = f‖N‖ ; f₀ ne sert qu’à l’adhérence.'},{q:'Pour atténuer le broutement, on peut…',o:['augmenter f₀ − f','réduire f₀ − f ou ajouter du visqueux','réduire la vitesse du tireur'],a:1,w:'La chute de frottement au décollage (Stribeck) alimente le stick-slip ; le visqueux amortit.'}],
+[{q:'Si α ≤ φ, la vis est…',o:['réversible','irréversible (η inverse ≤ 0)','sans frottement'],a:1,w:'Le frottement retient la charge : maintien sans frein, mais η direct < ½.'},{q:'Avec f = 0,1, le meilleur η direct d’une vis vaut environ…',o:['0,82','0,95','1'],a:0,w:'η_max = (1 − sin φ)/(1 + sin φ) ≈ 0,82, atteint vers α = 45° − φ/2 ≈ 42°.'},{q:'Pendant le glissement de l’écrou sur le filet, l’angle entre la résultante R du filet et la normale N vaut…',o:['0','φ, avec tan φ = f','α'],a:1,w:'R est sur le cône de frottement : ‖T‖ = f‖N‖ ⇒ tan(angle) = f. L’angle d’hélice α est une donnée géométrique.'}],
+[{q:'Un rendement η constant peut-il représenter fidèlement un frottement sec ?',o:['Oui, à toute vitesse','Non : la perte (1−η)P est proportionnelle à la puissance, alors que le frottement sec dissipe Cs·ω même à faible charge','Oui, mais seulement à l’arrêt'],a:1,w:'Le rendement dépend du point de fonctionnement : η_équivalent = C_utile/C_r,eq(ω) varie avec la vitesse et tend vers 0 à faible vitesse si Cs ≠ 0.'},{q:'Avec les rendements, tout ce qui est en aval d’un transmetteur est…',o:['multiplié par η','divisé par η','inchangé'],a:1,w:'La puissance prélevée sur le moteur vaut P_aval/η (régime moteur).'}]];
+function panel(i){const p=PN[i];return `<div class="goal"><b>Objectif.</b> ${p.g}</div><ol class="steps">${p.s.map(s=>`<li>${s}</li>`).join('')}</ol><details><summary>${p.d[0]}</summary><p>${p.d[1]}</p></details><b>Quiz</b>${QZ[i].map((z,j)=>`<fieldset class="q"><legend>${z.q}</legend>${z.o.map((t,k)=>`<label class="opt"><input type="radio" name="q${j}" value="${k}">${t}</label>`).join('')}<div class="why" hidden></div></fieldset>`).join('')}<button class="btn pri" onclick="chk(${i})">Vérifier</button><div class="score" id="sc"></div>`}
+function chk(i){let s=0;const fs=$('#act').querySelectorAll('fieldset.q');QZ[i].forEach((z,j)=>{const f=fs[j],sel=f.querySelector('input:checked'),ok=sel&&+sel.value==z.a;f.querySelectorAll('.opt').forEach((l,k)=>{l.classList.toggle('good',k==z.a);l.classList.toggle('bad',!!sel&&+sel.value==k&&k!=z.a)});const w=f.querySelector('.why');w.hidden=false;w.textContent=(ok?'✔ ':'✘ ')+z.w;if(ok)s++});$('#sc').textContent='Score : '+s+' / '+QZ[i].length}
+
+/* ---------- Cours ---------- */
+const CO=[['Le frottement : approche locale',`<p>Dans chaque liaison, on écrit les lois de Coulomb et on détermine les efforts de contact (PFD). Il y a deux régimes :</p><div class="fm">Adhérence (V = 0) : ‖T‖ ≤ f₀‖N‖ — R dans le cône d’adhérence<br>Glissement (V ≠ 0) : ‖T‖ = f‖N‖, T opposé à V — R sur le cône (tan φ = f)</div><p>En général f₀ ≳ f : c’est l’effet Stribeck, source de broutement (stick-slip). Pour une liaison pivot, on retient le modèle global :</p><div class="fm">C_f = Cs·sgn(ω) + fv·ω</div><div class="ret"><b>À retenir.</b> Le frottement sec agit comme un couple résistant constant (ω∞ diminue, τ inchangé) ; le visqueux comme un amortissement (ω∞ et τ diminuent).</div>`],
+['Le rendement : approche globale',`<p>On ne détaille plus le contact : on affecte au transmetteur un rendement η, et on fait un bilan de puissance.</p><div class="fm">η = P_s / P_e = (C_s ω_s)/(C_e ω_e) ≤ 1 ; P_pertes = (1 − η) P_e ; en série : η = η₁η₂…ηₙ</div><h3>Liaison hélicoïdale</h3><div class="fm">tan α = p/(2π rₘ)   η_direct = tan α / tan(α+φ)   η_inverse = tan(α−φ)/tan α</div><p>Si α ≤ φ : η_inverse ≤ 0, la vis est irréversible (maintien sans frein) mais η_direct < ½.</p><div class="ret"><b>Attention.</b> η dépend du sens de transit de la puissance : une charge motrice impose η_inverse (et la réversibilité).</div>`],
+['Ramener sur l’arbre moteur',`<p>Théorème de l’énergie cinétique sur l’ensemble, avec tout exprimé en fonction de ωm :</p><div class="fm">J_eq = J₁ + r²J₂/ηₑ + Mλ²/(ηₑη_h)<br>C_r,eq = Cs₁ + r·Cs₂/ηₑ + λ(µMg + Fₑ)/(ηₑη_h)<br>f_eq = fv₁ + r²fv₂/ηₑ</div><div class="fm">J_eq·dωm/dt = Cm − C_r,eq − f_eq·ωm   avec Cm = C₀ − k·ωm</div><div class="fm">τ = J_eq/(k + f_eq)     ω∞ = (C₀ − C_r,eq)/(k + f_eq)</div><div class="ret"><b>À retenir.</b> Inertie ramenée : × (rapport)². Effort ramené : × (rapport). Rendement (régime moteur) : ÷ η pour tout ce qui est en aval.</div>`],
+['Méthode et pièges',`<ol><li>Choisir le paramètre de mouvement (celui de l’actionneur).</li><li>Écrire les lois entrée-sortie (r, λ, R).</li><li>E_c = ½ J_eq ωm² (ou ½ M_eq v²).</li><li>Puissances : frottement local, ou ÷ η global.</li><li>TEC ⇒ équation différentielle ; identifier τ et la valeur finale.</li></ol><div class="ret"><b>Pièges.</b> Oublier le carré du rapport pour les inerties ; appliquer η dans le mauvais sens ; utiliser η direct pour une charge motrice ; oublier que Cs·sgn(ω) impose C₀ > C_r,eq pour démarrer.</div>`]];
+
+/* ---------- Pilotage ---------- */
+let cur=0,mode=0;
+function show(i){cur=i;[...$('#tabs').children].forEach((b,j)=>b.setAttribute('aria-selected',j==i));$('#stage').innerHTML=TPL[i]();$('#act').innerHTML=panel(i);out();if(i==0)r0();if(i==1){TH1=0;upd1()}if(i==2){A2.pin=null;rl2();upd2()}}
+$('#tabs').innerHTML=AT.map((t,i)=>`<button role="tab" aria-selected="false">${t}</button>`).join('');
+$('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)show([...$('#tabs').children].indexOf(b))};
+$('#stage').addEventListener('input',()=>{out();if(cur==1)upd1();if(cur==2)upd2()});
+$('#stage').addEventListener('click',e=>{const q=e.target.closest('#pc button');if(q){PC=+q.dataset.p;[...$('#pc').children].forEach(x=>x.setAttribute('aria-pressed',x==q));upd2();return}const b=e.target.closest('#ap button');if(!b)return;AP=+b.dataset.a;[...$('#ap').children].forEach(x=>x.setAttribute('aria-pressed',x==b));upd2()});
+$('#mode').onclick=e=>{const b=e.target.closest('button');if(!b)return;mode=+b.dataset.m;[...$('#mode').children].forEach(x=>x.setAttribute('aria-pressed',x==b));$('#atv').hidden=$('#tabs').hidden=!!mode;$('#cov').hidden=!mode};
+$('#toc').innerHTML=CO.map((c,i)=>`<button>${i+1}. ${c[0]}</button>`).join('');
+function cour(i){[...$('#toc').children].forEach((b,j)=>b.classList.toggle('on',j==i));$('#cb').innerHTML=`<h2>${CO[i][0]}</h2>${CO[i][1]}`}
+$('#toc').onclick=e=>{const b=e.target.closest('button');if(b)cour([...$('#toc').children].indexOf(b))};
+addEventListener('resize',()=>{if(cur==1)upd1()});
+let last=0;function tick(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+if(!mode){if(cur==0){if(S0.t>40)r0();step0(Math.round(dt*1000));draw0();plots0()}
+if(cur==1)draw1(dt);if(cur==2){if(A2.hold>0){A2.hold-=dt;if(A2.hold<=0)A2.tp=0}else{A2.tp+=dt*V('sp');if(A2.tp>=1.2){A2.tp=1.2;A2.hold=.8}}draw2()}}
+requestAnimationFrame(tick)}
+cour(0);show(0);requestAnimationFrame(tick);
+</script></body></html>
