@@ -8,15 +8,15 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 
 ## Sommaire
 
-- Géométrie et paramétrage
-- Liaisons et torseurs
-- Cinématique des mécanismes
-- Cinétique et inertie
-- Énergie cinétique et TEC
-- Statique, frottement et dynamique
-- Actionneurs et dimensionnement
-- Utilisation en local
-- Contribuer
+- [Géométrie et paramétrage](#géométrie-et-paramétrage)
+- [Liaisons et torseurs](#liaisons-et-torseurs)
+- [Cinématique des mécanismes](#cinématique-des-mécanismes)
+- [Cinétique et inertie](#cinétique-et-inertie)
+- [Énergie cinétique et TEC](#énergie-cinétique-et-tec)
+- [Statique, frottement et dynamique](#statique-frottement-et-dynamique)
+- [Actionneurs et dimensionnement](#actionneurs-et-dimensionnement)
+- [Utilisation en local](#utilisation-en-local)
+- [Contribuer](#contribuer)
 
 ---
 
@@ -25,7 +25,7 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Coordonnées d'un point](https://siicpgeamansur.github.io/mecanique/coordonnees.html) | Visualiser les différents systèmes de coordonnées d'un point : cartésiennes, cylindriques et sphériques. |
-| [Figures géométrales](https://siicpgeamansur.github.io/mecanique/figures_geometrales.html) | Visualiser et s'entraîner à manipuler les figures géométrales et leurs projections. |
+| [Figures géométriques](https://siicpgeamansur.github.io/mecanique/figures_geometrales.html) | Visualiser et s'entraîner à manipuler les figures géométriques et leurs projections. |
 | [Loi entrée-sortie](https://siicpgeamansur.github.io/mecanique/loi_entree_sortie.html) | Visualiser et s'entraîner aux lois entrée-sortie. |
 
 ## Liaisons et torseurs
@@ -40,9 +40,9 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Bras robotisé 2R](https://siicpgeamansur.github.io/mecanique/animation_2R.html) | Animation de deux bras en liaison pivot entre eux, l'un étant en liaison pivot avec le bâti. Il est possible de modifier les longueurs des bras et les positions angulaires des pivots pour visualiser la zone inaccessible. |
-| [Roulement sans glissements](https://siicpgeamansur.github.io/mecanique/rsg.html) | Animation pour comprendre le glissement et la condition de roulement sans glissements d'une roue sur le sol. |
-| [Réducteurs](https://siicpgeamansur.github.io/mecanique/reducteurs.html) | Réducteurs à train d'engrenages simples ou à train épicycloïdaux. |
-| [Théorie des mécanismes](https://siicpgeamansur.github.io/mecanique/TdM.html) | Théorie des mécanismes : degré de mobilité, hyperstatisme et liaison équivalente. |
+| [Roulement sans glissement](https://siicpgeamansur.github.io/mecanique/rsg.html) | Comprendre le glissement et la condition de roulement sans glissement d'une roue sur le sol. |
+| [Réducteurs](https://siicpgeamansur.github.io/mecanique/reducteurs.html) | Visualiser des réducteurs à train d'engrenages simple ou à train épicycloïdal. |
+| [Théorie des mécanismes](https://siicpgeamansur.github.io/mecanique/TdM.html) | Déterminer le degré de mobilité, l'hyperstatisme et la liaison équivalente d'un mécanisme. |
 
 ## Cinétique et inertie
 
@@ -61,18 +61,18 @@ Aucune installation : chaque outil s'ouvre directement dans le navigateur.
 | Outil | Description |
 |---|---|
 | [Arc-boutement](https://siicpgeamansur.github.io/mecanique/arc-boutement.html) | Visualiser le phénomène d'arc-boutement. |
-| [Poulies, courroies et palan](https://siicpgeamansur.github.io/mecanique/poulies_courroies_palan.html) | Visualiser les poulies et comprendre le principe de palan. |
+| [Poulies, courroies et palan](https://siicpgeamansur.github.io/mecanique/poulies_courroies_palan.html) | Visualiser les poulies et comprendre le principe du palan. |
 | [Équilibrage dynamique d'un rotor](https://siicpgeamansur.github.io/mecanique/equilibrage_dynamique.html) | Visualiser l'équilibrage dynamique d'un rotor. |
 | [Équations différentielles du mouvement](https://siicpgeamansur.github.io/mecanique/equation_differentielle_mouvement.html) | Établir et résoudre les équations différentielles du mouvement. |
-| [Effets gyroscopiques](https://siicpgeamansur.github.io/mecanique/gyroscope.html) | Établir et résoudre les équations différentielles du mouvement. |
-| [Hydro-nettoyeur](https://siicpgeamansur.github.io/mecanique/hydronettoyeur.html) | Viuslaisation de l'hydro-nettoyeur vu en TD. |
-| [Pertes dynamiques](https://siicpgeamansur.github.io/mecanique/pertes_dynamiques.html) | Viuslaisation des pertes dynamiques. |
+| [Effets gyroscopiques](https://siicpgeamansur.github.io/mecanique/gyroscope.html) | Visualiser et comprendre les effets gyroscopiques. |
+| [Hydro-nettoyeur](https://siicpgeamansur.github.io/mecanique/hydronettoyeur.html) | Visualiser l'hydro-nettoyeur vu en TD. |
+| [Pertes dynamiques](https://siicpgeamansur.github.io/mecanique/pertes_dynamiques.html) | Visualiser les pertes dynamiques. |
 
 ## Actionneurs et dimensionnement
 
 | Outil | Description |
 |---|---|
-| [Trapèze de vitesse](https://siicpgeamansur.github.io/mecanique/trapeze_de_vitesse.html) | Commande en trapèze de vitesse d'un actionneur et dimensionnement du moteur sur l'exemple d'un palan (moteur, réducteur à deux étages, tambour, charge). Animation du cycle, couple statique de maintien, couple dynamique en accélération, inertie équivalente, et vérification du moteur (couple de pic, couple efficace, vitesse, accélération maximale admissible). |
+| [Trapèze de vitesse](https://siicpgeamansur.github.io/mecanique/trapeze_de_vitesse.html) | Dimensionner un actionneur commandé en trapèze de vitesse sur l'exemple d'un palan (moteur, réducteur à deux étages, tambour, charge) : animation du cycle, couple statique de maintien, couple dynamique en accélération, inertie équivalente et vérification du moteur (couple de pic, couple efficace, vitesse, accélération maximale admissible). |
 
 ---
 
